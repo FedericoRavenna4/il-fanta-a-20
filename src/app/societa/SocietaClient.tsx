@@ -1,28 +1,28 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
+import type { Societa } from "@/lib/societa";
 
-type Team = {
-  id: number;
-  nome: string;
-  logo: string;
-  lega: string;
-  ranking: number;
-  leader: boolean;
-};
-
-export default function SocietaClient({ societa }: { societa: Team[] }) {
+export default function SocietaClient({ societa }: { societa: Societa[] }) {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("Tutte");
 
   const filtered = societa.filter((team) => {
-    const matchSearch = team.nome.toLowerCase().includes(search.toLowerCase());
+    const searchText = `
+      ${team.nome}
+      ${team.fantallenatore}
+      ${team.nicknameInstagram}
+      ${team.squadraReale}
+    `.toLowerCase();
+
+    const matchSearch = searchText.includes(search.toLowerCase());
 
     const matchFilter =
       filter === "Tutte" ||
-      team.lega === filter ||
-      (filter === "Serie C" && team.lega.startsWith("Serie C"));
+      team.legaAttuale === filter ||
+      (filter === "Serie C" && team.legaAttuale.startsWith("Serie C"));
 
     return matchSearch && matchFilter;
   });
@@ -42,7 +42,7 @@ export default function SocietaClient({ societa }: { societa: Team[] }) {
       <div className="mb-6">
         <input
           type="text"
-          placeholder="Cerca società..."
+          placeholder="Cerca società, fantallenatore o nickname..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full rounded-2xl border border-slate-200 px-5 py-4 text-slate-700 outline-none focus:border-blue-900"
@@ -67,9 +67,10 @@ export default function SocietaClient({ societa }: { societa: Team[] }) {
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {filtered.map((team) => (
-          <div
+          <Link
             key={team.id}
-            className="rounded-3xl border border-slate-200 bg-white p-6 text-center shadow-sm hover:shadow-md transition"
+            href={`/societa/${team.slug}`}
+            className="rounded-3xl border border-slate-200 bg-white p-6 text-center shadow-sm hover:shadow-md hover:-translate-y-1 transition block"
           >
             <div className="h-28 flex items-center justify-center mb-5">
               <Image
@@ -85,7 +86,9 @@ export default function SocietaClient({ societa }: { societa: Team[] }) {
               {team.nome}
             </h2>
 
-            <p className="mt-2 text-sm text-slate-500">{team.lega}</p>
+            <p className="mt-2 text-sm text-slate-500">
+              {team.legaAttuale}
+            </p>
 
             {team.leader && (
               <p className="mt-3 inline-block rounded-full bg-blue-950 px-3 py-1 text-xs font-semibold text-white">
@@ -96,7 +99,7 @@ export default function SocietaClient({ societa }: { societa: Team[] }) {
             <p className="mt-4 text-sm font-semibold text-blue-900">
               #{team.ranking} Ranking
             </p>
-          </div>
+          </Link>
         ))}
       </div>
     </>
