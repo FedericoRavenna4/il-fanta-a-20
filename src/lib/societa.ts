@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { getRanking } from "./ranking";
 
 export type Societa = {
   id: number;
@@ -13,6 +14,7 @@ export type Societa = {
   girone: string;
   logo: string;
   ranking: number;
+  puntiRanking: number;
   leader: boolean;
 };
 
@@ -23,6 +25,7 @@ function parseCsvLine(line: string) {
 export function getSocieta(): Societa[] {
   const filePath = path.join(process.cwd(), "data", "societa.csv");
   const fileContent = fs.readFileSync(filePath, "utf-8");
+  const ranking = getRanking();
 
   const lines = fileContent.trim().split(/\r?\n/);
   const headers = parseCsvLine(lines[0]);
@@ -36,6 +39,8 @@ export function getSocieta(): Societa[] {
     });
 
     const id = Number(row.ID_Squadra);
+
+    const rankingItem = ranking.find((item) => item.squadraId === id);
 
     const slug = row.Nome_Società
       .toLowerCase()
@@ -62,8 +67,9 @@ export function getSocieta(): Societa[] {
       legaAttuale: lega,
       girone,
       logo: `/societa/${row.Logo}`,
-      ranking: id,
-      leader: id === 1,
+      ranking: rankingItem?.posizione ?? 999,
+      puntiRanking: rankingItem?.puntiRanking ?? 0,
+      leader: rankingItem?.posizione === 1,
     };
   });
 }
