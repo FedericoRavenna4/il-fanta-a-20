@@ -1,0 +1,2401 @@
+Stagione,Squadra_ID,Ruolo,Giocatore,Squadra_Reale,Costo
+2025/26,1,P,Scuffet,Pis,1
+2025/26,1,P,Nicolas,Pis,1
+2025/26,1,P,Semper,Pis,1
+2025/26,1,D,Bastoni,Int,47
+2025/26,1,D,Mancini,Rom,37
+2025/26,1,D,Kolasinac,Ata,1
+2025/26,1,D,Di Lorenzo,Nap,40
+2025/26,1,D,Mina,Cag,13
+2025/26,1,D,Valenti,Par,1
+2025/26,1,D,Bartesaghi,Mil,1
+2025/26,1,D,Troilo,Par,4
+2025/26,1,C,Saelemaekers,Mil,20
+2025/26,1,C,Musah,Ata,1
+2025/26,1,C,Frendrup,Gen,20
+2025/26,1,C,Ferguson,Bol,9
+2025/26,1,C,Perrone,Com,3
+2025/26,1,C,Neres,Nap,1
+2025/26,1,C,Bernede,Ver,1
+2025/26,1,C,Baturina,Com,26
+2025/26,1,A,Martinez L.,Int,178
+2025/26,1,A,Cancellieri,Laz,8
+2025/26,1,A,Borrelli,Cag,3
+2025/26,1,A,Durosinmi,Pis,99
+2025/26,1,A,Kulenovic,Tor,17
+2025/26,2,P,Perin,Juv,1
+2025/26,2,P,Pinsoglio,Juv,97
+2025/26,2,P,Di Gregorio,Juv,1
+2025/26,2,D,Dimarco,Int,51
+2025/26,2,D,Pavlovic,Mil,22
+2025/26,2,D,Tsimikas,Rom,2
+2025/26,2,D,Pongracic,Fio,11
+2025/26,2,D,Baschirotto,Cre,15
+2025/26,2,D,Dossena,Cag,5
+2025/26,2,D,Pedersen,Tor,2
+2025/26,2,D,Van Der Brempt,Com,1
+2025/26,2,C,Zielinski,Int,1
+2025/26,2,C,Cataldi,Laz,1
+2025/26,2,C,El Shaarawy,Rom,2
+2025/26,2,C,Orsolini,Bol,78
+2025/26,2,C,Mkhitaryan,Int,9
+2025/26,2,C,Lovric,Ver,12
+2025/26,2,C,Zerbin,Cre,7
+2025/26,2,C,Miller L.,Udi,1
+2025/26,2,A,Vardy,Cre,61
+2025/26,2,A,Raspadori,Ata,126
+2025/26,2,A,Davis K.,Udi,27
+2025/26,2,A,Almqvist,Par,1
+2025/26,2,A,Moro L.,Sas,1
+2025/26,3,P,Falcone,Lec,31
+2025/26,3,P,Fruchtl,Lec,1
+2025/26,3,P,Samooja,Lec,1
+2025/26,3,D,Albiol,Pis,5
+2025/26,3,D,Bianchetti,Cre,2
+2025/26,3,D,Spinazzola,Nap,1
+2025/26,3,D,Lirola,Ver,10
+2025/26,3,D,Diego Carlos,Com,5
+2025/26,3,D,Gutierrez,Nap,17
+2025/26,3,D,Terracciano F.,Cre,6
+2025/26,3,D,Ehizibue,Udi,17
+2025/26,3,C,Loftus-Cheek,Mil,36
+2025/26,3,C,Sergi Roberto,Com,1
+2025/26,3,C,Cornet,Gen,17
+2025/26,3,C,Harrison,Fio,27
+2025/26,3,C,Ramadani,Lec,1
+2025/26,3,C,Bernabè,Par,32
+2025/26,3,C,Paz N.,Com,89
+2025/26,3,C,Lorran,Pis,25
+2025/26,3,A,David,Juv,175
+2025/26,3,A,Sulemana K.,Ata,5
+2025/26,3,A,Njie,Tor,3
+2025/26,3,A,Addai,Com,7
+2025/26,3,A,Aboukhlal,Tor,27
+2025/26,4,P,Gollini,Rom,1
+2025/26,4,P,Svilar,Rom,98
+2025/26,4,P,Zelezny,Rom,1
+2025/26,4,D,Luperto,Cre,13
+2025/26,4,D,Buongiorno,Nap,47
+2025/26,4,D,Calabresi,Pis,1
+2025/26,4,D,Kalulu,Juv,32
+2025/26,4,D,Cabal,Juv,1
+2025/26,4,D,Beukema,Nap,19
+2025/26,4,D,Dembelè A. *,Tor,1
+2025/26,4,D,Kempf,Com,17
+2025/26,4,C,Zambo Anguissa,Nap,25
+2025/26,4,C,Elmas,Nap,49
+2025/26,4,C,Estevez,Par,1
+2025/26,4,C,Ricci S.,Mil,17
+2025/26,4,C,Niasse,Ver,1
+2025/26,4,C,Ederson D.S.,Ata,29
+2025/26,4,C,Anjorin,Tor,13
+2025/26,4,C,Keita M.,Par,1
+2025/26,4,A,Sanabria,Cre,38
+2025/26,4,A,Johnsen *,Cre,1
+2025/26,4,A,Yildiz,Juv,139
+2025/26,4,A,N'Dri,Lec,1
+2025/26,4,,,,
+2025/26,5,P,Sportiello,Ata,85
+2025/26,5,P,Rossi F.,Ata,1
+2025/26,5,P,Carnesecchi,Ata,1
+2025/26,5,D,Pellegrini Lu.,Laz,3
+2025/26,5,D,Walukiewicz,Sas,5
+2025/26,5,D,Rrahmani,Nap,24
+2025/26,5,D,Ismajli,Tor,9
+2025/26,5,D,Gatti,Juv,21
+2025/26,5,D,Palestra,Cag,7
+2025/26,5,D,Vitik,Bol,20
+2025/26,5,D,Bernasconi,Ata,2
+2025/26,5,C,Grassi,Cre,5
+2025/26,5,C,Gagliardini,Ver,2
+2025/26,5,C,Fagioli,Fio,8
+2025/26,5,C,Maldini,Laz,10
+2025/26,5,C,Gilmour,Nap,1
+2025/26,5,C,Payero,Cre,3
+2025/26,5,C,Konè I.,Sas,10
+2025/26,5,C,Hojholt,Pis,1
+2025/26,5,A,Milik,Juv,1
+2025/26,5,A,Lukaku,Nap,25
+2025/26,5,A,Moreo,Pis,10
+2025/26,5,A,Malen,Rom,160
+2025/26,5,A,Soulè,Rom,110
+2025/26,6,P,Satalino,Sas,1
+2025/26,6,P,Muric,Sas,7
+2025/26,6,P,Turati,Sas,1
+2025/26,6,D,Ceccherini,Cre,1
+2025/26,6,D,Bremer,Juv,51
+2025/26,6,D,Gallo,Lec,10
+2025/26,6,D,Miranda J.,Bol,32
+2025/26,6,D,Bisseck,Int,15
+2025/26,6,D,Solet,Udi,28
+2025/26,6,D,Heggem,Bol,2
+2025/26,6,D,Helland,Bol,2
+2025/26,6,C,Mandragora,Fio,6
+2025/26,6,C,Leris,Pis,1
+2025/26,6,C,Caqueret,Com,6
+2025/26,6,C,Thuram K.,Juv,45
+2025/26,6,C,Moro N.,Bol,15
+2025/26,6,C,Diouf,Int,13
+2025/26,6,C,Isaksen,Laz,70
+2025/26,6,C,Jashari,Mil,18
+2025/26,6,A,Hojlund,Nap,135
+2025/26,6,A,Krstovic,Ata,107
+2025/26,6,A,Adams C.,Tor,57
+2025/26,6,A,Bayo V.,Udi,11
+2025/26,6,A,Stojilkovic,Pis,34
+2025/26,7,P,Di Gennaro,Int,1
+2025/26,7,P,Sommer,Int,109
+2025/26,7,P,Martinez Jo.,Int,1
+2025/26,7,D,Rugani,Fio,1
+2025/26,7,D,Ranieri L.,Fio,14
+2025/26,7,D,Vasquez,Gen,23
+2025/26,7,D,Gila,Laz,17
+2025/26,7,D,Hien,Ata,23
+2025/26,7,D,Idzes,Sas,12
+2025/26,7,D,Folino,Cre,1
+2025/26,7,D,Joao Mario,Bol,31
+2025/26,7,C,Locatelli,Juv,15
+2025/26,7,C,Rabiot,Mil,85
+2025/26,7,C,Malinovskyi,Gen,10
+2025/26,7,C,Luis Henrique,Int,1
+2025/26,7,C,Basic,Laz,1
+2025/26,7,C,Belahyane,Laz,1
+2025/26,7,C,Dele-Bashiru,Laz,3
+2025/26,7,C,Bakola,Sas,1
+2025/26,7,A,Morata,Com,46
+2025/26,7,A,Nzola,Sas,45
+2025/26,7,A,Ekuban,Gen,1
+2025/26,7,A,Noslin,Laz,3
+2025/26,7,A,Pellegrino M.,Par,91
+2025/26,8,P,Provedel,Laz,1
+2025/26,8,P,Furlanetto,Laz,85
+2025/26,8,P,Motta,Laz,1
+2025/26,8,D,Marusic,Laz,17
+2025/26,8,D,Lazzari,Laz,2
+2025/26,8,D,Akanji,Int,34
+2025/26,8,D,Parisi,Fio,1
+2025/26,8,D,Carlos Augusto,Int,15
+2025/26,8,D,Athekame,Mil,9
+2025/26,8,D,Siebert,Lec,2
+2025/26,8,D,Bella-Kotchap,Ver,5
+2025/26,8,C,Gaetano,Cag,10
+2025/26,8,C,Fofana Y.,Mil,9
+2025/26,8,C,Brescianini,Fio,2
+2025/26,8,C,Samardzic,Ata,27
+2025/26,8,C,Pobega,Bol,1
+2025/26,8,C,Bondo,Cre,2
+2025/26,8,C,Fazzini,Fio,16
+2025/26,8,C,Prati,Tor,4
+2025/26,8,A,Dybala,Rom,80
+2025/26,8,A,Bonazzoli,Cre,1
+2025/26,8,A,Vlahovic,Juv,34
+2025/26,8,A,Bonny,Int,15
+2025/26,8,A,Bowie,Ver,40
+2025/26,9,P,Audero,Cre,1
+2025/26,9,P,Silvestri,Cre,1
+2025/26,9,P,Nava,Cre,1
+2025/26,9,D,Bianchetti,Cre,16
+2025/26,9,D,Kabasele,Udi,1
+2025/26,9,D,Lazaro,Tor,23
+2025/26,9,D,Hermoso,Rom,37
+2025/26,9,D,Kamara H.,Udi,22
+2025/26,9,D,Holm,Juv,25
+2025/26,9,D,Kempf,Com,24
+2025/26,9,D,Veiga D.,Lec,17
+2025/26,9,C,Pellegrini Lo.,Rom,1
+2025/26,9,C,Orsolini,Bol,73
+2025/26,9,C,Sottil,Lec,10
+2025/26,9,C,Frattesi,Int,17
+2025/26,9,C,Gaetano,Cag,1
+2025/26,9,C,Gilmour,Nap,1
+2025/26,9,C,Adzic,Juv,1
+2025/26,9,C,Gandelman,Lec,48
+2025/26,9,A,Simeone,Tor,27
+2025/26,9,A,Thuram,Int,140
+2025/26,9,A,Cancellieri,Laz,2
+2025/26,9,A,Davis K.,Udi,26
+2025/26,9,,,,
+2025/26,10,P,Audero,Cre,1
+2025/26,10,P,Silvestri,Cre,1
+2025/26,10,P,Nava,Cre,1
+2025/26,10,D,Cuadrado,Pis,16
+2025/26,10,D,Celik,Rom,1
+2025/26,10,D,Maripan,Tor,16
+2025/26,10,D,Valentini N.,Ver,11
+2025/26,10,D,Britschgi,Par,1
+2025/26,10,D,Zè Pedro,Cag,12
+2025/26,10,D,Bozhinov,Pis,9
+2025/26,10,D,Obrador,Tor,26
+2025/26,10,C,Calhanoglu,Int,46
+2025/26,10,C,De Bruyne,Nap,17
+2025/26,10,C,Sottil,Lec,7
+2025/26,10,C,Maleh,Cre,4
+2025/26,10,C,Harroui,Ver,1
+2025/26,10,C,Gudmundsson A.,Fio,115
+2025/26,10,C,Collocolo,Cre,4
+2025/26,10,C,Vergara,Nap,86
+2025/26,10,A,Cambiaghi,Bol,16
+2025/26,10,A,Laurientè,Sas,60
+2025/26,10,A,Diao,Com,59
+2025/26,10,A,Elphege,Par,5
+2025/26,10,,,,
+2025/26,11,P,Lezzerini,Fio,84
+2025/26,11,P,De Gea,Fio,1
+2025/26,11,P,Christensen O.,Fio,1
+2025/26,11,D,Caracciolo A.,Pis,9
+2025/26,11,D,Lazaro,Tor,17
+2025/26,11,D,Zappa,Cag,19
+2025/26,11,D,Doig,Sas,17
+2025/26,11,D,Ebosse,Tor,3
+2025/26,11,D,Delprato,Par,25
+2025/26,11,D,Tiago Gabriel,Lec,8
+2025/26,11,D,Pedro Felipe,Sas,2
+2025/26,11,C,Deiola,Cag,1
+2025/26,11,C,Matic,Sas,32
+2025/26,11,C,Nicolussi Caviglia,Par,34
+2025/26,11,C,Kostic,Juv,1
+2025/26,11,C,McTominay,Nap,76
+2025/26,11,C,Tramoni M.,Pis,29
+2025/26,11,C,Miretti,Juv,1
+2025/26,11,C,Piotrowski,Udi,5
+2025/26,11,A,Pinamonti,Sas,80
+2025/26,11,A,Dia,Laz,43
+2025/26,11,A,Dominguez B.,Bol,27
+2025/26,11,A,Gimenez,Mil,27
+2025/26,11,A,Kilicsoy,Cag,23
+2025/26,12,P,Perilli,Ver,1
+2025/26,12,P,Montipò,Ver,1
+2025/26,12,P,Toniolo,Ver,1
+2025/26,12,D,Vojvoda,Com,26
+2025/26,12,D,Tavares N.,Laz,40
+2025/26,12,D,Holm,Juv,1
+2025/26,12,D,Valeri,Par,34
+2025/26,12,D,Ahanor,Ata,2
+2025/26,12,D,Perez M.,Lec,1
+2025/26,12,D,Wesley,Rom,45
+2025/26,12,D,Ndiaye,Par,1
+2025/26,12,C,Sohm,Bol,19
+2025/26,12,C,Da Cunha,Com,24
+2025/26,12,C,Thorstvedt,Sas,15
+2025/26,12,C,Conceicao,Juv,51
+2025/26,12,C,Atta,Udi,38
+2025/26,12,C,Marin M.,Pis,1
+2025/26,12,C,Vural,Pis,1
+2025/26,12,C,Ngom,Lec,2
+2025/26,12,A,Piccoli,Fio,76
+2025/26,12,A,Nkunku,Mil,129
+2025/26,12,A,Rodriguez Je.,Com,16
+2025/26,12,A,Frigan,Par,1
+2025/26,12,,,,
+2025/26,13,P,Skorupski,Bol,1
+2025/26,13,P,Ravaglia F.,Bol,90
+2025/26,13,P,Pessina Mas.,Bol,1
+2025/26,13,D,Zortea,Bol,31
+2025/26,13,D,Kossounou,Ata,18
+2025/26,13,D,Garcia U.,Sas,14
+2025/26,13,D,Coco,Tor,14
+2025/26,13,D,Veiga D.,Lec,2
+2025/26,13,D,Idrissi R.,Cag,7
+2025/26,13,D,Angori,Pis,22
+2025/26,13,D,Edmundsson,Ver,3
+2025/26,13,C,Bernardeschi,Bol,1
+2025/26,13,C,Modric,Mil,27
+2025/26,13,C,Messias,Gen,1
+2025/26,13,C,Akpa Akpro,Ver,1
+2025/26,13,C,Fabbian,Fio,6
+2025/26,13,C,Adzic,Juv,1
+2025/26,13,C,Sucic P.,Int,13
+2025/26,13,C,Taylor K.,Laz,77
+2025/26,13,A,Zapata D.,Tor,65
+2025/26,13,A,Scamacca,Ata,88
+2025/26,13,A,Boga,Juv,37
+2025/26,13,A,Banda,Lec,1
+2025/26,13,A,Cheddira,Lec,19
+2025/26,14,P,Vigorito,Com,1
+2025/26,14,P,Butez,Com,54
+2025/26,14,P,Cavlina,Com,1
+2025/26,14,D,Acerbi,Int,1
+2025/26,14,D,Djimsiti,Ata,11
+2025/26,14,D,Martin,Gen,38
+2025/26,14,D,Mazzocchi,Nap,1
+2025/26,14,D,Gaspar K.,Lec,17
+2025/26,14,D,Marcandalli,Gen,1
+2025/26,14,D,Kelly L.,Juv,6
+2025/26,14,D,Fortini,Fio,6
+2025/26,14,C,Barella,Int,40
+2025/26,14,C,Strefezza,Par,65
+2025/26,14,C,McKennie,Juv,3
+2025/26,14,C,Konè M.,Rom,35
+2025/26,14,C,Ilkhan,Tor,1
+2025/26,14,C,Tourè I.,Pis,9
+2025/26,14,C,Loyola,Pis,4
+2025/26,14,C,Przyborek,Laz,2
+2025/26,14,A,Pavoletti,Cag,1
+2025/26,14,A,Leao,Mil,128
+2025/26,14,A,Ferguson E.,Rom,27
+2025/26,14,A,Stulic,Lec,83
+2025/26,14,A,Arena A.,Rom,1
+2025/26,15,P,Leali,Gen,1
+2025/26,15,P,Sommariva,Gen,49
+2025/26,15,P,Bijlow,Gen,1
+2025/26,15,D,Pezzella Giu.,Cre,10
+2025/26,15,D,Gosens,Fio,50
+2025/26,15,D,Cambiaso,Juv,41
+2025/26,15,D,Barbieri,Cre,4
+2025/26,15,D,Kristensen T.,Udi,5
+2025/26,15,D,Rensch,Rom,1
+2025/26,15,D,Slotsager,Ver,1
+2025/26,15,D,Nelsson,Ver,3
+2025/26,15,C,Pellegrini Lo.,Rom,1
+2025/26,15,C,El Aynaoui,Rom,18
+2025/26,15,C,Suslov,Ver,1
+2025/26,15,C,Zaragoza,Rom,50
+2025/26,15,C,Karlstrom,Udi,10
+2025/26,15,C,Ondrejka,Par,6
+2025/26,15,C,Sorensen O.,Par,5
+2025/26,15,C,Amorim,Gen,12
+2025/26,15,A,Orban G.,Ver,72
+2025/26,15,A,Moumbagna,Cre,1
+2025/26,15,A,Vaz,Rom,34
+2025/26,15,A,Giovane,Nap,29
+2025/26,15,A,Buksa,Udi,25
+2025/26,16,P,Caprile,Cag,49
+2025/26,16,P,Ciocci,Cag,1
+2025/26,16,P,Sherri,Cag,1
+2025/26,16,D,Darmian,Int,15
+2025/26,16,D,Hermoso,Rom,1
+2025/26,16,D,Dumfries,Int,54
+2025/26,16,D,Scalvini,Ata,17
+2025/26,16,D,Bradaric,Ver,2
+2025/26,16,D,Kamara H.,Udi,1
+2025/26,16,D,Norton-Cuffy,Gen,18
+2025/26,16,D,Ramon,Com,16
+2025/26,16,C,Freuler,Bol,13
+2025/26,16,C,Frattesi,Int,16
+2025/26,16,C,Aebischer,Pis,8
+2025/26,16,C,Ndour,Fio,1
+2025/26,16,C,Pierotti,Lec,15
+2025/26,16,C,Akinsanmiro,Pis,2
+2025/26,16,C,Rowe,Bol,67
+2025/26,16,C,Lahdo,Com,11
+2025/26,16,A,Simeone,Tor,43
+2025/26,16,A,Kean,Fio,179
+2025/26,16,A,Vitinha O.,Gen,10
+2025/26,16,A,Esposito F.P.,Int,8
+2025/26,16,A,Gueye,Udi,1
+2025/26,17,P,Rinaldi,Par,1
+2025/26,17,P,Suzuki,Par,1
+2025/26,17,P,Corvi,Par,20
+2025/26,17,D,Lykogiannis,Bol,1
+2025/26,17,D,Kabasele,Udi,10
+2025/26,17,D,Gabbia,Mil,11
+2025/26,17,D,De Winter,Mil,16
+2025/26,17,D,Ostigard,Gen,18
+2025/26,17,D,Zemura,Udi,11
+2025/26,17,D,Smolcic I.,Com,24
+2025/26,17,D,Canestrelli,Pis,15
+2025/26,17,C,De Roon,Ata,15
+2025/26,17,C,Mazzitelli,Cag,1
+2025/26,17,C,Pulisic,Mil,100
+2025/26,17,C,Rovella,Laz,17
+2025/26,17,C,Coulibaly L.,Lec,1
+2025/26,17,C,Gineitis,Tor,1
+2025/26,17,C,Vandeputte,Cre,20
+2025/26,17,C,Ordonez C.,Par,1
+2025/26,17,A,Thuram,Int,169
+2025/26,17,A,Solomon,Fio,38
+2025/26,17,A,Mosquera,Ver,6
+2025/26,17,A,Douvikas,Com,14
+2025/26,17,A,Isaac,Ver,7
+2025/26,18,P,Padelli,Udi,26
+2025/26,18,P,Okoye,Udi,1
+2025/26,18,P,Sava,Udi,1
+2025/26,18,D,De Vrij,Int,2
+2025/26,18,D,Romagnoli,Laz,31
+2025/26,18,D,N'Dicka,Rom,19
+2025/26,18,D,Tomori,Mil,33
+2025/26,18,D,Comuzzo,Fio,17
+2025/26,18,D,Ghilardi,Rom,10
+2025/26,18,D,Frese,Ver,15
+2025/26,18,D,Provstgaard,Laz,8
+2025/26,18,C,Pasalic,Ata,10
+2025/26,18,C,Odgaard,Bol,55
+2025/26,18,C,Thorsby,Cre,1
+2025/26,18,C,Vlasic,Tor,38
+2025/26,18,C,Volpato,Sas,1
+2025/26,18,C,Folorunsho,Cag,21
+2025/26,18,C,Fadera,Sas,1
+2025/26,18,C,Masini,Gen,10
+2025/26,18,A,Berardi,Sas,105
+2025/26,18,A,Colombo,Gen,49
+2025/26,18,A,Camarda,Lec,1
+2025/26,18,A,Albarracin,Cag,5
+2025/26,18,,,,
+2025/26,19,P,Sportiello,Ata,1
+2025/26,19,P,Rossi F.,Ata,1
+2025/26,19,P,Carnesecchi,Ata,70
+2025/26,19,D,Kolasinac,Ata,9
+2025/26,19,D,Vojvoda,Com,28
+2025/26,19,D,Gutierrez,Nap,22
+2025/26,19,D,Vasquez,Gen,14
+2025/26,19,D,Barbieri,Cre,16
+2025/26,19,D,Beukema,Nap,14
+2025/26,19,D,Dossena,Cag,2
+2025/26,19,D,Ghilardi,Rom,19
+2025/26,19,C,Nicolussi Caviglia,Par,15
+2025/26,19,C,Caqueret,Com,12
+2025/26,19,C,Akpa Akpro,Ver,1
+2025/26,19,C,Zalewski,Ata,7
+2025/26,19,C,Gudmundsson A.,Fio,70
+2025/26,19,C,Lipani,Sas,5
+2025/26,19,C,Zaragoza,Rom,56
+2025/26,19,C,Bernabè,Par,18
+2025/26,19,A,Sanabria,Cre,3
+2025/26,19,A,Vlahovic,Juv,47
+2025/26,19,A,Nkunku,Mil,63
+2025/26,19,A,Bonny,Int,28
+2025/26,19,,,,
+2025/26,20,P,Di Gennaro,Int,1
+2025/26,20,P,Sommer,Int,85
+2025/26,20,P,Martinez Jo.,Int,1
+2025/26,20,D,Darmian,Int,1
+2025/26,20,D,N'Dicka,Rom,1
+2025/26,20,D,Tomori,Mil,25
+2025/26,20,D,Bisseck,Int,27
+2025/26,20,D,Pedersen,Tor,3
+2025/26,20,D,Kristensen T.,Udi,3
+2025/26,20,D,Coppola F.,Pis,1
+2025/26,20,D,Bernasconi,Ata,1
+2025/26,20,C,Rabiot,Mil,65
+2025/26,20,C,Estevez,Par,6
+2025/26,20,C,Sohm,Bol,10
+2025/26,20,C,Basic,Laz,1
+2025/26,20,C,Fazzini,Fio,1
+2025/26,20,C,Konè I.,Sas,5
+2025/26,20,C,Rowe,Bol,54
+2025/26,20,C,Taylor K.,Laz,70
+2025/26,20,A,Belotti,Cag,1
+2025/26,20,A,De Ketelaere,Ata,59
+2025/26,20,A,Solomon,Fio,57
+2025/26,20,A,Castro S.,Bol,31
+2025/26,20,A,Esposito F.P.,Int,3
+2025/26,21,P,Paleari,Tor,1
+2025/26,21,P,Israel,Tor,1
+2025/26,21,P,Siviero,Tor,51
+2025/26,21,D,Juan Jesus,Nap,3
+2025/26,21,D,Bellanova,Ata,56
+2025/26,21,D,Nkounkou,Tor,2
+2025/26,21,D,Bertola,Udi,10
+2025/26,21,D,Dodò,Fio,44
+2025/26,21,D,Ziolkowski,Rom,8
+2025/26,21,D,Rodriguez Ju.,Cag,2
+2025/26,21,D,Mlacic,Udi,3
+2025/26,21,C,Zaccagni,Laz,100
+2025/26,21,C,Zaniolo,Udi,53
+2025/26,21,C,Zalewski,Ata,3
+2025/26,21,C,Zhegrova,Juv,14
+2025/26,21,C,Ekkelenkamp,Udi,13
+2025/26,21,C,Venturino,Rom,6
+2025/26,21,C,Piccinini G.,Pis,2
+2025/26,21,C,Santos A.,Nap,26
+2025/26,21,A,Fullkrug,Mil,82
+2025/26,21,A,De Ketelaere,Ata,80
+2025/26,21,A,Ekhator,Gen,3
+2025/26,21,A,Ratkov,Laz,68
+2025/26,21,A,Trepy,Cag,9
+2025/26,22,P,Meret,Nap,1
+2025/26,22,P,Milinkovic-Savic V.,Nap,1
+2025/26,22,P,Contini,Nap,106
+2025/26,22,D,Zappacosta,Ata,27
+2025/26,22,D,Estupinan,Mil,31
+2025/26,22,D,Moreno Alb.,Com,4
+2025/26,22,D,Casale,Bol,2
+2025/26,22,D,Olivera,Nap,20
+2025/26,22,D,Otoa,Gen,6
+2025/26,22,D,Muharemovic,Sas,20
+2025/26,22,D,Zatterstrom,Gen,1
+2025/26,22,C,Politano,Nap,50
+2025/26,22,C,Cristante,Rom,6
+2025/26,22,C,Lobotka,Nap,15
+2025/26,22,C,Tameze,Tor,1
+2025/26,22,C,Koopmeiners,Juv,34
+2025/26,22,C,Baldanzi,Gen,4
+2025/26,22,C,Sulemana I.,Cag,2
+2025/26,22,C,Iling Junior,Pis,33
+2025/26,22,A,Pedro,Laz,7
+2025/26,22,A,Djuric,Cre,1
+2025/26,22,A,Openda,Juv,61
+2025/26,22,A,Castro S.,Bol,43
+2025/26,22,A,Dovbyk,Rom,12
+2025/26,23,P,Terracciano,Mil,102
+2025/26,23,P,Maignan,Mil,1
+2025/26,23,P,Torriani,Mil,1
+2025/26,23,D,Sabelli,Gen,1
+2025/26,23,D,Angelino,Rom,40
+2025/26,23,D,Obert,Cag,4
+2025/26,23,D,Lucumì,Bol,12
+2025/26,23,D,Circati,Par,11
+2025/26,23,D,Coulibaly W.,Sas,1
+2025/26,23,D,Valle,Com,18
+2025/26,23,D,Belghali,Ver,6
+2025/26,23,C,Adopo,Cag,10
+2025/26,23,C,Stengs,Pis,3
+2025/26,23,C,Casadei,Tor,20
+2025/26,23,C,Ellertsson,Gen,1
+2025/26,23,C,Pisilli,Rom,31
+2025/26,23,C,Oristanio,Par,56
+2025/26,23,C,Lipani,Sas,3
+2025/26,23,C,Gandelman,Lec,28
+2025/26,23,A,Esposito Se.,Cag,77
+2025/26,23,A,Sarr A.,Ver,31
+2025/26,23,A,Dallinga,Bol,23
+2025/26,23,A,Meister,Pis,1
+2025/26,23,A,Kuhn,Com,13
+2025/26,24,P,Terracciano,Mil,92
+2025/26,24,P,Maignan,Mil,1
+2025/26,24,P,Torriani,Mil,1
+2025/26,24,D,Martin,Gen,37
+2025/26,24,D,Buongiorno,Nap,55
+2025/26,24,D,Cambiaso,Juv,31
+2025/26,24,D,Gatti,Juv,23
+2025/26,24,D,Coulibaly W.,Sas,4
+2025/26,24,D,Kelly L.,Juv,1
+2025/26,24,D,Tiago Gabriel,Lec,16
+2025/26,24,D,Arizala,Udi,1
+2025/26,24,C,Politano,Nap,39
+2025/26,24,C,Volpato,Sas,1
+2025/26,24,C,Iling Junior,Pis,48
+2025/26,24,C,Perrone,Com,8
+2025/26,24,C,Dele-Bashiru,Laz,2
+2025/26,24,C,Conceicao,Juv,60
+2025/26,24,C,Venturino,Rom,4
+2025/26,24,C,Piotrowski,Udi,3
+2025/26,24,A,Dybala,Rom,48
+2025/26,24,A,Vardy,Cre,62
+2025/26,24,A,Moreo,Pis,1
+2025/26,24,A,Noslin,Laz,1
+2025/26,24,A,Njie,Tor,1
+2025/26,25,P,Terracciano,Mil,1
+2025/26,25,P,Maignan,Mil,118
+2025/26,25,P,Torriani,Mil,1
+2025/26,25,D,Spinazzola,Nap,9
+2025/26,25,D,Darmian,Int,8
+2025/26,25,D,Lykogiannis,Bol,4
+2025/26,25,D,Kalulu,Juv,40
+2025/26,25,D,Parisi,Fio,8
+2025/26,25,D,De Winter,Mil,13
+2025/26,25,D,Olivera,Nap,31
+2025/26,25,D,Palestra,Cag,36
+2025/26,25,C,De Roon,Ata,21
+2025/26,25,C,Zambo Anguissa,Nap,25
+2025/26,25,C,McKennie,Juv,1
+2025/26,25,C,Ellertsson,Gen,13
+2025/26,25,C,Konè I.,Sas,8
+2025/26,25,C,Baturina,Com,27
+2025/26,25,C,Tourè I.,Pis,1
+2025/26,25,C,Hojholt,Pis,3
+2025/26,25,A,Pinamonti,Sas,75
+2025/26,25,A,Nzola,Sas,41
+2025/26,25,A,Sulemana K.,Ata,8
+2025/26,25,A,Mosquera,Ver,22
+2025/26,25,A,Dominguez B.,Bol,16
+2025/26,26,P,Leali,Gen,47
+2025/26,26,P,Sommariva,Gen,1
+2025/26,26,P,Bijlow,Gen,1
+2025/26,26,D,Caracciolo A.,Pis,3
+2025/26,26,D,Maripan,Tor,31
+2025/26,26,D,Estupinan,Mil,6
+2025/26,26,D,Pongracic,Fio,8
+2025/26,26,D,Ostigard,Gen,28
+2025/26,26,D,Delprato,Par,30
+2025/26,26,D,Smolcic I.,Com,1
+2025/26,26,D,Athekame,Mil,7
+2025/26,26,C,Mazzitelli,Cag,1
+2025/26,26,C,Odgaard,Bol,58
+2025/26,26,C,Lobotka,Nap,13
+2025/26,26,C,Ilkhan,Tor,6
+2025/26,26,C,Isaksen,Laz,44
+2025/26,26,C,Fadera,Sas,20
+2025/26,26,C,Miller L.,Udi,2
+2025/26,26,C,Przyborek,Laz,2
+2025/26,26,A,Djuric,Cre,1
+2025/26,26,A,Soulè,Rom,101
+2025/26,26,A,Yildiz,Juv,99
+2025/26,26,A,Cheddira,Lec,15
+2025/26,26,A,Albarracin,Cag,1
+2025/26,27,P,Caprile,Cag,1
+2025/26,27,P,Ciocci,Cag,34
+2025/26,27,P,Sherri,Cag,1
+2025/26,27,D,Dimarco,Int,50
+2025/26,27,D,Patric,Laz,2
+2025/26,27,D,Pavlovic,Mil,25
+2025/26,27,D,Bradaric,Ver,1
+2025/26,27,D,Marcandalli,Gen,1
+2025/26,27,D,Kelly L.,Juv,3
+2025/26,27,D,Bernasconi,Ata,2
+2025/26,27,D,Troilo,Par,1
+2025/26,27,C,Cristante,Rom,5
+2025/26,27,C,Mazzitelli,Cag,1
+2025/26,27,C,McTominay,Nap,84
+2025/26,27,C,Messias,Gen,1
+2025/26,27,C,Maleh,Cre,15
+2025/26,27,C,Gudmundsson A.,Fio,88
+2025/26,27,C,Fabbian,Fio,2
+2025/26,27,C,Collocolo,Cre,11
+2025/26,27,A,Bonazzoli,Cre,2
+2025/26,27,A,Fullkrug,Mil,108
+2025/26,27,A,Nzola,Sas,31
+2025/26,27,A,Sulemana K.,Ata,17
+2025/26,27,A,Albarracin,Cag,1
+2025/26,28,P,Sportiello,Ata,1
+2025/26,28,P,Rossi F.,Ata,1
+2025/26,28,P,Carnesecchi,Ata,97
+2025/26,28,D,N'Dicka,Rom,19
+2025/26,28,D,Cabal,Juv,5
+2025/26,28,D,Kelly L.,Juv,3
+2025/26,28,D,Kempf,Com,6
+2025/26,28,D,Ahanor,Ata,6
+2025/26,28,D,Tiago Gabriel,Lec,6
+2025/26,28,D,Angori,Pis,15
+2025/26,28,D,Troilo,Par,12
+2025/26,28,C,Bernardeschi,Bol,14
+2025/26,28,C,Cristante,Rom,15
+2025/26,28,C,Adopo,Cag,11
+2025/26,28,C,Sulemana I.,Cag,4
+2025/26,28,C,Akinsanmiro,Pis,4
+2025/26,28,C,Paz N.,Com,89
+2025/26,28,C,Bakola,Sas,1
+2025/26,28,C,Santos A.,Nap,26
+2025/26,28,A,Openda,Juv,15
+2025/26,28,A,Yildiz,Juv,128
+2025/26,28,A,Ekhator,Gen,1
+2025/26,28,A,Vaz,Rom,2
+2025/26,28,A,Kilicsoy,Cag,15
+2025/26,29,P,Satalino,Sas,1
+2025/26,29,P,Muric,Sas,28
+2025/26,29,P,Turati,Sas,1
+2025/26,29,D,Zappacosta,Ata,30
+2025/26,29,D,Spinazzola,Nap,18
+2025/26,29,D,Pellegrini Lu.,Laz,15
+2025/26,29,D,Bradaric,Ver,4
+2025/26,29,D,Terracciano F.,Cre,11
+2025/26,29,D,Olivera,Nap,18
+2025/26,29,D,Norton-Cuffy,Gen,20
+2025/26,29,D,Faye,Cre,1
+2025/26,29,C,Cristante,Rom,13
+2025/26,29,C,Samardzic,Ata,13
+2025/26,29,C,Da Cunha,Com,23
+2025/26,29,C,Zhegrova,Juv,53
+2025/26,29,C,Aebischer,Pis,11
+2025/26,29,C,Ederson D.S.,Ata,30
+2025/26,29,C,Suslov,Ver,6
+2025/26,29,C,Atta,Udi,30
+2025/26,29,A,Malen,Rom,162
+2025/26,29,A,Vitinha O.,Gen,5
+2025/26,29,A,Mosquera,Ver,5
+2025/26,29,A,Dovbyk,Rom,1
+2025/26,29,A,Gimenez,Mil,37
+2025/26,30,P,Audero,Cre,1
+2025/26,30,P,Silvestri,Cre,1
+2025/26,30,P,Nava,Cre,1
+2025/26,30,D,Dimarco,Int,66
+2025/26,30,D,Tomori,Mil,38
+2025/26,30,D,Kamara H.,Udi,3
+2025/26,30,D,Kossounou,Ata,24
+2025/26,30,D,Bertola,Udi,8
+2025/26,30,D,Baschirotto,Cre,10
+2025/26,30,D,Athekame,Mil,1
+2025/26,30,D,Bozhinov,Pis,13
+2025/26,30,C,Matic,Sas,7
+2025/26,30,C,McTominay,Nap,89
+2025/26,30,C,Maldini,Laz,25
+2025/26,30,C,Musah,Ata,1
+2025/26,30,C,Ederson D.S.,Ata,33
+2025/26,30,C,Thorstvedt,Sas,24
+2025/26,30,C,Zerbin,Cre,7
+2025/26,30,C,Fazzini,Fio,3
+2025/26,30,A,Scamacca,Ata,45
+2025/26,30,A,Leao,Mil,112
+2025/26,30,A,Colombo,Gen,65
+2025/26,30,A,Openda,Juv,15
+2025/26,30,,,,
+2025/26,31,,,,
+2025/26,31,,,,
+2025/26,31,,,,
+2025/26,31,,,,
+2025/26,31,,,,
+2025/26,31,,,,
+2025/26,31,,,,
+2025/26,31,,,,
+2025/26,31,,,,
+2025/26,31,,,,
+2025/26,31,,,,
+2025/26,31,,,,
+2025/26,31,,,,
+2025/26,31,,,,
+2025/26,31,,,,
+2025/26,31,,,,
+2025/26,31,,,,
+2025/26,31,,,,
+2025/26,31,,,,
+2025/26,31,,,,
+2025/26,31,,,,
+2025/26,31,,,,
+2025/26,31,,,,
+2025/26,31,,,,
+2025/26,32,P,Paleari,Tor,1
+2025/26,32,P,Israel,Tor,1
+2025/26,32,P,Siviero,Tor,54
+2025/26,32,D,De Vrij,Int,21
+2025/26,32,D,Bremer,Juv,52
+2025/26,32,D,Tsimikas,Rom,5
+2025/26,32,D,Scalvini,Ata,10
+2025/26,32,D,Bertola,Udi,7
+2025/26,32,D,Baschirotto,Cre,21
+2025/26,32,D,Nelsson,Ver,6
+2025/26,32,D,Folino,Cre,1
+2025/26,32,C,De Bruyne,Nap,78
+2025/26,32,C,Matic,Sas,2
+2025/26,32,C,Zaniolo,Udi,36
+2025/26,32,C,Sulemana I.,Cag,3
+2025/26,32,C,Pisilli,Rom,2
+2025/26,32,C,Ordonez C.,Par,4
+2025/26,32,C,Jashari,Mil,22
+2025/26,32,C,Santos A.,Nap,22
+2025/26,32,A,Martinez L.,Int,183
+2025/26,32,A,Cambiaghi,Bol,3
+2025/26,32,A,Ekuban,Gen,10
+2025/26,32,A,Balentien,Mil,1
+2025/26,32,A,Kulenovic,Tor,5
+2025/26,33,P,Provedel,Laz,75
+2025/26,33,P,Furlanetto,Laz,1
+2025/26,33,P,Motta,Laz,1
+2025/26,33,D,Walukiewicz,Sas,14
+2025/26,33,D,Celik,Rom,13
+2025/26,33,D,Bellanova,Ata,57
+2025/26,33,D,Ehizibue,Udi,29
+2025/26,33,D,Zemura,Udi,12
+2025/26,33,D,Van Der Brempt,Com,9
+2025/26,33,D,Provstgaard,Laz,17
+2025/26,33,D,Canestrelli,Pis,19
+2025/26,33,C,Harroui,Ver,6
+2025/26,33,C,Frendrup,Gen,21
+2025/26,33,C,Bondo,Cre,2
+2025/26,33,C,Zerbin,Cre,7
+2025/26,33,C,Belahyane,Laz,2
+2025/26,33,C,Piccinini G.,Pis,4
+2025/26,33,C,Tourè I.,Pis,22
+2025/26,33,C,Hojholt,Pis,1
+2025/26,33,A,Esposito Se.,Cag,49
+2025/26,33,A,Nzola,Sas,62
+2025/26,33,A,Laurientè,Sas,45
+2025/26,33,A,Vaz,Rom,38
+2025/26,33,A,Elphege,Par,3
+2025/26,34,P,Rinaldi,Par,1
+2025/26,34,P,Suzuki,Par,1
+2025/26,34,P,Corvi,Par,29
+2025/26,34,D,Juan Jesus,Nap,1
+2025/26,34,D,Patric,Laz,2
+2025/26,34,D,Mancini,Rom,27
+2025/26,34,D,Moreno Alb.,Com,5
+2025/26,34,D,Garcia U.,Sas,2
+2025/26,34,D,Circati,Par,13
+2025/26,34,D,Belghali,Ver,1
+2025/26,34,D,Edmundsson,Ver,2
+2025/26,34,C,Strefezza,Par,71
+2025/26,34,C,Maldini,Laz,15
+2025/26,34,C,Messias,Gen,10
+2025/26,34,C,Niasse,Ver,1
+2025/26,34,C,Ramadani,Lec,9
+2025/26,34,C,Sucic P.,Int,19
+2025/26,34,C,Marin M.,Pis,13
+2025/26,34,C,Sorensen O.,Par,4
+2025/26,34,A,Raspadori,Ata,126
+2025/26,34,A,Okereke,Cre,8
+2025/26,34,A,Trepy,Cag,1
+2025/26,34,A,Stojilkovic,Pis,19
+2025/26,34,A,Bowie,Ver,13
+2025/26,35,P,Padelli,Udi,1
+2025/26,35,P,Okoye,Udi,51
+2025/26,35,P,Sava,Udi,1
+2025/26,35,D,Sabelli,Gen,11
+2025/26,35,D,Gosens,Fio,27
+2025/26,35,D,Marusic,Laz,22
+2025/26,35,D,Valenti,Par,23
+2025/26,35,D,Parisi,Fio,1
+2025/26,35,D,Lucumì,Bol,20
+2025/26,35,D,Frese,Ver,11
+2025/26,35,D,Solet,Udi,26
+2025/26,35,C,De Roon,Ata,24
+2025/26,35,C,Zaccagni,Laz,89
+2025/26,35,C,Mandragora,Fio,17
+2025/26,35,C,Kostic,Juv,1
+2025/26,35,C,McKennie,Juv,1
+2025/26,35,C,Ellertsson,Gen,1
+2025/26,35,C,Folorunsho,Cag,31
+2025/26,35,C,Al-Musrati,Ver,1
+2025/26,35,A,Zapata D.,Tor,72
+2025/26,35,A,Colombo,Gen,51
+2025/26,35,A,Orban G.,Ver,51
+2025/26,35,A,Ekhator,Gen,1
+2025/26,35,A,Dominguez B.,Bol,11
+2025/26,36,P,Skorupski,Bol,1
+2025/26,36,P,Ravaglia F.,Bol,64
+2025/26,36,P,Pessina Mas.,Bol,1
+2025/26,36,D,Ceccherini,Cre,4
+2025/26,36,D,Zortea,Bol,42
+2025/26,36,D,Ismajli,Tor,17
+2025/26,36,D,Carlos Augusto,Int,22
+2025/26,36,D,Hien,Ata,21
+2025/26,36,D,Rensch,Rom,2
+2025/26,36,D,Oyegoke,Ver,2
+2025/26,36,D,Bella-Kotchap,Ver,23
+2025/26,36,C,Freuler,Bol,21
+2025/26,36,C,El Shaarawy,Rom,9
+2025/26,36,C,Deiola,Cag,2
+2025/26,36,C,Pulisic,Mil,88
+2025/26,36,C,Brescianini,Fio,5
+2025/26,36,C,Moro N.,Bol,1
+2025/26,36,C,Prati,Tor,10
+2025/26,36,C,Bakola,Sas,5
+2025/26,36,A,Milik,Juv,3
+2025/26,36,A,Lukaku,Nap,35
+2025/26,36,A,Sulemana K.,Ata,17
+2025/26,36,A,Diao,Com,63
+2025/26,36,A,Kuhn,Com,32
+2025/26,37,P,Falcone,Lec,1
+2025/26,37,P,Fruchtl,Lec,13
+2025/26,37,P,Samooja,Lec,1
+2025/26,37,D,Pezzella Giu.,Cre,20
+2025/26,37,D,Djimsiti,Ata,18
+2025/26,37,D,Mina,Cag,26
+2025/26,37,D,Tavares N.,Laz,39
+2025/26,37,D,De Winter,Mil,7
+2025/26,37,D,Valeri,Par,36
+2025/26,37,D,Comuzzo,Fio,7
+2025/26,37,D,Marianucci,Tor,1
+2025/26,37,C,Barella,Int,47
+2025/26,37,C,Elmas,Nap,14
+2025/26,37,C,Maleh,Cre,20
+2025/26,37,C,Thorstvedt,Sas,27
+2025/26,37,C,Ferguson,Bol,16
+2025/26,37,C,Anjorin,Tor,18
+2025/26,37,C,Vergara,Nap,58
+2025/26,37,C,Amorim,Gen,13
+2025/26,37,A,Boga,Juv,18
+2025/26,37,A,Ferguson E.,Rom,20
+2025/26,37,A,Krstovic,Ata,71
+2025/26,37,A,Douvikas,Com,4
+2025/26,37,A,Stulic,Lec,52
+2025/26,38,P,Perin,Juv,95
+2025/26,38,P,Pinsoglio,Juv,1
+2025/26,38,P,Di Gregorio,Juv,1
+2025/26,38,D,Lykogiannis,Bol,6
+2025/26,38,D,Calabresi,Pis,20
+2025/26,38,D,Miranda J.,Bol,48
+2025/26,38,D,Gila,Laz,2
+2025/26,38,D,Doig,Sas,19
+2025/26,38,D,Dodò,Fio,53
+2025/26,38,D,Marcandalli,Gen,1
+2025/26,38,D,Britschgi,Par,5
+2025/26,38,C,Grassi,Cre,1
+2025/26,38,C,Gagliardini,Ver,1
+2025/26,38,C,Pasalic,Ata,20
+2025/26,38,C,Fofana Y.,Mil,8
+2025/26,38,C,Pobega,Bol,3
+2025/26,38,C,Vlasic,Tor,37
+2025/26,38,C,Pierotti,Lec,26
+2025/26,38,C,Ondrejka,Par,15
+2025/26,38,A,Berardi,Sas,88
+2025/26,38,A,Pedro,Laz,17
+2025/26,38,A,Piccoli,Fio,45
+2025/26,38,A,Banda,Lec,1
+2025/26,38,,,,
+2025/26,39,P,Lezzerini,Fio,1
+2025/26,39,P,De Gea,Fio,72
+2025/26,39,P,Christensen O.,Fio,1
+2025/26,39,D,Albiol,Pis,4
+2025/26,39,D,Luperto,Cre,22
+2025/26,39,D,Romagnoli,Laz,30
+2025/26,39,D,Cuadrado,Pis,1
+2025/26,39,D,Di Lorenzo,Nap,40
+2025/26,39,D,Gabbia,Mil,27
+2025/26,39,D,Floriani Mussolini,Cre,10
+2025/26,39,D,Obrador,Tor,21
+2025/26,39,C,Adopo,Cag,12
+2025/26,39,C,Thuram K.,Juv,50
+2025/26,39,C,Gineitis,Tor,6
+2025/26,39,C,Oristanio,Par,30
+2025/26,39,C,El Aynaoui,Rom,12
+2025/26,39,C,Payero,Cre,1
+2025/26,39,C,Baturina,Com,31
+2025/26,39,C,Vandeputte,Cre,30
+2025/26,39,A,Scamacca,Ata,93
+2025/26,39,A,Camarda,Lec,1
+2025/26,39,A,Bayo V.,Udi,1
+2025/26,39,A,Kilicsoy,Cag,12
+2025/26,39,,,,
+2025/26,40,,,,
+2025/26,40,,,,
+2025/26,40,,,,
+2025/26,40,,,,
+2025/26,40,,,,
+2025/26,40,,,,
+2025/26,40,,,,
+2025/26,40,,,,
+2025/26,40,,,,
+2025/26,40,,,,
+2025/26,40,,,,
+2025/26,40,,,,
+2025/26,40,,,,
+2025/26,40,,,,
+2025/26,40,,,,
+2025/26,40,,,,
+2025/26,40,,,,
+2025/26,40,,,,
+2025/26,40,,,,
+2025/26,40,,,,
+2025/26,40,,,,
+2025/26,40,,,,
+2025/26,40,,,,
+2025/26,40,,,,
+2025/26,41,P,Perilli,Ver,1
+2025/26,41,P,Montipò,Ver,1
+2025/26,41,P,Toniolo,Ver,1
+2025/26,41,D,Dimarco,Int,75
+2025/26,41,D,Lazzari,Laz,7
+2025/26,41,D,Romagna,Sas,1
+2025/26,41,D,Dumfries,Int,51
+2025/26,41,D,Ahanor,Ata,10
+2025/26,41,D,Ziolkowski,Rom,10
+2025/26,41,D,Rodriguez Ju.,Cag,1
+2025/26,41,D,Raterink,Cag,1
+2025/26,41,C,Mkhitaryan,Int,17
+2025/26,41,C,McTominay,Nap,88
+2025/26,41,C,Harrison,Fio,40
+2025/26,41,C,Miretti,Juv,2
+2025/26,41,C,Fabbian,Fio,4
+2025/26,41,C,Serdar,Ver,1
+2025/26,41,C,Masini,Gen,5
+2025/26,41,C,Sala A.,Lec,1
+2025/26,41,A,Hojlund,Nap,136
+2025/26,41,A,N'Dri,Lec,6
+2025/26,41,A,Giovane,Nap,26
+2025/26,41,A,Gueye,Udi,10
+2025/26,41,A,Arena A.,Rom,1
+2025/26,42,P,Lezzerini,Fio,62
+2025/26,42,P,De Gea,Fio,1
+2025/26,42,P,Christensen O.,Fio,1
+2025/26,42,D,Celik,Rom,10
+2025/26,42,D,Pongracic,Fio,7
+2025/26,42,D,Valeri,Par,29
+2025/26,42,D,Lucumì,Bol,15
+2025/26,42,D,Dossena,Cag,6
+2025/26,42,D,Gaspar K.,Lec,14
+2025/26,42,D,Smolcic I.,Com,1
+2025/26,42,D,Muharemovic,Sas,16
+2025/26,42,C,Gagliardini,Ver,7
+2025/26,42,C,Maleh,Cre,8
+2025/26,42,C,Harroui,Ver,9
+2025/26,42,C,Oristanio,Par,41
+2025/26,42,C,Prati,Tor,9
+2025/26,42,C,Baturina,Com,31
+2025/26,42,C,Vandeputte,Cre,36
+2025/26,42,C,Taylor K.,Laz,51
+2025/26,42,A,Berardi,Sas,127
+2025/26,42,A,Esposito Se.,Cag,44
+2025/26,42,A,Moreo,Pis,11
+2025/26,42,A,Noslin,Laz,6
+2025/26,42,A,Adams C.,Tor,48
+2025/26,43,P,Audero,Cre,1
+2025/26,43,P,Silvestri,Cre,1
+2025/26,43,P,Nava,Cre,1
+2025/26,43,D,Ceccherini,Cre,1
+2025/26,43,D,Lirola,Ver,21
+2025/26,43,D,Buongiorno,Nap,56
+2025/26,43,D,Bremer,Juv,50
+2025/26,43,D,Kamara H.,Udi,12
+2025/26,43,D,Baschirotto,Cre,16
+2025/26,43,D,Zemura,Udi,3
+2025/26,43,D,Marcandalli,Gen,1
+2025/26,43,C,De Roon,Ata,17
+2025/26,43,C,Calhanoglu,Int,51
+2025/26,43,C,Zambo Anguissa,Nap,40
+2025/26,43,C,Strefezza,Par,45
+2025/26,43,C,Tameze,Tor,1
+2025/26,43,C,Volpato,Sas,5
+2025/26,43,C,Miretti,Juv,1
+2025/26,43,C,Casadei,Tor,25
+2025/26,43,A,Raspadori,Ata,48
+2025/26,43,A,Soulè,Rom,82
+2025/26,43,A,Vitinha O.,Gen,2
+2025/26,43,A,Moumbagna,Cre,1
+2025/26,43,A,Douvikas,Com,22
+2025/26,44,P,Gollini,Rom,1
+2025/26,44,P,Svilar,Rom,1
+2025/26,44,P,Zelezny,Rom,93
+2025/26,44,D,Romagnoli,Laz,27
+2025/26,44,D,Walukiewicz,Sas,14
+2025/26,44,D,Gallo,Lec,15
+2025/26,44,D,Bertola,Udi,1
+2025/26,44,D,Circati,Par,14
+2025/26,44,D,Palestra,Cag,1
+2025/26,44,D,Folino,Cre,3
+2025/26,44,D,Belghali,Ver,1
+2025/26,44,C,Freuler,Bol,14
+2025/26,44,C,Maldini,Laz,18
+2025/26,44,C,Brescianini,Fio,4
+2025/26,44,C,Bondo,Cre,2
+2025/26,44,C,Zaragoza,Rom,33
+2025/26,44,C,Tourè I.,Pis,10
+2025/26,44,C,Marin M.,Pis,1
+2025/26,44,C,Loyola,Pis,7
+2025/26,44,A,David,Juv,126
+2025/26,44,A,Hojlund,Nap,101
+2025/26,44,A,Meister,Pis,56
+2025/26,44,A,Moro L.,Sas,1
+2025/26,44,,,,
+2025/26,45,P,Perilli,Ver,1
+2025/26,45,P,Montipò,Ver,2
+2025/26,45,P,Toniolo,Ver,1
+2025/26,45,D,Kalulu,Juv,24
+2025/26,45,D,Obert,Cag,19
+2025/26,45,D,Gila,Laz,31
+2025/26,45,D,Doig,Sas,18
+2025/26,45,D,Carlos Augusto,Int,17
+2025/26,45,D,Barbieri,Cre,15
+2025/26,45,D,Wesley,Rom,50
+2025/26,45,D,Rodriguez Ju.,Cag,10
+2025/26,45,C,El Shaarawy,Rom,5
+2025/26,45,C,Frendrup,Gen,21
+2025/26,45,C,Perrone,Com,17
+2025/26,45,C,Konè I.,Sas,11
+2025/26,45,C,Rowe,Bol,50
+2025/26,45,C,Anjorin,Tor,3
+2025/26,45,C,Bernede,Ver,2
+2025/26,45,C,Ngom,Lec,4
+2025/26,45,A,Martinez L.,Int,150
+2025/26,45,A,Kuhn,Com,38
+2025/26,45,A,Albarracin,Cag,2
+2025/26,45,A,Bowie,Ver,9
+2025/26,45,,,,
+2025/26,46,P,Di Gennaro,Int,1
+2025/26,46,P,Sommer,Int,94
+2025/26,46,P,Martinez Jo.,Int,1
+2025/26,46,D,Djimsiti,Ata,12
+2025/26,46,D,Romagna,Sas,1
+2025/26,46,D,Dumfries,Int,28
+2025/26,46,D,Tavares N.,Laz,41
+2025/26,46,D,Gatti,Juv,20
+2025/26,46,D,Idzes,Sas,16
+2025/26,46,D,Idrissi R.,Cag,1
+2025/26,46,D,Joao Mario,Bol,33
+2025/26,46,C,Leris,Pis,1
+2025/26,46,C,Zaniolo,Udi,28
+2025/26,46,C,McKennie,Juv,7
+2025/26,46,C,Estevez,Par,1
+2025/26,46,C,Musah,Ata,2
+2025/26,46,C,Zalewski,Ata,9
+2025/26,46,C,Gudmundsson A.,Fio,91
+2025/26,46,C,Ekkelenkamp,Udi,21
+2025/26,46,A,Sanabria,Cre,10
+2025/26,46,A,Dia,Laz,39
+2025/26,46,A,Banda,Lec,1
+2025/26,46,A,Ferguson E.,Rom,73
+2025/26,46,A,Solomon,Fio,35
+2025/26,47,P,Provedel,Laz,79
+2025/26,47,P,Furlanetto,Laz,1
+2025/26,47,P,Motta,Laz,1
+2025/26,47,D,Calabresi,Pis,1
+2025/26,47,D,Pedersen,Tor,7
+2025/26,47,D,Delprato,Par,21
+2025/26,47,D,Valle,Com,18
+2025/26,47,D,Otoa,Gen,1
+2025/26,47,D,Vitik,Bol,19
+2025/26,47,D,Floriani Mussolini,Cre,11
+2025/26,47,D,Bella-Kotchap,Ver,12
+2025/26,47,C,Mandragora,Fio,12
+2025/26,47,C,Matic,Sas,36
+2025/26,47,C,Thorsby,Cre,1
+2025/26,47,C,Rovella,Laz,4
+2025/26,47,C,Caqueret,Com,20
+2025/26,47,C,Ricci S.,Mil,13
+2025/26,47,C,Ramadani,Lec,3
+2025/26,47,C,Fadera,Sas,14
+2025/26,47,A,Thuram,Int,137
+2025/26,47,A,Colombo,Gen,58
+2025/26,47,A,Ekuban,Gen,6
+2025/26,47,A,Camarda,Lec,2
+2025/26,47,A,Gueye,Udi,18
+2025/26,48,P,Leali,Gen,60
+2025/26,48,P,Sommariva,Gen,1
+2025/26,48,P,Bijlow,Gen,1
+2025/26,48,D,Caracciolo A.,Pis,1
+2025/26,48,D,Pavlovic,Mil,20
+2025/26,48,D,Vasquez,Gen,21
+2025/26,48,D,Garcia U.,Sas,1
+2025/26,48,D,Rensch,Rom,1
+2025/26,48,D,Nelsson,Ver,22
+2025/26,48,D,Siebert,Lec,1
+2025/26,48,D,Britschgi,Par,7
+2025/26,48,C,Orsolini,Bol,85
+2025/26,48,C,Pulisic,Mil,64
+2025/26,48,C,McTominay,Nap,76
+2025/26,48,C,Ndour,Fio,1
+2025/26,48,C,Atta,Udi,23
+2025/26,48,C,Venturino,Rom,8
+2025/26,48,C,Sorensen O.,Par,3
+2025/26,48,C,Vergara,Nap,1
+2025/26,48,A,Bonazzoli,Cre,5
+2025/26,48,A,Pedro,Laz,25
+2025/26,48,A,Vardy,Cre,59
+2025/26,48,A,Sulemana K.,Ata,11
+2025/26,48,A,Isaac,Ver,1
+2025/26,49,P,Terracciano,Mil,1
+2025/26,49,P,Maignan,Mil,97
+2025/26,49,P,Torriani,Mil,1
+2025/26,49,D,Lykogiannis,Bol,1
+2025/26,49,D,Kabasele,Udi,3
+2025/26,49,D,Zappa,Cag,13
+2025/26,49,D,Cambiaso,Juv,60
+2025/26,49,D,Terracciano F.,Cre,8
+2025/26,49,D,Norton-Cuffy,Gen,8
+2025/26,49,D,Slotsager,Ver,7
+2025/26,49,D,Bozhinov,Pis,7
+2025/26,49,C,Politano,Nap,42
+2025/26,49,C,Sottil,Lec,14
+2025/26,49,C,Loftus-Cheek,Mil,31
+2025/26,49,C,Kostic,Juv,1
+2025/26,49,C,Sohm,Bol,23
+2025/26,49,C,Harrison,Fio,12
+2025/26,49,C,Vlasic,Tor,35
+2025/26,49,C,Serdar,Ver,7
+2025/26,49,A,Krstovic,Ata,73
+2025/26,49,A,Cheddira,Lec,4
+2025/26,49,A,Addai,Com,15
+2025/26,49,A,Elphege,Par,1
+2025/26,49,A,Kulenovic,Tor,8
+2025/26,50,,,,
+2025/26,50,,,,
+2025/26,50,,,,
+2025/26,50,,,,
+2025/26,50,,,,
+2025/26,50,,,,
+2025/26,50,,,,
+2025/26,50,,,,
+2025/26,50,,,,
+2025/26,50,,,,
+2025/26,50,,,,
+2025/26,50,,,,
+2025/26,50,,,,
+2025/26,50,,,,
+2025/26,50,,,,
+2025/26,50,,,,
+2025/26,50,,,,
+2025/26,50,,,,
+2025/26,50,,,,
+2025/26,50,,,,
+2025/26,50,,,,
+2025/26,50,,,,
+2025/26,50,,,,
+2025/26,50,,,,
+2025/26,51,P,Scuffet,Pis,1
+2025/26,51,P,Nicolas,Pis,1
+2025/26,51,P,Semper,Pis,1
+2025/26,51,D,Juan Jesus,Nap,15
+2025/26,51,D,Hermoso,Rom,21
+2025/26,51,D,Estupinan,Mil,34
+2025/26,51,D,Valenti,Par,4
+2025/26,51,D,Beukema,Nap,3
+2025/26,51,D,Ramon,Com,6
+2025/26,51,D,Zè Pedro,Cag,6
+2025/26,51,D,Edmundsson,Ver,5
+2025/26,51,C,Zielinski,Int,14
+2025/26,51,C,Zaccagni,Laz,44
+2025/26,51,C,Da Cunha,Com,19
+2025/26,51,C,Vranckx,Sas,9
+2025/26,51,C,Zerbin,Cre,7
+2025/26,51,C,Bernabè,Par,38
+2025/26,51,C,Hojholt,Pis,1
+2025/26,51,C,Miller L.,Udi,7
+2025/26,51,A,Milik,Juv,1
+2025/26,51,A,Malen,Rom,60
+2025/26,51,A,De Ketelaere,Ata,75
+2025/26,51,A,Bonny,Int,26
+2025/26,51,A,Trepy,Cag,3
+2025/26,52,P,Satalino,Sas,1
+2025/26,52,P,Muric,Sas,20
+2025/26,52,P,Turati,Sas,1
+2025/26,52,D,Pezzella Giu.,Cre,18
+2025/26,52,D,Lazaro,Tor,20
+2025/26,52,D,Tomori,Mil,20
+2025/26,52,D,Tsimikas,Rom,4
+2025/26,52,D,Casale,Bol,1
+2025/26,52,D,Hien,Ata,26
+2025/26,52,D,Ehizibue,Udi,20
+2025/26,52,D,Frese,Ver,11
+2025/26,52,C,Rabiot,Mil,72
+2025/26,52,C,Odgaard,Bol,62
+2025/26,52,C,Ilic,Tor,3
+2025/26,52,C,Konè M.,Rom,28
+2025/26,52,C,Zhegrova,Juv,3
+2025/26,52,C,Boloca,Sas,12
+2025/26,52,C,Dele-Bashiru,Laz,27
+2025/26,52,C,Ondrejka,Par,4
+2025/26,52,A,Simeone,Tor,21
+2025/26,52,A,Cambiaghi,Bol,19
+2025/26,52,A,Laurientè,Sas,50
+2025/26,52,A,Sarr A.,Ver,27
+2025/26,52,A,Buksa,Udi,53
+2025/26,53,P,Perin,Juv,1
+2025/26,53,P,Pinsoglio,Juv,89
+2025/26,53,P,Di Gregorio,Juv,1
+2025/26,53,D,De Silvestri,Bol,1
+2025/26,53,D,Bianchetti,Cre,4
+2025/26,53,D,Ismajli,Tor,23
+2025/26,53,D,Parisi,Fio,3
+2025/26,53,D,Kossounou,Ata,5
+2025/26,53,D,Holm,Juv,20
+2025/26,53,D,Ostigard,Gen,16
+2025/26,53,D,Canestrelli,Pis,17
+2025/26,53,C,Mkhitaryan,Int,17
+2025/26,53,C,Modric,Mil,27
+2025/26,53,C,Frattesi,Int,32
+2025/26,53,C,Malinovskyi,Gen,17
+2025/26,53,C,Coulibaly L.,Lec,7
+2025/26,53,C,Zarraga,Udi,4
+2025/26,53,C,Suslov,Ver,3
+2025/26,53,C,Piotrowski,Udi,1
+2025/26,53,A,Pavoletti,Cag,1
+2025/26,53,A,Nkunku,Mil,56
+2025/26,53,A,Nzola,Sas,66
+2025/26,53,A,Djuric,Cre,1
+2025/26,53,A,Pellegrino M.,Par,106
+2025/26,54,P,Padelli,Udi,31
+2025/26,54,P,Okoye,Udi,1
+2025/26,54,P,Sava,Udi,1
+2025/26,54,D,Acerbi,Int,14
+2025/26,54,D,Spinazzola,Nap,4
+2025/26,54,D,Akanji,Int,48
+2025/26,54,D,Maripan,Tor,2
+2025/26,54,D,Moreno Alb.,Com,6
+2025/26,54,D,Ebosse,Tor,1
+2025/26,54,D,Bartesaghi,Mil,3
+2025/26,54,D,Bernasconi,Ata,21
+2025/26,54,C,Sergi Roberto,Com,1
+2025/26,54,C,Nicolussi Caviglia,Par,21
+2025/26,54,C,Samardzic,Ata,35
+2025/26,54,C,Pobega,Bol,8
+2025/26,54,C,Koopmeiners,Juv,41
+2025/26,54,C,Payero,Cre,2
+2025/26,54,C,Sucic P.,Int,19
+2025/26,54,C,Ordonez C.,Par,1
+2025/26,54,A,Morata,Com,59
+2025/26,54,A,Kouamè *,Fio,1
+2025/26,54,A,Vlahovic,Juv,29
+2025/26,54,A,Leao,Mil,136
+2025/26,54,A,Diao,Com,4
+2025/26,55,P,Rinaldi,Par,15
+2025/26,55,P,Suzuki,Par,1
+2025/26,55,P,Corvi,Par,1
+2025/26,55,D,Zappacosta,Ata,18
+2025/26,55,D,Cuadrado,Pis,17
+2025/26,55,D,Di Lorenzo,Nap,40
+2025/26,55,D,Zortea,Bol,41
+2025/26,55,D,Nkounkou,Tor,1
+2025/26,55,D,Bradaric,Ver,1
+2025/26,55,D,De Winter,Mil,14
+2025/26,55,D,Provstgaard,Laz,4
+2025/26,55,C,De Bruyne,Nap,8
+2025/26,55,C,Fagioli,Fio,9
+2025/26,55,C,Elmas,Nap,40
+2025/26,55,C,Lovric,Ver,9
+2025/26,55,C,Iling Junior,Pis,9
+2025/26,55,C,Keita M.,Par,10
+2025/26,55,C,Piccinini G.,Pis,5
+2025/26,55,C,Iannoni,Sas,1
+2025/26,55,A,Kean,Fio,150
+2025/26,55,A,Scamacca,Ata,113
+2025/26,55,A,Davis K.,Udi,39
+2025/26,55,A,Njie,Tor,1
+2025/26,55,A,N'Dri,Lec,7
+2025/26,56,P,Paleari,Tor,53
+2025/26,56,P,Israel,Tor,1
+2025/26,56,P,Siviero,Tor,1
+2025/26,56,D,De Vrij,Int,11
+2025/26,56,D,Luperto,Cre,14
+2025/26,56,D,Marusic,Laz,15
+2025/26,56,D,Martin,Gen,28
+2025/26,56,D,Diego Carlos,Com,22
+2025/26,56,D,Angelino,Rom,53
+2025/26,56,D,Scalvini,Ata,22
+2025/26,56,D,Athekame,Mil,15
+2025/26,56,C,Grassi,Cre,8
+2025/26,56,C,Fofana Y.,Mil,13
+2025/26,56,C,Messias,Gen,3
+2025/26,56,C,Luis Henrique,Int,16
+2025/26,56,C,Tramoni M.,Pis,41
+2025/26,56,C,Baldanzi,Gen,5
+2025/26,56,C,Fazzini,Fio,20
+2025/26,56,C,Karlstrom,Udi,10
+2025/26,56,A,Borrelli,Cag,3
+2025/26,56,A,Dominguez B.,Bol,23
+2025/26,56,A,Rodriguez Je.,Com,19
+2025/26,56,A,Stulic,Lec,54
+2025/26,56,A,Ratkov,Laz,47
+2025/26,57,,,,
+2025/26,57,,,,
+2025/26,57,,,,
+2025/26,57,,,,
+2025/26,57,,,,
+2025/26,57,,,,
+2025/26,57,,,,
+2025/26,57,,,,
+2025/26,57,,,,
+2025/26,57,,,,
+2025/26,57,,,,
+2025/26,57,,,,
+2025/26,57,,,,
+2025/26,57,,,,
+2025/26,57,,,,
+2025/26,57,,,,
+2025/26,57,,,,
+2025/26,57,,,,
+2025/26,57,,,,
+2025/26,57,,,,
+2025/26,57,,,,
+2025/26,57,,,,
+2025/26,57,,,,
+2025/26,57,,,,
+2025/26,58,,,,
+2025/26,58,,,,
+2025/26,58,,,,
+2025/26,58,,,,
+2025/26,58,,,,
+2025/26,58,,,,
+2025/26,58,,,,
+2025/26,58,,,,
+2025/26,58,,,,
+2025/26,58,,,,
+2025/26,58,,,,
+2025/26,58,,,,
+2025/26,58,,,,
+2025/26,58,,,,
+2025/26,58,,,,
+2025/26,58,,,,
+2025/26,58,,,,
+2025/26,58,,,,
+2025/26,58,,,,
+2025/26,58,,,,
+2025/26,58,,,,
+2025/26,58,,,,
+2025/26,58,,,,
+2025/26,58,,,,
+2025/26,59,P,Falcone,Lec,1
+2025/26,59,P,Fruchtl,Lec,1
+2025/26,59,P,Samooja,Lec,15
+2025/26,59,D,Gosens,Fio,55
+2025/26,59,D,Miranda J.,Bol,36
+2025/26,59,D,Vojvoda,Com,20
+2025/26,59,D,Gutierrez,Nap,51
+2025/26,59,D,Olivera,Nap,25
+2025/26,59,D,Dodò,Fio,44
+2025/26,59,D,Ghilardi,Rom,2
+2025/26,59,D,Van Der Brempt,Com,5
+2025/26,59,C,Pellegrini Lo.,Rom,2
+2025/26,59,C,Pasalic,Ata,15
+2025/26,59,C,Saelemaekers,Mil,25
+2025/26,59,C,Thuram K.,Juv,44
+2025/26,59,C,Ferguson,Bol,19
+2025/26,59,C,Ellertsson,Gen,1
+2025/26,59,C,Diouf,Int,1
+2025/26,59,C,Al-Musrati,Ver,1
+2025/26,59,A,Zapata D.,Tor,63
+2025/26,59,A,Pinamonti,Sas,76
+2025/26,59,A,Mosquera,Ver,14
+2025/26,59,A,Bayo V.,Udi,4
+2025/26,59,A,Aboukhlal,Tor,2
+2025/26,60,,,,
+2025/26,60,,,,
+2025/26,60,,,,
+2025/26,60,,,,
+2025/26,60,,,,
+2025/26,60,,,,
+2025/26,60,,,,
+2025/26,60,,,,
+2025/26,60,,,,
+2025/26,60,,,,
+2025/26,60,,,,
+2025/26,60,,,,
+2025/26,60,,,,
+2025/26,60,,,,
+2025/26,60,,,,
+2025/26,60,,,,
+2025/26,60,,,,
+2025/26,60,,,,
+2025/26,60,,,,
+2025/26,60,,,,
+2025/26,60,,,,
+2025/26,60,,,,
+2025/26,60,,,,
+2025/26,60,,,,
+2025/26,61,P,Gollini,Rom,1
+2025/26,61,P,Svilar,Rom,1
+2025/26,61,P,Zelezny,Rom,84
+2025/26,61,D,Rugani,Fio,9
+2025/26,61,D,Diego Carlos,Com,2
+2025/26,61,D,Ranieri L.,Fio,27
+2025/26,61,D,Gallo,Lec,10
+2025/26,61,D,Kalulu,Juv,31
+2025/26,61,D,Otoa,Gen,2
+2025/26,61,D,Candè,Sas,1
+2025/26,61,D,Slotsager,Ver,3
+2025/26,61,C,Cataldi,Laz,1
+2025/26,61,C,Locatelli,Juv,14
+2025/26,61,C,Modric,Mil,31
+2025/26,61,C,Thorsby,Cre,1
+2025/26,61,C,Ilic,Tor,1
+2025/26,61,C,Karlstrom,Udi,15
+2025/26,61,C,Neres,Nap,2
+2025/26,61,C,Bernede,Ver,1
+2025/26,61,A,Morata,Com,80
+2025/26,61,A,Dia,Laz,26
+2025/26,61,A,Sarr A.,Ver,26
+2025/26,61,A,Adams C.,Tor,64
+2025/26,61,A,Ratkov,Laz,73
+2025/26,62,P,Falcone,Lec,3
+2025/26,62,P,Fruchtl,Lec,1
+2025/26,62,P,Samooja,Lec,1
+2025/26,62,D,Zappacosta,Ata,25
+2025/26,62,D,Pezzella Giu.,Cre,9
+2025/26,62,D,Gabbia,Mil,6
+2025/26,62,D,Tsimikas,Rom,15
+2025/26,62,D,Gatti,Juv,32
+2025/26,62,D,Carlos Augusto,Int,27
+2025/26,62,D,Dossena,Cag,4
+2025/26,62,D,Ghilardi,Rom,22
+2025/26,62,C,Bernardeschi,Bol,5
+2025/26,62,C,Mkhitaryan,Int,13
+2025/26,62,C,Fofana Y.,Mil,10
+2025/26,62,C,Kostic,Juv,2
+2025/26,62,C,Adopo,Cag,13
+2025/26,62,C,Konè M.,Rom,39
+2025/26,62,C,Vranckx,Sas,9
+2025/26,62,C,Loyola,Pis,7
+2025/26,62,A,Malen,Rom,220
+2025/26,62,A,Dia,Laz,19
+2025/26,62,A,Laurientè,Sas,40
+2025/26,62,A,Ferguson E.,Rom,18
+2025/26,62,A,N'Dri,Lec,1
+2025/26,63,P,Sportiello,Ata,1
+2025/26,63,P,Rossi F.,Ata,1
+2025/26,63,P,Carnesecchi,Ata,91
+2025/26,63,D,Marusic,Laz,22
+2025/26,63,D,Scalvini,Ata,16
+2025/26,63,D,Kristensen T.,Udi,19
+2025/26,63,D,Smolcic I.,Com,1
+2025/26,63,D,Angori,Pis,12
+2025/26,63,D,Heggem,Bol,12
+2025/26,63,D,Troilo,Par,9
+2025/26,63,D,Zatterstrom,Gen,1
+2025/26,63,C,Grassi,Cre,4
+2025/26,63,C,Malinovskyi,Gen,14
+2025/26,63,C,Ilic,Tor,2
+2025/26,63,C,Estevez,Par,4
+2025/26,63,C,Luis Henrique,Int,8
+2025/26,63,C,Tramoni M.,Pis,41
+2025/26,63,C,Berisha M.,Lec,5
+2025/26,63,C,Paz N.,Com,85
+2025/26,63,A,Pavoletti,Cag,1
+2025/26,63,A,Dybala,Rom,80
+2025/26,63,A,Pedro,Laz,14
+2025/26,63,A,Yildiz,Juv,95
+2025/26,63,A,Meister,Pis,4
+2025/26,64,P,Lezzerini,Fio,1
+2025/26,64,P,De Gea,Fio,1
+2025/26,64,P,Christensen O.,Fio,1
+2025/26,64,D,Albiol,Pis,9
+2025/26,64,D,Djimsiti,Ata,11
+2025/26,64,D,Mancini,Rom,39
+2025/26,64,D,Martin,Gen,36
+2025/26,64,D,Di Lorenzo,Nap,55
+2025/26,64,D,Maripan,Tor,12
+2025/26,64,D,Garcia U.,Sas,1
+2025/26,64,D,Valentini N.,Ver,1
+2025/26,64,C,Deiola,Cag,1
+2025/26,64,C,Orsolini,Bol,97
+2025/26,64,C,Saelemaekers,Mil,42
+2025/26,64,C,Niasse,Ver,5
+2025/26,64,C,Vlasic,Tor,42
+2025/26,64,C,Miretti,Juv,1
+2025/26,64,C,Ramadani,Lec,1
+2025/26,64,C,Atta,Udi,31
+2025/26,64,A,Moreo,Pis,1
+2025/26,64,A,Sarr A.,Ver,28
+2025/26,64,A,Moumbagna,Cre,1
+2025/26,64,A,Douvikas,Com,22
+2025/26,64,,,,
+2025/26,65,P,Vigorito,Com,45
+2025/26,65,P,Butez,Com,1
+2025/26,65,P,Cavlina,Com,1
+2025/26,65,D,Walukiewicz,Sas,4
+2025/26,65,D,Zappa,Cag,18
+2025/26,65,D,Bradaric,Ver,1
+2025/26,65,D,Dodò,Fio,55
+2025/26,65,D,Beukema,Nap,11
+2025/26,65,D,Zemura,Udi,1
+2025/26,65,D,Bisseck,Int,31
+2025/26,65,D,Marcandalli,Gen,2
+2025/26,65,C,Gaetano,Cag,8
+2025/26,65,C,Zhegrova,Juv,18
+2025/26,65,C,Bondo,Cre,4
+2025/26,65,C,Ilkhan,Tor,7
+2025/26,65,C,Isaksen,Laz,47
+2025/26,65,C,Conceicao,Juv,70
+2025/26,65,C,Vural,Pis,1
+2025/26,65,C,Jashari,Mil,3
+2025/26,65,A,Bonazzoli,Cre,3
+2025/26,65,A,Nkunku,Mil,105
+2025/26,65,A,Soulè,Rom,78
+2025/26,65,A,Ekhator,Gen,5
+2025/26,65,A,Moro L.,Sas,2
+2025/26,66,P,Paleari,Tor,1
+2025/26,66,P,Israel,Tor,22
+2025/26,66,P,Siviero,Tor,1
+2025/26,66,D,Lazzari,Laz,4
+2025/26,66,D,Akanji,Int,42
+2025/26,66,D,Gallo,Lec,24
+2025/26,66,D,Ostigard,Gen,21
+2025/26,66,D,Barbieri,Cre,10
+2025/26,66,D,Coco,Tor,20
+2025/26,66,D,Otoa,Gen,3
+2025/26,66,D,Bella-Kotchap,Ver,15
+2025/26,66,C,Zaccagni,Laz,102
+2025/26,66,C,Cristante,Rom,11
+2025/26,66,C,El Shaarawy,Rom,9
+2025/26,66,C,Frattesi,Int,21
+2025/26,66,C,Samardzic,Ata,10
+2025/26,66,C,Akpa Akpro,Ver,1
+2025/26,66,C,Casadei,Tor,26
+2025/26,66,C,Iling Junior,Pis,21
+2025/26,66,A,Cambiaghi,Bol,1
+2025/26,66,A,Thuram,Int,106
+2025/26,66,A,Djuric,Cre,5
+2025/26,66,A,Adams C.,Tor,31
+2025/26,66,A,Bonny,Int,43
+2025/26,67,,,,
+2025/26,67,,,,
+2025/26,67,,,,
+2025/26,67,,,,
+2025/26,67,,,,
+2025/26,67,,,,
+2025/26,67,,,,
+2025/26,67,,,,
+2025/26,67,,,,
+2025/26,67,,,,
+2025/26,67,,,,
+2025/26,67,,,,
+2025/26,67,,,,
+2025/26,67,,,,
+2025/26,67,,,,
+2025/26,67,,,,
+2025/26,67,,,,
+2025/26,67,,,,
+2025/26,67,,,,
+2025/26,67,,,,
+2025/26,67,,,,
+2025/26,67,,,,
+2025/26,67,,,,
+2025/26,67,,,,
+2025/26,68,P,Di Gennaro,Int,1
+2025/26,68,P,Sommer,Int,100
+2025/26,68,P,Martinez Jo.,Int,1
+2025/26,68,D,De Vrij,Int,12
+2025/26,68,D,Acerbi,Int,21
+2025/26,68,D,Bianchetti,Cre,10
+2025/26,68,D,Tavares N.,Laz,25
+2025/26,68,D,Doig,Sas,21
+2025/26,68,D,Kelly L.,Juv,11
+2025/26,68,D,Valle,Com,24
+2025/26,68,D,Bernasconi,Ata,6
+2025/26,68,C,Zielinski,Int,7
+2025/26,68,C,Freuler,Bol,15
+2025/26,68,C,Mazzitelli,Cag,21
+2025/26,68,C,Calhanoglu,Int,56
+2025/26,68,C,Loftus-Cheek,Mil,18
+2025/26,68,C,Brescianini,Fio,2
+2025/26,68,C,Lipani,Sas,19
+2025/26,68,C,Ndour,Fio,12
+2025/26,68,A,Cheddira,Lec,10
+2025/26,68,A,Dallinga,Bol,11
+2025/26,68,A,Vaz,Rom,37
+2025/26,68,A,Kuhn,Com,15
+2025/26,68,A,Rodriguez Je.,Com,24
+2025/26,69,,,,
+2025/26,69,,,,
+2025/26,69,,,,
+2025/26,69,,,,
+2025/26,69,,,,
+2025/26,69,,,,
+2025/26,69,,,,
+2025/26,69,,,,
+2025/26,69,,,,
+2025/26,69,,,,
+2025/26,69,,,,
+2025/26,69,,,,
+2025/26,69,,,,
+2025/26,69,,,,
+2025/26,69,,,,
+2025/26,69,,,,
+2025/26,69,,,,
+2025/26,69,,,,
+2025/26,69,,,,
+2025/26,69,,,,
+2025/26,69,,,,
+2025/26,69,,,,
+2025/26,69,,,,
+2025/26,69,,,,
+2025/26,70,P,Meret,Nap,112
+2025/26,70,P,Milinkovic-Savic V.,Nap,1
+2025/26,70,P,Contini,Nap,1
+2025/26,70,D,Luperto,Cre,24
+2025/26,70,D,Ceccherini,Cre,2
+2025/26,70,D,Lazaro,Tor,17
+2025/26,70,D,Vojvoda,Com,23
+2025/26,70,D,Ahanor,Ata,16
+2025/26,70,D,Rensch,Rom,2
+2025/26,70,D,Joao Mario,Bol,19
+2025/26,70,D,Siebert,Lec,18
+2025/26,70,C,Politano,Nap,38
+2025/26,70,C,Mandragora,Fio,6
+2025/26,70,C,Leris,Pis,1
+2025/26,70,C,Modric,Mil,23
+2025/26,70,C,Sottil,Lec,34
+2025/26,70,C,Fagioli,Fio,13
+2025/26,70,C,Messias,Gen,1
+2025/26,70,C,Venturino,Rom,4
+2025/26,70,A,Berardi,Sas,90
+2025/26,70,A,Cancellieri,Laz,10
+2025/26,70,A,Pellegrino M.,Par,92
+2025/26,70,A,Addai,Com,2
+2025/26,70,A,Arena A.,Rom,1
+2025/26,71,,,,
+2025/26,71,,,,
+2025/26,71,,,,
+2025/26,71,,,,
+2025/26,71,,,,
+2025/26,71,,,,
+2025/26,71,,,,
+2025/26,71,,,,
+2025/26,71,,,,
+2025/26,71,,,,
+2025/26,71,,,,
+2025/26,71,,,,
+2025/26,71,,,,
+2025/26,71,,,,
+2025/26,71,,,,
+2025/26,71,,,,
+2025/26,71,,,,
+2025/26,71,,,,
+2025/26,71,,,,
+2025/26,71,,,,
+2025/26,71,,,,
+2025/26,71,,,,
+2025/26,71,,,,
+2025/26,71,,,,
+2025/26,72,P,Caprile,Cag,1
+2025/26,72,P,Ciocci,Cag,10
+2025/26,72,P,Sherri,Cag,1
+2025/26,72,D,Cuadrado,Pis,1
+2025/26,72,D,Sabelli,Gen,1
+2025/26,72,D,Bastoni,Int,64
+2025/26,72,D,Kabasele,Udi,6
+2025/26,72,D,Hermoso,Rom,1
+2025/26,72,D,Bellanova,Ata,34
+2025/26,72,D,Comuzzo,Fio,12
+2025/26,72,D,Rodriguez Ju.,Cag,6
+2025/26,72,C,Nicolussi Caviglia,Par,24
+2025/26,72,C,Caqueret,Com,9
+2025/26,72,C,Volpato,Sas,1
+2025/26,72,C,Perrone,Com,8
+2025/26,72,C,Fabbian,Fio,3
+2025/26,72,C,Adzic,Juv,5
+2025/26,72,C,Ordonez C.,Par,2
+2025/26,72,C,Piccinini G.,Pis,3
+2025/26,72,A,Martinez L.,Int,149
+2025/26,72,A,Esposito Se.,Cag,44
+2025/26,72,A,Gimenez,Mil,2
+2025/26,72,A,Durosinmi,Pis,210
+2025/26,72,,,,
+2025/26,73,P,Provedel,Laz,107
+2025/26,73,P,Furlanetto,Laz,1
+2025/26,73,P,Motta,Laz,1
+2025/26,73,D,Miranda J.,Bol,40
+2025/26,73,D,Casale,Bol,1
+2025/26,73,D,Pongracic,Fio,11
+2025/26,73,D,Ebosse,Tor,2
+2025/26,73,D,Delprato,Par,28
+2025/26,73,D,Idzes,Sas,20
+2025/26,73,D,Marianucci,Tor,40
+2025/26,73,D,Mlacic,Udi,5
+2025/26,73,C,Sergi Roberto,Com,1
+2025/26,73,C,Ricci S.,Mil,15
+2025/26,73,C,Gudmundsson A.,Fio,98
+2025/26,73,C,Moro N.,Bol,1
+2025/26,73,C,Keita M.,Par,9
+2025/26,73,C,Bernede,Ver,7
+2025/26,73,C,Marin M.,Pis,4
+2025/26,73,C,Ngom,Lec,18
+2025/26,73,A,Zapata D.,Tor,60
+2025/26,73,A,Esposito F.P.,Int,26
+2025/26,73,A,Stulic,Lec,33
+2025/26,73,A,Elphege,Par,2
+2025/26,73,A,Stojilkovic,Pis,2
+2025/26,74,P,Scuffet,Pis,1
+2025/26,74,P,Nicolas,Pis,1
+2025/26,74,P,Semper,Pis,1
+2025/26,74,D,Lirola,Ver,13
+2025/26,74,D,Gosens,Fio,70
+2025/26,74,D,Gutierrez,Nap,20
+2025/26,74,D,Cambiaso,Juv,64
+2025/26,74,D,Valeri,Par,40
+2025/26,74,D,Cabal,Juv,7
+2025/26,74,D,Veiga D.,Lec,11
+2025/26,74,D,Floriani Mussolini,Cre,11
+2025/26,74,C,Pasalic,Ata,19
+2025/26,74,C,Gineitis,Tor,16
+2025/26,74,C,Oristanio,Par,12
+2025/26,74,C,Suslov,Ver,4
+2025/26,74,C,Neres,Nap,4
+2025/26,74,C,Rowe,Bol,39
+2025/26,74,C,Ondrejka,Par,6
+2025/26,74,C,Piotrowski,Udi,4
+2025/26,74,A,Vlahovic,Juv,38
+2025/26,74,A,Piccoli,Fio,65
+2025/26,74,A,Krstovic,Ata,97
+2025/26,74,A,Noslin,Laz,4
+2025/26,74,A,Bayo V.,Udi,1
+2025/26,75,,,,
+2025/26,75,,,,
+2025/26,75,,,,
+2025/26,75,,,,
+2025/26,75,,,,
+2025/26,75,,,,
+2025/26,75,,,,
+2025/26,75,,,,
+2025/26,75,,,,
+2025/26,75,,,,
+2025/26,75,,,,
+2025/26,75,,,,
+2025/26,75,,,,
+2025/26,75,,,,
+2025/26,75,,,,
+2025/26,75,,,,
+2025/26,75,,,,
+2025/26,75,,,,
+2025/26,75,,,,
+2025/26,75,,,,
+2025/26,75,,,,
+2025/26,75,,,,
+2025/26,75,,,,
+2025/26,75,,,,
+2025/26,76,P,Rinaldi,Par,27
+2025/26,76,P,Suzuki,Par,1
+2025/26,76,P,Corvi,Par,1
+2025/26,76,D,Caracciolo A.,Pis,1
+2025/26,76,D,Vasquez,Gen,32
+2025/26,76,D,Lucumì,Bol,17
+2025/26,76,D,Ramon,Com,6
+2025/26,76,D,Folino,Cre,2
+2025/26,76,D,Ziolkowski,Rom,1
+2025/26,76,D,Helland,Bol,4
+2025/26,76,D,Obrador,Tor,34
+2025/26,76,C,Frendrup,Gen,20
+2025/26,76,C,Prati,Tor,7
+2025/26,76,C,Zaragoza,Rom,36
+2025/26,76,C,Bakola,Sas,1
+2025/26,76,C,Vandeputte,Cre,30
+2025/26,76,C,Iannoni,Sas,1
+2025/26,76,C,Miller L.,Udi,3
+2025/26,76,C,Gandelman,Lec,21
+2025/26,76,A,Raspadori,Ata,220
+2025/26,76,A,Borrelli,Cag,12
+2025/26,76,A,Njie,Tor,1
+2025/26,76,A,Kilicsoy,Cag,11
+2025/26,76,A,Kulenovic,Tor,41
+2025/26,77,,,,
+2025/26,77,,,,
+2025/26,77,,,,
+2025/26,77,,,,
+2025/26,77,,,,
+2025/26,77,,,,
+2025/26,77,,,,
+2025/26,77,,,,
+2025/26,77,,,,
+2025/26,77,,,,
+2025/26,77,,,,
+2025/26,77,,,,
+2025/26,77,,,,
+2025/26,77,,,,
+2025/26,77,,,,
+2025/26,77,,,,
+2025/26,77,,,,
+2025/26,77,,,,
+2025/26,77,,,,
+2025/26,77,,,,
+2025/26,77,,,,
+2025/26,77,,,,
+2025/26,77,,,,
+2025/26,77,,,,
+2025/26,78,,,,
+2025/26,78,,,,
+2025/26,78,,,,
+2025/26,78,,,,
+2025/26,78,,,,
+2025/26,78,,,,
+2025/26,78,,,,
+2025/26,78,,,,
+2025/26,78,,,,
+2025/26,78,,,,
+2025/26,78,,,,
+2025/26,78,,,,
+2025/26,78,,,,
+2025/26,78,,,,
+2025/26,78,,,,
+2025/26,78,,,,
+2025/26,78,,,,
+2025/26,78,,,,
+2025/26,78,,,,
+2025/26,78,,,,
+2025/26,78,,,,
+2025/26,78,,,,
+2025/26,78,,,,
+2025/26,78,,,,
+2025/26,79,P,Perilli,Ver,1
+2025/26,79,P,Montipò,Ver,1
+2025/26,79,P,Toniolo,Ver,1
+2025/26,79,D,Luperto,Cre,23
+2025/26,79,D,Kalulu,Juv,23
+2025/26,79,D,Holm,Juv,3
+2025/26,79,D,De Winter,Mil,17
+2025/26,79,D,Bisseck,Int,19
+2025/26,79,D,Kempf,Com,15
+2025/26,79,D,Nelsson,Ver,9
+2025/26,79,D,Coppola F.,Pis,2
+2025/26,79,C,Leris,Pis,9
+2025/26,79,C,Zambo Anguissa,Nap,29
+2025/26,79,C,Malinovskyi,Gen,10
+2025/26,79,C,Rovella,Laz,11
+2025/26,79,C,Cornet,Gen,1
+2025/26,79,C,Ferguson,Bol,12
+2025/26,79,C,Serdar,Ver,4
+2025/26,79,C,Conceicao,Juv,49
+2025/26,79,A,Kean,Fio,155
+2025/26,79,A,Raspadori,Ata,106
+2025/26,79,A,Banda,Lec,8
+2025/26,79,A,Sarr A.,Ver,26
+2025/26,79,A,Dallinga,Bol,1
+2025/26,80,P,Sportiello,Ata,1
+2025/26,80,P,Rossi F.,Ata,1
+2025/26,80,P,Carnesecchi,Ata,87
+2025/26,80,D,Bianchetti,Cre,6
+2025/26,80,D,Bastoni,Int,54
+2025/26,80,D,Zortea,Bol,15
+2025/26,80,D,Angelino,Rom,42
+2025/26,80,D,Tsimikas,Rom,9
+2025/26,80,D,Hien,Ata,35
+2025/26,80,D,Ramon,Com,17
+2025/26,80,D,Ahanor,Ata,1
+2025/26,80,C,Lobotka,Nap,16
+2025/26,80,C,Caqueret,Com,4
+2025/26,80,C,Gilmour,Nap,1
+2025/26,80,C,Niasse,Ver,1
+2025/26,80,C,Koopmeiners,Juv,3
+2025/26,80,C,Keita M.,Par,3
+2025/26,80,C,Ondrejka,Par,2
+2025/26,80,C,Miller L.,Udi,1
+2025/26,80,A,Dia,Laz,29
+2025/26,80,A,Openda,Juv,68
+2025/26,80,A,Vaz,Rom,38
+2025/26,80,A,Esposito F.P.,Int,39
+2025/26,80,,,,
+2025/26,81,P,Vigorito,Com,58
+2025/26,81,P,Butez,Com,1
+2025/26,81,P,Cavlina,Com,1
+2025/26,81,D,Lirola,Ver,22
+2025/26,81,D,Akanji,Int,46
+2025/26,81,D,Ebosse,Tor,11
+2025/26,81,D,Cabal,Juv,1
+2025/26,81,D,Vitik,Bol,12
+2025/26,81,D,Angori,Pis,29
+2025/26,81,D,Zè Pedro,Cag,1
+2025/26,81,D,Bozhinov,Pis,19
+2025/26,81,C,Malinovskyi,Gen,17
+2025/26,81,C,Luis Henrique,Int,10
+2025/26,81,C,Tramoni M.,Pis,38
+2025/26,81,C,Coulibaly L.,Lec,7
+2025/26,81,C,Stengs,Pis,17
+2025/26,81,C,Lovric,Ver,12
+2025/26,81,C,Collocolo,Cre,16
+2025/26,81,C,Vural,Pis,1
+2025/26,81,A,Bonazzoli,Cre,1
+2025/26,81,A,Fullkrug,Mil,56
+2025/26,81,A,David,Juv,118
+2025/26,81,A,Openda,Juv,19
+2025/26,81,A,Meister,Pis,5
+2025/26,82,P,Perin,Juv,1
+2025/26,82,P,Pinsoglio,Juv,101
+2025/26,82,P,Di Gregorio,Juv,1
+2025/26,82,D,Ismajli,Tor,14
+2025/26,82,D,Pavlovic,Mil,18
+2025/26,82,D,Terracciano F.,Cre,1
+2025/26,82,D,Hien,Ata,30
+2025/26,82,D,Ehizibue,Udi,20
+2025/26,82,D,Circati,Par,8
+2025/26,82,D,Vitik,Bol,9
+2025/26,82,D,Edmundsson,Ver,1
+2025/26,82,C,Locatelli,Juv,19
+2025/26,82,C,De Bruyne,Nap,89
+2025/26,82,C,Gilmour,Nap,1
+2025/26,82,C,Zalewski,Ata,9
+2025/26,82,C,Koopmeiners,Juv,13
+2025/26,82,C,Pisilli,Rom,1
+2025/26,82,C,Karlstrom,Udi,8
+2025/26,82,C,Collocolo,Cre,1
+2025/26,82,A,Sanabria,Cre,29
+2025/26,82,A,Simeone,Tor,29
+2025/26,82,A,Orban G.,Ver,52
+2025/26,82,A,Castro S.,Bol,44
+2025/26,82,A,Isaac,Ver,3
+2025/26,83,P,Satalino,Sas,16
+2025/26,83,P,Muric,Sas,1
+2025/26,83,P,Turati,Sas,1
+2025/26,83,D,Buongiorno,Nap,31
+2025/26,83,D,Celik,Rom,1
+2025/26,83,D,Bellanova,Ata,45
+2025/26,83,D,Scalvini,Ata,20
+2025/26,83,D,Frese,Ver,9
+2025/26,83,D,Faye,Cre,1
+2025/26,83,D,Solet,Udi,32
+2025/26,83,D,Joao Mario,Bol,34
+2025/26,83,C,Cataldi,Laz,1
+2025/26,83,C,Barella,Int,49
+2025/26,83,C,Modric,Mil,30
+2025/26,83,C,Stengs,Pis,4
+2025/26,83,C,Suslov,Ver,1
+2025/26,83,C,Konè I.,Sas,10
+2025/26,83,C,Neres,Nap,2
+2025/26,83,C,Gandelman,Lec,34
+2025/26,83,A,Martinez L.,Int,162
+2025/26,83,A,Djuric,Cre,1
+2025/26,83,A,Laurientè,Sas,51
+2025/26,83,A,N'Dri,Lec,1
+2025/26,83,A,Stulic,Lec,63
+2025/26,84,P,Rinaldi,Par,25
+2025/26,84,P,Suzuki,Par,1
+2025/26,84,P,Corvi,Par,1
+2025/26,84,D,Bertola,Udi,9
+2025/26,84,D,Comuzzo,Fio,6
+2025/26,84,D,Coulibaly W.,Sas,10
+2025/26,84,D,Palestra,Cag,2
+2025/26,84,D,Rensch,Rom,4
+2025/26,84,D,Muharemovic,Sas,7
+2025/26,84,D,Wesley,Rom,50
+2025/26,84,D,Ziolkowski,Rom,10
+2025/26,84,C,Pasalic,Ata,10
+2025/26,84,C,Orsolini,Bol,118
+2025/26,84,C,Fagioli,Fio,17
+2025/26,84,C,Fofana Y.,Mil,19
+2025/26,84,C,Estevez,Par,1
+2025/26,84,C,Baldanzi,Gen,5
+2025/26,84,C,Bondo,Cre,3
+2025/26,84,C,Baturina,Com,25
+2025/26,84,A,Orban G.,Ver,57
+2025/26,84,A,Adams C.,Tor,47
+2025/26,84,A,Dovbyk,Rom,20
+2025/26,84,A,Ekhator,Gen,1
+2025/26,84,A,Gimenez,Mil,84
+2025/26,85,P,Perin,Juv,96
+2025/26,85,P,Pinsoglio,Juv,1
+2025/26,85,P,Di Gregorio,Juv,1
+2025/26,85,D,Mancini,Rom,25
+2025/26,85,D,Kolasinac,Ata,15
+2025/26,85,D,Walukiewicz,Sas,5
+2025/26,85,D,Maripan,Tor,14
+2025/26,85,D,Coco,Tor,17
+2025/26,85,D,Provstgaard,Laz,7
+2025/26,85,D,Fortini,Fio,5
+2025/26,85,D,Floriani Mussolini,Cre,24
+2025/26,85,C,Politano,Nap,61
+2025/26,85,C,Locatelli,Juv,15
+2025/26,85,C,De Bruyne,Nap,80
+2025/26,85,C,Sottil,Lec,25
+2025/26,85,C,McKennie,Juv,5
+2025/26,85,C,Luis Henrique,Int,2
+2025/26,85,C,Gineitis,Tor,3
+2025/26,85,C,Belahyane,Laz,4
+2025/26,85,A,Pinamonti,Sas,100
+2025/26,85,A,Scamacca,Ata,78
+2025/26,85,A,Borrelli,Cag,1
+2025/26,85,A,Moro L.,Sas,1
+2025/26,85,A,Buksa,Udi,34
+2025/26,86,P,Terracciano,Mil,91
+2025/26,86,P,Maignan,Mil,1
+2025/26,86,P,Torriani,Mil,1
+2025/26,86,D,Pezzella Giu.,Cre,13
+2025/26,86,D,Spinazzola,Nap,21
+2025/26,86,D,Zappa,Cag,10
+2025/26,86,D,Tomori,Mil,26
+2025/26,86,D,Gutierrez,Nap,7
+2025/26,86,D,Dumfries,Int,54
+2025/26,86,D,Van Der Brempt,Com,1
+2025/26,86,D,Tiago Gabriel,Lec,11
+2025/26,86,C,Zielinski,Int,1
+2025/26,86,C,Freuler,Bol,11
+2025/26,86,C,Thorsby,Cre,2
+2025/26,86,C,Strefezza,Par,75
+2025/26,86,C,Coulibaly L.,Lec,3
+2025/26,86,C,Casadei,Tor,25
+2025/26,86,C,Akinsanmiro,Pis,1
+2025/26,86,C,Karlstrom,Udi,7
+2025/26,86,A,Lukaku,Nap,39
+2025/26,86,A,Vlahovic,Juv,31
+2025/26,86,A,Moreo,Pis,16
+2025/26,86,A,Malen,Rom,178
+2025/26,86,A,Ferguson E.,Rom,28
+2025/26,87,,,,
+2025/26,87,,,,
+2025/26,87,,,,
+2025/26,87,,,,
+2025/26,87,,,,
+2025/26,87,,,,
+2025/26,87,,,,
+2025/26,87,,,,
+2025/26,87,,,,
+2025/26,87,,,,
+2025/26,87,,,,
+2025/26,87,,,,
+2025/26,87,,,,
+2025/26,87,,,,
+2025/26,87,,,,
+2025/26,87,,,,
+2025/26,87,,,,
+2025/26,87,,,,
+2025/26,87,,,,
+2025/26,87,,,,
+2025/26,87,,,,
+2025/26,87,,,,
+2025/26,87,,,,
+2025/26,87,,,,
+2025/26,88,P,Meret,Nap,112
+2025/26,88,P,Milinkovic-Savic V.,Nap,1
+2025/26,88,P,Contini,Nap,1
+2025/26,88,D,Romagnoli,Laz,16
+2025/26,88,D,Diego Carlos,Com,12
+2025/26,88,D,N'Dicka,Rom,21
+2025/26,88,D,Lazaro,Tor,10
+2025/26,88,D,Kamara H.,Udi,11
+2025/26,88,D,Lucumì,Bol,14
+2025/26,88,D,Zemura,Udi,4
+2025/26,88,D,Dossena,Cag,1
+2025/26,88,C,Nicolussi Caviglia,Par,40
+2025/26,88,C,Saelemaekers,Mil,25
+2025/26,88,C,Thorstvedt,Sas,23
+2025/26,88,C,Zerbin,Cre,6
+2025/26,88,C,Ramadani,Lec,6
+2025/26,88,C,Bernede,Ver,3
+2025/26,88,C,Marin M.,Pis,6
+2025/26,88,C,Santos A.,Nap,14
+2025/26,88,A,Davis K.,Udi,71
+2025/26,88,A,Soulè,Rom,83
+2025/26,88,A,Kilicsoy,Cag,16
+2025/26,88,A,Arena A.,Rom,1
+2025/26,88,A,Elphege,Par,18
+2025/26,89,P,Skorupski,Bol,69
+2025/26,89,P,Ravaglia F.,Bol,1
+2025/26,89,P,Pessina Mas.,Bol,1
+2025/26,89,D,Pellegrini Lu.,Laz,1
+2025/26,89,D,Calabresi,Pis,11
+2025/26,89,D,Vojvoda,Com,17
+2025/26,89,D,Pongracic,Fio,16
+2025/26,89,D,Ostigard,Gen,28
+2025/26,89,D,Garcia U.,Sas,1
+2025/26,89,D,Idzes,Sas,17
+2025/26,89,D,Obrador,Tor,8
+2025/26,89,C,Adopo,Cag,15
+2025/26,89,C,Perrone,Com,6
+2025/26,89,C,Ndour,Fio,1
+2025/26,89,C,Pierotti,Lec,15
+2025/26,89,C,Zaragoza,Rom,42
+2025/26,89,C,Fadera,Sas,8
+2025/26,89,C,Piotrowski,Udi,3
+2025/26,89,C,Taylor K.,Laz,60
+2025/26,89,A,Hojlund,Nap,88
+2025/26,89,A,Bonny,Int,34
+2025/26,89,A,Pellegrino M.,Par,71
+2025/26,89,A,Kulenovic,Tor,1
+2025/26,89,,,,
+2025/26,90,P,Leali,Gen,56
+2025/26,90,P,Sommariva,Gen,1
+2025/26,90,P,Bijlow,Gen,1
+2025/26,90,D,Gosens,Fio,61
+2025/26,90,D,Lazzari,Laz,14
+2025/26,90,D,Darmian,Int,1
+2025/26,90,D,Kabasele,Udi,5
+2025/26,90,D,Ismajli,Tor,19
+2025/26,90,D,Olivera,Nap,16
+2025/26,90,D,Kristensen T.,Udi,10
+2025/26,90,D,Edmundsson,Ver,1
+2025/26,90,C,Frattesi,Int,28
+2025/26,90,C,Gaetano,Cag,4
+2025/26,90,C,Miretti,Juv,1
+2025/26,90,C,Payero,Cre,1
+2025/26,90,C,Dele-Bashiru,Laz,27
+2025/26,90,C,Bernabè,Par,16
+2025/26,90,C,Al-Musrati,Ver,1
+2025/26,90,C,Jashari,Mil,2
+2025/26,90,A,Sanabria,Cre,47
+2025/26,90,A,Milik,Juv,17
+2025/26,90,A,Simeone,Tor,49
+2025/26,90,A,Colombo,Gen,77
+2025/26,90,A,Okereke,Cre,22
+2025/26,91,P,Lezzerini,Fio,90
+2025/26,91,P,De Gea,Fio,1
+2025/26,91,P,Christensen O.,Fio,1
+2025/26,91,D,De Vrij,Int,1
+2025/26,91,D,Gallo,Lec,5
+2025/26,91,D,Moreno Alb.,Com,1
+2025/26,91,D,Mazzocchi,Nap,1
+2025/26,91,D,Terracciano F.,Cre,1
+2025/26,91,D,Carlos Augusto,Int,39
+2025/26,91,D,Valle,Com,19
+2025/26,91,D,Bella-Kotchap,Ver,14
+2025/26,91,C,Mkhitaryan,Int,11
+2025/26,91,C,Zaniolo,Udi,52
+2025/26,91,C,Ilic,Tor,1
+2025/26,91,C,Zalewski,Ata,8
+2025/26,91,C,Harrison,Fio,7
+2025/26,91,C,Fazzini,Fio,1
+2025/26,91,C,El Aynaoui,Rom,23
+2025/26,91,C,Felici,Cag,1
+2025/26,91,A,Berardi,Sas,97
+2025/26,91,A,Solomon,Fio,88
+2025/26,91,A,Camarda,Lec,1
+2025/26,91,A,Bowie,Ver,66
+2025/26,91,,,,
+2025/26,92,,,,
+2025/26,92,,,,
+2025/26,92,,,,
+2025/26,92,,,,
+2025/26,92,,,,
+2025/26,92,,,,
+2025/26,92,,,,
+2025/26,92,,,,
+2025/26,92,,,,
+2025/26,92,,,,
+2025/26,92,,,,
+2025/26,92,,,,
+2025/26,92,,,,
+2025/26,92,,,,
+2025/26,92,,,,
+2025/26,92,,,,
+2025/26,92,,,,
+2025/26,92,,,,
+2025/26,92,,,,
+2025/26,92,,,,
+2025/26,92,,,,
+2025/26,92,,,,
+2025/26,92,,,,
+2025/26,92,,,,
+2025/26,93,P,Di Gennaro,Int,1
+2025/26,93,P,Sommer,Int,1
+2025/26,93,P,Martinez Jo.,Int,99
+2025/26,93,D,Zappacosta,Ata,20
+2025/26,93,D,Ceccherini,Cre,1
+2025/26,93,D,Mina,Cag,14
+2025/26,93,D,Cambiaso,Juv,44
+2025/26,93,D,Ehizibue,Udi,5
+2025/26,93,D,Delprato,Par,8
+2025/26,93,D,Oyegoke,Ver,1
+2025/26,93,D,Zè Pedro,Cag,1
+2025/26,93,C,Tramoni M.,Pis,42
+2025/26,93,C,Sohm,Bol,3
+2025/26,93,C,Harroui,Ver,1
+2025/26,93,C,Pisilli,Rom,1
+2025/26,93,C,Folorunsho,Cag,16
+2025/26,93,C,Masini,Gen,5
+2025/26,93,C,Piccinini G.,Pis,3
+2025/26,93,C,Vergara,Nap,71
+2025/26,93,A,Morata,Com,37
+2025/26,93,A,Esposito Se.,Cag,51
+2025/26,93,A,De Ketelaere,Ata,72
+2025/26,93,A,Aboukhlal,Tor,5
+2025/26,93,A,Gueye,Udi,1
+2025/26,94,,,,
+2025/26,94,,,,
+2025/26,94,,,,
+2025/26,94,,,,
+2025/26,94,,,,
+2025/26,94,,,,
+2025/26,94,,,,
+2025/26,94,,,,
+2025/26,94,,,,
+2025/26,94,,,,
+2025/26,94,,,,
+2025/26,94,,,,
+2025/26,94,,,,
+2025/26,94,,,,
+2025/26,94,,,,
+2025/26,94,,,,
+2025/26,94,,,,
+2025/26,94,,,,
+2025/26,94,,,,
+2025/26,94,,,,
+2025/26,94,,,,
+2025/26,94,,,,
+2025/26,94,,,,
+2025/26,94,,,,
+2025/26,95,P,Scuffet,Pis,3
+2025/26,95,P,Nicolas,Pis,1
+2025/26,95,P,Semper,Pis,1
+2025/26,95,D,Gabbia,Mil,21
+2025/26,95,D,Estupinan,Mil,38
+2025/26,95,D,Parisi,Fio,3
+2025/26,95,D,Dodò,Fio,56
+2025/26,95,D,Bartesaghi,Mil,1
+2025/26,95,D,Gaspar K.,Lec,20
+2025/26,95,D,Dembelè A. *,Tor,1
+2025/26,95,D,Lovik *,Par,4
+2025/26,95,C,Mandragora,Fio,9
+2025/26,95,C,Loftus-Cheek,Mil,34
+2025/26,95,C,Sergi Roberto,Com,1
+2025/26,95,C,Da Cunha,Com,19
+2025/26,95,C,Vlasic,Tor,60
+2025/26,95,C,Ederson D.S.,Ata,31
+2025/26,95,C,Moro N.,Bol,4
+2025/26,95,C,Richardson *,Fio,1
+2025/26,95,A,Johnsen *,Cre,1
+2025/26,95,A,Noslin,Laz,1
+2025/26,95,A,Castro S.,Bol,57
+2025/26,95,A,Meister,Pis,5
+2025/26,95,,,,
+2025/26,96,P,Audero,Cre,1
+2025/26,96,P,Silvestri,Cre,1
+2025/26,96,P,Nava,Cre,1
+2025/26,96,D,Acerbi,Int,24
+2025/26,96,D,Martin,Gen,29
+2025/26,96,D,Nkounkou,Tor,5
+2025/26,96,D,Obert,Cag,8
+2025/26,96,D,Baschirotto,Cre,14
+2025/26,96,D,Otoa,Gen,1
+2025/26,96,D,Canestrelli,Pis,11
+2025/26,96,D,Siebert,Lec,1
+2025/26,96,C,De Roon,Ata,10
+2025/26,96,C,Grassi,Cre,1
+2025/26,96,C,Zaccagni,Laz,112
+2025/26,96,C,Calhanoglu,Int,62
+2025/26,96,C,Brescianini,Fio,2
+2025/26,96,C,Ricci S.,Mil,2
+2025/26,96,C,Oristanio,Par,8
+2025/26,96,C,Lipani,Sas,7
+2025/26,96,A,Vardy,Cre,55
+2025/26,96,A,Cambiaghi,Bol,27
+2025/26,96,A,Almqvist,Par,10
+2025/26,96,A,Yildiz,Juv,117
+2025/26,96,A,Stojilkovic,Pis,1
+2025/26,97,P,Padelli,Udi,1
+2025/26,97,P,Okoye,Udi,29
+2025/26,97,P,Sava,Udi,1
+2025/26,97,D,Djimsiti,Ata,2
+2025/26,97,D,Di Lorenzo,Nap,56
+2025/26,97,D,Casale,Bol,1
+2025/26,97,D,Tavares N.,Laz,39
+2025/26,97,D,Barbieri,Cre,1
+2025/26,97,D,Cabal,Juv,7
+2025/26,97,D,Marianucci,Tor,21
+2025/26,97,D,Valentini N.,Ver,8
+2025/26,97,C,Odgaard,Bol,60
+2025/26,97,C,Vranckx,Sas,13
+2025/26,97,C,Zhegrova,Juv,61
+2025/26,97,C,Isaksen,Laz,40
+2025/26,97,C,Prati,Tor,4
+2025/26,97,C,Venturino,Rom,2
+2025/26,97,C,Sucic P.,Int,15
+2025/26,97,C,Vural,Pis,1
+2025/26,97,A,Boga,Juv,33
+2025/26,97,A,Krstovic,Ata,93
+2025/26,97,A,Mosquera,Ver,4
+2025/26,97,A,Dominguez B.,Bol,8
+2025/26,97,A,Rodriguez Je.,Com,25
+2025/26,98,,,,
+2025/26,98,,,,
+2025/26,98,,,,
+2025/26,98,,,,
+2025/26,98,,,,
+2025/26,98,,,,
+2025/26,98,,,,
+2025/26,98,,,,
+2025/26,98,,,,
+2025/26,98,,,,
+2025/26,98,,,,
+2025/26,98,,,,
+2025/26,98,,,,
+2025/26,98,,,,
+2025/26,98,,,,
+2025/26,98,,,,
+2025/26,98,,,,
+2025/26,98,,,,
+2025/26,98,,,,
+2025/26,98,,,,
+2025/26,98,,,,
+2025/26,98,,,,
+2025/26,98,,,,
+2025/26,98,,,,
+2025/26,99,,,,
+2025/26,99,,,,
+2025/26,99,,,,
+2025/26,99,,,,
+2025/26,99,,,,
+2025/26,99,,,,
+2025/26,99,,,,
+2025/26,99,,,,
+2025/26,99,,,,
+2025/26,99,,,,
+2025/26,99,,,,
+2025/26,99,,,,
+2025/26,99,,,,
+2025/26,99,,,,
+2025/26,99,,,,
+2025/26,99,,,,
+2025/26,99,,,,
+2025/26,99,,,,
+2025/26,99,,,,
+2025/26,99,,,,
+2025/26,99,,,,
+2025/26,99,,,,
+2025/26,99,,,,
+2025/26,99,,,,
+2025/26,100,P,Paleari,Tor,1
+2025/26,100,P,Israel,Tor,1
+2025/26,100,P,Siviero,Tor,46
+2025/26,100,D,Caracciolo A.,Pis,17
+2025/26,100,D,Valeri,Par,34
+2025/26,100,D,Veiga D.,Lec,1
+2025/26,100,D,Smolcic I.,Com,1
+2025/26,100,D,Heggem,Bol,24
+2025/26,100,D,Rodriguez Ju.,Cag,14
+2025/26,100,D,Zatterstrom,Gen,3
+2025/26,100,D,Mlacic,Udi,1
+2025/26,100,C,Konè M.,Rom,42
+2025/26,100,C,Aebischer,Pis,6
+2025/26,100,C,Iling Junior,Pis,18
+2025/26,100,C,Diouf,Int,10
+2025/26,100,C,Adzic,Juv,2
+2025/26,100,C,Ekkelenkamp,Udi,35
+2025/26,100,C,Vandeputte,Cre,22
+2025/26,100,C,Ordonez C.,Par,1
+2025/26,100,A,Pavoletti,Cag,2
+2025/26,100,A,Leao,Mil,143
+2025/26,100,A,Moumbagna,Cre,6
+2025/26,100,A,Njie,Tor,1
+2025/26,100,A,Durosinmi,Pis,75

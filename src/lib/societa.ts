@@ -16,10 +16,25 @@ export type Societa = {
   ranking: number;
   puntiRanking: number;
   leader: boolean;
+  badgeNewEntry: boolean;
+  badgeNeopromossa: boolean;
+  badgeCampioneSerieA: boolean;
 };
 
 function parseCsvLine(line: string) {
-  return line.split(",").map((value) => value.trim());
+  return line
+    .split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/)
+    .map((value) => value.replace(/^"|"$/g, "").trim());
+}
+
+function isSi(value: string | undefined) {
+  const normalized = value
+    ?.trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+  return normalized === "si";
 }
 
 export function getSocieta(): Societa[] {
@@ -28,7 +43,9 @@ export function getSocieta(): Societa[] {
   const ranking = getRanking();
 
   const lines = fileContent.trim().split(/\r?\n/);
-  const headers = parseCsvLine(lines[0]);
+  const headers = parseCsvLine(lines[0]).map((header) =>
+    header.replace(/^\uFEFF/, "")
+  );
 
   return lines.slice(1).map((line) => {
     const values = parseCsvLine(line);
@@ -39,7 +56,6 @@ export function getSocieta(): Societa[] {
     });
 
     const id = Number(row.ID_Squadra);
-
     const rankingItem = ranking.find((item) => item.squadraId === id);
 
     const slug = row.Nome_Società
@@ -70,6 +86,9 @@ export function getSocieta(): Societa[] {
       ranking: rankingItem?.posizione ?? 999,
       puntiRanking: rankingItem?.puntiRanking ?? 0,
       leader: rankingItem?.posizione === 1,
+      badgeNewEntry: isSi(row.Badge_New_Entry),
+      badgeNeopromossa: isSi(row.Badge_Neopromossa),
+      badgeCampioneSerieA: isSi(row.Badge_Campione_Serie_A),
     };
   });
 }

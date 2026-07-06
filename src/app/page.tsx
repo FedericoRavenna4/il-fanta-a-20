@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <div className="bg-white">
+    <div>
       <section className="max-w-7xl mx-auto px-6 py-20 text-center">
         <Image
           src="/logos/logo.png"
