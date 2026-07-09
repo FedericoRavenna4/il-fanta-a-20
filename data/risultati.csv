@@ -1,0 +1,524 @@
+Stagione_ID,Lega,Competizione,Nome_Storico,Squadra_ID,Risultato_Testo
+1,Serie A,Campionato,Analanta,3,1
+1,Serie A,Campionato,PalerMavai Ma vieni Ma chi sono,26,2
+1,Serie A,Campionato,Brodena,9,3
+1,Serie A,Campionato,Coolinese FC,2,4
+1,Serie A,Campionato,Cagliarithanos,4,5
+1,Serie A,Campionato,I Leccendari,6,6
+1,Serie A,Campionato,IRoman,5,7
+1,Serie A,Campionato,u sole u mare Uventus,21,8
+1,Serie A,Campionato,Genoasis,23,9
+1,Serie A,Campionato,Interapia Intensiva,7,10
+1,Serie A,Campionato,FiorenTeen,101,11
+1,Serie A,Campionato,Bolagna,10,12
+1,Serie A,Campionato,Maranza Calcio Monza,107,13
+1,Serie A,Campionato,Napoleoni,17,14
+1,Serie A,Campionato,Mantova la gatta al lardo,31,15
+1,Serie A,Campionato,Fel-Lazio,22,16
+1,Serie A,Campionato,Como Habilis,13,17
+1,Serie A,Campionato,Leccester City FC,108,18
+1,Serie A,Campionato,SalerniTotti AO,104,19
+1,Serie A,Campionato,Why Always Milan,11,20
+2,Tutte,Coppa Fanta a 20,Analanta,3,Eliminato ai Quarti
+2,Tutte,Coppa Fanta a 20,Barisa,24,Eliminato agli Ottavi
+2,Tutte,Coppa Fanta a 20,Bolagna,10,Eliminato agli Ottavi
+2,Tutte,Coppa Fanta a 20,Hellas Terronia,14,Eliminato agli Ottavi
+2,Tutte,Coppa Fanta a 20,Cagliarithanos,4,Eliminato ai Sedicesimi
+2,Tutte,Coppa Fanta a 20,Napoleoni,17,Eliminato ai Sedicesimi
+2,Tutte,Coppa Fanta a 20,Carrariise,87,Eliminato ai Gironi
+2,Tutte,Coppa Fanta a 20,CE-SENI,105,Eliminato ai Sedicesimi
+2,Tutte,Coppa Fanta a 20,VenEzio Greggio Fc,19,Eliminato ai Gironi
+2,Tutte,Coppa Fanta a 20,FROSILVIONE,32,Eliminato ai Sedicesimi
+2,Tutte,Coppa Fanta a 20,PalerMavai Ma vieni Ma chi sono,26,Eliminato ai Gironi
+2,Tutte,Coppa Fanta a 20,Como Habilis,13,Eliminato ai Sedicesimi
+2,Tutte,Coppa Fanta a 20,Interapia Intensiva,7,Eliminato agli Ottavi
+2,Tutte,Coppa Fanta a 20,Fel-Lazio,22,Eliminato in Semifinale
+2,Tutte,Coppa Fanta a 20,Fiodena FC,110,Eliminato ai Gironi
+2,Tutte,Coppa Fanta a 20,Fiorentonio Cartonio,101,Eliminato agli Ottavi
+2,Tutte,Coppa Fanta a 20,KUNG FU PARMA CALCIO,1,Vincitore
+2,Tutte,Coppa Fanta a 20,Brodena,9,Eliminato ai Sedicesimi
+2,Tutte,Coppa Fanta a 20,Il Lecce di Sabino Virgilio,102,Eliminato agli Ottavi
+2,Tutte,Coppa Fanta a 20,Genoasis,23,Eliminato ai Sedicesimi
+2,Tutte,Coppa Fanta a 20,IRoman,5,Eliminato in Semifinale
+2,Tutte,Coppa Fanta a 20,Juve Scabbia,34,Eliminato ai Sedicesimi
+2,Tutte,Coppa Fanta a 20,u sole u mare Uventus,21,Eliminato ai Quarti
+2,Tutte,Coppa Fanta a 20,LA CRIMONESE,103,Eliminato agli Ottavi
+2,Tutte,Coppa Fanta a 20,MantoPa,109,Eliminato ai Sedicesimi
+2,Tutte,Coppa Fanta a 20,Maranza Monza,107,Eliminato ai Sedicesimi
+2,Tutte,Coppa Fanta a 20,MATERASSUOLO,15,Eliminato ai Quarti
+2,Tutte,Coppa Fanta a 20,Why Always Milan,11,Eliminato ai Sedicesimi
+2,Tutte,Coppa Fanta a 20,Coolinese FC,2,Eliminato ai Quarti
+2,Tutte,Coppa Fanta a 20,One Pisa,29,Eliminato ai Sedicesimi
+2,Tutte,Coppa Fanta a 20,PALLERMO FC,35,Eliminato ai Gironi
+2,Tutte,Coppa Fanta a 20,Parmalosi,104,Eliminato ai Sedicesimi
+2,Tutte,Coppa Fanta a 20,PREDATORINO,12,Eliminato ai Sedicesimi
+2,Tutte,Coppa Fanta a 20,Cremonelle,16,Eliminato ai Gironi
+2,Tutte,Coppa Fanta a 20,Pisa and Love,8,Eliminato agli Ottavi
+2,Tutte,Coppa Fanta a 20,Sampdodoria,81,Eliminato ai Sedicesimi
+2,Tutte,Coppa Fanta a 20,Spezial One,36,Eliminato ai Gironi
+2,Tutte,Coppa Fanta a 20,Sud Ti Rollo,106,Eliminato ai Sedicesimi
+2,Tutte,Coppa Fanta a 20,US CatanZarri,18,Finalista
+2,Tutte,Coppa Fanta a 20,I Leccendari,6,Eliminato ai Gironi
+2,Serie A,Campionato,Genoasis,23,1
+2,Serie A,Campionato,PREDATORINO,12,2
+2,Serie A,Campionato,Bolagna,10,3
+2,Serie A,Campionato,Why Always Milan,11,4
+2,Serie A,Campionato,Interapia Intensiva,7,5
+2,Serie A,Campionato,IRoman,5,6
+2,Serie A,Campionato,Analanta,3,7
+2,Serie A,Campionato,Como Habilis,13,8
+2,Serie A,Campionato,Il Lecce di Sabino Virgilio,102,9
+2,Serie A,Campionato,Cagliarithanos,4,10
+2,Serie A,Campionato,Parmalosi,104,11
+2,Serie A,Campionato,u sole u mare Uventus,21,12
+2,Serie A,Campionato,Fiorentonio Cartonio,101,13
+2,Serie A,Campionato,Napoleoni,17,14
+2,Serie A,Campionato,Coolinese FC,2,15
+2,Serie A,Campionato,I Leccendari,6,16
+2,Serie A,Campionato,Fel-Lazio,22,17
+2,Serie A,Campionato,PalerMavai Ma vieni Ma chi sono,26,18
+2,Serie A,Campionato,Maranza Monza,107,19
+2,Serie A,Campionato,Brodena,9,20
+2,Serie B,Campionato,KUNG FU PARMA CALCIO,1,1
+2,Serie B,Campionato,Pisa and Love,8,2
+2,Serie B,Campionato,MATERASSUOLO,15,3
+2,Serie B,Campionato,FiorenToni Pepperoni,18,4
+2,Serie B,Campionato,Barisa,24,5
+2,Serie B,Campionato,Cremonelle,16,6
+2,Serie B,Campionato,La Crimonese,103,7
+2,Serie B,Campionato,Juve Scabbia,34,8
+2,Serie B,Campionato,VenEzio Greggio Fc,19,9
+2,Serie B,Campionato,Sampdodoria,81,10
+2,Serie B,Campionato,Hellas Terronia,14,11
+2,Serie B,Campionato,Ce-seni,105,12
+2,Serie B,Campionato,PESCARAMUCCIA,29,13
+2,Serie B,Campionato,FROSILVIONE,32,14
+2,Serie B,Campionato,Carrariise,87,15
+2,Serie B,Campionato,Sud Ti Rollo,106,16
+2,Serie B,Campionato,Spezial One,36,17
+2,Serie B,Campionato,Mantopa,109,18
+2,Serie B,Campionato,PALLERMO FC,35,19
+2,Serie B,Campionato,Fiodena Fc,110,20
+3,Tutte,Coppa Fanta a 20,Ciolone Milano,44,Qualificazione 1
+3,Tutte,Coppa Fanta a 20,Cassarano,83,Qualificazione 2
+3,Tutte,Coppa Fanta a 20,Andrea e Giugliano,27,Qualificazione 61
+3,Tutte,Coppa Fanta a 20,Carrariise,87,Qualificazione 4
+3,Tutte,Coppa Fanta a 20,KUNG FU PARMA CALCIO,1,Qualificazione 5
+3,Tutte,Coppa Fanta a 20,BIANCAVESE,88,Qualificazione 6
+3,Tutte,Coppa Fanta a 20,Gubbio di Fango,65,Qualificazione 7
+3,Tutte,Coppa Fanta a 20,A G Pascoli,67,Qualificazione 8
+3,Tutte,Coppa Fanta a 20,PONTEDERA,64,Qualificazione 9
+3,Tutte,Coppa Fanta a 20,NasPicerno,79,Qualificazione 10
+3,Tutte,Coppa Fanta a 20,I Leccendari,6,Qualificazione 11
+3,Tutte,Coppa Fanta a 20,PESCARAMUCCIA,29,Qualificazione 12
+3,Tutte,Coppa Fanta a 20,Genoasis,23,Qualificazione 13
+3,Tutte,Coppa Fanta a 20,GUIDONIA MONTECESARE,69,Qualificazione 14
+3,Tutte,Coppa Fanta a 20,Virtus Corona,47,Qualificazione 15
+3,Tutte,Coppa Fanta a 20,Why Always Milan,11,Qualificazione 16
+3,Tutte,Coppa Fanta a 20,Bacarpi Schitz,30,Qualificazione 17
+3,Tutte,Coppa Fanta a 20,Brodena,9,Qualificazione 18
+3,Tutte,Coppa Fanta a 20,Cagliarithanos,4,Qualificazione 19
+3,Tutte,Coppa Fanta a 20,Campobasta,63,Qualificazione 20
+3,Tutte,Coppa Fanta a 20,Andrea e Giugliano,27,Eliminato agli Ottavi
+3,Tutte,Coppa Fanta a 20,PineTonic,70,Qualificazione 22
+3,Tutte,Coppa Fanta a 20,FORLIPPO INZAGHI,62,Qualificazione 23
+3,Tutte,Coppa Fanta a 20,Benevengo,89,Qualificazione 24
+3,Tutte,Coppa Fanta a 20,Albanoleffe,48,Qualificazione 25
+3,Tutte,Coppa Fanta a 20,Hellas Terronia,14,Qualificazione 26
+3,Tutte,Coppa Fanta a 20,PATATA-LANTA UN23,96,Qualificazione 27
+3,Tutte,Coppa Fanta a 20,Sambenedetta Domenica,82,Qualificazione 28
+3,Tutte,Coppa Fanta a 20,Ospitaletto,28,Qualificazione 29
+3,Tutte,Coppa Fanta a 20,Pisa and Love,8,Qualificazione 30
+3,Tutte,Coppa Fanta a 20,Mantova la gatta al lardo,31,Qualificazione 31
+3,Tutte,Coppa Fanta a 20,AREZZENAL,68,Qualificazione 32
+3,Tutte,Coppa Fanta a 20,IRoman,5,Qualificazione 33
+3,Tutte,Coppa Fanta a 20,PalerMavai Ma vieni Ma chi sono,26,Qualificazione 34
+3,Tutte,Coppa Fanta a 20,Monzarella e Pomodoro,33,Qualificazione 35
+3,Tutte,Coppa Fanta a 20,Monopoly,84,Qualificazione 36
+3,Tutte,Coppa Fanta a 20,Pro Tarzanelli,54,Qualificazione 37
+3,Tutte,Coppa Fanta a 20,Kakasertana,86,Qualificazione 38
+3,Tutte,Coppa Fanta a 20,Cacace CerriNzola,92,Qualificazione 39
+3,Tutte,Coppa Fanta a 20,Coolinese FC,2,Qualificazione 40
+3,Tutte,Coppa Fanta a 20,Barisa,24,Qualificazione 41
+3,Tutte,Coppa Fanta a 20,acCattania,90,Qualificazione 42
+3,Tutte,Coppa Fanta a 20,Bolagna,10,Qualificazione 43
+3,Tutte,Coppa Fanta a 20,Communion Brescia,51,Qualificazione 44
+3,Tutte,Coppa Fanta a 20,Spezial One,36,Qualificazione 45
+3,Tutte,Coppa Fanta a 20,Aurora Pro Patriarcato,52,Qualificazione 46
+3,Tutte,Coppa Fanta a 20,BOMBERUGIA,75,Qualificazione 47
+3,Tutte,Coppa Fanta a 20,Lumezzanegger,57,Qualificazione 48
+3,Tutte,Coppa Fanta a 20,FROSILVIONE,32,Qualificazione 49
+3,Tutte,Coppa Fanta a 20,Juve Scabbia,34,Qualificazione 50
+3,Tutte,Coppa Fanta a 20,Virtus Tavernello,40,Qualificazione 51
+3,Tutte,Coppa Fanta a 20,Napoleoni,17,Qualificazione 52
+3,Tutte,Coppa Fanta a 20,Ravengers FC,66,Qualificazione 53
+3,Tutte,Coppa Fanta a 20,Vosenza,95,Qualificazione 54
+3,Tutte,Coppa Fanta a 20,Analanta,3,Qualificazione 55
+3,Tutte,Coppa Fanta a 20,FiorenToni Pepperoni,18,Qualificazione 56
+3,Tutte,Coppa Fanta a 20,Triest-In Peace,55,Qualificazione 57
+3,Tutte,Coppa Fanta a 20,El Dolomitazo,45,Qualificazione 58
+3,Tutte,Coppa Fanta a 20,Foggia a sbornia,98,Qualificazione 59
+3,Tutte,Coppa Fanta a 20,AS Pizza Erminio,49,Qualificazione 60
+3,Serie C - Girone C,Campionato,Andrea e Giugliano,27,1
+3,Tutte,Coppa Fanta a 20,FC Arzignano VAcchiappo,56,Qualificazione 62
+3,Tutte,Coppa Fanta a 20,Con mollica o senza,100,Qualificazione 63
+3,Tutte,Coppa Fanta a 20,SiracUSA,80,Qualificazione 64
+3,Tutte,Coppa Fanta a 20,SorrEnd,93,Qualificazione 65
+3,Tutte,Coppa Fanta a 20,Rimiccoli,73,Qualificazione 66
+3,Tutte,Coppa Fanta a 20,next Gengis Khan,53,Qualificazione 67
+3,Tutte,Coppa Fanta a 20,MATERASSUOLO,15,Qualificazione 68
+3,Tutte,Coppa Fanta a 20,CARTAnzaro,38,Qualificazione 69
+3,Tutte,Coppa Fanta a 20,Salernitanna,99,Qualificazione 70
+3,Tutte,Coppa Fanta a 20,Fc TiramiSudtirol,41,Qualificazione 71
+3,Tutte,Coppa Fanta a 20,SCARENATE L INFERNO,43,Qualificazione 72
+3,Tutte,Coppa Fanta a 20,Como Habilis,13,Qualificazione 73
+3,Tutte,Coppa Fanta a 20,Ac Bracciughina,71,Qualificazione 74
+3,Tutte,Coppa Fanta a 20,PergoleTette,59,Qualificazione 75
+3,Tutte,Coppa Fanta a 20,PEsaROTTI,72,Qualificazione 76
+3,Tutte,Coppa Fanta a 20,LeccoBenfica,50,Qualificazione 77
+3,Tutte,Coppa Fanta a 20,Trepanni,94,Qualificazione 78
+3,Tutte,Coppa Fanta a 20,CITTASNELLA,46,Qualificazione 79
+3,Tutte,Coppa Fanta a 20,Interapia Intensiva,7,Qualificazione 80
+3,Tutte,Coppa Fanta a 20,Croton Fioc,85,Qualificazione 81
+3,Tutte,Coppa Fanta a 20,PadoVainCul,35,Qualificazione 82
+3,Tutte,Coppa Fanta a 20,PREDATORINO,12,Qualificazione 83
+3,Tutte,Coppa Fanta a 20,ALTAMOURINHO,97,Qualificazione 84
+3,Tutte,Coppa Fanta a 20,piantinese,77,Qualificazione 85
+3,Tutte,Coppa Fanta a 20,NO-VAR,58,Qualificazione 86
+3,Tutte,Coppa Fanta a 20,Torres,76,Qualificazione 87
+3,Tutte,Coppa Fanta a 20,US LATTINA CALCIO 1932,91,Qualificazione 88
+3,Tutte,Coppa Fanta a 20,Ternani,74,Qualificazione 89
+3,Tutte,Coppa Fanta a 20,u sole u mare Uventus,21,Qualificazione 90
+3,Tutte,Coppa Fanta a 20,VenEzio Greggio Fc,19,Qualificazione 91
+3,Tutte,Coppa Fanta a 20,InterUn23,78,Qualificazione 92
+3,Tutte,Coppa Fanta a 20,SCOREGGIANA,20,Qualificazione 93
+3,Tutte,Coppa Fanta a 20,Cremonelle,16,Qualificazione 94
+3,Tutte,Coppa Fanta a 20,FC CESENARTICO,39,Qualificazione 95
+3,Tutte,Coppa Fanta a 20,Trentotto Smalto Bianco,60,Qualificazione 96
+3,Tutte,Coppa Fanta a 20,AGNELLINO,61,Qualificazione 97
+3,Tutte,Coppa Fanta a 20,Sampdodoria,81,Qualificazione 98
+3,Tutte,Coppa Fanta a 20,EMPOLIZIA MUNICIPALE,37,Qualificazione 99
+3,Tutte,Coppa Fanta a 20,Fel-Lazio,22,Qualificazione 100
+3,Tutte,Coppa Fanta a 20,A G Pascoli,67,Eliminato agli Ottavi
+3,Tutte,Coppa Fanta a 20,acCattania,90,Eliminato 1 Turno Playoff
+3,Tutte,Coppa Fanta a 20,Albanoleffe,48,Eliminato 1 Turno Playoff
+3,Tutte,Coppa Fanta a 20,Analanta,3,Eliminato 3 Turno Playoff
+3,Serie C - Girone C,Champions League,Andrea e Giugliano,27,Finalista
+3,Tutte,Coppa Fanta a 20,AREZZENAL,68,Eliminato ai Trentaduesimi
+3,Tutte,Coppa Fanta a 20,AS Pizza Erminio,49,Eliminato ai Trentaduesimi
+3,Tutte,Coppa Fanta a 20,Aurora Pro Patriarcato,52,Eliminato 2 Turno Playoff
+3,Tutte,Coppa Fanta a 20,Bacarpi Schitz,30,Eliminato ai Trentaduesimi
+3,Tutte,Coppa Fanta a 20,Barisa,24,Eliminato 3 Turno Playoff
+3,Tutte,Coppa Fanta a 20,Benevengo,89,Quarto
+3,Tutte,Coppa Fanta a 20,BIANCAVESE,88,Eliminato ai Quarti
+3,Tutte,Coppa Fanta a 20,Bolagna,10,Eliminato 2 Turno Playoff
+3,Tutte,Coppa Fanta a 20,BOMBERUGIA,75,Eliminato 3 Turno Playoff
+3,Tutte,Coppa Fanta a 20,Brodena,9,Eliminato ai Trentaduesimi
+3,Tutte,Coppa Fanta a 20,Cacace CerriNzola,92,Eliminato ai Sedicesimi
+3,Tutte,Coppa Fanta a 20,Cagliarithanos,4,Eliminato ai Sedicesimi
+3,Tutte,Coppa Fanta a 20,Campobasta,63,Eliminato ai Sedicesimi
+3,Tutte,Coppa Fanta a 20,Carrariise,87,Eliminato agli Ottavi
+3,Tutte,Coppa Fanta a 20,Cassarano,83,Terzo
+3,Tutte,Coppa Fanta a 20,Ciolone Milano,44,Eliminato agli Ottavi
+3,Tutte,Coppa Fanta a 20,Communion Brescia,51,Eliminato 3 Turno Playoff
+3,Tutte,Coppa Fanta a 20,Con mollica o senza,100,Eliminato 3 Turno Playoff
+3,Tutte,Coppa Fanta a 20,Coolinese FC,2,Eliminato ai Sedicesimi
+3,Tutte,Coppa Fanta a 20,El Dolomitazo,45,Eliminato 3 Turno Playoff
+3,Tutte,Coppa Fanta a 20,FC Arzignano VAcchiappo,56,Eliminato 2 Turno Playoff
+3,Tutte,Coppa Fanta a 20,FiorenToni Pepperoni,18,Eliminato 2 Turno Playoff
+3,Tutte,Coppa Fanta a 20,Foggia a sbornia,98,Eliminato 3 Turno Playoff
+3,Tutte,Coppa Fanta a 20,FORLIPPO INZAGHI,62,Eliminato ai Quarti
+3,Tutte,Coppa Fanta a 20,FROSILVIONE,32,Eliminato 1 Turno Playoff
+3,Tutte,Coppa Fanta a 20,Genoasis,23,Eliminato ai Sedicesimi
+3,Tutte,Coppa Fanta a 20,Gubbio di Fango,65,Eliminato agli Ottavi
+3,Tutte,Coppa Fanta a 20,GUIDONIA MONTECESARE,69,Eliminato ai Sedicesimi
+3,Tutte,Coppa Fanta a 20,Hellas Terronia,14,Eliminato ai Trentaduesimi
+3,Tutte,Coppa Fanta a 20,I Leccendari,6,Eliminato ai Quarti
+3,Tutte,Coppa Fanta a 20,IRoman,5,Eliminato 2 Turno Playoff
+3,Tutte,Coppa Fanta a 20,Juve Scabbia,34,Eliminato 2 Turno Playoff
+3,Tutte,Coppa Fanta a 20,Kakasertana,86,Eliminato 2 Turno Playoff
+3,Tutte,Coppa Fanta a 20,KUNG FU PARMA CALCIO,1,Eliminato agli Ottavi
+3,Tutte,Coppa Fanta a 20,LanaRhoades Vicenza,42,Qualificazione 21
+3,Tutte,Coppa Fanta a 20,LanaRhoades Vicenza,42,Vincitore
+3,Tutte,Coppa Fanta a 20,Lumezzanegger,57,Eliminato 3 Turno Playoff
+3,Tutte,Coppa Fanta a 20,Mantova la gatta al lardo,31,Eliminato 1 Turno Playoff
+3,Tutte,Coppa Fanta a 20,Monopoly,84,Eliminato 3 Turno Playoff
+3,Tutte,Coppa Fanta a 20,Monzarella e Pomodoro,33,Eliminato 3 Turno Playoff
+3,Tutte,Coppa Fanta a 20,Napoleoni,17,Eliminato 1 Turno Playoff
+3,Tutte,Coppa Fanta a 20,NasPicerno,79,Eliminato ai Quarti
+3,Tutte,Coppa Fanta a 20,Ospitaletto,28,Eliminato ai Trentaduesimi
+3,Tutte,Coppa Fanta a 20,PalerMavai Ma vieni Ma chi sono,26,Eliminato 1 Turno Playoff
+3,Tutte,Coppa Fanta a 20,PATATA-LANTA UN23,96,Eliminato 1 Turno Playoff
+3,Tutte,Coppa Fanta a 20,PESCARAMUCCIA,29,Eliminato agli Ottavi
+3,Tutte,Coppa Fanta a 20,PineTonic,70,Eliminato ai Trentaduesimi
+3,Tutte,Coppa Fanta a 20,Pisa and Love,8,Eliminato ai Trentaduesimi
+3,Tutte,Coppa Fanta a 20,PONTEDERA,64,Eliminato agli Ottavi
+3,Tutte,Coppa Fanta a 20,Pro Tarzanelli,54,Eliminato 3 Turno Playoff
+3,Tutte,Coppa Fanta a 20,Ravengers FC,66,Eliminato 2 Turno Playoff
+3,Tutte,Coppa Fanta a 20,Sambenedetta Domenica,82,Eliminato 1 Turno Playoff
+3,Tutte,Coppa Fanta a 20,SiracUSA,80,Eliminato 3 Turno Playoff
+3,Tutte,Coppa Fanta a 20,Spezial One,36,Eliminato 3 Turno Playoff
+3,Tutte,Coppa Fanta a 20,Triest-In Peace,55,Eliminato 3 Turno Playoff
+3,Tutte,Coppa Fanta a 20,Virtus Corona,47,Eliminato ai Sedicesimi
+3,Tutte,Coppa Fanta a 20,Virtus Tavernello,40,Eliminato 3 Turno Playoff
+3,Tutte,Coppa Fanta a 20,Vosenza,95,Eliminato 3 Turno Playoff
+3,Tutte,Coppa Fanta a 20,Why Always Milan,11,Eliminato ai Sedicesimi
+3,Serie A,Campionato,Coolinese FC,2,1
+3,Serie A,Campionato,I Leccendari,6,2
+3,Serie A,Campionato,Como Habilis,13,3
+3,Serie A,Campionato,Cremonelle,16,4
+3,Serie A,Campionato,IRoman,5,5
+3,Serie A,Campionato,Pisa and Love,8,6
+3,Serie A,Campionato,Hellas Terronia,14,7
+3,Serie A,Campionato,PREDATORINO,12,8
+3,Serie A,Campionato,FiorenToni Pepperoni,18,9
+3,Serie A,Campionato,Why Always Milan,11,10
+3,Serie A,Campionato,KUNG FU PARMA CALCIO,1,11
+3,Serie A,Campionato,Cagliarithanos,4,12
+3,Serie A,Campionato,Interapia Intensiva,7,13
+3,Serie A,Campionato,Bolagna,10,14
+3,Serie A,Campionato,MATERASSUOLO,15,15
+3,Serie A,Campionato,Analanta,3,16
+3,Serie A,Campionato,Napoleoni,17,17
+3,Serie A,Campionato,Genoasis,23,18
+3,Serie A,Campionato,Fel-Lazio,22,19
+3,Serie A,Campionato,u sole u mare Uventus,21,20
+3,Serie B,Campionato,SCOREGGIANA,20,1
+3,Serie B,Campionato,Brodena,9,2
+3,Serie B,Campionato,VenEzio Greggio Fc,19,3
+3,Serie B,Campionato,Monzarella e Pomodoro,33,4
+3,Serie B,Campionato,PESCARAMUCCIA,29,5
+3,Serie B,Campionato,Barisa,24,6
+3,Serie B,Campionato,PadoVainCul,35,7
+3,Serie B,Campionato,Mantova la gatta al lardo,31,8
+3,Serie B,Campionato,EMPOLIZIA MUNICIPALE,37,9
+3,Serie B,Campionato,FC CESENARTICO,39,10
+3,Serie B,Campionato,FROSILVIONE,32,11
+3,Serie B,Campionato,CARTAnzaro,38,12
+3,Serie B,Campionato,PalerMavai Ma vieni Ma chi sono,26,13
+3,Serie B,Campionato,Virtus Tavernello,40,14
+3,Serie B,Campionato,Juve Scabbia,34,15
+3,Serie B,Campionato,Spezial One,36,16
+3,Serie B,Campionato,Carrariise,87,17
+3,Serie B,Campionato,Fc TiramiSudtirol,41,18
+3,Serie B,Campionato,AGNELLINO,61,19
+3,Serie B,Campionato,Sampdodoria,81,20
+3,Serie C - Girone A,Campionato,Ospitaletto,28,1
+3,Serie C - Girone A,Campionato,El Dolomitazo,45,2
+3,Serie C - Girone A,Campionato,SCARENATE L INFERNO,43,3
+3,Serie C - Girone A,Campionato,Ciolone Milano,44,4
+3,Serie C - Girone A,Campionato,CITTASNELLA,46,5
+3,Serie C - Girone A,Campionato,LanaRhoades Vicenza,42,6
+3,Serie C - Girone A,Campionato,Albanoleffe,48,7
+3,Serie C - Girone A,Campionato,AS Pizza Erminio,49,8
+3,Serie C - Girone A,Campionato,Communion Brescia,51,9
+3,Serie C - Girone A,Campionato,Virtus Corona,47,10
+3,Serie C - Girone A,Campionato,LeccoBenfica,50,11
+3,Serie C - Girone A,Campionato,Triest-In Peace,55,12
+3,Serie C - Girone A,Campionato,Pro Tarzanelli,54,13
+3,Serie C - Girone A,Campionato,next Gengis Khan,53,14
+3,Serie C - Girone A,Campionato,Aurora Pro Patriarcato,52,15
+3,Serie C - Girone A,Campionato,FC Arzignano VAcchiappo,56,16
+3,Serie C - Girone A,Campionato,NO-VAR,58,17
+3,Serie C - Girone A,Campionato,PergoleTette,59,18
+3,Serie C - Girone A,Campionato,Lumezzanegger,57,19
+3,Serie C - Girone A,Campionato,Trentotto Smalto Bianco,60,20
+3,Serie C - Girone B,Campionato,Bacarpi Schitz,30,1
+3,Serie C - Girone A,Europa League,LanaRhoades Vicenza,42,Semifinale
+3,Serie C - Girone B,Campionato,FORLIPPO INZAGHI,62,3
+3,Serie C - Girone B,Campionato,Campobasta,63,4
+3,Serie C - Girone B,Campionato,PONTEDERA,64,5
+3,Serie C - Girone B,Campionato,Sambenedetta Domenica,82,6
+3,Serie C - Girone B,Campionato,Ravengers FC,66,7
+3,Serie C - Girone B,Campionato,Gubbio di Fango,65,8
+3,Serie C - Girone B,Campionato,Ac Bracciughina,71,9
+3,Serie C - Girone B,Campionato,AREZZENAL,68,10
+3,Serie C - Girone B,Campionato,PEsaROTTI,72,11
+3,Serie C - Girone B,Campionato,A G Pascoli,67,12
+3,Serie C - Girone B,Campionato,PineTonic,70,13
+3,Serie C - Girone B,Campionato,GUIDONIA MONTECESARE,69,14
+3,Serie C - Girone B,Campionato,Rimiccoli,73,15
+3,Serie C - Girone B,Campionato,Ternani,74,16
+3,Serie C - Girone B,Campionato,piantinese,77,17
+3,Serie C - Girone B,Campionato,Torres,76,18
+3,Serie C - Girone B,Campionato,BOMBERUGIA,75,19
+3,Serie C - Girone B,Campionato,InterUn 23,78,20
+3,Tutte,Coppa Fanta a 20,Licorto Muso FC,25,Qualificazione 3
+3,Serie C - Girone C,Campionato,Croton Fioc,85,2
+3,Serie C - Girone C,Campionato,Monopoly,84,3
+3,Serie C - Girone C,Campionato,Kakasertana,86,4
+3,Serie C - Girone C,Campionato,NasPicerno,79,5
+3,Serie C - Girone C,Campionato,SorrEnd,93,6
+3,Serie C - Girone C,Campionato,acCattania,90,7
+3,Serie C - Girone C,Campionato,Cassarano,83,8
+3,Serie C - Girone C,Campionato,BIANCAVESE,88,9
+3,Serie C - Girone C,Campionato,Cacace CerriNzola,92,10
+3,Serie C - Girone C,Campionato,US LATTINA CALCIO 1932,91,11
+3,Serie C - Girone C,Campionato,Trepanni,94,12
+3,Serie C - Girone C,Campionato,ALTAMOURINHO,97,13
+3,Serie C - Girone C,Campionato,Benevengo,89,14
+3,Serie C - Girone C,Campionato,Vosenza,95,15
+3,Serie C - Girone C,Campionato,SiracUSA,80,16
+3,Serie C - Girone C,Campionato,Foggia a sbornia,98,17
+3,Serie C - Girone C,Campionato,PATATA-LANTA UN23,96,18
+3,Serie C - Girone C,Campionato,Salernitanna,99,19
+3,Serie C - Girone C,Campionato,Con mollica o senza,100,20
+1,Serie A,Champions League,Bolagna,10,Semifinale
+1,Serie A,Champions League,Brodena,9,Girone 4
+1,Serie A,Champions League,Cagliarithanos,4,Vincitore
+1,Serie A,Champions League,Genoasis,23,Girone 3
+1,Serie A,Champions League,Maranza Calcio Monza,107,Girone 4
+1,Serie A,Champions League,Napoleoni,17,Semifinale
+1,Serie A,Champions League,PalerMavai Ma vieni Ma chi sono,26,Finalista
+1,Serie A,Champions League,u sole u mare Uventus,21,Girone 3
+1,Serie A,Conference League,Fel-Lazio,22,Girone 3
+1,Serie A,Conference League,Interapia Intensiva,7,Vincitore
+1,Serie A,Conference League,Leccester City FC,108,Finalista
+1,Serie A,Conference League,IRoman,5,Semifinale
+1,Serie A,Conference League,SalerniTotti AO,104,Semifinale
+1,Serie A,Conference League,Why Always Milan,11,Girone 3
+1,Serie A,Europa League,Analanta,3,Semifinale
+1,Serie A,Europa League,Como Habilis,13,Girone 3
+1,Serie A,Europa League,Coolinese FC,2,Semifinale
+1,Serie A,Europa League,FiorenTeen,101,Finalista
+1,Serie A,Europa League,I Leccendari,6,Vincitore
+1,Serie A,Europa League,Mantova la gatta al lardo,31,Girone 3
+2,Serie A,Champions League,Bolagna,10,Girone 4
+2,Serie A,Champions League,Fiorentonio Cartonio,101,Girone 3
+2,Serie A,Champions League,Genoasis,23,Semifinale
+2,Serie A,Champions League,Interapia Intensiva,7,Vincitore
+2,Serie A,Champions League,PREDATORINO,12,Finalista
+2,Serie A,Champions League,IRoman,5,Girone 3
+2,Serie A,Champions League,u sole u mare Uventus,21,Girone 4
+2,Serie A,Champions League,Why Always Milan,11,Semifinale
+2,Serie A,Conference League,Brodena,9,Girone 3
+2,Serie A,Conference League,Fel-Lazio,22,Girone 3
+2,Serie A,Conference League,I Leccendari,6,Vincitore
+2,Serie A,Conference League,Maranza Monza,107,Semifinale
+2,Serie A,Conference League,Napoleoni,17,Finalista
+2,Serie A,Conference League,PalerMavai Ma vieni Ma chi sono,26,Semifinale
+2,Serie A,Europa League,Analanta,3,Vincitore
+2,Serie A,Europa League,Cagliarithanos,4,Finalista
+2,Serie A,Europa League,Como Habilis,13,Semifinale
+2,Serie A,Europa League,Coolinese FC,2,Girone 3
+2,Serie A,Europa League,Il Lecce di Sabino Virgilio,102,Girone 3
+2,Serie A,Europa League,Parmalosi,104,Semifinale
+2,Serie B,Champions League,Barisa,24,Semifinale
+2,Serie B,Champions League,KUNG FU PARMA CALCIO,1,Vincitore
+2,Serie B,Champions League,La Crimonese,103,Girone 4
+2,Serie B,Champions League,MATERASSUOLO,15,Semifinale
+2,Serie B,Champions League,PESCARAMUCCIA,29,Girone 3
+2,Serie B,Champions League,Pisa and Love,8,Girone 3
+2,Serie B,Champions League,Sud Ti Rollo,106,Girone 4
+2,Serie B,Conference League,Carrariise,87,Finalista
+2,Serie B,Conference League,Cremonelle,16,Semifinale
+2,Serie B,Conference League,Fiodena Fc,110,Girone 3
+2,Serie B,Conference League,Mantopa,109,Girone 3
+2,Serie B,Conference League,PALLERMO FC,35,Semifinale
+2,Serie B,Conference League,Spezial One,36,Vincitore
+2,Serie B,Europa League,Ce-seni,105,Semifinale
+2,Serie B,Europa League,FiorenToni Pepperoni,18,Girone 3
+2,Serie B,Europa League,Hellas Terronia,14,Vincitore
+2,Serie B,Europa League,Juve Scabbia,34,Girone 3
+2,Serie B,Europa League,Sampdodoria,81,Finalista
+2,Serie B,Europa League,VenEzio Greggio Fc,19,Semifinale
+3,Serie A,Champions League,Analanta,3,Girone 4
+3,Serie A,Champions League,Cagliarithanos,4,Semifinale
+3,Serie A,Champions League,Como Habilis,13,Girone 3
+3,Serie A,Champions League,Coolinese FC,2,Vincitore
+3,Serie A,Champions League,I Leccendari,6,Girone 3
+3,Serie A,Champions League,Pisa and Love,8,Semifinale
+3,Serie A,Champions League,IRoman,5,Finalista
+3,Serie A,Champions League,Why Always Milan,11,Girone 4
+3,Serie A,Conference League,Fel-Lazio,22,Semifinale
+3,Serie A,Conference League,FiorenToni Pepperoni,18,Girone 3
+3,Serie A,Conference League,Genoasis,23,Finalista
+3,Serie A,Conference League,Napoleoni,17,Vincitore
+3,Serie A,Conference League,PREDATORINO,12,Semifinale
+3,Serie A,Conference League,u sole u mare Uventus,21,Girone 3
+3,Serie A,Europa League,Bolagna,10,Girone 3
+3,Serie A,Europa League,Cremonelle,16,Vincitore
+3,Serie A,Europa League,Hellas Terronia,14,Semifinale
+3,Serie A,Europa League,Interapia Intensiva,7,Finalista
+3,Serie A,Europa League,KUNG FU PARMA CALCIO,1,Semifinale
+3,Serie A,Europa League,MATERASSUOLO,15,Girone 3
+3,Serie B,Champions League,Brodena,9,Girone 3
+3,Serie B,Champions League,Carrariise,87,Girone 4
+3,Serie B,Champions League,CARTAnzaro,38,Girone 4
+3,Serie B,Champions League,Mantova la gatta al lardo,31,Semifinale
+3,Serie B,Champions League,Monzarella e Pomodoro,33,Girone 3
+3,Serie B,Champions League,PadoVainCul,35,Finalista
+3,Serie B,Champions League,SCOREGGIANA,20,Vincitore
+3,Serie B,Champions League,VenEzio Greggio Fc,19,Semifinale
+3,Serie B,Conference League,AGNELLINO,61,Semifinale
+3,Serie B,Conference League,EMPOLIZIA MUNICIPALE,37,Vincitore
+3,Serie B,Conference League,FC CESENARTICO,39,Semifinale
+3,Serie B,Conference League,Fc TiramiSudtirol,41,Girone 3
+3,Serie B,Conference League,Juve Scabbia,34,Girone 3
+3,Serie B,Conference League,Sampdodoria,81,Finalista
+3,Serie B,Europa League,Barisa,24,Vincitore
+3,Serie B,Europa League,FROSILVIONE,32,Semifinale
+3,Serie B,Europa League,PalerMavai Ma vieni Ma chi sono,26,Girone 3
+3,Serie B,Europa League,PESCARAMUCCIA,29,Finalista
+3,Serie B,Europa League,Spezial One,36,Semifinale
+3,Serie B,Europa League,Virtus Tavernello,40,Girone 3
+3,Serie C - Girone A,Champions League,AS Pizza Erminio,49,Girone 4
+3,Serie C - Girone A,Champions League,Aurora Pro Patriarcato,52,Girone 4
+3,Serie C - Girone A,Champions League,Ciolone Milano,44,Girone 3
+3,Serie C - Girone A,Champions League,CITTASNELLA,46,Semifinale
+3,Serie C - Girone A,Champions League,El Dolomitazo,45,Semifinale
+3,Serie C - Girone A,Champions League,Ospitaletto,28,Finalista
+3,Serie C - Girone A,Champions League,SCARENATE L INFERNO,43,Vincitore
+3,Serie C - Girone A,Champions League,Virtus Corona,47,Girone 3
+3,Serie C - Girone A,Conference League,Communion Brescia,51,Finalista
+3,Serie C - Girone A,Conference League,Lumezzanegger,57,Semifinale
+3,Serie C - Girone A,Conference League,NO-VAR,58,Semifinale
+3,Serie C - Girone A,Conference League,PergoleTette,59,Finalista
+3,Serie C - Girone A,Conference League,Trentotto Smalto Bianco,60,Girone 3
+3,Serie C - Girone A,Conference League,Triest-In Peace,55,Girone 3
+3,Serie C - Girone A,Europa League,Albanoleffe,48,Semifinale
+3,Serie C - Girone A,Europa League,FC Arzignano VAcchiappo,56,Girone 3
+3,Tutte,Coppa Fanta a 20,Licorto Muso FC,25,Finalista
+3,Serie C - Girone A,Europa League,LeccoBenfica,50,Vincitore
+3,Serie C - Girone A,Europa League,next Gengis Khan,53,Finalista
+3,Serie C - Girone A,Europa League,Pro Tarzanelli,54,Girone 3
+3,Serie C - Girone B,Champions League,A G Pascoli,67,Girone 3
+3,Serie C - Girone B,Champions League,Bacarpi Schitz,30,Semifinale
+3,Serie C - Girone B,Champions League,Campobasta,63,Finalista
+3,Serie C - Girone B,Champions League,FORLIPPO INZAGHI,62,Vincitore
+3,Serie C - Girone B,Champions League,Gubbio di Fango,65,Girone 4
+3,Serie C - Girone B,Campionato,Licorto Muso FC,25,2
+3,Serie C - Girone B,Champions League,PONTEDERA,64,Girone 4
+3,Serie C - Girone B,Champions League,Sambenedetta Domenica,82,Girone 3
+3,Serie C - Girone B,Conference League,BOMBERUGIA,75,Semifinale
+3,Serie C - Girone B,Conference League,InterUn 23,78,Girone 3
+3,Serie C - Girone B,Conference League,piantinese,77,Girone 3
+3,Serie C - Girone B,Conference League,Rimiccoli,73,Finalista
+3,Serie C - Girone B,Conference League,Ternani,74,Finalista
+3,Serie C - Girone B,Conference League,Torres,76,Semifinale
+3,Serie C - Girone B,Europa League,Ac Bracciughina,71,Girone 3
+3,Serie C - Girone B,Europa League,AREZZENAL,68,Finalista
+3,Serie C - Girone B,Europa League,GUIDONIA MONTECESARE,69,Semifinale
+3,Serie C - Girone B,Europa League,PEsaROTTI,72,Girone 3
+3,Serie C - Girone B,Europa League,PineTonic,70,Semifinale
+3,Serie C - Girone B,Europa League,Ravengers FC,66,Vincitore
+3,Serie C - Girone C,Champions League,acCattania,90,Girone 4
+3,Serie C - Girone B,Champions League,Licorto Muso FC,25,Semifinale
+3,Serie C - Girone C,Champions League,BIANCAVESE,88,Girone 3
+3,Serie C - Girone C,Champions League,Croton Fioc,85,Semifinale
+3,Serie C - Girone C,Champions League,Monopoly,84,Semifinale
+3,Serie C - Girone C,Champions League,NasPicerno,79,Girone 3
+3,Serie C - Girone C,Champions League,PATATA-LANTA UN23,96,Girone 4
+3,Serie C - Girone C,Champions League,US LATTINA CALCIO 1932,91,Finalista
+3,Serie C - Girone C,Conference League,ALTAMOURINHO,97,Finalista
+3,Serie C - Girone C,Conference League,Con mollica o senza,100,Girone 3
+3,Serie C - Girone C,Conference League,Foggia a sbornia,98,Girone 3
+3,Serie C - Girone C,Conference League,Salernitanna,99,Semifinale
+3,Serie C - Girone C,Conference League,SiracUSA,80,Semifinale
+3,Serie C - Girone C,Conference League,Trepanni,94,Vincitore
+3,Serie C - Girone C,Europa League,Benevengo,89,Finalista
+3,Serie C - Girone C,Europa League,Cacace CerriNzola,92,Girone 3
+3,Serie C - Girone C,Europa League,Cassarano,83,Semifinale
+3,Serie C - Girone C,Europa League,Kakasertana,86,Vincitore
+3,Serie C - Girone C,Europa League,SorrEnd,93,Girone 3
+3,Serie C - Girone C,Europa League,Vosenza,95,Semifinale

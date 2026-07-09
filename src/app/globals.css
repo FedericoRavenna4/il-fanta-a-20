@@ -21,4 +21,14 @@ body {
 
 a {
   text-decoration: none;
+}@keyframes logo-name-scroll {
+  0%,
+  18% {
+    transform: translateX(0);
+  }
+
+  78%,
+  100% {
+    transform: translateX(calc(-100% + 100px));
+  }
 }

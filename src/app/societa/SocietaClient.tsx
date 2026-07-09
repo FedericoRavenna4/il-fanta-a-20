@@ -5,18 +5,42 @@ import Link from "next/link";
 import { useState } from "react";
 import type { Societa } from "@/lib/societa";
 
-function getLegaBadge(lega: string) {
-  if (lega === "Serie A") return "bg-sky-100 text-sky-700 border-sky-200";
-  if (lega === "Serie B") return "bg-emerald-100 text-emerald-700 border-emerald-200";
-  if (lega.startsWith("Serie C")) return "bg-violet-100 text-violet-700 border-violet-200";
-  return "bg-blue-100 text-blue-700 border-blue-200";
-}
+function getHighlight(team: Societa) {
+  const baseGlow = {
+    glow:
+      "bg-[radial-gradient(circle_at_center,rgba(251,191,36,0.20),transparent_58%)]",
+    light: "group-hover:bg-amber-300/30",
+    logo: "group-hover:drop-shadow-[0_0_18px_rgba(251,191,36,0.45)]",
+  };
 
-function getLegaShortName(lega: string) {
-  if (lega === "Serie A") return "Serie A";
-  if (lega === "Serie B") return "Serie B";
-  if (lega.startsWith("Serie C")) return "Serie C";
-  return lega;
+  if (team.badgeCampioneSerieA) {
+    return {
+      border:
+        "border-sky-400 shadow-[0_0_0_1px_rgba(56,189,248,.45),0_0_28px_rgba(56,189,248,.22)]",
+      ...baseGlow,
+    };
+  }
+
+  if (team.id === 42) {
+    return {
+      border:
+        "border-amber-400 shadow-[0_0_0_1px_rgba(251,191,36,.50),0_0_30px_rgba(251,191,36,.26)]",
+      ...baseGlow,
+    };
+  }
+
+  if (team.leader) {
+    return {
+      border:
+        "border-red-500 shadow-[0_0_0_1px_rgba(239,68,68,.45),0_0_30px_rgba(239,68,68,.24)]",
+      ...baseGlow,
+    };
+  }
+
+  return {
+    border: "border-slate-200",
+    ...baseGlow,
+  };
 }
 
 export default function SocietaClient({ societa }: { societa: Societa[] }) {
@@ -25,14 +49,15 @@ export default function SocietaClient({ societa }: { societa: Societa[] }) {
 
   const filtered = societa
     .filter((team) => {
-      const searchText = `${team.nome} ${team.fantallenatore} ${team.nicknameInstagram} ${team.squadraReale}`.toLowerCase();
+      const searchText =
+        `${team.nome} ${team.fantallenatore} ${team.nicknameInstagram} ${team.squadraReale}`.toLowerCase();
 
       const matchSearch = searchText.includes(search.toLowerCase());
 
       const matchFilter =
         filter === "Tutte" ||
         team.legaAttuale === filter ||
-        (filter === "Serie C" && team.legaAttuale.startsWith("Serie C"));
+        team.legaAttuale === filter;
 
       return matchSearch && matchFilter;
     })
@@ -42,7 +67,6 @@ export default function SocietaClient({ societa }: { societa: Societa[] }) {
     "Tutte",
     "Serie A",
     "Serie B",
-    "Serie C",
     "Serie C - Girone A",
     "Serie C - Girone B",
     "Serie C - Girone C",
@@ -50,24 +74,24 @@ export default function SocietaClient({ societa }: { societa: Societa[] }) {
 
   return (
     <>
-      <div className="mb-8 grid gap-4 lg:grid-cols-[1fr_auto]">
+      <div className="mb-12">
         <input
           type="text"
           placeholder="Cerca società, fantallenatore o nickname..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full rounded-2xl border border-slate-200 bg-white/90 px-5 py-4 text-slate-700 shadow-sm outline-none focus:border-blue-900"
+          className="mx-auto block w-full max-w-3xl rounded-[1.25rem] border border-slate-200 bg-white px-6 py-5 text-lg text-slate-700 shadow-lg outline-none transition-all duration-300 placeholder:text-slate-400 focus:border-blue-900 focus:shadow-xl"
         />
 
-        <div className="flex flex-wrap gap-3">
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
           {filters.map((item) => (
             <button
               key={item}
               onClick={() => setFilter(item)}
-              className={`rounded-full px-5 py-3 text-sm font-semibold transition ${
+              className={`rounded-full px-5 py-3 text-sm font-bold transition-all duration-300 ${
                 filter === item
-                  ? "bg-blue-950 text-white shadow-md"
-                  : "bg-white/85 border border-slate-200 text-slate-600 hover:border-blue-900 hover:text-blue-900"
+                  ? "bg-blue-950 text-white shadow-lg shadow-blue-950/20"
+                  : "border border-slate-200 bg-white text-slate-600 hover:-translate-y-0.5 hover:border-blue-900 hover:text-blue-900 hover:shadow-md"
               }`}
             >
               {item}
@@ -76,62 +100,40 @@ export default function SocietaClient({ societa }: { societa: Societa[] }) {
         </div>
       </div>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 gap-x-4 gap-y-10 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-8 xl:grid-cols-10">
         {filtered.map((team) => {
-          const legaBadge = getLegaBadge(team.legaAttuale);
-          const legaShortName = getLegaShortName(team.legaAttuale);
+          const highlight = getHighlight(team);
 
           return (
             <Link
               key={team.id}
               href={`/societa/${team.slug}`}
-              className="group relative flex h-[330px] flex-col overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white px-6 pb-6 pt-5 text-center shadow-sm transition hover:-translate-y-1 hover:border-blue-200 hover:shadow-2xl"
+              title={team.nome}
+              className="group flex flex-col items-center"
             >
-              <div className={`absolute left-4 top-4 rounded-full border px-3 py-1 text-xs font-bold ${legaBadge}`}>
-                {legaShortName}
+              <div
+                className={`relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-[1.45rem] border bg-white shadow-sm transition-all duration-300 group-hover:-translate-y-1 group-hover:border-amber-300 group-hover:shadow-[0_18px_42px_rgba(15,23,42,0.16),0_0_30px_rgba(251,191,36,0.22)] ${highlight.border}`}
+              >
+                <div
+                  className={`pointer-events-none absolute inset-0 opacity-0 transition duration-300 group-hover:opacity-100 ${highlight.glow}`}
+                />
+
+                <div
+                  className={`pointer-events-none absolute h-24 w-24 rounded-full bg-amber-300/0 blur-3xl transition-all duration-300 ${highlight.light}`}
+                />
+
+                <Image
+                  src={team.logo}
+                  alt={team.nome}
+                  width={90}
+                  height={90}
+                  className={`relative z-10 max-h-[92px] max-w-[98px] object-contain drop-shadow-[0_8px_14px_rgba(15,23,42,0.18)] transition-all duration-300 group-hover:scale-[1.04] ${highlight.logo}`}
+                />
               </div>
 
-              {team.leader && (
-  <div className="absolute right-[-58px] top-[24px] rotate-45 bg-red-500/90 px-14 py-2 text-[10px] font-semibold tracking-wide text-white shadow-md">
-    ⭐ Ranking Leader
-  </div>
-)}
-
-              {team.badgeNewEntry && (
-  <div className="absolute right-[-58px] top-[24px] rotate-45 bg-sky-400/90 px-14 py-2 text-[10px] font-semibold tracking-wide text-white shadow-md">
-    🆕 New Entry
-  </div>
-)}
-
-              {team.badgeCampioneSerieA && (
-  <div className="absolute right-[-58px] top-[24px] rotate-45 bg-amber-400/90 px-14 py-2 text-[10px] font-semibold tracking-wide text-white shadow-md">
-    🏆 Campione
-  </div>
-)}
-
-              <div className="flex h-[132px] w-full items-center justify-center pt-5">
-                <div className="flex h-[112px] w-[128px] items-center justify-center">
-                  <Image
-                    src={team.logo}
-                    alt={team.nome}
-                    width={128}
-                    height={128}
-                    className="max-h-[108px] max-w-[118px] object-contain transition group-hover:scale-105"
-                  />
-                </div>
-              </div>
-
-              <div className="mt-4 flex h-[64px] items-start justify-center text-center">
-                <h2 className="line-clamp-2 max-w-full text-center text-balance text-[20px] font-extrabold uppercase leading-tight text-blue-950">
-                  {team.nome}
-                </h2>
-              </div>
-
-              <div className="flex h-[26px] items-start justify-center text-center">
-                <p className="line-clamp-1 max-w-full text-center text-sm text-slate-500">
-                  {team.fantallenatore}
-                </p>
-              </div>
+              <h2 className="mt-3 px-1 text-center text-[11px] font-black uppercase leading-[1.4] tracking-tight text-blue-950 transition-all duration-300 ease-out group-hover:tracking-normal group-hover:text-blue-900 group-hover:drop-shadow-[0_2px_8px_rgba(30,64,175,0.18)]">
+                {team.nome}
+              </h2>
             </Link>
           );
         })}
