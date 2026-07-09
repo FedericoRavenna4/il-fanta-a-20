@@ -84,7 +84,7 @@ export default function Home() {
         logo: team.logo,
       };
     })
-    .filter(Boolean);
+    .filter((squadra): squadra is NonNullable<typeof squadra> => squadra !== null);
 
   return (
     <main className="overflow-hidden bg-[linear-gradient(180deg,#eef7ff_0%,#f8fbff_42%,#eef5fb_100%)]">
