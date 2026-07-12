@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { getPalmares } from "@/lib/palmares";
 import { getRanking } from "@/lib/ranking";
 import { getSocieta, type Societa } from "@/lib/societa";
@@ -75,7 +76,7 @@ function SectionHeading({
   href,
   linkLabel,
 }: {
-  eyebrow: string;
+  eyebrow: ReactNode;
   title: string;
   text: string;
   href?: string;
@@ -84,9 +85,9 @@ function SectionHeading({
   return (
     <div className="mb-6 flex flex-col gap-3 sm:mb-10 sm:gap-6 lg:flex-row lg:items-end lg:justify-between">
       <div className="max-w-3xl">
-        <p className="text-[10px] font-black uppercase tracking-[0.24em] text-amber-500 sm:text-xs sm:tracking-[0.3em]">{eyebrow}</p>
+        <p className={`text-[10px] font-black uppercase tracking-[0.24em] sm:text-xs sm:tracking-[0.3em] ${eyebrow === "Le protagoniste" ? "text-amber-600 sm:text-amber-500" : "text-amber-500"}`}>{eyebrow}</p>
         <h2 className="mt-2 text-3xl font-black uppercase tracking-tight text-blue-950 sm:mt-3 sm:text-5xl">{title}</h2>
-        <p className="mt-2 text-sm font-semibold leading-5 text-slate-500 sm:mt-4 sm:text-lg sm:leading-7">{text}</p>
+        <p className={`mt-2 text-sm font-semibold leading-5 sm:mt-4 sm:text-lg sm:leading-7 ${eyebrow === "Le protagoniste" ? "text-slate-600 sm:text-slate-500" : "text-slate-500"}`}>{text}</p>
       </div>
       {href && linkLabel && (
         <Link href={href} className="group/link inline-flex w-fit items-center gap-3 text-sm font-black uppercase tracking-[0.14em] text-blue-950">
@@ -134,8 +135,8 @@ export default function Home() {
 
           <div className="relative order-3 mx-auto flex min-h-0 w-full max-w-lg items-center justify-center sm:min-h-[330px]">
             <div className="pointer-events-none absolute left-1/2 top-1/2 h-52 w-20 -translate-x-1/2 -translate-y-1/2 rotate-12 bg-sky-300/30 blur-[48px]" />
-            <div className="pointer-events-none absolute left-[24%] top-[26%] h-px w-56 -rotate-12 bg-gradient-to-r from-transparent via-sky-300/70 to-transparent" />
-            <div className="pointer-events-none absolute bottom-[26%] right-[18%] h-px w-48 rotate-12 bg-gradient-to-r from-transparent via-amber-300/60 to-transparent" />
+            <div className="pointer-events-none absolute left-[24%] top-[26%] hidden h-px w-56 -rotate-12 bg-gradient-to-r from-transparent via-sky-300/70 to-transparent sm:block" />
+            <div className="pointer-events-none absolute bottom-[26%] right-[18%] hidden h-px w-48 rotate-12 bg-gradient-to-r from-transparent via-amber-300/60 to-transparent sm:block" />
             <div className="relative z-10">
               <Image src="/logos/logo.png" alt="Logo Il Fanta a 20" width={310} height={310} priority className="h-auto w-16 drop-shadow-[0_18px_24px_rgba(15,23,42,0.22)] sm:w-72 sm:drop-shadow-[0_30px_38px_rgba(15,23,42,0.24)]" />
             </div>
@@ -175,18 +176,18 @@ export default function Home() {
 
       <section className="border-y border-slate-200/80 bg-white/65 py-8 sm:py-16 lg:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <SectionHeading eyebrow="Numeri e memoria" title="Le statistiche" text="Il valore delle società prende forma attraverso ranking, record e trofei conquistati nel tempo." />
-          <div className="grid gap-5 lg:grid-cols-[1.45fr_0.75fr]">
+          <SectionHeading eyebrow={<><span className="sm:hidden">Numeri e storia</span><span className="hidden sm:inline">Numeri e memoria</span></>} title="Le statistiche" text="Il valore delle società prende forma attraverso ranking, record e trofei conquistati nel tempo." />
+          <div className="grid gap-3 sm:gap-5 lg:grid-cols-[1.45fr_0.75fr]">
             <div className="relative flex flex-col overflow-hidden rounded-[2rem] bg-blue-950 p-4 text-white shadow-xl shadow-blue-950/15 sm:p-9">
               <div className="pointer-events-none absolute left-1/3 top-0 h-72 w-72 bg-sky-400/10 blur-[90px]" />
-              <p className="relative text-xs font-black uppercase tracking-[0.24em] text-sky-300">Il podio del ranking</p>
-              <div className="relative mt-4 grid gap-2 sm:mt-8 sm:grid-cols-3 sm:items-end sm:gap-3">
+              <p className="relative text-[10px] font-black uppercase tracking-[0.2em] text-sky-300 sm:text-xs sm:tracking-[0.24em]">Il podio del ranking</p>
+              <div className="relative mt-3 grid grid-cols-3 items-end gap-1.5 sm:mt-8 sm:gap-3">
                 {podioRanking.map(({ team, ranking: rankingItem }, index) => (
-                  <Link key={team.id} href={`/societa/${team.slug}`} className={`group flex flex-col items-center rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-3 text-center transition hover:-translate-y-1 hover:bg-white/[0.08] sm:p-5 ${index === 0 ? "sm:min-h-64 sm:justify-center" : "sm:min-h-56 sm:justify-center"}`}>
-                    <div className={`${index === 0 ? "h-14 w-14 sm:h-28 sm:w-28" : "h-12 w-12 sm:h-24 sm:w-24"} flex items-center justify-center p-1`}><TeamLogo team={team} size={index === 0 ? 105 : 90} /></div>
-                    <p className="mt-2 text-[10px] font-black uppercase tracking-[0.18em] text-white/45 sm:mt-4">{rankingItem.posizione}° posto</p>
-                    <h3 className="mt-2 text-sm font-black uppercase leading-tight">{team.nome}</h3>
-                    <p className="mt-2 text-xs font-bold text-sky-300">{rankingItem.puntiRanking.toLocaleString("it-IT")} pt</p>
+                  <Link key={team.id} href={`/societa/${team.slug}`} className={`group flex flex-col items-center rounded-xl border border-white/10 bg-white/[0.04] px-1.5 py-2 text-center transition hover:-translate-y-1 hover:bg-white/[0.08] sm:rounded-[1.5rem] sm:p-5 ${index === 0 ? "pb-3 sm:min-h-64 sm:justify-center" : "sm:min-h-56 sm:justify-center"}`}>
+                    <div className={`${index === 0 ? "h-12 w-12 sm:h-28 sm:w-28" : "h-10 w-10 sm:h-24 sm:w-24"} flex items-center justify-center p-0.5 sm:p-1`}><TeamLogo team={team} size={index === 0 ? 105 : 90} /></div>
+                    <p className="mt-1 text-[8px] font-black uppercase tracking-[0.1em] text-white/45 sm:mt-4 sm:text-[10px] sm:tracking-[0.18em]">{rankingItem.posizione}° posto</p>
+                    <h3 className="mt-1 line-clamp-2 text-[10px] font-black uppercase leading-tight sm:mt-2 sm:text-sm">{team.nome}</h3>
+                    <p className="mt-1 text-[9px] font-bold text-sky-300 sm:mt-2 sm:text-xs">{rankingItem.puntiRanking.toLocaleString("it-IT")} pt</p>
                   </Link>
                 ))}
               </div>
@@ -196,15 +197,15 @@ export default function Home() {
               </Link>
             </div>
             {teamPiuTitolato && (
-              <Link href="/hall-of-fame" className="group relative flex flex-col overflow-hidden rounded-[2rem] bg-[linear-gradient(145deg,#10264f,#071f45)] p-4 text-white shadow-xl shadow-blue-950/10 transition hover:-translate-y-1 hover:shadow-2xl sm:p-9">
+              <Link href="/hall-of-fame" className="group relative grid grid-cols-[52px_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 overflow-hidden rounded-[2rem] bg-[linear-gradient(145deg,#10264f,#071f45)] p-4 text-white shadow-xl shadow-blue-950/10 transition hover:-translate-y-1 hover:shadow-2xl sm:flex sm:flex-col sm:p-9">
                 <div className="pointer-events-none absolute -right-10 top-8 h-44 w-44 bg-amber-300/10 blur-[55px]" />
-                <p className="relative text-xs font-black uppercase tracking-[0.24em] text-amber-300">Hall of Fame</p>
-                <div className="relative mt-4 flex h-20 items-center justify-center sm:mt-10 sm:h-28"><TeamLogo team={teamPiuTitolato} size={118} /></div>
-                <div className="relative mt-4 flex flex-col items-start gap-4 border-t border-white/10 pt-5 sm:flex-row sm:items-center sm:justify-between">
-                  <div><h3 className="text-xl font-black uppercase">{teamPiuTitolato.nome}</h3><p className="mt-2 text-sm font-semibold text-white/50">La società più titolata della storia.</p></div>
-                  <div className="text-left sm:text-right"><p className="text-5xl font-black text-amber-300">{piuTitolata.totaleTrofei}</p><p className="text-[9px] font-black uppercase tracking-[0.18em] text-white/40">Trofei</p></div>
+                <p className="relative col-span-3 text-[10px] font-black uppercase tracking-[0.2em] text-amber-300 sm:text-xs sm:tracking-[0.24em]">Hall of Fame</p>
+                <div className="relative flex h-12 w-12 items-center justify-center sm:mt-10 sm:h-28 sm:w-auto"><TeamLogo team={teamPiuTitolato} size={118} /></div>
+                <div className="contents sm:relative sm:mt-4 sm:flex sm:w-full sm:items-center sm:justify-between sm:gap-4 sm:border-t sm:border-white/10 sm:pt-5">
+                  <div className="min-w-0"><h3 className="line-clamp-2 text-sm font-black uppercase leading-tight sm:text-xl">{teamPiuTitolato.nome}</h3><p className="mt-1 text-[10px] font-semibold leading-4 text-white/50 sm:mt-2 sm:text-sm">La società più titolata della storia.</p></div>
+                  <div className="text-right"><p className="text-3xl font-black text-amber-300 sm:text-5xl">{piuTitolata.totaleTrofei}</p><p className="text-[8px] font-black uppercase tracking-[0.14em] text-white/40 sm:text-[9px] sm:tracking-[0.18em]">Trofei</p></div>
                 </div>
-                <p className="relative mt-auto border-t border-white/10 pt-6 text-[10px] font-black uppercase tracking-[0.17em] text-white/80">Entra nella Hall of Fame <span className="ml-1 inline-block transition-transform group-hover:translate-x-1">→</span></p>
+                <p className="relative col-span-3 mt-1 border-t border-white/10 pt-3 text-[9px] font-black uppercase tracking-[0.14em] text-white/80 sm:mt-auto sm:w-full sm:pt-6 sm:text-[10px] sm:tracking-[0.17em]">Entra nella Hall of Fame <span className="ml-1 inline-block transition-transform group-hover:translate-x-1">→</span></p>
               </Link>
             )}
           </div>
@@ -236,7 +237,7 @@ export default function Home() {
                     <p className="pt-4 text-sm font-semibold leading-6 text-white/50">{item.descrizione}</p>
                     <p className="pt-6 text-[10px] font-black uppercase tracking-[0.17em] text-white/80">{item.nome === "Campionati" || item.nome === "Coppe europee" ? "Entra nelle competizioni" : "Entra nella competizione"} <span className="ml-1 inline-block transition-transform group-hover:translate-x-1">→</span></p>
                   </div>
-                  <div className={`flex items-center justify-center sm:h-full sm:min-h-52 ${item.nome === "Scatto Promozione" ? "h-20" : "h-24"}`}><CompetitionArtwork nome={item.nome} immagini={item.immagini} /></div>
+                  <div className={`flex items-center justify-center sm:h-full sm:min-h-52 ${item.nome === "Scatto Promozione" ? "h-12" : "h-14"}`}><CompetitionArtwork nome={item.nome} immagini={item.immagini} /></div>
                 </div>
               </Link>
             ))}

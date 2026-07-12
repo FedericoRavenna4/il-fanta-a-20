@@ -80,7 +80,7 @@ export default function CoppeEuropee() {
   alt={coppa.nome}
   width={230}
   height={230}
-  className={`relative z-0 mx-auto mt-3 h-24 w-full translate-y-0 object-contain opacity-90 drop-shadow-[0_0_26px_rgba(255,255,255,0.28)] transition duration-500 group-hover:scale-105 sm:mt-5 sm:h-36 lg:absolute lg:top-1/2 lg:mx-0 lg:mt-0 lg:h-auto lg:max-h-56 lg:w-auto lg:-translate-y-1/2 lg:opacity-100 lg:group-hover:scale-110 lg:group-hover:drop-shadow-[0_0_44px_rgba(255,255,255,0.55)] ${
+  className={`relative z-0 mx-auto mt-3 hidden h-24 w-full translate-y-0 object-contain opacity-90 drop-shadow-[0_0_26px_rgba(255,255,255,0.28)] transition duration-500 group-hover:scale-105 sm:mt-5 sm:block sm:h-36 lg:absolute lg:top-1/2 lg:mx-0 lg:mt-0 lg:h-auto lg:max-h-56 lg:w-auto lg:-translate-y-1/2 lg:opacity-100 lg:group-hover:scale-110 lg:group-hover:drop-shadow-[0_0_44px_rgba(255,255,255,0.55)] ${
     coppa.nome === "Champions League" ? "lg:-right-12" : "lg:-right-6"
   }`}
 />
@@ -91,7 +91,7 @@ export default function CoppeEuropee() {
   {coppa.nome}
 </h3>
 
-<p className="mt-4 max-w-none text-sm font-semibold leading-6 text-white/82 sm:text-[15px] sm:leading-7 lg:mt-5 lg:max-w-[68%]">
+<p className="mt-2 max-w-none text-xs font-semibold leading-5 text-white/82 sm:mt-4 sm:text-[15px] sm:leading-7 lg:mt-5 lg:max-w-[68%]">
                   {coppa.descrizione}
                 </p>
               </div>

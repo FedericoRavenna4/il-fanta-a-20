@@ -127,7 +127,7 @@ export function HallOfFameContent({ embedded = false }: { embedded?: boolean }) 
                 storia del Fanta a 20.
               </p>
 
-              <div className="order-5 col-span-2 mt-3 flex w-full min-w-0 items-center gap-3 rounded-[1.5rem] border border-amber-300 bg-white/70 px-3 py-2 shadow-md shadow-amber-200/50 sm:mt-5 sm:inline-flex sm:w-auto sm:gap-5 sm:px-5 sm:py-3">
+              <div className="order-5 col-span-2 mt-3 grid w-full min-w-0 grid-cols-[minmax(0,0.8fr)_1px_minmax(0,1.2fr)] items-center gap-3 rounded-[1.5rem] border border-amber-300 bg-white/70 px-3 py-2 shadow-md shadow-amber-200/50 sm:mt-5 sm:inline-flex sm:w-auto sm:gap-5 sm:px-5 sm:py-3">
                 <div>
                   <p className="text-xs font-black uppercase tracking-[0.22em] text-amber-800">
                     Trofei totali
@@ -138,7 +138,7 @@ export function HallOfFameContent({ embedded = false }: { embedded?: boolean }) 
                   </p>
                 </div>
 
-                <div className="h-14 w-px bg-amber-300" />
+                <div className="h-12 w-px bg-amber-300 sm:h-14" />
 
                 <p className="min-w-0 text-xs font-bold leading-5 text-slate-600 sm:max-w-[180px] sm:text-sm">
                   record assoluto nella storia della lega
@@ -156,7 +156,7 @@ export function HallOfFameContent({ embedded = false }: { embedded?: boolean }) 
                 alt={teamPiuTitolato.nome}
                 width={300}
                 height={300}
-                className="max-h-16 w-auto object-contain drop-shadow-[0_18px_28px_rgba(30,41,59,0.35)] transition group-hover:scale-105 sm:max-h-72"
+                className="max-h-18 w-auto object-contain drop-shadow-[0_18px_28px_rgba(30,41,59,0.35)] transition group-hover:scale-105 sm:max-h-72"
               />
             </div>
           </div>

@@ -69,12 +69,12 @@ export default function CoppaFanta() {
         </div>
       </div>
 
-      <div className="p-4 sm:p-6 lg:p-8">
-        <div className="grid gap-3 sm:gap-5 lg:grid-cols-3">
+      <div className="p-3 sm:p-6 lg:p-8">
+        <div className="grid gap-2 sm:gap-5 lg:grid-cols-3">
           {fasi.map((fase) => (
             <article
               key={fase.step}
-              className="group relative overflow-hidden rounded-[1.75rem] border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-white p-4 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg sm:p-6"
+              className="group relative overflow-hidden rounded-[1.35rem] border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-white p-3 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg sm:rounded-[1.75rem] sm:p-6"
             >
               <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(251,191,36,0.18),transparent_35%)] opacity-0 transition duration-300 group-hover:opacity-100" />
 
@@ -87,12 +87,12 @@ export default function CoppaFanta() {
                   {fase.title}
                 </h3>
 
-                <p className="mt-2 min-h-0 text-xs font-semibold leading-5 text-slate-500 sm:mt-5 sm:min-h-[72px] sm:text-sm sm:leading-6">
+                <p className="mt-1.5 min-h-0 text-[11px] font-semibold leading-4 text-slate-500 sm:mt-5 sm:min-h-[72px] sm:text-sm sm:leading-6">
                   {fase.text}
                 </p>
 
-                <div className="mt-3 rounded-[1.35rem] border border-amber-200 bg-gradient-to-br from-white via-amber-50 to-amber-100 px-3 py-2 text-center shadow-sm sm:mt-auto sm:px-5 sm:py-4">
-                  <p className="text-3xl font-black leading-none text-blue-950 sm:text-5xl">
+                <div className="mt-2 rounded-xl border border-amber-200 bg-gradient-to-br from-white via-amber-50 to-amber-100 px-3 py-1.5 text-center shadow-sm sm:mt-auto sm:rounded-[1.35rem] sm:px-5 sm:py-4">
+                  <p className="text-2xl font-black leading-none text-blue-950 sm:text-5xl">
                     {fase.number}
                   </p>
 
@@ -105,7 +105,7 @@ export default function CoppaFanta() {
           ))}
         </div>
 
-        <div className="my-10 flex items-center justify-center">
+        <div className="my-6 flex items-center justify-center sm:my-10">
           <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-300 to-amber-300" />
 
           <div className="mx-5 rounded-full bg-amber-300 px-6 py-2 text-sm font-black uppercase tracking-[0.18em] text-blue-950 shadow-md">

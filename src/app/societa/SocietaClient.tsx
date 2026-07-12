@@ -72,7 +72,7 @@ export default function SocietaClient({ societa }: { societa: Societa[] }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-x-2 gap-y-5 sm:gap-x-4 sm:gap-y-10 md:grid-cols-5 lg:grid-cols-8 xl:grid-cols-10">
+      <div className="grid grid-cols-4 gap-x-1.5 gap-y-4 sm:grid-cols-3 sm:gap-x-4 sm:gap-y-10 md:grid-cols-5 lg:grid-cols-8 xl:grid-cols-10">
         {filtered.map((team) => {
           const highlight = getHighlight();
 
@@ -84,7 +84,7 @@ export default function SocietaClient({ societa }: { societa: Societa[] }) {
               className="group flex flex-col items-center"
             >
               <div
-                className={`relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-[1rem] border bg-white p-1 shadow-sm transition-all duration-300 group-hover:-translate-y-1 group-hover:border-amber-300 group-hover:shadow-[0_18px_42px_rgba(15,23,42,0.16),0_0_30px_rgba(251,191,36,0.22)] sm:rounded-[1.45rem] sm:p-0 ${highlight.border}`}
+                className={`relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-[0.85rem] border bg-white p-0.5 shadow-sm transition-all duration-300 group-hover:-translate-y-1 group-hover:border-amber-300 group-hover:shadow-[0_18px_42px_rgba(15,23,42,0.16),0_0_30px_rgba(251,191,36,0.22)] sm:rounded-[1.45rem] sm:p-0 ${highlight.border}`}
               >
                 <div
                   className={`pointer-events-none absolute inset-0 opacity-0 transition duration-300 group-hover:opacity-100 ${highlight.glow}`}
@@ -99,11 +99,11 @@ export default function SocietaClient({ societa }: { societa: Societa[] }) {
                   alt={team.nome}
                   width={90}
                   height={90}
-                  className={`relative z-10 max-h-[68px] max-w-[72px] object-contain drop-shadow-[0_8px_14px_rgba(15,23,42,0.18)] transition-all duration-300 group-hover:scale-[1.04] sm:max-h-[92px] sm:max-w-[98px] ${highlight.logo}`}
+                  className={`relative z-10 max-h-[54px] max-w-[58px] object-contain drop-shadow-[0_8px_14px_rgba(15,23,42,0.18)] transition-all duration-300 group-hover:scale-[1.04] sm:max-h-[92px] sm:max-w-[98px] ${highlight.logo}`}
                 />
               </div>
 
-              <h2 className="mt-2 line-clamp-2 min-h-8 px-0.5 text-center text-[11px] font-black uppercase leading-4 tracking-tight text-blue-950 transition-colors duration-300 group-hover:text-blue-900 sm:mt-3 sm:h-8 sm:px-1">
+              <h2 className="mt-1.5 line-clamp-2 min-h-7 px-0 text-center text-[9px] font-black uppercase leading-[0.8rem] tracking-tight text-blue-950 transition-colors duration-300 group-hover:text-blue-900 sm:mt-3 sm:h-8 sm:px-1 sm:text-[11px] sm:leading-4">
                 {team.nome}
               </h2>
             </Link>
