@@ -21,7 +21,9 @@ body {
 
 a {
   text-decoration: none;
-}@keyframes logo-name-scroll {
+}
+
+@keyframes logo-name-scroll {
   0%,
   18% {
     transform: translateX(0);
@@ -31,4 +33,25 @@ a {
   100% {
     transform: translateX(calc(-100% + 100px));
   }
+}
+
+@keyframes home-club-marquee {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.home-club-marquee {
+  animation: home-club-marquee 150s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-club-marquee {
+    animation-play-state: paused;
+  }
+
 }

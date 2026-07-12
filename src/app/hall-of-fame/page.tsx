@@ -2,10 +2,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { getSocieta } from "@/lib/societa";
 import { getPalmares } from "@/lib/palmares";
+import PageHeader from "../components/PageHeader";
+import { getRisultati } from "@/lib/risultati";
 
 const sezioni = [
   {
-    titolo: "Campioni d’Italia",
+    titolo: "Gli Scudetti",
     descrizione: "Le società che hanno conquistato i campionati nazionali.",
     gruppi: [
       {
@@ -29,7 +31,7 @@ const sezioni = [
     ],
   },
   {
-    titolo: "Coppe europee",
+    titolo: "Le Coppe europee",
     descrizione: "Le società che hanno lasciato il segno nelle competizioni europee.",
     gruppi: [
       {
@@ -53,7 +55,7 @@ const sezioni = [
     ],
   },
   {
-    titolo: "Coppa Fanta a 20",
+    titolo: "La Coppa Fanta a 20",
     descrizione: "La coppa più prestigiosa e difficile dell’intero ecosistema competitivo.",
     gruppi: [
       {
@@ -71,9 +73,23 @@ function valore(record: unknown, campo: string) {
   return Number(item[campo] ?? 0);
 }
 
-export default function HallOfFamePage() {
+export function HallOfFameContent({ embedded = false }: { embedded?: boolean }) {
   const societa = getSocieta();
   const palmares = getPalmares();
+  const risultati = getRisultati();
+
+  const vincitoriCoppaFanta = risultati
+    .filter(
+      (item) =>
+        item.competizione === "Coppa Fanta a 20" &&
+        item.risultatoTesto.toLowerCase() === "vincitore"
+    )
+    .map((item) => ({
+      stagione: item.stagione,
+      team: societa.find((team) => team.id === item.squadraId),
+    }))
+    .filter((item) => item.team)
+    .sort((a, b) => a.stagione.localeCompare(b.stagione));
 
   const societaPiuTitolata = [...palmares].sort(
     (a, b) => b.totaleTrofei - a.totaleTrofei
@@ -84,34 +100,25 @@ export default function HallOfFamePage() {
   );
 
   return (
-    <section className="mx-auto max-w-7xl px-6 py-16">
-      <div className="mb-14">
-        <p className="mb-4 text-sm font-black uppercase tracking-[0.35em] text-slate-400">
-          Trofei e memoria storica
-        </p>
-
-        <h1 className="mb-5 text-6xl font-black tracking-tight text-blue-950">
-          Hall of Fame
-        </h1>
-
-        <p className="max-w-6xl text-lg leading-8 text-slate-600">
-          La vetrina più prestigiosa del Fanta a 20: il luogo in cui trofei,
-          vittorie e società leggendarie compongono la storia della lega.
-        </p>
-      </div>
+    <section id="hall-of-fame" className={embedded ? "scroll-mt-28" : "mx-auto max-w-7xl px-4 py-10 sm:px-5 sm:py-12 lg:px-6 lg:py-16"}>
+      {!embedded && <PageHeader
+        eyebrow="Trofei e memoria storica"
+        title="Hall of Fame"
+        description="La vetrina più prestigiosa del Fanta a 20, dove trofei, vittorie e società leggendarie compongono la storia della competizione."
+      />}
 
       {teamPiuTitolato && societaPiuTitolata && (
         <Link
           href={`/societa/${teamPiuTitolato.slug}`}
-          className="group mb-12 block overflow-hidden rounded-[2rem] border border-amber-400 bg-gradient-to-br from-amber-100 via-yellow-100 to-amber-50 text-blue-950 shadow-2xl shadow-amber-200/70 transition hover:-translate-y-1"
+          className={`group block overflow-hidden rounded-[2rem] border border-amber-400 bg-gradient-to-br from-amber-100 via-yellow-100 to-amber-50 text-blue-950 shadow-xl shadow-amber-200/60 transition hover:-translate-y-1 ${embedded ? "mb-7" : "mb-9"}`}
         >
-          <div className="grid items-center gap-8 p-8 lg:grid-cols-[1fr_320px] lg:p-10">
+          <div className={`grid items-center gap-5 p-5 sm:gap-6 sm:p-7 ${embedded ? "lg:grid-cols-[1fr_220px]" : "lg:grid-cols-[1fr_280px] lg:p-8"}`}>
             <div>
               <p className="mb-4 text-sm font-black uppercase tracking-[0.28em] text-amber-800">
                 🏛️ Società più titolata
               </p>
 
-              <h2 className="max-w-4xl text-5xl font-black leading-tight md:text-6xl">
+              <h2 className={`max-w-4xl break-words font-black leading-tight ${embedded ? "text-2xl sm:text-3xl md:text-4xl" : "text-3xl sm:text-4xl md:text-5xl"}`}>
                 {teamPiuTitolato.nome}
               </h2>
 
@@ -120,7 +127,7 @@ export default function HallOfFamePage() {
                 storia del Fanta a 20.
               </p>
 
-              <div className="mt-7 inline-flex items-center gap-5 rounded-[1.5rem] border border-amber-300 bg-white/70 px-5 py-4 shadow-md shadow-amber-200/50">
+              <div className="mt-5 inline-flex items-center gap-5 rounded-[1.5rem] border border-amber-300 bg-white/70 px-5 py-3 shadow-md shadow-amber-200/50">
                 <div>
                   <p className="text-xs font-black uppercase tracking-[0.22em] text-amber-800">
                     Trofei totali
@@ -156,11 +163,11 @@ export default function HallOfFamePage() {
         </Link>
       )}
 
-      <div className="grid gap-8">
-        {sezioni.map((sezione) => (
+      <div className="grid gap-5">
+        {[sezioni[0], sezioni[2], sezioni[1]].map((sezione) => (
           <section
             key={sezione.titolo}
-            className="rounded-[2rem] border border-slate-200 bg-white/90 p-7 shadow-xl shadow-slate-200/70"
+            className="rounded-[2rem] border border-slate-200 bg-white/90 p-5 shadow-xl shadow-slate-200/70 sm:p-7"
           >
             <div className="mb-7">
               <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-400">
@@ -176,7 +183,7 @@ export default function HallOfFamePage() {
               </p>
             </div>
 
-            <div className="grid gap-5 lg:grid-cols-3">
+            <div className={`grid gap-4 ${sezione.gruppi.length > 1 ? "lg:grid-cols-3" : ""}`}>
               {sezione.gruppi.map((gruppo) => {
                 const records = palmares
                   .map((record) => ({
@@ -188,6 +195,7 @@ export default function HallOfFamePage() {
                   .sort((a, b) => b.count - a.count);
 
                 const isDark = gruppo.style.includes("darkCard");
+                const isCoppaFanta = gruppo.campo === "coppaFantaA20";
 
                 return (
                   <div
@@ -224,8 +232,42 @@ export default function HallOfFamePage() {
                       </div>
                     </div>
 
-                    <div className="space-y-3">
-                      {records.length > 0 ? (
+                    <div className={isCoppaFanta ? "grid gap-3 md:grid-cols-2" : "space-y-3"}>
+                      {isCoppaFanta && vincitoriCoppaFanta.length > 0 ? (
+                        vincitoriCoppaFanta.map(({ stagione, team }) => (
+                          <Link
+                            key={`${stagione}-${team!.id}`}
+                            href={`/societa/${team!.slug}`}
+                            className="group grid grid-cols-[72px_52px_minmax(0,1fr)] items-center gap-3 rounded-[1.4rem] border border-amber-200 bg-white/75 p-3 shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-md sm:grid-cols-[90px_64px_minmax(0,1fr)] sm:gap-4 sm:p-4"
+                          >
+                            <div>
+                              <p className="text-[9px] font-black uppercase tracking-[0.18em] text-amber-700">
+                                Edizione
+                              </p>
+                              <p className="mt-1 text-lg font-black text-blue-950">
+                                {stagione}
+                              </p>
+                            </div>
+                            <div className="flex h-14 w-14 items-center justify-center">
+                              <Image
+                                src={team!.logo}
+                                alt={team!.nome}
+                                width={58}
+                                height={58}
+                                className="max-h-14 max-w-14 object-contain transition group-hover:scale-105"
+                              />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">
+                                Campione
+                              </p>
+                              <p className="mt-1 truncate font-black uppercase text-blue-950">
+                                {team!.nome}
+                              </p>
+                            </div>
+                          </Link>
+                        ))
+                      ) : records.length > 0 ? (
                         records.map(({ team, count }) => (
                           <Link
                             key={team!.id}
@@ -286,4 +328,8 @@ export default function HallOfFamePage() {
       </div>
     </section>
   );
+}
+
+export default function HallOfFamePage() {
+  return <HallOfFameContent />;
 }

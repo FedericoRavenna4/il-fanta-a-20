@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { getSocieta } from "@/lib/societa";
+import PageHeader from "../components/PageHeader";
 
 const leghe = [
   {
@@ -27,7 +28,7 @@ const gironiSerieC = [
   { id: "serie-c-girone-c", nome: "Serie C - Girone C", label: "Girone C" },
 ];
 
-export default function CampionatiPage() {
+export function CampionatiContent({ embedded = false }: { embedded?: boolean }) {
   const societa = getSocieta();
 
   const campioneSerieA = societa.find((team) => team.badgeCampioneSerieA);
@@ -41,22 +42,12 @@ export default function CampionatiPage() {
   );
 
   return (
-    <section className="mx-auto max-w-7xl px-6 py-16">
-      <div className="mb-14">
-        <p className="mb-4 text-sm font-black uppercase tracking-[0.35em] text-slate-400">
-          Sistema competitivo
-        </p>
-
-        <h1 className="mb-5 text-6xl font-black tracking-tight text-blue-950">
-          Campionati
-        </h1>
-
-        <p className="max-w-6xl text-lg leading-8 text-slate-600">
-          Le leghe che compongono il sistema competitivo del Fanta a 20. Dalla
-          Serie A ai tre gironi di Serie C, ogni società lotta per costruire la
-          propria storia tra promozioni, retrocessioni e stagioni decisive.
-        </p>
-      </div>
+    <section id="campionati" className={embedded ? "scroll-mt-28" : "mx-auto max-w-7xl px-4 py-10 sm:px-5 sm:py-12 lg:px-6 lg:py-16"}>
+      {!embedded && <PageHeader
+        eyebrow="Sistema competitivo"
+        title="Campionati"
+        description="Dalla Serie A ai tre gironi di Serie C, cinque leghe unite da promozioni, retrocessioni e una corsa continua verso il vertice."
+      />}
 
       <div className="grid gap-8">
         {leghe.map((lega) => {
@@ -77,14 +68,14 @@ export default function CampionatiPage() {
               id={lega.id}
               className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-xl shadow-slate-200/70"
             >
-              <div className={`bg-gradient-to-r ${lega.colore} px-8 py-8 text-white`}>
+              <div className={`bg-gradient-to-r ${lega.colore} px-5 py-6 text-white sm:px-8 sm:py-8`}>
                 <div className="flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
                   <div>
                     <p className="text-xs font-black uppercase tracking-[0.35em] text-white/60">
                       Campionato
                     </p>
 
-                    <h2 className="mt-2 text-5xl font-black tracking-tight drop-shadow-sm">
+                    <h2 className="mt-2 text-3xl font-black tracking-tight drop-shadow-sm sm:text-4xl lg:text-5xl">
   {lega.nome}
 </h2>
 
@@ -105,7 +96,7 @@ export default function CampionatiPage() {
                 </div>
               </div>
 
-              <div className="grid gap-6 p-6 lg:grid-cols-[1fr_1.3fr]">
+              <div className="grid gap-5 p-4 sm:gap-6 sm:p-6 lg:grid-cols-[1fr_1.3fr]">
                 <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-6">
                   {lega.nome === "Serie A" && campioneSerieA ? (
                     <>
@@ -139,16 +130,16 @@ export default function CampionatiPage() {
                   ) : (
                     <>
                       <p className="text-xs font-black uppercase tracking-[0.25em] text-slate-400">
-                        Focus campionato
+                        Il cuore della piramide
                       </p>
 
                       <h3 className="mt-3 text-2xl font-black text-blue-950">
-                        Corsa alla promozione
+                        La lega degli equilibri
                       </h3>
 
                       <p className="mt-3 text-sm font-semibold leading-6 text-slate-500">
-                        Ogni stagione può cambiare gli equilibri: la Serie B è
-                        il passaggio decisivo verso la massima lega.
+                        Ambizione, continuità e pressione si incontrano nella
+                        categoria che separa la crescita dalla consacrazione.
                       </p>
                     </>
                   )}
@@ -201,7 +192,7 @@ export default function CampionatiPage() {
                   Società partecipanti
                 </p>
 
-                <div className="mt-5 grid grid-cols-5 gap-3 sm:grid-cols-8 lg:grid-cols-10">
+                <div className="mt-5 grid grid-cols-3 gap-2 sm:grid-cols-5 sm:gap-3 md:grid-cols-8 lg:grid-cols-10">
                   {squadreLega.map((team) => (
                     <Link
   key={team.id}
@@ -219,7 +210,7 @@ export default function CampionatiPage() {
     className="relative z-10 max-h-14 max-w-14 object-contain transition duration-300 group-hover:-translate-y-5 group-hover:scale-105 group-hover:drop-shadow-[0_0_14px_rgba(255,255,255,0.95)]"
   />
 
-  <div className="pointer-events-none absolute bottom-3 left-2 right-2 z-10 flex h-9 items-center justify-center overflow-hidden opacity-0 transition duration-300 group-hover:opacity-100">
+  <div className="pointer-events-none absolute bottom-2 left-1 right-1 z-10 flex h-8 items-center justify-center overflow-hidden rounded-lg bg-slate-950/65 px-1 opacity-100 transition duration-300 lg:bottom-3 lg:left-2 lg:right-2 lg:h-9 lg:bg-transparent lg:opacity-0 lg:group-hover:opacity-100">
   <p className="line-clamp-2 text-center text-[10px] font-black uppercase leading-tight text-white">
     {team.nome}
   </p>
@@ -236,14 +227,14 @@ export default function CampionatiPage() {
           id="serie-c"
           className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-xl shadow-slate-200/70"
         >
-          <div className="bg-gradient-to-r from-violet-500 via-violet-600 to-blue-950 px-8 py-8 text-white">
+          <div className="bg-gradient-to-r from-violet-500 via-violet-600 to-blue-950 px-5 py-6 text-white sm:px-8 sm:py-8">
             <div className="flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.3em] text-white/70">
                   Campionato
                 </p>
 
-                <h2 className="mt-2 text-5xl font-black tracking-tight drop-shadow-sm">
+                <h2 className="mt-2 text-3xl font-black tracking-tight drop-shadow-sm sm:text-4xl lg:text-5xl">
   Serie C
 </h2>
 
@@ -286,7 +277,7 @@ export default function CampionatiPage() {
                     {girone.label}
                   </h3>
 
-                  <div className="mt-5 grid grid-cols-4 gap-3">
+                  <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
                     {squadreGirone.map((team) => (
                       <Link
   key={team.id}
@@ -304,7 +295,7 @@ export default function CampionatiPage() {
     className="relative z-10 max-h-12 max-w-12 object-contain transition duration-300 group-hover:-translate-y-5 group-hover:scale-105 group-hover:drop-shadow-[0_0_14px_rgba(255,255,255,0.95)]"
   />
 
-  <div className="pointer-events-none absolute bottom-3 left-1.5 right-1.5 z-10 flex h-9 items-center justify-center overflow-hidden opacity-0 transition duration-300 group-hover:opacity-100">
+  <div className="pointer-events-none absolute bottom-2 left-1 right-1 z-10 flex h-8 items-center justify-center overflow-hidden rounded-lg bg-slate-950/65 px-1 opacity-100 transition duration-300 lg:bottom-3 lg:left-1.5 lg:right-1.5 lg:h-9 lg:bg-transparent lg:opacity-0 lg:group-hover:opacity-100">
   <p className="overflow-hidden text-ellipsis text-center text-[9px] font-black uppercase leading-tight text-white">
   {team.nome}
 </p>
@@ -320,4 +311,8 @@ export default function CampionatiPage() {
       </div>
     </section>
   );
+}
+
+export default function CampionatiPage() {
+  return <CampionatiContent />;
 }

@@ -1,4 +1,4 @@
-import Image from "next/image";
+import PageHeader from "../components/PageHeader";
 const bonusIniziali = [
   ["1ª", "13 punti"],
   ["2ª", "8 punti"],
@@ -20,41 +20,15 @@ const puntiGiornata = [
   ["10°", "1"],
 ];
 
-export default function ScattoPromozionePage() {
+export function ScattoPromozioneContent({ embedded = false }: { embedded?: boolean }) {
   return (
     
-    <main className="mx-auto max-w-7xl px-6 py-16">
-      <section className="group relative overflow-hidden rounded-[2rem] border border-slate-200 bg-[radial-gradient(circle_at_85%_20%,rgba(239,68,68,0.38),transparent_30%),linear-gradient(135deg,#101827_0%,#111f3f_45%,#050814_100%)] px-10 py-16 text-white shadow-2xl shadow-slate-900/25">
-        <div className="pointer-events-none absolute inset-0 opacity-20 [background-image:linear-gradient(45deg,rgba(255,255,255,0.18)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.18)_50%,rgba(255,255,255,0.18)_75%,transparent_75%,transparent)] [background-size:42px_42px]" />
-        <div className="pointer-events-none absolute -right-20 top-10 h-72 w-72 rounded-full bg-red-500/35 blur-[120px] transition duration-500 group-hover:bg-red-500/35" />
-        <div className="pointer-events-none absolute -bottom-24 left-16 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
-<Image
-    src="/scatto-promozione/background.png"
-    alt=""
-    width={900}
-    height={900}
-    className="pointer-events-none absolute -right-45 top-[67%] h-auto w-[45rem] -translate-y-1/2 rotate-[18deg] object-contain opacity-25"
-    priority
-  style={{ zIndex: 0 }} /> 
-  
-
-  <div className="relative z-10 max-w-5xl"></div>
-        <div className="relative z-10 max-w-5xl">
-          <p className="text-sm font-black uppercase tracking-[0.35em] text-red-300">
-            La novità
-          </p>
-
-          <h1 className="mt-4 text-5xl font-black uppercase tracking-tight md:text-7xl">
-            Lo Scatto Promozione
-          </h1>
-
-          <p className="mt-6 max-w-4xl text-xl font-semibold leading-9 text-white/78">
-            La corsa finale della Serie C: 15 squadre, 9 giornate e un sistema
-            a punti ispirato alla Formula 1 per assegnare la quarta promozione
-            in Serie B.
-          </p>
-        </div>
-      </section>
+    <main id="scatto-promozione" className={embedded ? "scroll-mt-28" : "mx-auto max-w-7xl px-4 py-10 sm:px-5 sm:py-12 lg:px-6 lg:py-16"}>
+      {!embedded && <PageHeader
+        eyebrow="La corsa finale della Serie C"
+        title="Lo Scatto Promozione"
+        description="Quindici squadre, nove giornate e un sistema ispirato alla Formula 1 per assegnare la quarta promozione in Serie B."
+      />}
 
       <section className="mt-8 grid gap-5 md:grid-cols-4">
         {[
@@ -81,7 +55,7 @@ export default function ScattoPromozionePage() {
         ))}
       </section>
 
-      <section className="mt-10 rounded-[2rem] border border-slate-200 bg-white p-8 shadow-xl lg:p-10">
+      <section className="mt-8 rounded-[2rem] border border-slate-200 bg-white p-5 shadow-xl sm:mt-10 sm:p-8 lg:p-10">
         <p className="text-xs font-black uppercase tracking-[0.3em] text-red-500">
           Formula
         </p>
@@ -163,4 +137,8 @@ export default function ScattoPromozionePage() {
       </section>
     </main>
   );
+}
+
+export default function ScattoPromozionePage() {
+  return <ScattoPromozioneContent />;
 }

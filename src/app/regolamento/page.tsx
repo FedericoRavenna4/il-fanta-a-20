@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+import PageHeader from "../components/PageHeader";
+import { useState } from "react";
 
 const highlights = [
   {
@@ -24,64 +28,55 @@ const highlights = [
 ];
 
 export default function RegolamentoPage() {
+  const [activeSection, setActiveSection] = useState("asta");
+
   return (
-    <main className="mx-auto max-w-7xl px-6 py-16">
-      <section className="relative overflow-hidden rounded-[2rem] border border-blue-200/40 bg-[radial-gradient(circle_at_top_right,rgba(251,191,36,0.18),transparent_34%),linear-gradient(135deg,#294a8a_0%,#1a3268_45%,#10214c_100%)] px-10 py-12 text-white shadow-xl shadow-blue-950/20">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.08),transparent_45%)]" />
+    <main className="mx-auto max-w-7xl px-4 py-10 sm:px-5 sm:py-12 lg:px-6 lg:py-16">
+      <PageHeader
+        eyebrow="Documentazione ufficiale"
+        title="Il Regolamento"
+        description="Il Regolamento 3.0 raccoglie aste, mercato, competizioni e calcolo dei risultati, definendo il funzionamento completo della stagione."
+      />
 
-        <div className="relative z-10 max-w-4xl">
-          <p className="text-sm font-black uppercase tracking-[0.35em] text-blue-200">
-            Documentazione ufficiale
-          </p>
-
-          <h1 className="mt-4 text-5xl font-black uppercase tracking-tight">
-            Il Regolamento
-          </h1>
-
-          <p className="mt-6 text-xl leading-9 text-white/80">
-            Il Regolamento 3.0 raccoglie le regole ufficiali del Fanta a 20:
-            aste, mercato, competizioni e calcolo dei risultati, illustrando il
-            funzionamento completo della stagione.
-          </p>
-        </div>
-      </section>
-
-      <section className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-4 grid items-start gap-7 xl:grid-cols-[230px_minmax(0,1fr)]">
+      <aside className="grid gap-2 self-start rounded-[1.6rem] border border-slate-200/80 bg-white/70 p-2 shadow-lg shadow-blue-950/5 backdrop-blur-xl md:grid-cols-2 xl:grid-cols-1">
   {highlights.map((item) => (
-    <Link
+    <button
+      type="button"
       key={item.title}
-      href={item.href}
-      className="group relative overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white px-6 py-6 shadow-lg transition-all duration-300 hover:-translate-y-1 hover:border-amber-300 hover:shadow-xl"
+      onClick={() => setActiveSection(item.href.slice(1))}
+      className={`group relative overflow-hidden rounded-[1.15rem] border px-4 py-3 text-left transition-all duration-300 hover:border-amber-200 hover:bg-white hover:shadow-md ${activeSection === item.href.slice(1) ? "border-amber-200 bg-white shadow-md" : "border-transparent bg-white/70"}`}
     >
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(251,191,36,0.12),transparent_38%)] opacity-0 transition duration-300 group-hover:opacity-100" />
 
       <div className="relative">
-        <p className="text-xs font-black uppercase tracking-[0.22em] text-amber-500">
+        <p className="text-[9px] font-black uppercase tracking-[0.2em] text-amber-500">
           {item.label}
         </p>
 
-        <h2 className="mt-2 text-xl font-black uppercase tracking-tight text-blue-950 transition-colors duration-300 group-hover:text-blue-900">
+        <h2 className="mt-1 text-sm font-black uppercase tracking-tight text-blue-950 transition-colors duration-300 group-hover:text-blue-900">
           {item.title}
         </h2>
       </div>
-    </Link>
+    </button>
   ))}
-</section>
+</aside>
 
-      <section className="mt-12 space-y-10">
+      <section className="space-y-7">
 
  {/* ASTA */}
 
-<article id="asta" className="scroll-mt-28 overflow-hidden rounded-[2rem] border border-slate-200 bg-white p-8 shadow-xl lg:p-10">
+{activeSection === "asta" && (
+<article id="asta" className="relative overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white/90 p-5 shadow-lg shadow-slate-200/50 before:absolute before:inset-y-0 before:left-0 before:w-1 before:bg-gradient-to-b before:from-amber-400 before:via-sky-400 before:to-transparent sm:p-7 lg:p-9">
   <p className="text-xs font-black uppercase tracking-[0.30em] text-amber-500">
     Sezione Asta
   </p>
 
-  <h2 className="mt-2 text-4xl font-black uppercase tracking-tight text-blue-950">
+  <h2 className="mt-2 text-3xl font-black uppercase tracking-tight text-blue-950 sm:text-4xl">
     L&apos;asta principale
   </h2>
 
-  <div className="mt-7 max-w-5xl space-y-4 text-[17px] leading-8 text-slate-600">
+  <div className="mt-6 max-w-4xl space-y-4 text-base font-medium leading-8 text-slate-600 sm:text-[17px]">
     <p>
       L&apos;asta principale rappresenta il momento più atteso dell&apos;intera
       stagione: è qui che ogni fantallenatore costruisce la propria rosa e pone
@@ -143,7 +138,7 @@ export default function RegolamentoPage() {
             {block.subtitle}
           </p>
 
-          <div className="mt-5 grid grid-cols-4 gap-3 text-center">
+          <div className="mt-5 grid grid-cols-2 gap-2 text-center sm:grid-cols-4 sm:gap-3">
             {block.values.map(([numero, ruolo]) => (
               <div key={ruolo} className="rounded-2xl bg-white/10 px-3 py-4 transition-all duration-300 group-hover:bg-white/15">
                 <p className="text-3xl font-black text-amber-300 transition-all duration-300 group-hover:scale-105 group-hover:text-amber-200">
@@ -161,18 +156,20 @@ export default function RegolamentoPage() {
     </div>
   </div>
 </article>
+)}
 {/* MERCATI */}
 
-<article id="mercati" className="scroll-mt-28 overflow-hidden rounded-[2rem] border border-slate-200 bg-white p-8 shadow-xl lg:p-10">
+{activeSection === "mercati" && (
+<article id="mercati" className="relative overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white/90 p-5 shadow-lg shadow-slate-200/50 before:absolute before:inset-y-0 before:left-0 before:w-1 before:bg-gradient-to-b before:from-amber-400 before:via-sky-400 before:to-transparent sm:p-7 lg:p-9">
   <p className="text-xs font-black uppercase tracking-[0.30em] text-amber-500">
     Sezione Mercati
   </p>
 
-  <h2 className="mt-2 text-4xl font-black uppercase tracking-tight text-blue-950">
+  <h2 className="mt-2 text-3xl font-black uppercase tracking-tight text-blue-950 sm:text-4xl">
     Aste di riparazione
   </h2>
 
-  <div className="mt-7 max-w-5xl space-y-4 text-[17px] leading-8 text-slate-600">
+  <div className="mt-6 max-w-4xl space-y-4 text-base font-medium leading-8 text-slate-600 sm:text-[17px]">
     <p>
       Le aste di riparazione permettono di intervenire sulla rosa durante la
       stagione, correggere le scelte iniziali e cogliere nuove opportunità
@@ -180,21 +177,21 @@ export default function RegolamentoPage() {
     </p>
 
     <p>
-      Sono previste un'asta di settembre per completare le rose, un'asta di
+      Sono previste un’asta di settembre per completare le rose, un’asta di
       gennaio e sessioni durante le pause nazionali dedicate a interventi più
       contenuti.
     </p>
 
     <p>
-      Gli svincoli rimborsano il valore d'acquisto del giocatore e ogni
+      Gli svincoli rimborsano il valore d’acquisto del giocatore e ogni
       calciatore svincolato può essere riacquistato soltanto a un prezzo pari o
       superiore a quello di svincolo.
     </p>
 
     <p>
-      Le diverse finestre di mercato scandiscono l'intera stagione e
+      Le diverse finestre di mercato scandiscono l’intera stagione e
       permettono ai fantallenatori di adattare continuamente la propria rosa
-      all'andamento del campionato.
+      all’andamento del campionato.
     </p>
   </div>
 
@@ -237,18 +234,20 @@ export default function RegolamentoPage() {
     </div>
   </div>
 </article>
+)}
 {/* COMPETIZIONI */}
 
-<article id="competizioni" className="scroll-mt-28 overflow-hidden rounded-[2rem] border border-slate-200 bg-white p-8 shadow-xl lg:p-10">
+{activeSection === "competizioni" && (
+<article id="competizioni" className="relative overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white/90 p-5 shadow-lg shadow-slate-200/50 before:absolute before:inset-y-0 before:left-0 before:w-1 before:bg-gradient-to-b before:from-amber-400 before:via-sky-400 before:to-transparent sm:p-7 lg:p-9">
   <p className="text-xs font-black uppercase tracking-[0.30em] text-amber-500">
     Sezione Competizioni
   </p>
 
-  <h2 className="mt-2 text-4xl font-black uppercase tracking-tight text-blue-950">
+  <h2 className="mt-2 text-3xl font-black uppercase tracking-tight text-blue-950 sm:text-4xl">
     Campionati e categorie
   </h2>
 
-  <div className="mt-7 max-w-5xl space-y-4 text-[17px] leading-8 text-slate-600">
+  <div className="mt-6 max-w-4xl space-y-4 text-base font-medium leading-8 text-slate-600 sm:text-[17px]">
     <p>
       Il sistema campionati del Fanta a 20 è costruito su una vera piramide
       sportiva:{" "}
@@ -423,18 +422,20 @@ export default function RegolamentoPage() {
     </div>
   </div>
 </article>
+)}
 {/* CALCOLO */}
 
-<article id="calcolo" className="scroll-mt-28 overflow-hidden rounded-[2rem] border border-slate-200 bg-white p-8 shadow-xl lg:p-10">
+{activeSection === "calcolo" && (
+<article id="calcolo" className="relative overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white/90 p-5 shadow-lg shadow-slate-200/50 before:absolute before:inset-y-0 before:left-0 before:w-1 before:bg-gradient-to-b before:from-amber-400 before:via-sky-400 before:to-transparent sm:p-7 lg:p-9">
   <p className="text-xs font-black uppercase tracking-[0.30em] text-amber-500">
     Sezione Calcolo
   </p>
 
-  <h2 className="mt-2 text-4xl font-black uppercase tracking-tight text-blue-950">
+  <h2 className="mt-2 text-3xl font-black uppercase tracking-tight text-blue-950 sm:text-4xl">
     Calcolo punteggi
   </h2>
 
-  <div className="mt-7 max-w-5xl space-y-4 text-[17px] leading-8 text-slate-600">
+  <div className="mt-6 max-w-4xl space-y-4 text-base font-medium leading-8 text-slate-600 sm:text-[17px]">
     <p>
       Le partite del Fanta a 20 vengono calcolate utilizzando voti, bonus e
       malus ufficiali di Fantacalcio.it. Il punteggio totale determina il numero
@@ -458,8 +459,8 @@ export default function RegolamentoPage() {
     <p>
       Le formazioni prevedono una panchina completa, fino a
       <strong> 11 sostituzioni automatiche</strong>, cambio modulo attivo e
-      funzione <strong>Switch</strong>, con l'ordine della panchina che
-      determina la priorità d'ingresso dei calciatori.
+      funzione <strong>Switch</strong>, con l’ordine della panchina che
+      determina la priorità d’ingresso dei calciatori.
     </p>
   </div>
 
@@ -552,9 +553,10 @@ export default function RegolamentoPage() {
     </div>
   </div>
 </article>
-<section className="mt-14 overflow-hidden rounded-[2rem] border border-slate-200 bg-gradient-to-br from-blue-950 via-[#142b69] to-slate-950 px-10 py-14 text-white shadow-xl">
+)}
+<section className="mt-10 overflow-hidden rounded-[2rem] border border-slate-200 bg-gradient-to-br from-blue-950 via-[#142b69] to-slate-950 px-5 py-9 text-white shadow-xl sm:mt-14 sm:px-8 sm:py-12 lg:px-10 lg:py-14">
   <div className="mx-auto max-w-4xl text-center">
-    <h2 className="text-5xl font-black uppercase tracking-[0.02em]">
+    <h2 className="text-3xl font-black uppercase tracking-[0.02em] sm:text-4xl lg:text-5xl">
       Il Regolamento
     </h2>
 
@@ -570,13 +572,14 @@ export default function RegolamentoPage() {
       href="/regolamento.pdf"
       target="_blank"
       rel="noopener noreferrer"
-      className="group mx-auto mt-10 inline-flex items-center justify-center rounded-full bg-amber-400 px-10 py-5 text-lg font-black uppercase tracking-[0.18em] text-blue-950 transition-all duration-300 hover:-translate-y-1 hover:bg-amber-300 hover:shadow-[0_0_40px_rgba(251,191,36,0.45)]"
+      className="group mx-auto mt-8 inline-flex w-full items-center justify-center rounded-full bg-amber-400 px-5 py-4 text-center text-sm font-black uppercase tracking-[0.12em] text-blue-950 transition-all duration-300 hover:-translate-y-1 hover:bg-amber-300 hover:shadow-[0_0_40px_rgba(251,191,36,0.45)] sm:mt-10 sm:w-auto sm:px-10 sm:py-5 sm:text-lg sm:tracking-[0.18em]"
     >
       📄 Regolamento completo · Scarica qui
     </a>
   </div>
 </section>
 </section>
+      </div>
     </main>
   );
 }

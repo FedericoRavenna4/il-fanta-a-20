@@ -50,13 +50,13 @@ const struttura = [
 
 export default function CoppeEuropee() {
   return (
-    <section id="coppe-europee" className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-xl">
+    <section id="coppe-europee" className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-xl sm:p-8">
       <div className="mb-10">
         <p className="mb-2 text-xs font-black uppercase tracking-[0.3em] text-amber-500">
           Coppe interne
         </p>
 
-        <h2 className="text-4xl font-black uppercase tracking-tight text-blue-950 md:text-5xl">
+        <h2 className="text-3xl font-black uppercase tracking-tight text-blue-950 sm:text-4xl md:text-5xl">
           Le coppe europee
         </h2>
 
@@ -71,7 +71,7 @@ export default function CoppeEuropee() {
         {coppe.map((coppa) => (
           <article
             key={coppa.nome}
-            className={`group relative min-h-[335px] overflow-hidden rounded-[2rem] border p-7 text-white shadow-xl transition duration-300 hover:-translate-y-1 ${coppa.style}`}
+            className={`group relative min-h-[300px] overflow-hidden rounded-[2rem] border p-5 text-white shadow-xl transition duration-300 hover:-translate-y-1 sm:min-h-[335px] sm:p-7 ${coppa.style}`}
           >
             <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.12),transparent_42%),radial-gradient(circle_at_88%_42%,rgba(255,255,255,0.25),transparent_28%)]" />
 
@@ -80,18 +80,18 @@ export default function CoppeEuropee() {
   alt={coppa.nome}
   width={230}
   height={230}
-  className={`absolute top-1/2 z-0 max-h-56 w-auto -translate-y-1/2 object-contain drop-shadow-[0_0_26px_rgba(255,255,255,0.28)] transition duration-500 group-hover:scale-110 group-hover:drop-shadow-[0_0_44px_rgba(255,255,255,0.55)] ${
+  className={`absolute top-1/2 z-0 max-h-44 w-auto -translate-y-1/2 object-contain opacity-65 drop-shadow-[0_0_26px_rgba(255,255,255,0.28)] transition duration-500 group-hover:scale-110 group-hover:drop-shadow-[0_0_44px_rgba(255,255,255,0.55)] sm:max-h-56 sm:opacity-100 ${
     coppa.nome === "Champions League" ? "-right-12" : "-right-6"
   }`}
 />
 
 <div className="relative z-10 flex min-h-[280px] flex-col justify-between">
               <div>
-                <h3 className="whitespace-nowrap text-[22px] font-black uppercase tracking-tight">
+                <h3 className="text-xl font-black uppercase tracking-tight sm:text-[22px] lg:whitespace-nowrap">
   {coppa.nome}
 </h3>
 
-<p className="mt-5 max-w-[68%] text-[15px] font-semibold leading-7 text-white/82">
+<p className="mt-5 max-w-[62%] text-sm font-semibold leading-6 text-white/82 sm:max-w-[68%] sm:text-[15px] sm:leading-7">
                   {coppa.descrizione}
                 </p>
               </div>

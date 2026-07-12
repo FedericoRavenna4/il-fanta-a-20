@@ -1,0 +1,101 @@
+ID_Squadra,Nome_Società,Stagione_Ingresso,un_anno,due_anni,tre_anni,promozione,retrocessione,triplete,ventesimo,vinci_champions,vinci_conference,vinci_coppa_fanta_a_20,vinci_europa,vinci_serie_a,vinci_serie_b,vinci_serie_c,acquisto_piu_costoso,miglior_punteggio,peggior_punteggio,piu_scambi
+1,KUNG FU PARMA CALCIO,2024/25,No,Sì,No,Sì,No,Sì,No,Sì,No,Sì,No,No,Sì,No,No,No,No,No
+2,Coolinese FC,2023/24,No,No,Sì,No,No,No,No,Sì,No,No,No,Sì,No,No,No,No,No,No
+3,Analanta,2023/24,No,No,Sì,No,No,No,No,No,No,No,Sì,Sì,No,No,No,No,No,No
+4,Cagliarithanos,2023/24,No,No,Sì,No,No,No,No,Sì,No,No,No,No,No,No,No,No,No,No
+5,IRoman,2023/24,No,No,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,Difendi,No
+6,I Leccendari,2023/24,No,No,Sì,No,No,No,No,No,Sì,No,Sì,No,No,No,No,No,No,No
+7,Interapia Intensiva,2023/24,No,No,Sì,No,No,No,No,Sì,Sì,No,No,No,No,No,No,No,No,No
+8,Pisa and Love,2024/25,No,Sì,No,Sì,No,No,Sì,No,No,No,No,No,No,No,No,No,No,No
+9,Brodena,2023/24,No,No,Sì,Sì,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No
+10,Bolagna,2023/24,No,No,Sì,No,No,No,No,No,No,No,No,No,No,No,No,Difendi,No,No
+11,Why Always Milan,2023/24,No,No,Sì,No,No,No,Sì,No,No,No,No,No,No,No,No,No,No,No
+12,PREDATORINO,2024/25,No,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+13,Como Habilis,2023/24,No,No,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+14,Hellas Terronia,2024/25,No,Sì,No,No,No,No,No,No,No,No,Sì,No,No,No,No,No,No,No
+15,MATERASSUOLO,2024/25,No,Sì,No,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+16,Cremonelle,2024/25,No,Sì,No,No,No,No,No,No,No,No,Sì,No,No,No,No,No,No,No
+17,Napoleoni,2023/24,No,No,Sì,No,No,No,No,No,Sì,No,No,No,No,No,No,No,No,No
+18,FiorenToni Pepperoni,2024/25,No,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+19,VenEzio Greggio Fc,2024/25,No,Sì,No,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+20,SCOREGGIANA,2025/26,Sì,No,No,Sì,No,No,No,Sì,No,No,No,No,Sì,No,No,No,No,No
+21,u sole u mare Uventus,2023/24,No,No,Sì,No,Sì,No,Sì,No,No,No,No,No,No,No,No,No,No,No
+22,Fel-Lazio,2023/24,No,No,Sì,No,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No
+23,Genoasis,2023/24,No,No,Sì,No,Sì,No,No,No,No,No,No,Sì,No,No,No,No,No,No
+24,Barisa,2026/27,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+25,Licorto Muso FC,2025/26,Sì,No,No,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+26,PalerMavai Ma vieni Ma chi sono,2023/24,No,No,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+27,Andrea e Giugliano,2025/26,Sì,No,No,Sì,No,No,No,No,No,No,No,No,No,Sì,No,No,No,No
+28,Ospitaletto,2025/26,Sì,No,No,Sì,No,No,No,No,No,No,No,No,No,Sì,No,No,No,No
+29,PESCARAMUCCIA,2024/25,No,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+30,Bacarpi Schitz,2025/26,Sì,No,No,Sì,No,No,No,No,No,No,No,No,No,Sì,No,No,No,No
+31,Mantovai,2026/27,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+32,FROSILVIONE,2024/25,No,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+33,Monzarella e Pomodoro,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+34,Juve Scabbia,2024/25,No,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+35,PadoVainCul,2024/25,No,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+36,Spezial One,2024/25,No,Sì,No,No,No,No,No,No,Sì,No,No,No,No,No,No,No,No,No
+37,EMPOLIZIA MUNICIPALE,2024/25,No,Sì,No,No,No,No,No,No,Sì,No,No,No,No,No,No,No,No,No
+38,CARTAnzaro,2024/25,No,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+39,FC CESENARTICO,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+40,Virtus Entella,2026/27,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+41,Fc TiramiSudtirol,2025/26,Sì,No,No,No,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No
+42,LanaRhoades Vicenza,2025/26,Sì,No,No,No,No,No,No,No,No,Sì,No,No,No,No,No,No,No,No
+43,SCARENATE L INFERNO,2025/26,Sì,No,No,No,No,No,No,Sì,No,No,No,No,No,No,No,No,No,No
+44,Ciolone Milano,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+45,El Dolomitazo,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+46,CITTASNELLA,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+47,Virtus Corona,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+48,Albanoleffe,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+49,AS Pizza Erminio,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+50,Lecco,2026/27,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+51,Communion Brescia,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,Difendi
+52,Aurora Pro Patriarcato,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+53,next Gengis Khan,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+54,Pro Tarzanelli,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+55,Triest-In Peace,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+56,FC Arzignano VAcchiappo,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+57,Lumezzane,2026/27,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+58,Novara,2026/27,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+59,PergoleTette,2025/26,Sì,No,No,No,No,No,No,No,Sì,No,No,No,No,No,No,No,No,No
+60,Trento,2026/27,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+61,AGNELLINO,2025/26,Sì,No,No,No,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No
+62,FORLIPPO INZAGHI,2025/26,Sì,No,No,No,No,No,No,Sì,No,No,No,No,No,No,Difendi,No,No,No
+63,Campobasta,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+64,PONTEDERA,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+65,Gubbio di Fango,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+66,Ravengers FC,2025/26,Sì,No,No,No,No,No,No,No,No,No,Sì,No,No,No,No,No,No,No
+67,Ascoli,2026/27,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+68,AREZZENAL,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+69,Guidonia Montecelio,2026/27,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+70,PineTonic,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+71,Ac Bra,2026/27,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+72,PEsaROTTI,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+73,Rimiccoli,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+74,Ternani,2025/26,Sì,No,No,No,No,No,No,No,Sì,No,No,No,No,No,No,No,No,No
+75,Perugia,2026/27,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+76,Torres,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,Difendi,No,No,No
+77,Pianese,2026/27,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+78,InterUn 23,2026/27,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+79,NasPicerno,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+80,SiracUSA,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+81,Sampdodoria,2024/25,No,Sì,No,No,Sì,No,Sì,No,No,No,No,No,No,No,No,No,No,No
+82,Sambenedetta Domenica,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+83,Cassarano,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+84,Monopoly,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+85,Croton Fioc,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+86,Kakasertana,2025/26,Sì,No,No,No,No,No,No,No,No,No,Sì,No,No,No,No,No,No,No
+87,Carrarese,2026/27,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+88,BIANCAVESE,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+89,Benevengo,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+90,acCattania,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+91,US LATTINA CALCIO 1932,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+92,Audace Cerignola,2026/27,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+93,SorrEnd,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+94,Trapani,2026/27,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+95,Vosenza,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+96,PATATA-LANTA UN23,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+97,ALTAMOURINHO,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+98,Foggia,2026/27,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+99,Salernitana,2026/27,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
+100,Con mollica o senza,2025/26,Sì,No,No,No,No,No,Sì,No,No,No,No,No,No,No,No,No,No,No

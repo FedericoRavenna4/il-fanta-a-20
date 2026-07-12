@@ -43,13 +43,13 @@ export default function AlboDOroCoppe() {
   const societa = getSocieta();
 
   return (
-    <section className="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-xl">
+    <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-xl sm:p-8">
       <div className="mb-10">
         <p className="mb-2 text-xs font-black uppercase tracking-[0.3em] text-amber-500">
           Archivio storico
         </p>
 
-        <h2 className="text-4xl font-black uppercase tracking-tight text-blue-950 md:text-5xl">
+        <h2 className="text-3xl font-black uppercase tracking-tight text-blue-950 sm:text-4xl md:text-5xl">
           Albo d&apos;oro delle coppe
         </h2>
 

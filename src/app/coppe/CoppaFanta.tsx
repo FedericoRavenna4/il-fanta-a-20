@@ -34,7 +34,7 @@ export default function CoppaFanta() {
       id="coppa-fanta-a-20"
       className="scroll-mt-28 overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-xl"
     >
-      <div className="group relative overflow-hidden bg-gradient-to-br from-amber-300 via-yellow-100 to-white px-10 py-14">
+      <div className="group relative overflow-hidden bg-gradient-to-br from-amber-300 via-yellow-100 to-white px-5 py-9 sm:px-8 sm:py-12 lg:px-10 lg:py-14">
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.32),transparent_45%)]" />
 
         <div className="relative z-10 grid items-center gap-10 lg:grid-cols-[1fr_340px]">
@@ -43,11 +43,11 @@ export default function CoppaFanta() {
               Coppa assoluta
             </p>
 
-            <h1 className="mt-4 text-5xl font-black uppercase tracking-tight text-blue-950 md:text-6xl">
+            <h2 className="mt-4 text-3xl font-black uppercase tracking-tight text-blue-950 sm:text-4xl md:text-5xl lg:text-6xl">
               La Coppa Fanta a 20
-            </h1>
+            </h2>
 
-            <p className="mt-6 max-w-5xl text-[20px] font-semibold leading-9 text-blue-950/75">
+            <p className="mt-5 max-w-5xl text-base font-semibold leading-7 text-blue-950/75 sm:mt-6 sm:text-lg sm:leading-8 lg:text-[20px] lg:leading-9">
               Il trofeo più prestigioso del Fanta a 20. Le 100 società partono
               dallo stesso punto, senza distinzioni di lega o categoria: solo 64
               entrano nel tabellone finale, dove ogni sfida può cambiare la
@@ -69,7 +69,7 @@ export default function CoppaFanta() {
         </div>
       </div>
 
-      <div className="p-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         <div className="grid gap-5 lg:grid-cols-3">
           {fasi.map((fase) => (
             <article
@@ -83,7 +83,7 @@ export default function CoppaFanta() {
                   {fase.step}
                 </p>
 
-                <h3 className="mt-5 whitespace-nowrap text-2xl font-black uppercase tracking-tight text-blue-950">
+                <h3 className="mt-5 text-xl font-black uppercase tracking-tight text-blue-950 sm:text-2xl lg:whitespace-nowrap">
                   {fase.title}
                 </h3>
 

@@ -5,41 +5,13 @@ import Link from "next/link";
 import { useState } from "react";
 import type { Societa } from "@/lib/societa";
 
-function getHighlight(team: Societa) {
-  const baseGlow = {
+function getHighlight() {
+  return {
+    border: "border-slate-200",
     glow:
       "bg-[radial-gradient(circle_at_center,rgba(251,191,36,0.20),transparent_58%)]",
     light: "group-hover:bg-amber-300/30",
     logo: "group-hover:drop-shadow-[0_0_18px_rgba(251,191,36,0.45)]",
-  };
-
-  if (team.badgeCampioneSerieA) {
-    return {
-      border:
-        "border-sky-400 shadow-[0_0_0_1px_rgba(56,189,248,.45),0_0_28px_rgba(56,189,248,.22)]",
-      ...baseGlow,
-    };
-  }
-
-  if (team.id === 42) {
-    return {
-      border:
-        "border-amber-400 shadow-[0_0_0_1px_rgba(251,191,36,.50),0_0_30px_rgba(251,191,36,.26)]",
-      ...baseGlow,
-    };
-  }
-
-  if (team.leader) {
-    return {
-      border:
-        "border-red-500 shadow-[0_0_0_1px_rgba(239,68,68,.45),0_0_30px_rgba(239,68,68,.24)]",
-      ...baseGlow,
-    };
-  }
-
-  return {
-    border: "border-slate-200",
-    ...baseGlow,
   };
 }
 
@@ -100,9 +72,9 @@ export default function SocietaClient({ societa }: { societa: Societa[] }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-x-4 gap-y-10 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-8 xl:grid-cols-10">
+      <div className="grid grid-cols-2 gap-x-3 gap-y-8 sm:grid-cols-3 sm:gap-x-4 sm:gap-y-10 md:grid-cols-5 lg:grid-cols-8 xl:grid-cols-10">
         {filtered.map((team) => {
-          const highlight = getHighlight(team);
+          const highlight = getHighlight();
 
           return (
             <Link
@@ -127,11 +99,11 @@ export default function SocietaClient({ societa }: { societa: Societa[] }) {
                   alt={team.nome}
                   width={90}
                   height={90}
-                  className={`relative z-10 max-h-[92px] max-w-[98px] object-contain drop-shadow-[0_8px_14px_rgba(15,23,42,0.18)] transition-all duration-300 group-hover:scale-[1.04] ${highlight.logo}`}
+                  className={`relative z-10 max-h-[72px] max-w-[78px] object-contain drop-shadow-[0_8px_14px_rgba(15,23,42,0.18)] transition-all duration-300 group-hover:scale-[1.04] sm:max-h-[92px] sm:max-w-[98px] ${highlight.logo}`}
                 />
               </div>
 
-              <h2 className="mt-3 px-1 text-center text-[11px] font-black uppercase leading-[1.4] tracking-tight text-blue-950 transition-all duration-300 ease-out group-hover:tracking-normal group-hover:text-blue-900 group-hover:drop-shadow-[0_2px_8px_rgba(30,64,175,0.18)]">
+              <h2 className="mt-3 line-clamp-2 h-8 px-1 text-center text-[10px] font-black uppercase leading-4 tracking-tight text-blue-950 transition-colors duration-300 group-hover:text-blue-900 sm:text-[11px]">
                 {team.nome}
               </h2>
             </Link>

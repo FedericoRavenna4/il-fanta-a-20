@@ -9,12 +9,123 @@ import { getStatisticheGiocatori } from "@/lib/statisticheGiocatori";
 import { getStorieSocieta } from "@/lib/storieSocieta";
 import RosaSocieta from "./RosaSocieta";
 import StoriaSocieta from "./StoriaSocieta";
+import { getEmblemi } from "@/lib/emblemi";
+import EmblemiSocieta from "./EmblemiSocieta";
 
 function getLegaGradient(lega: string) {
   if (lega === "Serie A") return "from-sky-500 via-sky-600 to-blue-900";
   if (lega === "Serie B") return "from-emerald-500 via-emerald-600 to-blue-900";
   if (lega.startsWith("Serie C")) return "from-violet-500 via-violet-600 to-blue-900";
   return "from-blue-950 via-blue-900 to-blue-800";
+}
+type EmblemaInfo = {
+  titolo: string;
+  descrizione: string;
+  rarita: "Base" | "Comune" | "Raro" | "Leggendario";
+};
+
+const infoEmblemi: Record<string, EmblemaInfo> = {
+  un_anno: {
+    titolo: "Primo anno",
+    descrizione: "Partecipa al Fanta a 20 per una stagione.",
+    rarita: "Base",
+  },
+  due_anni: {
+    titolo: "Due stagioni",
+    descrizione: "Partecipa al Fanta a 20 per due stagioni.",
+    rarita: "Base",
+  },
+  tre_anni: {
+    titolo: "Tre stagioni",
+    descrizione: "Partecipa al Fanta a 20 per tre stagioni.",
+    rarita: "Comune",
+  },
+  promozione: {
+    titolo: "Promozione",
+    descrizione: "Vieni promosso almeno una volta.",
+    rarita: "Comune",
+  },
+  retrocessione: {
+    titolo: "Retrocessione",
+    descrizione: "Retrocedi almeno una volta.",
+    rarita: "Base",
+  },
+  triplete: {
+    titolo: "Triplete",
+    descrizione:
+      "Conquista campionato, Champions League e Coppa Fanta a 20 nella stessa stagione.",
+    rarita: "Leggendario",
+  },
+  ventesimo: {
+    titolo: "Fanalino di coda",
+    descrizione: "Concludi un campionato al 20° posto.",
+    rarita: "Base",
+  },
+  vinci_champions: {
+    titolo: "Campione Champions League",
+    descrizione: "Conquista la Champions League almeno una volta.",
+    rarita: "Raro",
+  },
+  vinci_conference: {
+    titolo: "Campione Conference League",
+    descrizione: "Conquista la Conference League almeno una volta.",
+    rarita: "Comune",
+  },
+  vinci_coppa_fanta_a_20: {
+    titolo: "Campione Coppa Fanta a 20",
+    descrizione: "Conquista la Coppa Fanta a 20 almeno una volta.",
+    rarita: "Leggendario",
+  },
+  vinci_europa: {
+    titolo: "Campione Europa League",
+    descrizione: "Conquista l’Europa League almeno una volta.",
+    rarita: "Comune",
+  },
+  vinci_serie_a: {
+    titolo: "Campione Serie A",
+    descrizione: "Vinci il campionato di Serie A.",
+    rarita: "Raro",
+  },
+  vinci_serie_b: {
+    titolo: "Campione Serie B",
+    descrizione: "Vinci il campionato di Serie B.",
+    rarita: "Comune",
+  },
+  vinci_serie_c: {
+    titolo: "Campione Serie C",
+    descrizione: "Vinci il proprio girone di Serie C.",
+    rarita: "Comune",
+  },
+  acquisto_piu_costoso: {
+    titolo: "Colpo da record",
+    descrizione: "Realizza l’acquisto più costoso di sempre.",
+    rarita: "Raro",
+  },
+  miglior_punteggio: {
+    titolo: "Punteggio record",
+    descrizione: "Ottieni il fantapunteggio più alto di sempre in una giornata.",
+    rarita: "Raro",
+  },
+  peggior_punteggio: {
+    titolo: "Giornata da dimenticare",
+    descrizione: "Registra il fantapunteggio più basso di sempre in una giornata.",
+    rarita: "Raro",
+  },
+  piu_scambi: {
+    titolo: "Re del mercato",
+    descrizione: "Effettua il maggior numero di scambi di sempre in una stagione.",
+    rarita: "Raro",
+  },
+};
+
+function getInfoEmblema(chiave: string): EmblemaInfo {
+  return (
+    infoEmblemi[chiave] ?? {
+      titolo: chiave.replace(/_/g, " "),
+      descrizione: "Emblema ufficiale conquistato dalla società.",
+      rarita: "Base",
+    }
+  );
 }
 
 export default async function SchedaSocietaPage({
@@ -30,6 +141,7 @@ export default async function SchedaSocietaPage({
   const risultati = getRisultati();
   const storieSocieta = getStorieSocieta();
 const statisticheGiocatori = getStatisticheGiocatori();
+const emblemi = getEmblemi();
   const team = societa.find((item) => item.slug === slug);
 
   if (!team) {
@@ -38,6 +150,9 @@ const statisticheGiocatori = getStatisticheGiocatori();
 
   const trofei = palmares.find((item) => item.squadraId === team.id);
   const rosaTeam = rose.filter((item) => item.squadraId === team.id);
+  const emblemiTeam = emblemi.find(
+  (item) => item.squadraId === team.id
+);
   const risultatiTeam = risultati.filter((item) => item.squadraId === team.id);
   const storiaEditoriale = storieSocieta.find(
     (item) => item.squadraId === team.id
@@ -49,6 +164,7 @@ const statisticheGiocatori = getStatisticheGiocatori();
     {
       value: trofei?.campionati ?? 0,
       image: "/trofei/scudetto-a.png",
+      label: "Serie A",
       style:
         "border-sky-200 bg-gradient-to-br from-sky-200 via-sky-50 to-white shadow-sky-100",
       glow: "drop-shadow-[0_0_26px_rgba(14,165,233,0.85)]",
@@ -56,6 +172,7 @@ const statisticheGiocatori = getStatisticheGiocatori();
     {
       value: trofei?.championsLeague ?? 0,
       image: "/trofei/champions-league.png",
+      label: "Champions League",
       style:
         "border-blue-900/30 bg-gradient-to-br from-blue-950 via-blue-900 to-slate-900 shadow-blue-950/30",
       glow: "drop-shadow-[0_0_30px_rgba(147,197,253,0.95)]",
@@ -64,6 +181,7 @@ const statisticheGiocatori = getStatisticheGiocatori();
     {
       value: trofei?.europaLeague ?? 0,
       image: "/trofei/europa-league.png",
+      label: "Europa League",
       style:
         "border-orange-400 bg-gradient-to-br from-orange-500 via-orange-300 to-orange-100 shadow-orange-200",
       glow: "drop-shadow-[0_0_30px_rgba(251,146,60,0.95)]",
@@ -71,6 +189,7 @@ const statisticheGiocatori = getStatisticheGiocatori();
     {
       value: trofei?.conferenceLeague ?? 0,
       image: "/trofei/conference-league.png",
+      label: "Conference League",
       style:
         "border-emerald-900/30 bg-gradient-to-br from-emerald-900 via-emerald-700 to-slate-900 shadow-emerald-950/30",
       glow: "drop-shadow-[0_0_30px_rgba(110,231,183,0.9)]",
@@ -79,32 +198,49 @@ const statisticheGiocatori = getStatisticheGiocatori();
     {
       value: trofei?.coppaFantaA20 ?? 0,
       image: "/trofei/coppa-fanta-a-20.png",
+      label: "Coppa Fanta a 20",
       style:
         "border-amber-300 bg-gradient-to-br from-amber-300 via-yellow-100 to-white shadow-amber-200",
       glow: "drop-shadow-[0_0_34px_rgba(251,191,36,1)]",
     },
   ].filter((item) => item.value > 0);
+const emblemiSbloccati = emblemiTeam
+  ? Object.entries(emblemiTeam.emblemi).filter(
+      ([, stato]) => stato === "Sì"
+    )
+  : [];
 
+const emblemiDaDifendere = emblemiTeam
+  ? Object.entries(emblemiTeam.emblemi).filter(
+      ([, stato]) => stato === "Difendi"
+    )
+  : [];
+const toEmblemaVisuale = ([chiave]: [string, string]) => ({
+  chiave,
+  ...getInfoEmblema(chiave),
+});
+const emblemiSbloccatiVisuali = emblemiSbloccati.map(toEmblemaVisuale);
+const emblemiDaDifendereVisuali = emblemiDaDifendere.map(toEmblemaVisuale);
   return (
-    <section className="mx-auto max-w-7xl px-6 py-16">
+    <section className="mx-auto max-w-7xl px-4 py-10 sm:px-5 sm:py-12 lg:px-6 lg:py-16">
       <div className="grid gap-8 lg:grid-cols-[1fr_360px] lg:items-start">
         <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-xl">
-          <div className={`bg-gradient-to-r ${legaGradient} px-8 py-8 text-white`}>
+          <div className={`bg-gradient-to-r ${legaGradient} px-5 py-6 text-white sm:px-8 sm:py-8`}>
             <p className="text-sm uppercase tracking-[0.3em] text-white/80">
               Scheda società
             </p>
           </div>
 
-          <div className="p-10 text-center">
+          <div className="p-5 text-center sm:p-8 lg:p-10">
             <Image
               src={team.logo}
               alt={team.nome}
               width={280}
               height={280}
-              className="mx-auto mb-8 max-h-72 w-auto object-contain drop-shadow-sm transition hover:scale-105 hover:drop-shadow-[0_22px_30px_rgba(14,116,144,0.35)]"
+              className="mx-auto mb-6 max-h-48 w-auto object-contain drop-shadow-sm transition hover:scale-105 hover:drop-shadow-[0_22px_30px_rgba(14,116,144,0.35)] sm:mb-8 sm:max-h-72"
             />
 
-            <h1 className="mb-4 text-5xl font-black text-blue-950">
+            <h1 className="mb-4 break-words text-3xl font-black text-blue-950 sm:text-4xl lg:text-5xl">
               {team.nome}
             </h1>
 
@@ -186,63 +322,60 @@ const statisticheGiocatori = getStatisticheGiocatori();
           </div>
         </div>
 
-        <aside className="space-y-6">
-          <div className="rounded-[2rem] border border-slate-200 bg-white/90 p-7 shadow-sm">
-            <h2 className="mb-6 text-2xl font-black text-blue-950">
-              Dettagli società
-            </h2>
-
-            <div className="space-y-5 text-slate-600">
-              <div>
-                <p className="text-sm text-slate-400">Fantallenatore</p>
-                <p className="font-bold text-slate-700">
-                  {team.fantallenatore}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-sm text-slate-400">Lega attuale</p>
-                <p className="font-bold text-slate-700">
-                  {team.legaAttuale}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-sm text-slate-400">Presente dal</p>
-                <p className="font-bold text-slate-700">
-                  {team.stagioneIngresso}
-                </p>
-              </div>
+        <aside className="space-y-5">
+          <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white/90 shadow-lg shadow-slate-200/50 backdrop-blur">
+            <div className={`bg-gradient-to-r ${legaGradient} px-7 py-5 text-white`}>
+              <p className="text-sm font-bold uppercase tracking-[0.25em] text-white/80">
+                Profilo societario
+              </p>
             </div>
+
+            <dl className="divide-y divide-slate-100 px-7">
+              {[
+                ["Fantallenatore", team.fantallenatore],
+                ["Lega attuale", team.legaAttuale],
+                ["Presente dal", team.stagioneIngresso],
+              ].map(([label, value]) => (
+                <div key={label} className="flex items-center justify-between gap-5 py-4">
+                  <dt className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-400">
+                    {label}
+                  </dt>
+                  <dd className="text-right text-sm font-black text-blue-950">
+                    {value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
           </div>
 
-          <div className="rounded-[2rem] border border-slate-200 bg-white/90 p-7 shadow-sm">
-            <h2 className="mb-6 text-2xl font-black text-blue-950">
-              Palmarès
-            </h2>
+          <div className="rounded-[2rem] border border-slate-200 bg-white/90 p-6 shadow-lg shadow-slate-200/40 backdrop-blur">
+            <div className="mb-4 border-b border-slate-100 pb-4">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-amber-500">
+                  Bacheca ufficiale
+                </p>
+                <h2 className="mt-1 text-2xl font-black uppercase tracking-tight text-blue-950">
+                  Palmarès
+                </h2>
+              </div>
+            </div>
 
             {palmaresCards.length > 0 ? (
-              <div className="flex flex-wrap justify-center gap-3">
+              <div className="grid grid-cols-3 gap-x-1 gap-y-4">
                 {palmaresCards.map((item, index) => (
                   <div
                     key={index}
-                    className={`relative flex h-[108px] w-[88px] flex-col items-center justify-center overflow-hidden rounded-2xl border shadow-md ${item.style}`}
+                    className="group relative flex h-32 min-w-0 items-center justify-center transition duration-300 hover:-translate-y-1"
                   >
-                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/25 via-transparent to-transparent" />
-
+                    <div className="pointer-events-none absolute top-7 h-20 w-20 bg-amber-300/0 blur-3xl transition group-hover:bg-amber-300/35" />
                     <Image
                       src={item.image}
-                      alt="Trofeo"
-                      width={92}
-                      height={92}
-                      className={`relative z-10 max-h-[74px] w-auto object-contain ${item.glow}`}
+                      alt={`Trofeo ${item.label}`}
+                      width={124}
+                      height={124}
+                      className="relative max-h-[116px] max-w-[108px] object-contain drop-shadow-[0_14px_20px_rgba(15,23,42,0.27)] transition duration-300 group-hover:scale-105"
                     />
-
-                    <p
-                      className={`relative z-10 -mt-2 text-base font-black ${
-                        item.dark ? "text-white" : "text-blue-950"
-                      }`}
-                    >
+                    <p className="absolute right-0 top-0 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-black text-blue-950 shadow-md">
                       x{item.value}
                     </p>
                   </div>
@@ -255,25 +388,10 @@ const statisticheGiocatori = getStatisticheGiocatori();
             )}
           </div>
 
-          <div className="rounded-[2rem] border border-slate-200 bg-white/90 p-7 shadow-sm">
-            <h2 className="mb-3 text-2xl font-black text-blue-950">
-              Trofei sbloccabili
-            </h2>
-
-            <p className="rounded-2xl bg-slate-50 p-5 text-sm font-semibold text-slate-500">
-              In arrivo...
-            </p>
-          </div>
-
-          <div className="rounded-[2rem] border border-slate-200 bg-white/90 p-7 shadow-sm">
-            <h2 className="mb-3 text-2xl font-black text-blue-950">
-              Trofei da difendere
-            </h2>
-
-            <p className="rounded-2xl bg-slate-50 p-5 text-sm font-semibold text-slate-500">
-              In arrivo...
-            </p>
-          </div>
+          <EmblemiSocieta
+            sbloccati={emblemiSbloccatiVisuali}
+            daDifendere={emblemiDaDifendereVisuali}
+          />
         </aside>
       </div>
 

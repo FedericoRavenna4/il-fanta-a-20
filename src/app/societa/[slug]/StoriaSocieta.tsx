@@ -283,7 +283,7 @@ export default function StoriaSocieta({
   return (
     <>
       {!isNewEntry && (
-        <section className="mt-10 rounded-[2rem] border border-slate-200 bg-white/90 p-8 shadow-xl shadow-slate-200/60">
+        <section className="mt-10 rounded-[2rem] border border-slate-200 bg-white/90 p-4 shadow-xl shadow-slate-200/60 sm:p-8">
           <div className="mb-8">
             <p className="mb-2 text-xs font-black uppercase tracking-[0.25em] text-slate-400">
               Archivio risultati
@@ -299,14 +299,14 @@ export default function StoriaSocieta({
           </div>
 
           {stagioniDisponibili.length > 0 && (
-            <div className="relative mb-10 flex items-center">
-              <div className="h-px flex-1 bg-gradient-to-r from-transparent via-slate-300 to-slate-300" />
+            <div className="relative mb-10 flex items-center justify-center">
+              <div className="hidden h-px flex-1 bg-gradient-to-r from-transparent via-slate-300 to-slate-300 sm:block" />
 
-              <div className="relative mx-6">
+              <div className="relative w-full max-w-[300px] sm:mx-6">
                 <button
                   type="button"
                   onClick={() => setMenuStagioniAperto((open) => !open)}
-                  className="flex min-w-[300px] items-center justify-center gap-3 rounded-full border border-sky-100 bg-gradient-to-r from-sky-50 via-white to-sky-50 px-8 py-3 shadow-md transition hover:-translate-y-0.5 hover:shadow-lg"
+                  className="flex w-full min-w-0 items-center justify-center gap-3 rounded-full border border-sky-100 bg-gradient-to-r from-sky-50 via-white to-sky-50 px-4 py-3 shadow-md transition hover:-translate-y-0.5 hover:shadow-lg sm:min-w-[300px] sm:px-8"
                 >
                   <span className="text-xl font-black tracking-tight text-blue-950">
                     {stagioneSelezionata === "Tutto"
@@ -324,7 +324,7 @@ export default function StoriaSocieta({
                 </button>
 
                 {menuStagioniAperto && (
-                  <div className="absolute left-1/2 z-30 mt-3 w-[300px] -translate-x-1/2 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
+                  <div className="absolute left-1/2 z-30 mt-3 w-full -translate-x-1/2 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl sm:w-[300px]">
                     <button
                       type="button"
                       onClick={() => {
@@ -353,7 +353,7 @@ export default function StoriaSocieta({
                 )}
               </div>
 
-              <div className="h-px flex-1 bg-gradient-to-l from-transparent via-slate-300 to-slate-300" />
+              <div className="hidden h-px flex-1 bg-gradient-to-l from-transparent via-slate-300 to-slate-300 sm:block" />
             </div>
           )}
 

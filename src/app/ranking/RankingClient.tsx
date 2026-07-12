@@ -3,25 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-
-type RankingRow = {
-  posizione: number;
-  squadraId: number;
-  nomeRanking: string;
-  puntiRanking: string | number;
-  team: {
-    id: number;
-    nome: string;
-    slug: string;
-    logo: string;
-    legaAttuale: string;
-    fantallenatore: string;
-    nicknameInstagram: string;
-  } | null;
-  trofei: {
-    totaleTrofei: number;
-  };
-};
+import PageHeader from "../components/PageHeader";
+import type { RankingRow } from "@/lib/rankingRows";
 
 type SortKey = "posizione" | "nome" | "punti" | "trofei";
 type SortDirection = "asc" | "desc";
@@ -54,10 +37,11 @@ function shouldShowFasciaHeader(
   return getFascia(current.posizione).label !== getFascia(previous.posizione).label;
 }
 
-export default function RankingClient({ rows }: { rows: RankingRow[] }) {
+export default function RankingClient({ rows, embedded = false, initialLimit }: { rows: RankingRow[]; embedded?: boolean; initialLimit?: number }) {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<SortKey>("posizione");
   const [direction, setDirection] = useState<SortDirection>("asc");
+  const [showAll, setShowAll] = useState(false);
 
   const leader = rows[0];
   const inseguitrici = rows.slice(1, 3);
@@ -126,64 +110,57 @@ export default function RankingClient({ rows }: { rows: RankingRow[] }) {
       });
   }, [rows, search, sort, direction]);
 
+  const classificaVisibile = initialLimit && !showAll && !search
+    ? classificaFiltrata.slice(0, initialLimit)
+    : classificaFiltrata;
+
   return (
-    <section className="mx-auto max-w-7xl px-6 py-16">
-      <div className="mb-12">
-        <p className="mb-4 text-sm font-black uppercase tracking-[0.35em] text-slate-400">
-          Classifica storica
-        </p>
-
-        <h1 className="mb-5 text-6xl font-black tracking-tight text-blue-950">
-          Ranking
-        </h1>
-
-        <p className="max-w-6xl text-lg leading-8 text-slate-600">
-          La graduatoria storica delle società del Fanta a 20. I punti ranking
-          vengono assegnati in base ai trofei conquistati e ai risultati
-          ottenuti nelle competizioni ufficiali, costruendo stagione dopo
-          stagione la classifica che misura il valore storico di ogni società.
-        </p>
-      </div>
+    <section id="ranking" className={embedded ? "scroll-mt-28" : "mx-auto max-w-7xl px-4 py-10 sm:px-5 sm:py-12 lg:px-6 lg:py-16"}>
+      {!embedded && <PageHeader
+        eyebrow="Classifica storica"
+        title="Ranking"
+        description="La graduatoria che misura il valore storico di ogni società attraverso trofei e risultati conquistati nelle competizioni ufficiali."
+      />}
 
       {leader?.team && (
         <Link
           href={`/societa/${leader.team.slug}`}
-          className="group mb-10 block overflow-hidden rounded-[2rem] border border-amber-400 bg-gradient-to-br from-amber-100 via-yellow-100 to-amber-50 text-blue-950 shadow-2xl shadow-amber-200/70 transition hover:-translate-y-1"
+          className="group mb-8 block overflow-hidden rounded-[2rem] border border-blue-900 bg-[linear-gradient(145deg,#102c5f,#071f45)] text-white shadow-2xl shadow-blue-950/20 transition hover:-translate-y-1"
         >
-          <div className="grid items-center gap-8 p-8 lg:grid-cols-[1fr_340px] lg:p-10">
+          <div className="grid items-center gap-6 p-5 sm:gap-8 sm:p-8 lg:grid-cols-[1fr_340px] lg:p-10">
             <div>
-              <p className="mb-4 text-sm font-black uppercase tracking-[0.28em] text-amber-800">
+              <p className="mb-4 text-xs font-black uppercase tracking-[0.28em] text-amber-300">
   ⭐ Ranking Leader
 </p>
 
-              <h2 className="text-5xl font-black leading-tight">
+              <h2 className="text-3xl font-black leading-tight sm:text-4xl lg:text-5xl">
                 {leader.team.nome}
               </h2>
 
-              <p className="mt-4 font-semibold text-amber-900">
+              <p className="mt-4 font-semibold text-white/60">
                 La società numero uno nella storia del Fanta a 20.
               </p>
 
               <div className="mt-8 grid gap-4 sm:grid-cols-3">
-                <div className="rounded-2xl bg-white/75 p-5 ring-1 ring-amber-300">
-                  <p className="text-sm font-bold text-amber-800">Posizione</p>
+                <div className="rounded-2xl bg-white/[0.06] p-5 ring-1 ring-white/10">
+                  <p className="text-sm font-bold text-white/45">Posizione</p>
                   <p className="text-3xl font-black">1°</p>
                 </div>
 
-                <div className="rounded-2xl bg-white/75 p-5 ring-1 ring-amber-300">
-                  <p className="text-sm font-bold text-amber-800">Punti</p>
+                <div className="rounded-2xl bg-white/[0.06] p-5 ring-1 ring-white/10">
+                  <p className="text-sm font-bold text-white/45">Punti</p>
                   <p className="text-3xl font-black">{leader.puntiRanking}</p>
                 </div>
 
-                <div className="rounded-2xl bg-white/75 p-5 ring-1 ring-amber-300">
-                  <p className="text-sm font-bold text-amber-800">Trofei</p>
+                <div className="rounded-2xl bg-white/[0.06] p-5 ring-1 ring-white/10">
+                  <p className="text-sm font-bold text-white/45">Trofei</p>
                   <p className="text-3xl font-black">
                     {leader.trofei.totaleTrofei}
                   </p>
                 </div>
               </div>
 
-              <p className="mt-6 text-sm font-black text-blue-950 opacity-0 transition group-hover:opacity-100">
+              <p className="mt-6 text-sm font-black text-white/80 opacity-0 transition group-hover:opacity-100">
                 Vai alla scheda →
               </p>
             </div>
@@ -201,19 +178,19 @@ height={300}
         </Link>
       )}
 
-      <div className="mb-12 grid gap-6 md:grid-cols-2">
+      <div className="mb-10 grid gap-5 md:grid-cols-2">
         {inseguitrici.map((row) => (
           <Link
             key={row.posizione}
             href={row.team ? `/societa/${row.team.slug}` : "#"}
-            className={`group relative flex h-[300px] flex-col overflow-hidden rounded-[1.75rem] border p-6 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-2xl ${
+            className={`group relative flex h-[270px] flex-col overflow-hidden rounded-[1.75rem] border bg-white/85 p-6 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-xl ${
              row.posizione === 2
-  ? "border-slate-400 bg-gradient-to-br from-slate-300 via-slate-100 to-white shadow-slate-300"
-                : "border-orange-300 bg-gradient-to-br from-orange-50 via-amber-50 to-white shadow-orange-100"
+  ? "border-slate-300 shadow-slate-200"
+                : "border-amber-200 shadow-amber-100"
             }`}
           >
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-white/75 text-3xl ring-1 ring-slate-200">
-              {row.posizione === 2 ? "🥈" : "🥉"}
+            <div className="mx-auto mb-2 text-3xl font-black tracking-[-0.05em] text-slate-300">
+              {String(row.posizione).padStart(2, "0")}
             </div>
 
             {row.team && (
@@ -305,13 +282,13 @@ height={300}
         </div>
 
         <div>
-          {classificaFiltrata.map((row, index) => {
+          {classificaVisibile.map((row, index) => {
   const fascia = getFascia(row.posizione);
 
   return (
     <div key={row.posizione}>
       {sort === "posizione" &&
-        shouldShowFasciaHeader(row, index, classificaFiltrata) && (
+        shouldShowFasciaHeader(row, index, classificaVisibile) && (
           <div className="px-6 pt-8 pb-3">
             <div className="rounded-[1.75rem] border border-sky-200 bg-gradient-to-r from-sky-50 via-white to-sky-50 px-6 py-4 shadow-md shadow-sky-100/80">
               <h3 className="text-2xl font-black tracking-tight text-blue-950">
@@ -391,6 +368,13 @@ height={300}
   );
 })}
         </div>
+        {initialLimit && classificaFiltrata.length > initialLimit && !search && (
+          <div className="border-t border-slate-200 p-5 text-center">
+            <button type="button" onClick={() => setShowAll((current) => !current)} className="rounded-full bg-blue-950 px-6 py-3 text-xs font-black uppercase tracking-[0.15em] text-white transition hover:bg-blue-800">
+              {showAll ? "Mostra le prime 20" : "Vedi classifica completa"}
+            </button>
+          </div>
+        )}
       </div>
     </section>
   );
