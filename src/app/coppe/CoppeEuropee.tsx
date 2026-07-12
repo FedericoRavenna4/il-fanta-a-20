@@ -50,8 +50,8 @@ const struttura = [
 
 export default function CoppeEuropee() {
   return (
-    <section id="coppe-europee" className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-xl sm:p-8">
-      <div className="mb-10">
+    <section id="coppe-europee" className="rounded-[2rem] border border-slate-200 bg-white p-4 shadow-xl sm:p-8">
+      <div className="mb-6 sm:mb-10">
         <p className="mb-2 text-xs font-black uppercase tracking-[0.3em] text-amber-500">
           Coppe interne
         </p>
@@ -60,18 +60,18 @@ export default function CoppeEuropee() {
           Le coppe europee
         </h2>
 
-        <p className="mt-4 max-w-5xl text-lg leading-8 text-slate-600">
+        <p className="mt-3 max-w-5xl text-sm leading-6 text-slate-600 sm:mt-4 sm:text-lg sm:leading-8">
           Le coppe europee sono i trofei interni di ogni lega: vi partecipano le
           squadre in base al piazzamento ottenuto al termine del girone di
           andata.
         </p>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-3">
+      <div className="grid gap-3 sm:gap-6 xl:grid-cols-3">
         {coppe.map((coppa) => (
           <article
             key={coppa.nome}
-            className={`group relative overflow-hidden rounded-[2rem] border p-5 text-white shadow-xl transition duration-300 hover:-translate-y-1 sm:p-7 lg:min-h-[335px] ${coppa.style}`}
+            className={`group relative overflow-hidden rounded-[2rem] border p-4 text-white shadow-xl transition duration-300 hover:-translate-y-1 sm:p-7 lg:min-h-[335px] ${coppa.style}`}
           >
             <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.12),transparent_42%),radial-gradient(circle_at_88%_42%,rgba(255,255,255,0.25),transparent_28%)]" />
 
@@ -80,7 +80,7 @@ export default function CoppeEuropee() {
   alt={coppa.nome}
   width={230}
   height={230}
-  className={`relative z-0 mx-auto mt-5 h-36 w-full translate-y-0 object-contain opacity-90 drop-shadow-[0_0_26px_rgba(255,255,255,0.28)] transition duration-500 group-hover:scale-105 lg:absolute lg:top-1/2 lg:mx-0 lg:mt-0 lg:h-auto lg:max-h-56 lg:w-auto lg:-translate-y-1/2 lg:opacity-100 lg:group-hover:scale-110 lg:group-hover:drop-shadow-[0_0_44px_rgba(255,255,255,0.55)] ${
+  className={`relative z-0 mx-auto mt-3 h-24 w-full translate-y-0 object-contain opacity-90 drop-shadow-[0_0_26px_rgba(255,255,255,0.28)] transition duration-500 group-hover:scale-105 sm:mt-5 sm:h-36 lg:absolute lg:top-1/2 lg:mx-0 lg:mt-0 lg:h-auto lg:max-h-56 lg:w-auto lg:-translate-y-1/2 lg:opacity-100 lg:group-hover:scale-110 lg:group-hover:drop-shadow-[0_0_44px_rgba(255,255,255,0.55)] ${
     coppa.nome === "Champions League" ? "lg:-right-12" : "lg:-right-6"
   }`}
 />
@@ -96,7 +96,7 @@ export default function CoppeEuropee() {
                 </p>
               </div>
 
-             <div className="mt-8 flex w-full items-center justify-between rounded-2xl border border-white/20 bg-black/25 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur">
+             <div className="mt-3 flex w-full items-center justify-between rounded-2xl border border-white/20 bg-black/25 px-3 py-2 text-[10px] font-black uppercase tracking-[0.1em] shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur sm:mt-8 sm:px-4 sm:py-3 sm:text-xs sm:tracking-[0.14em]">
                 <span className="text-white/60">Qualificate</span>
                 <span>{coppa.qualificate}</span>
               </div>

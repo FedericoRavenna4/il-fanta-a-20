@@ -34,10 +34,10 @@ export default function CoppaFanta() {
       id="coppa-fanta-a-20"
       className="scroll-mt-28 overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-xl"
     >
-      <div className="group relative overflow-hidden bg-gradient-to-br from-amber-300 via-yellow-100 to-white px-5 py-9 sm:px-8 sm:py-12 lg:px-10 lg:py-14">
+      <div className="group relative overflow-hidden bg-gradient-to-br from-amber-300 via-yellow-100 to-white px-4 py-5 sm:px-8 sm:py-12 lg:px-10 lg:py-14">
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,0.32),transparent_45%)]" />
 
-        <div className="relative z-10 grid items-center gap-10 lg:grid-cols-[1fr_340px]">
+        <div className="relative z-10 grid items-center gap-4 sm:gap-10 lg:grid-cols-[1fr_340px]">
           <div>
             <p className="text-sm font-black uppercase tracking-[0.35em] text-amber-700">
               Coppa assoluta
@@ -47,7 +47,7 @@ export default function CoppaFanta() {
               La Coppa Fanta a 20
             </h2>
 
-            <p className="mt-5 max-w-5xl text-base font-semibold leading-7 text-blue-950/75 sm:mt-6 sm:text-lg sm:leading-8 lg:text-[20px] lg:leading-9">
+            <p className="mt-3 max-w-5xl text-sm font-semibold leading-5 text-blue-950/75 sm:mt-6 sm:text-lg sm:leading-8 lg:text-[20px] lg:leading-9">
               Il trofeo più prestigioso del Fanta a 20. Le 100 società partono
               dallo stesso punto, senza distinzioni di lega o categoria: solo 64
               entrano nel tabellone finale, dove ogni sfida può cambiare la
@@ -70,29 +70,29 @@ export default function CoppaFanta() {
       </div>
 
       <div className="p-4 sm:p-6 lg:p-8">
-        <div className="grid gap-5 lg:grid-cols-3">
+        <div className="grid gap-3 sm:gap-5 lg:grid-cols-3">
           {fasi.map((fase) => (
             <article
               key={fase.step}
-              className="group relative overflow-hidden rounded-[1.75rem] border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-white p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg"
+              className="group relative overflow-hidden rounded-[1.75rem] border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-white p-4 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg sm:p-6"
             >
               <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(251,191,36,0.18),transparent_35%)] opacity-0 transition duration-300 group-hover:opacity-100" />
 
-              <div className="relative flex min-h-[270px] flex-col">
+              <div className="relative flex min-h-0 flex-col sm:min-h-[270px]">
                 <p className="text-xs font-black uppercase tracking-[0.22em] text-amber-600">
                   {fase.step}
                 </p>
 
-                <h3 className="mt-5 text-xl font-black uppercase tracking-tight text-blue-950 sm:text-2xl lg:whitespace-nowrap">
+                <h3 className="mt-2 text-lg font-black uppercase tracking-tight text-blue-950 sm:mt-5 sm:text-2xl lg:whitespace-nowrap">
                   {fase.title}
                 </h3>
 
-                <p className="mt-5 min-h-[72px] text-sm font-semibold leading-6 text-slate-500">
+                <p className="mt-2 min-h-0 text-xs font-semibold leading-5 text-slate-500 sm:mt-5 sm:min-h-[72px] sm:text-sm sm:leading-6">
                   {fase.text}
                 </p>
 
-                <div className="mt-auto rounded-[1.35rem] border border-amber-200 bg-gradient-to-br from-white via-amber-50 to-amber-100 px-5 py-4 text-center shadow-sm">
-                  <p className="text-5xl font-black leading-none text-blue-950">
+                <div className="mt-3 rounded-[1.35rem] border border-amber-200 bg-gradient-to-br from-white via-amber-50 to-amber-100 px-3 py-2 text-center shadow-sm sm:mt-auto sm:px-5 sm:py-4">
+                  <p className="text-3xl font-black leading-none text-blue-950 sm:text-5xl">
                     {fase.number}
                   </p>
 

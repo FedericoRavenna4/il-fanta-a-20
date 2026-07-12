@@ -222,33 +222,33 @@ const toEmblemaVisuale = ([chiave]: [string, string]) => ({
 const emblemiSbloccatiVisuali = emblemiSbloccati.map(toEmblemaVisuale);
 const emblemiDaDifendereVisuali = emblemiDaDifendere.map(toEmblemaVisuale);
   return (
-    <section className="mx-auto max-w-7xl px-4 py-10 sm:px-5 sm:py-12 lg:px-6 lg:py-16">
-      <div className="grid gap-8 lg:grid-cols-[1fr_360px] lg:items-start">
+    <section className="mx-auto max-w-7xl px-4 py-7 sm:px-5 sm:py-12 lg:px-6 lg:py-16">
+      <div className="grid gap-5 sm:gap-8 lg:grid-cols-[1fr_360px] lg:items-start">
         <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-xl">
-          <div className={`bg-gradient-to-r ${legaGradient} px-5 py-6 text-white sm:px-8 sm:py-8`}>
+          <div className={`bg-gradient-to-r ${legaGradient} px-4 py-4 text-white sm:px-8 sm:py-8`}>
             <p className="text-sm uppercase tracking-[0.3em] text-white/80">
               Scheda società
             </p>
           </div>
 
-          <div className="p-5 text-center sm:p-8 lg:p-10">
+          <div className="p-4 text-center sm:p-8 lg:p-10">
             <Image
               src={team.logo}
               alt={team.nome}
               width={280}
               height={280}
-              className="mx-auto mb-6 max-h-48 w-auto object-contain drop-shadow-sm transition hover:scale-105 hover:drop-shadow-[0_22px_30px_rgba(14,116,144,0.35)] sm:mb-8 sm:max-h-72"
+              className="mx-auto mb-4 max-h-36 w-auto object-contain drop-shadow-sm transition hover:scale-105 hover:drop-shadow-[0_22px_30px_rgba(14,116,144,0.35)] sm:mb-8 sm:max-h-72"
             />
 
-            <h1 className="mb-4 break-words text-3xl font-black text-blue-950 sm:text-4xl lg:text-5xl">
+            <h1 className="mb-2 break-words text-2xl font-black text-blue-950 sm:mb-4 sm:text-4xl lg:text-5xl">
               {team.nome}
             </h1>
 
-            <p className="mb-6 font-semibold text-slate-500">
+            <p className="mb-4 text-sm font-semibold text-slate-500 sm:mb-6 sm:text-base">
               {team.legaAttuale}
             </p>
 
-            <div className="mb-8 flex flex-wrap justify-center gap-3">
+            <div className="mb-5 flex flex-wrap justify-center gap-2 sm:mb-8 sm:gap-3">
               {team.leader && (
                 <div className="rounded-full border border-red-200 bg-red-100 px-4 py-2 text-sm font-bold text-red-700">
                   ⭐ Ranking Leader
@@ -288,10 +288,10 @@ const emblemiDaDifendereVisuali = emblemiDaDifendere.map(toEmblemaVisuale);
               </div>
             )}
 
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-2 sm:gap-4 md:grid-cols-3">
               <Link
                 href="/ranking"
-                className="rounded-2xl bg-slate-50 p-6 transition hover:-translate-y-0.5 hover:bg-sky-50 hover:shadow-md"
+                className="rounded-2xl bg-slate-50 p-3 transition hover:-translate-y-0.5 hover:bg-sky-50 hover:shadow-md sm:p-6"
               >
                 <p className="text-sm font-bold text-slate-500">Ranking</p>
                 <p className="text-3xl font-black text-blue-950">
@@ -301,7 +301,7 @@ const emblemiDaDifendereVisuali = emblemiDaDifendere.map(toEmblemaVisuale);
 
               <Link
                 href="#rose"
-                className="rounded-2xl bg-slate-50 p-6 transition hover:-translate-y-0.5 hover:bg-sky-50 hover:shadow-md"
+                className="rounded-2xl bg-slate-50 p-3 transition hover:-translate-y-0.5 hover:bg-sky-50 hover:shadow-md sm:p-6"
               >
                 <p className="text-sm font-bold text-slate-500">Rose</p>
                 <p className="text-2xl font-black text-blue-950">
@@ -311,7 +311,7 @@ const emblemiDaDifendereVisuali = emblemiDaDifendere.map(toEmblemaVisuale);
 
               <Link
                 href="#storia"
-                className="rounded-2xl bg-slate-50 p-6 transition hover:-translate-y-0.5 hover:bg-sky-50 hover:shadow-md"
+                className="rounded-2xl bg-slate-50 p-3 transition hover:-translate-y-0.5 hover:bg-sky-50 hover:shadow-md sm:p-6"
               >
                 <p className="text-sm font-bold text-slate-500">Storia</p>
                 <p className="text-2xl font-black text-blue-950">
@@ -322,7 +322,7 @@ const emblemiDaDifendereVisuali = emblemiDaDifendere.map(toEmblemaVisuale);
           </div>
         </div>
 
-        <aside className="space-y-5">
+        <aside className="space-y-3 sm:space-y-5">
           <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white/90 shadow-lg shadow-slate-200/50 backdrop-blur">
             <div className={`bg-gradient-to-r ${legaGradient} px-5 py-5 text-white sm:px-7`}>
               <p className="text-sm font-bold uppercase tracking-[0.25em] text-white/80">
@@ -365,7 +365,7 @@ const emblemiDaDifendereVisuali = emblemiDaDifendere.map(toEmblemaVisuale);
                 {palmaresCards.map((item, index) => (
                   <div
                     key={index}
-                    className="group relative flex h-32 min-w-0 items-center justify-center transition duration-300 hover:-translate-y-1"
+                    className="group relative flex h-24 min-w-0 items-center justify-center transition duration-300 hover:-translate-y-1 sm:h-32"
                   >
                     <div className="pointer-events-none absolute top-7 h-20 w-20 bg-amber-300/0 blur-3xl transition group-hover:bg-amber-300/35" />
                     <Image
@@ -373,7 +373,7 @@ const emblemiDaDifendereVisuali = emblemiDaDifendere.map(toEmblemaVisuale);
                       alt={`Trofeo ${item.label}`}
                       width={124}
                       height={124}
-                      className="relative max-h-[116px] max-w-[108px] object-contain drop-shadow-[0_14px_20px_rgba(15,23,42,0.27)] transition duration-300 group-hover:scale-105"
+                      className="relative max-h-[84px] max-w-[80px] object-contain drop-shadow-[0_14px_20px_rgba(15,23,42,0.27)] transition duration-300 group-hover:scale-105 sm:max-h-[116px] sm:max-w-[108px]"
                     />
                     <p className="absolute right-0 top-0 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-black text-blue-950 shadow-md">
                       x{item.value}

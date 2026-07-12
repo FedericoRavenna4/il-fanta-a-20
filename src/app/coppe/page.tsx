@@ -5,7 +5,7 @@ import PageHeader from "../components/PageHeader";
 
 export function CoppeContent({ embedded = false }: { embedded?: boolean }) {
   return (
-    <section id="coppe" className={embedded ? "scroll-mt-28" : "mx-auto max-w-7xl px-4 py-10 sm:px-5 sm:py-12 lg:px-6 lg:py-16"}>
+    <section id="coppe" className={embedded ? "scroll-mt-28" : "mx-auto max-w-7xl px-4 py-7 sm:px-5 sm:py-12 lg:px-6 lg:py-16"}>
       {!embedded && <PageHeader
         eyebrow="Il palcoscenico dei trofei"
         title="Le Coppe"

@@ -26,34 +26,34 @@ export default function StatistichePage() {
   const rows = getRankingRows();
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-10 sm:px-5 sm:py-12 lg:px-6 lg:py-16">
+    <main className="mx-auto max-w-7xl px-4 py-7 sm:px-5 sm:py-12 lg:px-6 lg:py-16">
       <PageHeader
         eyebrow="Numeri e memoria storica"
         title="Le Statistiche"
         description="Ranking e Hall of Fame raccontano il valore, i successi e l’eredità sportiva delle società del Fanta a 20."
       />
 
-      <div className="mb-20 grid gap-5 md:grid-cols-2">
+      <div className="mb-10 grid gap-3 sm:mb-20 sm:gap-5 md:grid-cols-2">
         {percorsi.map((item) => (
-          <Link key={item.title} href={item.href} className="group relative min-h-64 overflow-hidden rounded-[2rem] bg-blue-950 p-7 text-white shadow-xl shadow-blue-950/15 transition hover:-translate-y-1 hover:shadow-2xl sm:p-9">
+          <Link key={item.title} href={item.href} className="group relative min-h-0 overflow-hidden rounded-[2rem] bg-blue-950 p-4 text-white shadow-xl shadow-blue-950/15 transition hover:-translate-y-1 hover:shadow-2xl sm:min-h-64 sm:p-9">
             <div className="pointer-events-none absolute right-0 top-0 h-64 w-64 bg-sky-400/10 blur-[75px]" />
-            <div className="relative grid h-full grid-cols-1 items-center gap-5 sm:grid-cols-[1fr_190px]">
-              <div><p className="text-[10px] font-black uppercase tracking-[0.24em] text-amber-300">{item.eyebrow}</p><h2 className="mt-3 text-3xl font-black uppercase sm:text-4xl">{item.title}</h2><p className="mt-4 text-sm font-semibold leading-6 text-white/55">{item.text}</p><p className="mt-7 text-[10px] font-black uppercase tracking-[0.16em] text-white/80">Esplora la sezione <span className="ml-1 inline-block transition-transform group-hover:translate-x-1">→</span></p></div>
+            <div className="relative grid h-full grid-cols-[minmax(0,1fr)_76px] items-center gap-3 sm:grid-cols-[1fr_190px] sm:gap-5">
+              <div><p className="text-[9px] font-black uppercase tracking-[0.2em] text-amber-300 sm:text-[10px] sm:tracking-[0.24em]">{item.eyebrow}</p><h2 className="mt-2 text-xl font-black uppercase sm:mt-3 sm:text-4xl">{item.title}</h2><p className="mt-2 text-xs font-semibold leading-5 text-white/55 sm:mt-4 sm:text-sm sm:leading-6">{item.text}</p><p className="mt-3 text-[9px] font-black uppercase tracking-[0.14em] text-white/80 sm:mt-7 sm:text-[10px] sm:tracking-[0.16em]">Esplora la sezione <span className="ml-1 inline-block transition-transform group-hover:translate-x-1">→</span></p></div>
               {item.image === "podio" ? (
-                <div className="flex h-36 items-end justify-center gap-2" aria-hidden="true"><div className="flex h-20 w-12 items-center justify-center rounded-t-xl bg-white/15 text-xl font-black text-white/60">2</div><div className="flex h-32 w-14 items-center justify-center rounded-t-xl bg-amber-300 text-2xl font-black text-blue-950 shadow-[0_0_30px_rgba(251,191,36,0.25)]">1</div><div className="flex h-16 w-12 items-center justify-center rounded-t-xl bg-white/10 text-xl font-black text-white/45">3</div></div>
+                <div className="flex h-20 items-end justify-center gap-1 sm:h-36 sm:gap-2" aria-hidden="true"><div className="flex h-11 w-6 items-center justify-center rounded-t-lg bg-white/15 text-sm font-black text-white/60 sm:h-20 sm:w-12 sm:rounded-t-xl sm:text-xl">2</div><div className="flex h-18 w-7 items-center justify-center rounded-t-lg bg-amber-300 text-base font-black text-blue-950 shadow-[0_0_30px_rgba(251,191,36,0.25)] sm:h-32 sm:w-14 sm:rounded-t-xl sm:text-2xl">1</div><div className="flex h-9 w-6 items-center justify-center rounded-t-lg bg-white/10 text-sm font-black text-white/45 sm:h-16 sm:w-12 sm:rounded-t-xl sm:text-xl">3</div></div>
               ) : <Image src={item.image} alt="" width={220} height={180} className="max-h-40 w-full object-contain drop-shadow-[0_15px_22px_rgba(0,0,0,0.25)] transition duration-500 group-hover:scale-105" />}
             </div>
           </Link>
         ))}
       </div>
 
-      <div className="space-y-20">
+      <div className="space-y-10 sm:space-y-20">
         <section id="ranking" className="scroll-mt-28">
-          <div className="mb-8"><p className="text-xs font-black uppercase tracking-[0.28em] text-amber-500">Il Ranking</p><h2 className="mt-2 text-4xl font-black uppercase tracking-tight text-blue-950 sm:text-5xl">Il Podio</h2></div>
+          <div className="mb-5 sm:mb-8"><p className="text-[10px] font-black uppercase tracking-[0.22em] text-amber-500 sm:text-xs sm:tracking-[0.28em]">Il Ranking</p><h2 className="mt-2 text-3xl font-black uppercase tracking-tight text-blue-950 sm:text-5xl">Il Podio</h2></div>
           <RankingSmart rows={rows} />
         </section>
-        <div className="border-t border-slate-200 pt-20">
-          <div className="mb-8"><p className="text-xs font-black uppercase tracking-[0.28em] text-amber-500">Trofei e memoria</p><h2 className="mt-2 text-4xl font-black uppercase tracking-tight text-blue-950 sm:text-5xl">L’Hall of Fame</h2></div>
+        <div className="border-t border-slate-200 pt-10 sm:pt-20">
+          <div className="mb-5 sm:mb-8"><p className="text-[10px] font-black uppercase tracking-[0.22em] text-amber-500 sm:text-xs sm:tracking-[0.28em]">Trofei e memoria</p><h2 className="mt-2 text-3xl font-black uppercase tracking-tight text-blue-950 sm:text-5xl">L’Hall of Fame</h2></div>
           <HallOfFameContent embedded />
         </div>
       </div>

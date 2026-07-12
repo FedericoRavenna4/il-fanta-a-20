@@ -283,8 +283,8 @@ export default function StoriaSocieta({
   return (
     <>
       {!isNewEntry && (
-        <section className="mt-10 rounded-[2rem] border border-slate-200 bg-white/90 p-4 shadow-xl shadow-slate-200/60 sm:p-8">
-          <div className="mb-8">
+        <section className="mt-7 rounded-[2rem] border border-slate-200 bg-white/90 p-3 shadow-xl shadow-slate-200/60 sm:mt-10 sm:p-8">
+          <div className="mb-5 sm:mb-8">
             <p className="mb-2 text-xs font-black uppercase tracking-[0.25em] text-slate-400">
               Archivio risultati
             </p>
@@ -299,7 +299,7 @@ export default function StoriaSocieta({
           </div>
 
           {stagioniDisponibili.length > 0 && (
-            <div className="relative mb-10 flex items-center justify-center">
+            <div className="relative mb-6 flex items-center justify-center sm:mb-10">
               <div className="hidden h-px flex-1 bg-gradient-to-r from-transparent via-slate-300 to-slate-300 sm:block" />
 
               <div className="relative w-full max-w-[300px] sm:mx-6">
@@ -358,7 +358,7 @@ export default function StoriaSocieta({
           )}
 
           {risultati.length > 0 ? (
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {Object.entries(risultatiPerStagione).map(([stagione, items]) => {
   const itemsOrdinati = [...items].sort((a, b) => {
     const ordine = (item: Risultato) => {

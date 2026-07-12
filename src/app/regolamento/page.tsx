@@ -31,14 +31,14 @@ export default function RegolamentoPage() {
   const [activeSection, setActiveSection] = useState("asta");
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-10 sm:px-5 sm:py-12 lg:px-6 lg:py-16">
+    <main className="mx-auto max-w-7xl px-4 py-7 sm:px-5 sm:py-12 lg:px-6 lg:py-16">
       <PageHeader
         eyebrow="Documentazione ufficiale"
         title="Il Regolamento"
         description="Il Regolamento 3.0 raccoglie aste, mercato, competizioni e calcolo dei risultati, definendo il funzionamento completo della stagione."
       />
 
-      <div className="mt-4 grid items-start gap-7 xl:grid-cols-[230px_minmax(0,1fr)]">
+      <div className="mt-3 grid items-start gap-4 sm:mt-4 sm:gap-7 xl:grid-cols-[230px_minmax(0,1fr)]">
       <aside className="grid gap-2 self-start rounded-[1.6rem] border border-slate-200/80 bg-white/70 p-2 shadow-lg shadow-blue-950/5 backdrop-blur-xl md:grid-cols-2 xl:grid-cols-1">
   {highlights.map((item) => (
     <button
@@ -67,7 +67,7 @@ export default function RegolamentoPage() {
  {/* ASTA */}
 
 {activeSection === "asta" && (
-<article id="asta" className="relative overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white/90 p-5 shadow-lg shadow-slate-200/50 before:absolute before:inset-y-0 before:left-0 before:w-1 before:bg-gradient-to-b before:from-amber-400 before:via-sky-400 before:to-transparent sm:p-7 lg:p-9">
+<article id="asta" className="relative overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white/90 p-4 shadow-lg shadow-slate-200/50 before:absolute before:inset-y-0 before:left-0 before:w-1 before:bg-gradient-to-b before:from-amber-400 before:via-sky-400 before:to-transparent sm:p-7 lg:p-9">
   <p className="text-xs font-black uppercase tracking-[0.30em] text-amber-500">
     Sezione Asta
   </p>
@@ -160,7 +160,7 @@ export default function RegolamentoPage() {
 {/* MERCATI */}
 
 {activeSection === "mercati" && (
-<article id="mercati" className="relative overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white/90 p-5 shadow-lg shadow-slate-200/50 before:absolute before:inset-y-0 before:left-0 before:w-1 before:bg-gradient-to-b before:from-amber-400 before:via-sky-400 before:to-transparent sm:p-7 lg:p-9">
+<article id="mercati" className="relative overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white/90 p-4 shadow-lg shadow-slate-200/50 before:absolute before:inset-y-0 before:left-0 before:w-1 before:bg-gradient-to-b before:from-amber-400 before:via-sky-400 before:to-transparent sm:p-7 lg:p-9">
   <p className="text-xs font-black uppercase tracking-[0.30em] text-amber-500">
     Sezione Mercati
   </p>
@@ -238,7 +238,7 @@ export default function RegolamentoPage() {
 {/* COMPETIZIONI */}
 
 {activeSection === "competizioni" && (
-<article id="competizioni" className="relative overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white/90 p-5 shadow-lg shadow-slate-200/50 before:absolute before:inset-y-0 before:left-0 before:w-1 before:bg-gradient-to-b before:from-amber-400 before:via-sky-400 before:to-transparent sm:p-7 lg:p-9">
+<article id="competizioni" className="relative overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white/90 p-4 shadow-lg shadow-slate-200/50 before:absolute before:inset-y-0 before:left-0 before:w-1 before:bg-gradient-to-b before:from-amber-400 before:via-sky-400 before:to-transparent sm:p-7 lg:p-9">
   <p className="text-xs font-black uppercase tracking-[0.30em] text-amber-500">
     Sezione Competizioni
   </p>
@@ -426,7 +426,7 @@ export default function RegolamentoPage() {
 {/* CALCOLO */}
 
 {activeSection === "calcolo" && (
-<article id="calcolo" className="relative overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white/90 p-5 shadow-lg shadow-slate-200/50 before:absolute before:inset-y-0 before:left-0 before:w-1 before:bg-gradient-to-b before:from-amber-400 before:via-sky-400 before:to-transparent sm:p-7 lg:p-9">
+<article id="calcolo" className="relative overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white/90 p-4 shadow-lg shadow-slate-200/50 before:absolute before:inset-y-0 before:left-0 before:w-1 before:bg-gradient-to-b before:from-amber-400 before:via-sky-400 before:to-transparent sm:p-7 lg:p-9">
   <p className="text-xs font-black uppercase tracking-[0.30em] text-amber-500">
     Sezione Calcolo
   </p>

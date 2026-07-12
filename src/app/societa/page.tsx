@@ -7,7 +7,7 @@ export default function SocietaPage() {
   const societa = getSocieta();
 
   return (
-    <section className="mx-auto max-w-7xl px-4 py-10 sm:px-5 sm:py-12 lg:px-6 lg:py-16">
+    <section className="mx-auto max-w-7xl px-4 py-7 sm:px-5 sm:py-12 lg:px-6 lg:py-16">
       <PageHeader
         eyebrow="Archivio ufficiale"
         title="Le Società"

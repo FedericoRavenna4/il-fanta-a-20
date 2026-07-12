@@ -100,7 +100,7 @@ export function HallOfFameContent({ embedded = false }: { embedded?: boolean }) 
   );
 
   return (
-    <section id="hall-of-fame" className={embedded ? "scroll-mt-28" : "mx-auto max-w-7xl px-4 py-10 sm:px-5 sm:py-12 lg:px-6 lg:py-16"}>
+    <section id="hall-of-fame" className={embedded ? "scroll-mt-28" : "mx-auto max-w-7xl px-4 py-7 sm:px-5 sm:py-12 lg:px-6 lg:py-16"}>
       {!embedded && <PageHeader
         eyebrow="Trofei e memoria storica"
         title="Hall of Fame"
@@ -112,7 +112,7 @@ export function HallOfFameContent({ embedded = false }: { embedded?: boolean }) 
           href={`/societa/${teamPiuTitolato.slug}`}
           className={`group block overflow-hidden rounded-[2rem] border border-amber-400 bg-gradient-to-br from-amber-100 via-yellow-100 to-amber-50 text-blue-950 shadow-xl shadow-amber-200/60 transition hover:-translate-y-1 ${embedded ? "mb-7" : "mb-9"}`}
         >
-          <div className={`grid items-center gap-5 p-5 sm:gap-6 sm:p-7 ${embedded ? "lg:grid-cols-[1fr_220px]" : "lg:grid-cols-[1fr_280px] lg:p-8"}`}>
+          <div className={`grid items-center gap-3 p-4 sm:gap-6 sm:p-7 ${embedded ? "lg:grid-cols-[1fr_220px]" : "lg:grid-cols-[1fr_280px] lg:p-8"}`}>
             <div>
               <p className="mb-4 text-sm font-black uppercase tracking-[0.28em] text-amber-800">
                 🏛️ Società più titolata
@@ -122,7 +122,7 @@ export function HallOfFameContent({ embedded = false }: { embedded?: boolean }) 
                 {teamPiuTitolato.nome}
               </h2>
 
-              <p className="mt-4 max-w-3xl font-semibold leading-7 text-amber-900">
+              <p className="mt-2 max-w-3xl text-sm font-semibold leading-5 text-amber-900 sm:mt-4 sm:text-base sm:leading-7">
                 La società con il maggior numero complessivo di trofei nella
                 storia del Fanta a 20.
               </p>
@@ -150,31 +150,31 @@ export function HallOfFameContent({ embedded = false }: { embedded?: boolean }) 
               </p>
             </div>
 
-            <div className="flex items-center justify-center p-4">
+            <div className="flex items-center justify-center p-1 sm:p-4">
               <Image
                 src={teamPiuTitolato.logo}
                 alt={teamPiuTitolato.nome}
                 width={300}
                 height={300}
-                className="max-h-72 w-auto object-contain drop-shadow-[0_18px_28px_rgba(30,41,59,0.35)] transition group-hover:scale-105"
+                className="max-h-32 w-auto object-contain drop-shadow-[0_18px_28px_rgba(30,41,59,0.35)] transition group-hover:scale-105 sm:max-h-72"
               />
             </div>
           </div>
         </Link>
       )}
 
-      <div className="grid gap-5">
+      <div className="grid gap-3 sm:gap-5">
         {[sezioni[0], sezioni[2], sezioni[1]].map((sezione) => (
           <section
             key={sezione.titolo}
-            className="rounded-[2rem] border border-slate-200 bg-white/90 p-5 shadow-xl shadow-slate-200/70 sm:p-7"
+            className="rounded-[2rem] border border-slate-200 bg-white/90 p-4 shadow-xl shadow-slate-200/70 sm:p-7"
           >
-            <div className="mb-7">
+            <div className="mb-4 sm:mb-7">
               <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-400">
                 Albo d’oro
               </p>
 
-              <h2 className="mt-2 text-3xl font-black text-blue-950">
+              <h2 className="mt-2 text-2xl font-black text-blue-950 sm:text-3xl">
                 {sezione.titolo}
               </h2>
 
@@ -200,7 +200,7 @@ export function HallOfFameContent({ embedded = false }: { embedded?: boolean }) 
                 return (
                   <div
                     key={gruppo.label}
-                    className={`rounded-[1.75rem] border p-5 shadow-xl ${gruppo.style.replace(" darkCard", "")}`}
+                    className={`rounded-[1.75rem] border p-3 shadow-xl sm:p-5 ${gruppo.style.replace(" darkCard", "")}`}
                   >
                     <div className="mb-5 flex items-center gap-4">
                       <div className="flex h-20 w-20 shrink-0 items-center justify-center">

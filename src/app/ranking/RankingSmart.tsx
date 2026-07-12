@@ -42,13 +42,13 @@ export default function RankingSmart({ rows }: { rows: RankingRow[] }) {
 
   return (
     <>
-      <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+      <div className="grid gap-3 sm:gap-4 lg:grid-cols-[1.2fr_0.8fr]">
         {podio[0]?.team && (
-          <Link href={`/societa/${podio[0].team.slug}`} className="group relative overflow-hidden rounded-[2rem] border border-amber-300/40 bg-[linear-gradient(145deg,#17376f,#081f46)] p-7 text-white shadow-xl shadow-blue-950/15 transition hover:-translate-y-1">
+          <Link href={`/societa/${podio[0].team.slug}`} className="group relative overflow-hidden rounded-[2rem] border border-amber-300/40 bg-[linear-gradient(145deg,#17376f,#081f46)] p-4 text-white shadow-xl shadow-blue-950/15 transition hover:-translate-y-1 sm:p-7">
             <div className="absolute right-0 top-0 h-52 w-52 bg-amber-300/12 blur-[65px]" />
-            <div className="relative grid min-h-52 grid-cols-1 items-center gap-5 sm:grid-cols-[1fr_150px]">
-              <div><p className="text-[10px] font-black uppercase tracking-[0.24em] text-amber-300">Ranking leader</p><h3 className="mt-3 text-3xl font-black uppercase leading-tight">{podio[0].team.nome}</h3><div className="mt-6 flex gap-3"><span className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-xs font-black">{podio[0].puntiRanking} punti</span><span className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1.5 text-xs font-black">{podio[0].trofei.totaleTrofei} trofei</span></div></div>
-              <Image src={podio[0].team.logo} alt={podio[0].team.nome} width={145} height={145} className="mx-auto max-h-28 w-auto object-contain drop-shadow-[0_16px_22px_rgba(0,0,0,0.3)] transition group-hover:scale-105 sm:max-h-36" />
+            <div className="relative grid min-h-0 grid-cols-[minmax(0,1fr)_82px] items-center gap-3 sm:min-h-52 sm:grid-cols-[1fr_150px] sm:gap-5">
+              <div><p className="text-[9px] font-black uppercase tracking-[0.2em] text-amber-300 sm:text-[10px] sm:tracking-[0.24em]">Ranking leader</p><h3 className="mt-2 text-xl font-black uppercase leading-tight sm:mt-3 sm:text-3xl">{podio[0].team.nome}</h3><div className="mt-3 flex flex-wrap gap-1.5 sm:mt-6 sm:gap-3"><span className="rounded-full border border-white/10 bg-white/[0.06] px-2 py-1 text-[10px] font-black sm:px-3 sm:py-1.5 sm:text-xs">{podio[0].puntiRanking} punti</span><span className="rounded-full border border-white/10 bg-white/[0.06] px-2 py-1 text-[10px] font-black sm:px-3 sm:py-1.5 sm:text-xs">{podio[0].trofei.totaleTrofei} trofei</span></div></div>
+              <Image src={podio[0].team.logo} alt={podio[0].team.nome} width={145} height={145} className="mx-auto max-h-20 w-auto object-contain drop-shadow-[0_16px_22px_rgba(0,0,0,0.3)] transition group-hover:scale-105 sm:max-h-36" />
             </div>
           </Link>
         )}
@@ -62,10 +62,10 @@ export default function RankingSmart({ rows }: { rows: RankingRow[] }) {
       </div>
 
       <div className="mt-6 overflow-hidden rounded-[2rem] border border-slate-200 bg-white/90 shadow-xl shadow-slate-200/60">
-        <div className="border-b border-slate-200 p-6"><p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-500">Il Ranking</p><h3 className="mt-1 text-2xl font-black uppercase text-blue-950">La Top 10</h3></div>
+        <div className="border-b border-slate-200 p-4 sm:p-6"><p className="text-[9px] font-black uppercase tracking-[0.18em] text-amber-500 sm:text-[10px] sm:tracking-[0.2em]">Il Ranking</p><h3 className="mt-1 text-xl font-black uppercase text-blue-950 sm:text-2xl">La Top 10</h3></div>
         <div className="hidden grid-cols-[60px_minmax(0,1fr)_90px_150px_70px_80px] gap-3 bg-slate-50 px-6 py-3 text-[10px] font-black uppercase tracking-wider text-slate-400 lg:grid"><span>Pos.</span><span>Società</span><span>Ingresso</span><span>Lega attuale</span><span className="text-right">Trofei</span><span className="text-right text-blue-950">PT</span></div>
         {rows.slice(0, 10).map((row) => (
-          <Link key={row.posizione} href={row.team ? `/societa/${row.team.slug}` : "#"} className="grid min-w-0 grid-cols-[36px_minmax(0,1fr)_52px] items-center gap-2 border-t border-slate-100 px-3 py-3 transition hover:bg-sky-50/60 sm:grid-cols-[52px_minmax(0,1fr)_auto] sm:gap-3 sm:px-5 lg:grid-cols-[60px_minmax(0,1fr)_90px_150px_70px_80px] lg:px-6">
+          <Link key={row.posizione} href={row.team ? `/societa/${row.team.slug}` : "#"} className="grid min-w-0 grid-cols-[32px_minmax(0,1fr)_48px] items-center gap-2 border-t border-slate-100 px-3 py-2 transition hover:bg-sky-50/60 sm:grid-cols-[52px_minmax(0,1fr)_auto] sm:gap-3 sm:px-5 sm:py-3 lg:grid-cols-[60px_minmax(0,1fr)_90px_150px_70px_80px] lg:px-6">
             <span className="text-sm font-black text-blue-950">{row.posizione}°</span><div className="flex min-w-0 items-center gap-3">{row.team && <Image src={row.team.logo} alt="" width={42} height={42} className="h-10 w-10 object-contain" />}<span className="truncate text-base font-black uppercase text-blue-950">{row.team?.nome ?? row.nomeRanking}</span></div><span className="hidden text-sm font-bold text-slate-500 lg:block">{row.team?.stagioneIngresso ?? "—"}</span><span className="hidden truncate text-sm font-bold text-slate-500 lg:block">{row.team?.legaAttuale ?? "—"}</span><span className="hidden text-right text-sm font-black text-blue-950 lg:block">{row.trofei.totaleTrofei}</span><span className="text-right text-base font-black text-blue-950">{row.puntiRanking}</span>
           </Link>
         ))}

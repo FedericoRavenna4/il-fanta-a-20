@@ -43,7 +43,7 @@ export default function AlboDOroCoppe() {
   const societa = getSocieta();
 
   return (
-    <section className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-xl sm:p-8">
+    <section className="rounded-[2rem] border border-slate-200 bg-white p-4 shadow-xl sm:p-8">
       <div className="mb-10">
         <p className="mb-2 text-xs font-black uppercase tracking-[0.3em] text-amber-500">
           Archivio storico
@@ -59,7 +59,7 @@ export default function AlboDOroCoppe() {
         </p>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-4">
+      <div className="grid gap-3 sm:gap-5 lg:grid-cols-4">
         {competizioni.map((coppa) => {
           const vincitori = palmares
             .filter((item) => item[coppa.key] > 0)
@@ -78,18 +78,18 @@ export default function AlboDOroCoppe() {
           return (
             <article
               key={coppa.nome}
-              className={`group relative min-h-[355px] overflow-hidden rounded-[2rem] border p-6 shadow-xl transition duration-300 hover:-translate-y-1 ${coppa.colore}`}
+              className={`group relative min-h-0 overflow-hidden rounded-[2rem] border p-4 shadow-xl transition duration-300 hover:-translate-y-1 sm:min-h-[355px] sm:p-6 ${coppa.colore}`}
             >
               <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.22),transparent_44%)]" />
               <div className="pointer-events-none absolute inset-x-8 top-24 h-28 rounded-full bg-white/10 blur-2xl transition duration-500 group-hover:bg-white/18" />
 
-              <div className="relative z-10 flex min-h-[307px] flex-col">
+              <div className="relative z-10 flex min-h-0 flex-col sm:min-h-[307px]">
                 <div className="text-center">
-                  <h3 className="text-xl font-black uppercase tracking-tight">
+                  <h3 className="text-lg font-black uppercase tracking-tight sm:text-xl">
                     {coppa.nome}
                   </h3>
 
-                  <div className="mt-5 flex h-28 items-center justify-center">
+                  <div className="mt-2 flex h-20 items-center justify-center sm:mt-5 sm:h-28">
                     <Image
                       src={coppa.image}
                       alt={coppa.nome}
@@ -100,7 +100,7 @@ export default function AlboDOroCoppe() {
                   </div>
                 </div>
 
-                <div className="mt-auto flex min-h-[92px] flex-wrap items-end justify-center gap-5 pb-1">
+                <div className="mt-3 flex min-h-0 flex-wrap items-end justify-center gap-3 pb-1 sm:mt-auto sm:min-h-[92px] sm:gap-5">
                   {vincitori.map((vincitore) => (
                     <Link
                       key={vincitore.squadraId}

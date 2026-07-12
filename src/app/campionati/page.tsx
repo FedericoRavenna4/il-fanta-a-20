@@ -42,14 +42,14 @@ export function CampionatiContent({ embedded = false }: { embedded?: boolean }) 
   );
 
   return (
-    <section id="campionati" className={embedded ? "scroll-mt-28" : "mx-auto max-w-7xl px-4 py-10 sm:px-5 sm:py-12 lg:px-6 lg:py-16"}>
+    <section id="campionati" className={embedded ? "scroll-mt-28" : "mx-auto max-w-7xl px-4 py-7 sm:px-5 sm:py-12 lg:px-6 lg:py-16"}>
       {!embedded && <PageHeader
         eyebrow="Sistema competitivo"
         title="Campionati"
         description="Dalla Serie A ai tre gironi di Serie C, cinque leghe unite da promozioni, retrocessioni e una corsa continua verso il vertice."
       />}
 
-      <div className="grid gap-8">
+      <div className="grid gap-5 sm:gap-8">
         {leghe.map((lega) => {
           const hoverClass =
   lega.nome === "Serie A"
@@ -68,8 +68,8 @@ export function CampionatiContent({ embedded = false }: { embedded?: boolean }) 
               id={lega.id}
               className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-xl shadow-slate-200/70"
             >
-              <div className={`bg-gradient-to-r ${lega.colore} px-5 py-6 text-white sm:px-8 sm:py-8`}>
-                <div className="flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
+              <div className={`bg-gradient-to-r ${lega.colore} px-4 py-4 text-white sm:px-8 sm:py-8`}>
+                <div className="flex flex-col gap-3 sm:gap-8 md:flex-row md:items-center md:justify-between">
                   <div>
                     <p className="text-xs font-black uppercase tracking-[0.35em] text-white/60">
                       Campionato
@@ -79,12 +79,12 @@ export function CampionatiContent({ embedded = false }: { embedded?: boolean }) 
   {lega.nome}
 </h2>
 
-                    <p className="mt-4 max-w-3xl text-base font-semibold leading-7 text-white/85">
+                    <p className="mt-2 max-w-3xl text-sm font-semibold leading-5 text-white/85 sm:mt-4 sm:text-base sm:leading-7">
                       {lega.descrizione}
                     </p>
                   </div>
 
-                  <div className="flex h-44 w-44 items-center justify-center p-2">
+                  <div className="flex h-24 w-24 items-center justify-center p-1 sm:h-44 sm:w-44 sm:p-2">
                     <Image
                       src={lega.logo}
                       alt={`Logo ${lega.nome}`}
@@ -97,7 +97,7 @@ export function CampionatiContent({ embedded = false }: { embedded?: boolean }) 
               </div>
 
               <div className="grid gap-5 p-4 sm:gap-6 sm:p-6 lg:grid-cols-[1fr_1.3fr]">
-                <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-6">
+                <div className="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-4 sm:p-6">
                   {lega.nome === "Serie A" && campioneSerieA ? (
                     <>
                       <p className="text-xs font-black uppercase tracking-[0.25em] text-amber-600">
@@ -145,7 +145,7 @@ export function CampionatiContent({ embedded = false }: { embedded?: boolean }) 
                   )}
                 </div>
 
-                <div className="rounded-[1.75rem] border border-slate-200 bg-white p-6">
+                <div className="rounded-[1.75rem] border border-slate-200 bg-white p-4 sm:p-6">
                   <p className="text-xs font-black uppercase tracking-[0.25em] text-slate-400">
                     Neopromosse
                   </p>
@@ -187,7 +187,7 @@ export function CampionatiContent({ embedded = false }: { embedded?: boolean }) 
                 </div>
               </div>
 
-              <div className="border-t border-slate-100 px-6 pb-7">
+              <div className="border-t border-slate-100 px-4 pb-4 sm:px-6 sm:pb-7">
                 <p className="mt-6 text-xs font-black uppercase tracking-[0.25em] text-slate-400">
                   Società partecipanti
                 </p>
@@ -198,7 +198,7 @@ export function CampionatiContent({ embedded = false }: { embedded?: boolean }) 
   key={team.id}
   href={`/societa/${team.slug}`}
   title={team.nome}
-  className={`group relative flex h-28 items-center justify-center overflow-hidden rounded-2xl bg-slate-50 p-3 ring-1 ring-slate-100 transition hover:-translate-y-1 hover:scale-[1.03] hover:shadow-lg ${hoverClass}`}
+  className={`group relative flex h-20 items-center justify-center overflow-hidden rounded-2xl bg-slate-50 p-2 ring-1 ring-slate-100 transition hover:-translate-y-1 hover:scale-[1.03] hover:shadow-lg sm:h-28 sm:p-3 ${hoverClass}`}
 >
   <div className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-br from-white/35 via-white/10 to-transparent transition duration-500 group-hover:translate-x-0" />
 
@@ -227,8 +227,8 @@ export function CampionatiContent({ embedded = false }: { embedded?: boolean }) 
           id="serie-c"
           className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-xl shadow-slate-200/70"
         >
-          <div className="bg-gradient-to-r from-violet-500 via-violet-600 to-blue-950 px-5 py-6 text-white sm:px-8 sm:py-8">
-            <div className="flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
+          <div className="bg-gradient-to-r from-violet-500 via-violet-600 to-blue-950 px-4 py-4 text-white sm:px-8 sm:py-8">
+            <div className="flex flex-col gap-3 sm:gap-8 md:flex-row md:items-center md:justify-between">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.3em] text-white/70">
                   Campionato
@@ -238,14 +238,14 @@ export function CampionatiContent({ embedded = false }: { embedded?: boolean }) 
   Serie C
 </h2>
 
-                <p className="mt-4 max-w-3xl text-base font-semibold leading-7 text-white/85">
+                <p className="mt-2 max-w-3xl text-sm font-semibold leading-5 text-white/85 sm:mt-4 sm:text-base sm:leading-7">
                   La base del sistema competitivo, divisa in tre gironi. Qui
                   nascono nuove rivalità e iniziano le scalate verso le leghe
                   superiori.
                 </p>
               </div>
 
-              <div className="flex h-44 w-44 items-center justify-center p-2">
+              <div className="flex h-24 w-24 items-center justify-center p-1 sm:h-44 sm:w-44 sm:p-2">
                 <Image
                   src="/leghe/serie-c.png"
                   alt="Logo Serie C"
@@ -257,7 +257,7 @@ export function CampionatiContent({ embedded = false }: { embedded?: boolean }) 
             </div>
           </div>
 
-          <div className="grid gap-5 p-6 md:grid-cols-3">
+          <div className="grid gap-3 p-4 sm:gap-5 sm:p-6 md:grid-cols-3">
             {gironiSerieC.map((girone) => {
               const squadreGirone = societa.filter(
                 (team) => team.legaAttuale === girone.nome
@@ -267,23 +267,23 @@ export function CampionatiContent({ embedded = false }: { embedded?: boolean }) 
                 <div
                   key={girone.id}
                   id={girone.id}
-                  className="rounded-[1.75rem] border border-violet-100 bg-gradient-to-br from-violet-50 via-white to-white p-5 shadow-sm"
+                  className="rounded-[1.75rem] border border-violet-100 bg-gradient-to-br from-violet-50 via-white to-white p-3 shadow-sm sm:p-5"
                 >
                   <p className="text-xs font-black uppercase tracking-[0.25em] text-violet-600">
                     Serie C
                   </p>
 
-                  <h3 className="mt-2 text-2xl font-black text-blue-950">
+                  <h3 className="mt-1 text-lg font-black text-blue-950 sm:mt-2 sm:text-2xl">
                     {girone.label}
                   </h3>
 
-                  <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
+                  <div className="mt-3 grid grid-cols-2 gap-2 sm:mt-5 sm:grid-cols-4 sm:gap-3">
                     {squadreGirone.map((team) => (
                       <Link
   key={team.id}
   href={`/societa/${team.slug}`}
   title={team.nome}
-  className="group relative flex h-24 items-center justify-center overflow-hidden rounded-2xl bg-white p-2 shadow-sm ring-1 ring-violet-100 transition hover:-translate-y-1 hover:scale-[1.03] hover:bg-violet-500 hover:shadow-lg hover:ring-violet-300"
+  className="group relative flex h-20 items-center justify-center overflow-hidden rounded-2xl bg-white p-2 shadow-sm ring-1 ring-violet-100 transition hover:-translate-y-1 hover:scale-[1.03] hover:bg-violet-500 hover:shadow-lg hover:ring-violet-300 sm:h-24"
 >
   <div className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-br from-white/35 via-white/10 to-transparent transition duration-500 group-hover:translate-x-0" />
 
