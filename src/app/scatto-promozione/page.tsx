@@ -60,7 +60,7 @@ export function ScattoPromozioneContent({ embedded = false }: { embedded?: boole
           Formula
         </p>
 
-        <h2 className="mt-2 text-4xl font-black uppercase tracking-tight text-blue-950">
+        <h2 className="mt-2 text-3xl font-black uppercase tracking-tight text-blue-950 sm:text-4xl">
           La volata per la Serie B
         </h2>
 

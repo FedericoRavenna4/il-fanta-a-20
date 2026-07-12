@@ -71,7 +71,7 @@ export default function CoppeEuropee() {
         {coppe.map((coppa) => (
           <article
             key={coppa.nome}
-            className={`group relative min-h-[300px] overflow-hidden rounded-[2rem] border p-5 text-white shadow-xl transition duration-300 hover:-translate-y-1 sm:min-h-[335px] sm:p-7 ${coppa.style}`}
+            className={`group relative overflow-hidden rounded-[2rem] border p-5 text-white shadow-xl transition duration-300 hover:-translate-y-1 sm:p-7 lg:min-h-[335px] ${coppa.style}`}
           >
             <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.12),transparent_42%),radial-gradient(circle_at_88%_42%,rgba(255,255,255,0.25),transparent_28%)]" />
 
@@ -80,18 +80,18 @@ export default function CoppeEuropee() {
   alt={coppa.nome}
   width={230}
   height={230}
-  className={`absolute top-1/2 z-0 max-h-44 w-auto -translate-y-1/2 object-contain opacity-65 drop-shadow-[0_0_26px_rgba(255,255,255,0.28)] transition duration-500 group-hover:scale-110 group-hover:drop-shadow-[0_0_44px_rgba(255,255,255,0.55)] sm:max-h-56 sm:opacity-100 ${
-    coppa.nome === "Champions League" ? "-right-12" : "-right-6"
+  className={`relative z-0 mx-auto mt-5 h-36 w-full translate-y-0 object-contain opacity-90 drop-shadow-[0_0_26px_rgba(255,255,255,0.28)] transition duration-500 group-hover:scale-105 lg:absolute lg:top-1/2 lg:mx-0 lg:mt-0 lg:h-auto lg:max-h-56 lg:w-auto lg:-translate-y-1/2 lg:opacity-100 lg:group-hover:scale-110 lg:group-hover:drop-shadow-[0_0_44px_rgba(255,255,255,0.55)] ${
+    coppa.nome === "Champions League" ? "lg:-right-12" : "lg:-right-6"
   }`}
 />
 
-<div className="relative z-10 flex min-h-[280px] flex-col justify-between">
+<div className="relative z-10 flex flex-col justify-between lg:min-h-[280px]">
               <div>
                 <h3 className="text-xl font-black uppercase tracking-tight sm:text-[22px] lg:whitespace-nowrap">
   {coppa.nome}
 </h3>
 
-<p className="mt-5 max-w-[62%] text-sm font-semibold leading-6 text-white/82 sm:max-w-[68%] sm:text-[15px] sm:leading-7">
+<p className="mt-4 max-w-none text-sm font-semibold leading-6 text-white/82 sm:text-[15px] sm:leading-7 lg:mt-5 lg:max-w-[68%]">
                   {coppa.descrizione}
                 </p>
               </div>

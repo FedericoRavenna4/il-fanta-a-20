@@ -117,7 +117,7 @@ export default function CoppaFanta() {
 
         <TabelloneCoppaFanta partite={tabellone} stagione="2025/26" />
 
-        <div className="mt-10 rounded-[1.8rem] border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-white p-8 shadow-sm">
+        <div className="mt-10 rounded-[1.8rem] border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-white p-5 shadow-sm sm:p-8">
           <p className="text-xs font-black uppercase tracking-[0.28em] text-amber-500">
             Archivio
           </p>

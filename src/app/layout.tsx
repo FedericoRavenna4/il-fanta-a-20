@@ -31,7 +31,7 @@ export default function RootLayout({
       <body className="min-h-screen flex flex-col font-[var(--font-outfit)]">
         <Header />
 
-        <main className="flex-1">{children}</main>
+        <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top))] lg:pt-0">{children}</main>
 
         <Footer />
       </body>

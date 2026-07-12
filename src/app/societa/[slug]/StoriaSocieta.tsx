@@ -397,13 +397,13 @@ export default function StoriaSocieta({
                       return (
                         <div
                           key={`${item.stagioneId}-${item.competizione}-${index}`}
-                          className={`group relative h-[76px] overflow-hidden rounded-[1.35rem] border px-5 py-3 shadow-md transition hover:-translate-y-0.5 hover:shadow-lg ${getCardStyle(
+                          className={`group relative min-h-[84px] overflow-hidden rounded-[1.35rem] border px-4 py-3 shadow-md transition hover:-translate-y-0.5 hover:shadow-lg lg:h-[76px] lg:min-h-0 lg:px-5 ${getCardStyle(
   item,
   vittoria
 )}`}
                         >
                           {vittoria && icona && (
-                            <div className="pointer-events-none absolute right-2 top-[56%] flex h-24 w-24 -translate-y-1/2 items-center justify-center overflow-hidden">
+                            <div className="pointer-events-none absolute right-1 top-1/2 flex h-20 w-20 -translate-y-1/2 items-center justify-center overflow-hidden lg:right-2 lg:top-[56%] lg:h-24 lg:w-24">
                               <Image
   src={icona}
   alt="Trofeo"
@@ -414,7 +414,7 @@ export default function StoriaSocieta({
                             </div>
                           )}
 
-                          <div className="relative z-10 flex h-full max-w-[68%] flex-col justify-center">
+                          <div className={`relative z-10 flex h-full min-w-0 flex-col justify-center ${vittoria && icona ? "max-w-[calc(100%-4.5rem)] lg:max-w-[68%]" : "max-w-full lg:max-w-[68%]"}`}>
                             <h4
                               className={`line-clamp-1 text-[12px] font-black uppercase tracking-[0.12em] ${
                                 isDarkCard(item)
@@ -426,7 +426,7 @@ export default function StoriaSocieta({
                             </h4>
 
                             <p
-                              className={`mt-2 whitespace-nowrap text-[15px] font-black uppercase leading-none tracking-tight ${
+                              className={`mt-2 break-words text-[14px] font-black uppercase leading-tight tracking-tight lg:whitespace-nowrap lg:text-[15px] lg:leading-none ${
                                 isDarkCard(item)
                                   ? "text-white"
                                   : "text-blue-950"

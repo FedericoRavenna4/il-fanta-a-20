@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const statisticheLinks = [
   {
@@ -37,9 +37,9 @@ const competizioniLinks = [
 
 export default function Header() {
   const [hidden, setHidden] = useState(false);
-  const [lastScroll, setLastScroll] = useState(0);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const lastScroll = useRef(0);
 
   useEffect(() => {
     function onScroll() {
@@ -47,20 +47,45 @@ export default function Header() {
 
       if (current < 40) {
         setHidden(false);
-      } else if (current > lastScroll && current > 120) {
+      } else if (current > lastScroll.current && current > 120) {
         setHidden(true);
         setOpenMenu(null);
-        setMobileOpen(false);
-      } else if (current < lastScroll) {
+      } else if (current < lastScroll.current) {
         setHidden(false);
       }
 
-      setLastScroll(current);
+      lastScroll.current = current;
     }
 
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, [lastScroll]);
+  }, []);
+
+  useEffect(() => {
+    if (!mobileOpen) return;
+
+    const scrollY = window.scrollY;
+    const body = document.body;
+    const previous = {
+      overflow: body.style.overflow,
+      position: body.style.position,
+      top: body.style.top,
+      width: body.style.width,
+    };
+
+    body.style.overflow = "hidden";
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.width = "100%";
+
+    return () => {
+      body.style.overflow = previous.overflow;
+      body.style.position = previous.position;
+      body.style.top = previous.top;
+      body.style.width = previous.width;
+      window.scrollTo(0, scrollY);
+    };
+  }, [mobileOpen]);
 
   function closeMenu() {
     setOpenMenu(null);
@@ -68,9 +93,10 @@ export default function Header() {
   }
 
   return (
+    <>
     <header
-      className={`sticky top-0 z-50 border-b border-white/50 bg-white/75 shadow-sm shadow-slate-200/40 backdrop-blur-2xl transition-transform duration-300 ${
-        hidden ? "-translate-y-full" : "translate-y-0"
+      className={`fixed inset-x-0 top-0 z-[90] border-b border-white/50 bg-white/90 pt-[env(safe-area-inset-top)] shadow-sm shadow-slate-200/40 backdrop-blur-2xl transition-transform duration-300 lg:sticky lg:bg-white/75 lg:pt-0 ${
+        hidden ? "translate-y-0 lg:-translate-y-full" : "translate-y-0"
       }`}
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:h-20 sm:px-6">
@@ -219,9 +245,10 @@ export default function Header() {
           </span>
         </button>
       </div>
+    </header>
 
-      <nav className={`border-t border-slate-200/70 bg-white/95 px-4 shadow-xl backdrop-blur-xl transition-all lg:hidden ${mobileOpen ? "max-h-[calc(100vh-4rem)] overflow-y-auto py-4 opacity-100" : "max-h-0 overflow-hidden py-0 opacity-0"}`}>
-        <div className="mx-auto grid max-w-2xl gap-2 sm:grid-cols-2">
+      <nav className={`fixed inset-x-0 bottom-0 top-[calc(4rem+env(safe-area-inset-top))] z-[80] border-t border-slate-200/70 bg-white/98 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 shadow-xl backdrop-blur-xl transition duration-200 lg:hidden ${mobileOpen ? "visible translate-y-0 overflow-y-auto overscroll-contain opacity-100" : "invisible pointer-events-none -translate-y-2 opacity-0"}`}>
+        <div className="mx-auto grid min-h-full max-w-2xl content-start gap-3 sm:grid-cols-2">
           {[
             { href: "/", title: "Home", text: "Il portale ufficiale" },
             { href: "/societa", title: "Società", text: "Le 100 protagoniste" },
@@ -229,13 +256,13 @@ export default function Header() {
             { href: "/competizioni", title: "Competizioni", text: "Campionati, coppe e promozioni" },
             { href: "/regolamento", title: "Regolamento", text: "Le regole ufficiali" },
           ].map((item) => (
-            <Link key={item.href} href={item.href} onClick={closeMenu} className="rounded-[1.1rem] border border-slate-100 bg-slate-50/80 px-4 py-3 active:bg-sky-50">
+            <Link key={item.href} href={item.href} onClick={closeMenu} className="flex min-h-14 flex-col justify-center rounded-[1.1rem] border border-slate-100 bg-slate-50/80 px-4 py-3 active:bg-sky-50">
               <p className="text-sm font-black uppercase text-blue-950">{item.title}</p>
               <p className="mt-0.5 text-xs font-semibold text-slate-500">{item.text}</p>
             </Link>
           ))}
         </div>
       </nav>
-    </header>
+    </>
   );
 }

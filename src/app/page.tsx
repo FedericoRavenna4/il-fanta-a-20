@@ -159,12 +159,12 @@ export default function Home() {
         </div>
         <div className="grid gap-5 lg:grid-cols-3">
           {societaCampioni.map(({ team, label, tone, storia }) => (
-            <Link key={team.id} href={`/societa/${team.slug}`} className="group relative grid h-full grid-rows-[2.25rem_10rem_1fr_auto] overflow-hidden rounded-[2rem] bg-blue-950 p-7 text-white shadow-xl shadow-blue-950/10 transition duration-300 hover:-translate-y-1 hover:shadow-2xl">
+            <Link key={team.id} href={`/societa/${team.slug}`} className="group relative grid h-full grid-rows-[auto_auto_1fr_auto] gap-y-4 overflow-hidden rounded-[2rem] bg-blue-950 p-5 text-white shadow-xl shadow-blue-950/10 transition duration-300 hover:-translate-y-1 hover:shadow-2xl sm:p-7 lg:grid-rows-[2.25rem_10rem_1fr_auto] lg:gap-y-0">
               <div className="pointer-events-none absolute right-0 top-0 h-52 w-52 bg-sky-400/10 blur-3xl" />
               <p className={`relative self-start text-[10px] font-black uppercase leading-5 tracking-[0.22em] ${tone}`}>{label}</p>
-              <div className="relative flex items-center justify-between gap-5">
-                <div><h3 className="max-w-48 text-2xl font-black uppercase leading-tight">{team.nome}</h3><p className="mt-3 text-xs font-bold uppercase tracking-[0.14em] text-white/45">{team.legaAttuale}</p></div>
-                <div className="flex h-32 w-32 shrink-0 items-center justify-center p-2"><TeamLogo team={team} size={118} /></div>
+              <div className="relative flex min-w-0 flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
+                <div className="min-w-0"><h3 className="break-words text-2xl font-black uppercase leading-tight sm:max-w-48">{team.nome}</h3><p className="mt-3 text-xs font-bold uppercase tracking-[0.14em] text-white/45">{team.legaAttuale}</p></div>
+                <div className="flex h-28 w-28 shrink-0 self-center items-center justify-center p-2 sm:h-32 sm:w-32"><TeamLogo team={team} size={118} /></div>
               </div>
               <p className="relative border-t border-white/10 pt-5 text-sm font-semibold leading-6 text-white/60">{storia}</p>
               <p className="relative pt-6 text-[10px] font-black uppercase tracking-[0.17em] text-white/85">Visualizza la scheda completa <span className="ml-1 inline-block transition-transform group-hover:translate-x-1">→</span></p>
@@ -200,9 +200,9 @@ export default function Home() {
                 <div className="pointer-events-none absolute -right-10 top-8 h-44 w-44 bg-amber-300/10 blur-[55px]" />
                 <p className="relative text-xs font-black uppercase tracking-[0.24em] text-amber-300">Hall of Fame</p>
                 <div className="relative mt-10 flex h-28 items-center justify-center"><TeamLogo team={teamPiuTitolato} size={118} /></div>
-                <div className="relative mt-4 flex items-center justify-between gap-4 border-t border-white/10 pt-5">
+                <div className="relative mt-4 flex flex-col items-start gap-4 border-t border-white/10 pt-5 sm:flex-row sm:items-center sm:justify-between">
                   <div><h3 className="text-xl font-black uppercase">{teamPiuTitolato.nome}</h3><p className="mt-2 text-sm font-semibold text-white/50">La società più titolata della storia.</p></div>
-                  <div className="text-right"><p className="text-5xl font-black text-amber-300">{piuTitolata.totaleTrofei}</p><p className="text-[9px] font-black uppercase tracking-[0.18em] text-white/40">Trofei</p></div>
+                  <div className="text-left sm:text-right"><p className="text-5xl font-black text-amber-300">{piuTitolata.totaleTrofei}</p><p className="text-[9px] font-black uppercase tracking-[0.18em] text-white/40">Trofei</p></div>
                 </div>
                 <p className="relative mt-auto border-t border-white/10 pt-6 text-[10px] font-black uppercase tracking-[0.17em] text-white/80">Entra nella Hall of Fame <span className="ml-1 inline-block transition-transform group-hover:translate-x-1">→</span></p>
               </Link>

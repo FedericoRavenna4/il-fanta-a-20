@@ -21,13 +21,14 @@ export default function TabelloneCoppaFanta({
           Tabellone finale
         </p>
 
-        <h3 className="mt-2 text-4xl font-black uppercase tracking-tight text-blue-950">
+        <h3 className="mt-2 text-3xl font-black uppercase tracking-tight text-blue-950 sm:text-4xl">
           La strada verso la Coppa
         </h3>
       </div>
 
       <div className="overflow-hidden rounded-[2rem] border border-amber-300/60 bg-[#101a30] shadow-xl shadow-amber-200/40">
-        <div className="overflow-x-auto">
+        <p className="border-b border-white/10 bg-[#1b3054] px-4 py-3 text-center text-[10px] font-black uppercase tracking-[0.14em] text-white/60 sm:hidden">Scorri lateralmente per esplorare il tabellone</p>
+        <div className="overflow-x-auto overscroll-x-contain [-webkit-overflow-scrolling:touch]">
           <div className="min-w-max bg-[radial-gradient(ellipse_at_center,#466eb3_0%,#375895_28%,#2a436f_55%,#1b2d4f_78%,#101a30_100%)] p-7 pb-5">
             <div className="flex items-center justify-center gap-4">
               <BracketSide partite={sinistra} side="SX" />
@@ -39,7 +40,7 @@ export default function TabelloneCoppaFanta({
           </div>
         </div>
 <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-        <div className="border-t border-white/10 bg-[#1b3054] px-7 pb-7 pt-5">
+        <div className="border-t border-white/10 bg-[#1b3054] px-4 pb-5 pt-4 sm:px-7 sm:pb-7 sm:pt-5">
           <BracketLegend />
         </div>
       </div>

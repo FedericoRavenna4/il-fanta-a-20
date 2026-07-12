@@ -275,14 +275,14 @@ const emblemiDaDifendereVisuali = emblemiDaDifendere.map(toEmblemaVisuale);
             </div>
 
             {storiaEditoriale?.descrizione && (
-              <div className="mx-auto mb-9 max-w-4xl rounded-[1.75rem] border border-sky-100 bg-gradient-to-br from-sky-50/80 via-white to-white p-6 text-left shadow-md shadow-sky-100/70">
+              <div className="mx-auto mb-9 max-w-4xl rounded-[1.75rem] border border-sky-100 bg-gradient-to-br from-sky-50/80 via-white to-white p-4 text-left shadow-md shadow-sky-100/70 sm:p-6">
                 <p className="mb-3 text-xs font-black uppercase tracking-[0.25em] text-sky-600">
                   Identità storica
                 </p>
 
                 <div className="mb-4 h-[4px] w-40 rounded-full bg-gradient-to-r from-blue-950 via-sky-500 to-transparent" />
 
-                <p className="text-[17px] font-semibold leading-8 text-slate-600">
+                <p className="break-words text-[15px] font-semibold leading-7 text-slate-600 sm:text-[17px] sm:leading-8">
                   {storiaEditoriale.descrizione}
                 </p>
               </div>
@@ -324,23 +324,23 @@ const emblemiDaDifendereVisuali = emblemiDaDifendere.map(toEmblemaVisuale);
 
         <aside className="space-y-5">
           <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white/90 shadow-lg shadow-slate-200/50 backdrop-blur">
-            <div className={`bg-gradient-to-r ${legaGradient} px-7 py-5 text-white`}>
+            <div className={`bg-gradient-to-r ${legaGradient} px-5 py-5 text-white sm:px-7`}>
               <p className="text-sm font-bold uppercase tracking-[0.25em] text-white/80">
                 Profilo societario
               </p>
             </div>
 
-            <dl className="divide-y divide-slate-100 px-7">
+            <dl className="divide-y divide-slate-100 px-5 sm:px-7">
               {[
                 ["Fantallenatore", team.fantallenatore],
                 ["Lega attuale", team.legaAttuale],
                 ["Presente dal", team.stagioneIngresso],
               ].map(([label, value]) => (
-                <div key={label} className="flex items-center justify-between gap-5 py-4">
+                <div key={label} className="flex min-w-0 items-center justify-between gap-3 py-4 sm:gap-5">
                   <dt className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-400">
                     {label}
                   </dt>
-                  <dd className="text-right text-sm font-black text-blue-950">
+                  <dd className="min-w-0 break-words text-right text-sm font-black text-blue-950">
                     {value}
                   </dd>
                 </div>
@@ -348,7 +348,7 @@ const emblemiDaDifendereVisuali = emblemiDaDifendere.map(toEmblemaVisuale);
             </dl>
           </div>
 
-          <div className="rounded-[2rem] border border-slate-200 bg-white/90 p-6 shadow-lg shadow-slate-200/40 backdrop-blur">
+          <div className="rounded-[2rem] border border-slate-200 bg-white/90 p-4 shadow-lg shadow-slate-200/40 backdrop-blur sm:p-6">
             <div className="mb-4 border-b border-slate-100 pb-4">
               <div>
                 <p className="text-[10px] font-black uppercase tracking-[0.22em] text-amber-500">

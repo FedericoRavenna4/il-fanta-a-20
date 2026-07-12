@@ -52,7 +52,7 @@ export default function SocietaClient({ societa }: { societa: Societa[] }) {
           placeholder="Cerca società, fantallenatore o nickname..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="mx-auto block w-full max-w-3xl rounded-[1.25rem] border border-slate-200 bg-white px-6 py-5 text-lg text-slate-700 shadow-lg outline-none transition-all duration-300 placeholder:text-slate-400 focus:border-blue-900 focus:shadow-xl"
+          className="mx-auto block min-h-12 w-full max-w-3xl rounded-[1.25rem] border border-slate-200 bg-white px-4 py-4 text-base text-slate-700 shadow-lg outline-none transition-all duration-300 placeholder:text-slate-400 focus:border-blue-900 focus:shadow-xl sm:px-6 sm:py-5 sm:text-lg"
         />
 
         <div className="mt-8 flex flex-wrap justify-center gap-3">
@@ -60,7 +60,7 @@ export default function SocietaClient({ societa }: { societa: Societa[] }) {
             <button
               key={item}
               onClick={() => setFilter(item)}
-              className={`rounded-full px-5 py-3 text-sm font-bold transition-all duration-300 ${
+              className={`min-h-11 rounded-full px-4 py-2.5 text-xs font-bold transition-all duration-300 sm:px-5 sm:py-3 sm:text-sm ${
                 filter === item
                   ? "bg-blue-950 text-white shadow-lg shadow-blue-950/20"
                   : "border border-slate-200 bg-white text-slate-600 hover:-translate-y-0.5 hover:border-blue-900 hover:text-blue-900 hover:shadow-md"
@@ -110,6 +110,12 @@ export default function SocietaClient({ societa }: { societa: Societa[] }) {
           );
         })}
       </div>
+      {filtered.length === 0 && (
+        <div className="rounded-[1.75rem] border border-dashed border-slate-300 bg-white/70 px-5 py-12 text-center shadow-sm">
+          <h2 className="text-lg font-black uppercase text-blue-950">Nessuna società trovata</h2>
+          <p className="mx-auto mt-2 max-w-md text-sm font-semibold leading-6 text-slate-500">Prova con un altro nome, fantallenatore o nickname, oppure cambia il filtro selezionato.</p>
+        </div>
+      )}
     </>
   );
 }

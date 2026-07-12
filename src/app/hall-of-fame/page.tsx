@@ -127,7 +127,7 @@ export function HallOfFameContent({ embedded = false }: { embedded?: boolean }) 
                 storia del Fanta a 20.
               </p>
 
-              <div className="mt-5 inline-flex items-center gap-5 rounded-[1.5rem] border border-amber-300 bg-white/70 px-5 py-3 shadow-md shadow-amber-200/50">
+              <div className="mt-5 flex w-full min-w-0 items-center gap-3 rounded-[1.5rem] border border-amber-300 bg-white/70 px-4 py-3 shadow-md shadow-amber-200/50 sm:inline-flex sm:w-auto sm:gap-5 sm:px-5">
                 <div>
                   <p className="text-xs font-black uppercase tracking-[0.22em] text-amber-800">
                     Trofei totali
@@ -140,7 +140,7 @@ export function HallOfFameContent({ embedded = false }: { embedded?: boolean }) 
 
                 <div className="h-14 w-px bg-amber-300" />
 
-                <p className="max-w-[180px] text-sm font-bold leading-5 text-slate-600">
+                <p className="min-w-0 text-xs font-bold leading-5 text-slate-600 sm:max-w-[180px] sm:text-sm">
                   record assoluto nella storia della lega
                 </p>
               </div>

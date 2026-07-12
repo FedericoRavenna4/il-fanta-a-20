@@ -35,7 +35,7 @@ function Emblema({ emblema, grande = false }: { emblema: EmblemaVisuale; grande?
         height={grande ? 100 : 86}
         className={`relative object-contain drop-shadow-[0_12px_17px_rgba(15,23,42,0.26)] transition duration-300 group-hover:-translate-y-1 group-hover:scale-105 ${grande ? "max-h-24 max-w-24" : "max-h-20 max-w-20"}`}
       />
-      <div className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 w-56 -translate-x-1/2 translate-y-2 rounded-[1.1rem] border border-white/15 bg-blue-950/95 p-4 text-left text-white opacity-0 shadow-2xl backdrop-blur-xl transition duration-200 group-hover:translate-y-0 group-hover:opacity-100 group-focus:translate-y-0 group-focus:opacity-100">
+      <div className="pointer-events-none fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-4 right-4 z-[120] w-auto translate-y-2 rounded-[1.1rem] border border-white/15 bg-blue-950/95 p-4 text-left text-white opacity-0 shadow-2xl backdrop-blur-xl transition duration-200 group-hover:translate-y-0 group-hover:opacity-100 group-focus:translate-y-0 group-focus:opacity-100 sm:absolute sm:bottom-full sm:left-1/2 sm:right-auto sm:mb-2 sm:w-56 sm:-translate-x-1/2">
         <p className={`text-[9px] font-black uppercase tracking-[0.2em] ${raritaClass(emblema.rarita)}`}>{emblema.rarita}</p>
         <p className="mt-1 text-xs font-black uppercase">{emblema.titolo}</p>
         <p className="mt-2 text-[11px] font-semibold leading-4 text-white/60">{emblema.descrizione}</p>
@@ -71,7 +71,7 @@ export default function EmblemiSocieta({
 
   return (
     <>
-      <div className="rounded-[2rem] border border-slate-200 bg-white/90 p-6 shadow-lg shadow-slate-200/40 backdrop-blur">
+      <div className="rounded-[2rem] border border-slate-200 bg-white/90 p-4 shadow-lg shadow-slate-200/40 backdrop-blur sm:p-6">
         <div className="flex items-end justify-between gap-4">
           <div>
             <p className="text-[9px] font-black uppercase tracking-[0.22em] text-amber-500">Collezione ufficiale</p>
@@ -91,7 +91,7 @@ export default function EmblemiSocieta({
         )}
       </div>
 
-      <div className="rounded-[2rem] border border-amber-200/70 bg-[linear-gradient(145deg,#fffdf7,#ffffff)] p-6 shadow-lg shadow-amber-100/40">
+      <div className="rounded-[2rem] border border-amber-200/70 bg-[linear-gradient(145deg,#fffdf7,#ffffff)] p-4 shadow-lg shadow-amber-100/40 sm:p-6">
         <p className="text-[9px] font-black uppercase tracking-[0.22em] text-amber-600">Collezione Ufficiale</p>
         <h2 className="mt-1 text-xl font-black uppercase tracking-tight text-blue-950">Emblemi Da difendere</h2>
         {daDifendere.length > 0 ? (
@@ -106,10 +106,10 @@ export default function EmblemiSocieta({
       </div>
 
       {open && (
-        <div role="dialog" aria-modal="true" aria-label="Tutti gli emblemi" className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 p-5 backdrop-blur-md" onMouseDown={() => setOpen(false)}>
-          <div className="max-h-[85vh] w-full max-w-3xl overflow-y-auto rounded-[2rem] border border-white/15 bg-[#f8fbff] p-7 shadow-2xl sm:p-9" onMouseDown={(event) => event.stopPropagation()}>
-            <div className="flex items-start justify-between gap-6 border-b border-slate-200 pb-6">
-              <div><p className="text-[10px] font-black uppercase tracking-[0.24em] text-amber-500">Collezione completa</p><h2 className="mt-2 text-3xl font-black uppercase text-blue-950">Tutti gli emblemi</h2></div>
+        <div role="dialog" aria-modal="true" aria-label="Tutti gli emblemi" className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 p-2 backdrop-blur-md sm:p-5" onMouseDown={() => setOpen(false)}>
+          <div className="max-h-[calc(100dvh-1rem)] w-full max-w-3xl overflow-y-auto overscroll-contain rounded-[1.5rem] border border-white/15 bg-[#f8fbff] p-4 shadow-2xl sm:max-h-[85dvh] sm:rounded-[2rem] sm:p-9" onMouseDown={(event) => event.stopPropagation()}>
+            <div className="flex items-start justify-between gap-3 border-b border-slate-200 pb-5 sm:gap-6 sm:pb-6">
+              <div className="min-w-0"><p className="text-[9px] font-black uppercase tracking-[0.18em] text-amber-500 sm:text-[10px] sm:tracking-[0.24em]">Collezione completa</p><h2 className="mt-2 text-xl font-black uppercase text-blue-950 sm:text-3xl">Tutti gli emblemi</h2></div>
               <button type="button" onClick={() => setOpen(false)} className="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-black uppercase tracking-wider text-blue-950 shadow-sm transition hover:border-blue-300">Chiudi</button>
             </div>
             <div className="mt-7 space-y-8">

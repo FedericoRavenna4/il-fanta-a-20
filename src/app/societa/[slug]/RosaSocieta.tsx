@@ -77,7 +77,7 @@ function StatItem({
   value: string;
 }) {
   return (
-    <span className="flex shrink-0 items-center gap-1.5 border-r border-slate-300/60 pr-2 last:border-r-0 last:pr-0">
+    <span className="flex min-w-0 items-center justify-center gap-1 rounded-lg bg-white/55 px-1.5 py-2 sm:shrink-0 sm:justify-start sm:rounded-none sm:border-r sm:border-slate-300/60 sm:bg-transparent sm:px-0 sm:py-0 sm:pr-2 sm:last:border-r-0 sm:last:pr-0">
       {icon && <span className="text-[15px] leading-none">{icon}</span>}
       {label && (
         <span className="text-[11px] font-black uppercase text-slate-500">
@@ -116,9 +116,9 @@ export default function RosaSocieta({
       : 0;
 
   return (
-    <div className="mt-10 rounded-[2rem] border border-slate-200 bg-white/95 p-6 shadow-lg shadow-slate-200/70 sm:p-8">
-      <div className="mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-6">
-        <div>
+    <div className="mt-10 min-w-0 rounded-[2rem] border border-slate-200 bg-white/95 p-4 shadow-lg shadow-slate-200/70 sm:p-8">
+      <div className="mb-6 flex flex-col items-stretch gap-4 border-b border-slate-100 pb-5 sm:mb-8 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:pb-6">
+        <div className="min-w-0">
           <p className="mb-1 text-xs font-black uppercase tracking-[0.22em] text-slate-400">
             Rosa società
           </p>
@@ -135,7 +135,7 @@ export default function RosaSocieta({
         <select
           value={stagione}
           onChange={(e) => setStagione(e.target.value)}
-          className="rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-black text-blue-950 shadow-sm outline-none transition hover:border-blue-200 hover:shadow-md focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+          className="min-h-12 w-full rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-black text-blue-950 shadow-sm outline-none transition hover:border-blue-200 hover:shadow-md focus:border-blue-400 focus:ring-4 focus:ring-blue-100 sm:w-auto"
         >
           {stagioni.map((item) => (
             <option key={item} value={item}>
@@ -155,7 +155,7 @@ export default function RosaSocieta({
             return (
               <div
                 key={ruolo.short}
-                className="rounded-2xl border border-slate-100 bg-slate-50/90 p-4 shadow-inner shadow-white"
+                className="min-w-0 rounded-2xl border border-slate-100 bg-slate-50/90 p-3 shadow-inner shadow-white sm:p-4"
               >
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2">
@@ -184,30 +184,30 @@ export default function RosaSocieta({
                     return (
                       <div
                         key={`${player.giocatore}-${index}`}
-                        className={`rounded-2xl border px-4 py-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg ${
+                          className={`min-w-0 rounded-2xl border p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg sm:px-4 sm:py-3 ${
                           acquistoPiuCaro
                             ? "border-yellow-300 bg-gradient-to-br from-yellow-100 via-white to-white ring-2 ring-yellow-100"
                             : ruolo.card
                         }`}
                       >
-                        <div className="flex items-center justify-between gap-4">
-                          <div className="flex min-w-0 items-center gap-3">
+                        <div className="grid min-w-0 grid-cols-[36px_minmax(0,1fr)_auto] items-start gap-x-2.5 gap-y-3 sm:flex sm:items-center sm:justify-between sm:gap-4">
+                          <div className="contents sm:flex sm:min-w-0 sm:items-center sm:gap-3">
                             <span
                               className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-base font-black text-white shadow-md ${ruolo.color}`}
                             >
                               {ruolo.short}
                             </span>
 
-                            <div className="min-w-0">
-                              <p className="truncate text-[18px] font-black leading-tight text-blue-950">
-                                {player.giocatore}
-                                <span className="ml-2 text-[14px] font-black uppercase text-blue-950/80">
+                            <div className="contents min-w-0 sm:block">
+                              <p className="min-w-0 self-center break-words text-base font-black leading-tight text-blue-950 sm:truncate sm:text-[18px]">
+                                <span>{player.giocatore}</span>
+                                <span className="mt-0.5 block break-words text-[11px] font-black uppercase leading-tight text-blue-950/65 sm:ml-2 sm:mt-0 sm:inline sm:text-[14px] sm:text-blue-950/80">
                                   ({player.squadraReale})
                                 </span>
                               </p>
 
                               {stats && (
-                                <div className="mt-2 flex flex-nowrap items-center gap-1.5 overflow-x-auto whitespace-nowrap pr-2">
+                                <div className="order-4 col-span-3 mt-1 grid grid-cols-3 gap-1.5 sm:mt-2 sm:flex sm:flex-nowrap sm:items-center sm:overflow-x-auto sm:whitespace-nowrap sm:pr-2">
                                   <StatItem label="PG" value={formatStat(stats.partite)} />
 
                                   {isPortiere ? (
@@ -231,9 +231,9 @@ export default function RosaSocieta({
                             </div>
                           </div>
 
-                          <div className="flex shrink-0 items-center gap-2">
+                          <div className="order-3 flex shrink-0 items-center justify-end gap-1 self-center sm:gap-2">
   {acquistoPiuCaro && (
-    <div className="-ml-2 flex w-[46px] flex-col items-center leading-none">
+    <div className="flex w-9 flex-col items-center leading-none sm:-ml-2 sm:w-[46px]">
       <span className="text-base drop-shadow-[0_0_8px_rgba(251,191,36,0.95)]">
         ⭐
       </span>
@@ -244,7 +244,7 @@ export default function RosaSocieta({
     </div>
   )}
 
-  <p className="w-10 text-right text-2xl font-black leading-none text-blue-950">
+  <p className="w-8 text-right text-xl font-black leading-none text-blue-950 sm:w-10 sm:text-2xl">
     {player.costo}
   </p>
 </div>
