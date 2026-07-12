@@ -69,22 +69,22 @@ export function CampionatiContent({ embedded = false }: { embedded?: boolean }) 
               className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-xl shadow-slate-200/70"
             >
               <div className={`bg-gradient-to-r ${lega.colore} px-4 py-4 text-white sm:px-8 sm:py-8`}>
-                <div className="flex flex-col gap-3 sm:gap-8 md:flex-row md:items-center md:justify-between">
-                  <div>
-                    <p className="text-xs font-black uppercase tracking-[0.35em] text-white/60">
+                <div className="grid grid-cols-[minmax(0,1fr)_64px] items-center gap-x-3 gap-y-2 sm:flex sm:flex-col sm:gap-8 md:flex-row md:items-center md:justify-between">
+                  <div className="contents sm:block">
+                    <p className="order-1 col-span-2 text-[10px] font-black uppercase tracking-[0.25em] text-white/60 sm:text-xs sm:tracking-[0.35em]">
                       Campionato
                     </p>
 
-                    <h2 className="mt-2 text-3xl font-black tracking-tight drop-shadow-sm sm:text-4xl lg:text-5xl">
+                    <h2 className="order-2 mt-0 text-3xl font-black tracking-tight drop-shadow-sm sm:mt-2 sm:text-4xl lg:text-5xl">
   {lega.nome}
 </h2>
 
-                    <p className="mt-2 max-w-3xl text-sm font-semibold leading-5 text-white/85 sm:mt-4 sm:text-base sm:leading-7">
+                    <p className="order-4 col-span-2 mt-1 max-w-3xl text-xs font-semibold leading-5 text-white/85 sm:mt-4 sm:text-base sm:leading-7">
                       {lega.descrizione}
                     </p>
                   </div>
 
-                  <div className="flex h-24 w-24 items-center justify-center p-1 sm:h-44 sm:w-44 sm:p-2">
+                  <div className="order-3 flex h-16 w-16 items-center justify-center p-1 sm:h-44 sm:w-44 sm:p-2">
                     <Image
                       src={lega.logo}
                       alt={`Logo ${lega.nome}`}
@@ -192,13 +192,14 @@ export function CampionatiContent({ embedded = false }: { embedded?: boolean }) 
                   Società partecipanti
                 </p>
 
-                <div className="mt-5 grid grid-cols-3 gap-2 sm:grid-cols-5 sm:gap-3 md:grid-cols-8 lg:grid-cols-10">
+                <div className="mt-4 grid grid-cols-4 gap-2 sm:mt-5 sm:grid-cols-5 sm:gap-3 md:grid-cols-8 lg:grid-cols-10">
                   {squadreLega.map((team) => (
                     <Link
   key={team.id}
   href={`/societa/${team.slug}`}
   title={team.nome}
-  className={`group relative flex h-20 items-center justify-center overflow-hidden rounded-2xl bg-slate-50 p-2 ring-1 ring-slate-100 transition hover:-translate-y-1 hover:scale-[1.03] hover:shadow-lg sm:h-28 sm:p-3 ${hoverClass}`}
+  aria-label={team.nome}
+  className={`group relative flex h-16 items-center justify-center overflow-hidden rounded-xl bg-slate-50 p-1.5 ring-1 ring-slate-100 transition hover:-translate-y-1 hover:scale-[1.03] hover:shadow-lg sm:h-28 sm:rounded-2xl sm:p-3 ${hoverClass}`}
 >
   <div className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-br from-white/35 via-white/10 to-transparent transition duration-500 group-hover:translate-x-0" />
 
@@ -207,10 +208,10 @@ export function CampionatiContent({ embedded = false }: { embedded?: boolean }) 
     alt={team.nome}
     width={64}
     height={64}
-    className="relative z-10 max-h-14 max-w-14 object-contain transition duration-300 group-hover:-translate-y-5 group-hover:scale-105 group-hover:drop-shadow-[0_0_14px_rgba(255,255,255,0.95)]"
+    className="relative z-10 max-h-11 max-w-11 object-contain transition duration-300 group-hover:scale-105 group-hover:drop-shadow-[0_0_14px_rgba(255,255,255,0.95)] sm:max-h-14 sm:max-w-14 sm:group-hover:-translate-y-5"
   />
 
-  <div className="pointer-events-none absolute bottom-2 left-1 right-1 z-10 flex h-8 items-center justify-center overflow-hidden rounded-lg bg-slate-950/65 px-1 opacity-100 transition duration-300 lg:bottom-3 lg:left-2 lg:right-2 lg:h-9 lg:bg-transparent lg:opacity-0 lg:group-hover:opacity-100">
+  <div className="pointer-events-none absolute bottom-2 left-1 right-1 z-10 hidden h-8 items-center justify-center overflow-hidden rounded-lg bg-slate-950/65 px-1 opacity-100 transition duration-300 sm:flex lg:bottom-3 lg:left-2 lg:right-2 lg:h-9 lg:bg-transparent lg:opacity-0 lg:group-hover:opacity-100">
   <p className="line-clamp-2 text-center text-[10px] font-black uppercase leading-tight text-white">
     {team.nome}
   </p>
@@ -228,24 +229,24 @@ export function CampionatiContent({ embedded = false }: { embedded?: boolean }) 
           className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-xl shadow-slate-200/70"
         >
           <div className="bg-gradient-to-r from-violet-500 via-violet-600 to-blue-950 px-4 py-4 text-white sm:px-8 sm:py-8">
-            <div className="flex flex-col gap-3 sm:gap-8 md:flex-row md:items-center md:justify-between">
-              <div>
-                <p className="text-xs font-black uppercase tracking-[0.3em] text-white/70">
+            <div className="grid grid-cols-[minmax(0,1fr)_64px] items-center gap-x-3 gap-y-2 sm:flex sm:flex-col sm:gap-8 md:flex-row md:items-center md:justify-between">
+              <div className="contents sm:block">
+                <p className="order-1 col-span-2 text-[10px] font-black uppercase tracking-[0.24em] text-white/70 sm:text-xs sm:tracking-[0.3em]">
                   Campionato
                 </p>
 
-                <h2 className="mt-2 text-3xl font-black tracking-tight drop-shadow-sm sm:text-4xl lg:text-5xl">
+                <h2 className="order-2 mt-0 text-3xl font-black tracking-tight drop-shadow-sm sm:mt-2 sm:text-4xl lg:text-5xl">
   Serie C
 </h2>
 
-                <p className="mt-2 max-w-3xl text-sm font-semibold leading-5 text-white/85 sm:mt-4 sm:text-base sm:leading-7">
+                <p className="order-4 col-span-2 mt-1 max-w-3xl text-xs font-semibold leading-5 text-white/85 sm:mt-4 sm:text-base sm:leading-7">
                   La base del sistema competitivo, divisa in tre gironi. Qui
                   nascono nuove rivalità e iniziano le scalate verso le leghe
                   superiori.
                 </p>
               </div>
 
-              <div className="flex h-24 w-24 items-center justify-center p-1 sm:h-44 sm:w-44 sm:p-2">
+              <div className="order-3 flex h-16 w-16 items-center justify-center p-1 sm:h-44 sm:w-44 sm:p-2">
                 <Image
                   src="/leghe/serie-c.png"
                   alt="Logo Serie C"
@@ -277,13 +278,14 @@ export function CampionatiContent({ embedded = false }: { embedded?: boolean }) 
                     {girone.label}
                   </h3>
 
-                  <div className="mt-3 grid grid-cols-2 gap-2 sm:mt-5 sm:grid-cols-4 sm:gap-3">
+                  <div className="mt-3 grid grid-cols-5 gap-1.5 sm:mt-5 sm:grid-cols-4 sm:gap-3">
                     {squadreGirone.map((team) => (
                       <Link
   key={team.id}
   href={`/societa/${team.slug}`}
   title={team.nome}
-  className="group relative flex h-20 items-center justify-center overflow-hidden rounded-2xl bg-white p-2 shadow-sm ring-1 ring-violet-100 transition hover:-translate-y-1 hover:scale-[1.03] hover:bg-violet-500 hover:shadow-lg hover:ring-violet-300 sm:h-24"
+  aria-label={team.nome}
+  className="group relative flex h-14 items-center justify-center overflow-hidden rounded-lg bg-white p-1 shadow-sm ring-1 ring-violet-100 transition hover:-translate-y-1 hover:scale-[1.03] hover:bg-violet-500 hover:shadow-lg hover:ring-violet-300 sm:h-24 sm:rounded-2xl sm:p-2"
 >
   <div className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-br from-white/35 via-white/10 to-transparent transition duration-500 group-hover:translate-x-0" />
 
@@ -292,10 +294,10 @@ export function CampionatiContent({ embedded = false }: { embedded?: boolean }) 
     alt={team.nome}
     width={52}
     height={52}
-    className="relative z-10 max-h-12 max-w-12 object-contain transition duration-300 group-hover:-translate-y-5 group-hover:scale-105 group-hover:drop-shadow-[0_0_14px_rgba(255,255,255,0.95)]"
+    className="relative z-10 max-h-9 max-w-9 object-contain transition duration-300 group-hover:scale-105 group-hover:drop-shadow-[0_0_14px_rgba(255,255,255,0.95)] sm:max-h-12 sm:max-w-12 sm:group-hover:-translate-y-5"
   />
 
-  <div className="pointer-events-none absolute bottom-2 left-1 right-1 z-10 flex h-8 items-center justify-center overflow-hidden rounded-lg bg-slate-950/65 px-1 opacity-100 transition duration-300 lg:bottom-3 lg:left-1.5 lg:right-1.5 lg:h-9 lg:bg-transparent lg:opacity-0 lg:group-hover:opacity-100">
+  <div className="pointer-events-none absolute bottom-2 left-1 right-1 z-10 hidden h-8 items-center justify-center overflow-hidden rounded-lg bg-slate-950/65 px-1 opacity-100 transition duration-300 sm:flex lg:bottom-3 lg:left-1.5 lg:right-1.5 lg:h-9 lg:bg-transparent lg:opacity-0 lg:group-hover:opacity-100">
   <p className="overflow-hidden text-ellipsis text-center text-[9px] font-black uppercase leading-tight text-white">
   {team.nome}
 </p>

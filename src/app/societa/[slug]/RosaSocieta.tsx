@@ -77,14 +77,14 @@ function StatItem({
   value: string;
 }) {
   return (
-    <span className="flex min-w-0 items-center justify-center gap-1 rounded-md bg-white/55 px-1 py-1 sm:shrink-0 sm:justify-start sm:rounded-none sm:border-r sm:border-slate-300/60 sm:bg-transparent sm:px-0 sm:py-0 sm:pr-2 sm:last:border-r-0 sm:last:pr-0">
-      {icon && <span className="text-[12px] leading-none sm:text-[15px]">{icon}</span>}
+    <span className="flex min-w-0 items-center justify-center gap-0.5 rounded-md bg-white/55 px-0.5 py-1 sm:shrink-0 sm:justify-start sm:gap-1 sm:rounded-none sm:border-r sm:border-slate-300/60 sm:bg-transparent sm:px-0 sm:py-0 sm:pr-2 sm:last:border-r-0 sm:last:pr-0">
+      {icon && <span className="text-[10px] leading-none sm:text-[15px]">{icon}</span>}
       {label && (
-        <span className="text-[9px] font-black uppercase text-slate-500 sm:text-[11px]">
+        <span className="text-[8px] font-black uppercase text-slate-500 sm:text-[11px]">
           {label}
         </span>
       )}
-      <span className="text-[12px] font-black text-blue-950 sm:text-[14px]">{value}</span>
+      <span className="text-[10px] font-black text-blue-950 sm:text-[14px]">{value}</span>
     </span>
   );
 }
@@ -157,7 +157,7 @@ export default function RosaSocieta({
                 key={ruolo.short}
                 className="min-w-0 rounded-2xl border border-slate-100 bg-slate-50/90 p-2.5 shadow-inner shadow-white sm:p-4"
               >
-                <div className="mb-2.5 flex items-center justify-between gap-2 sm:mb-4 sm:gap-3">
+                <div className="hidden sm:mb-4 sm:flex sm:items-center sm:justify-between sm:gap-3">
                   <div className="flex items-center gap-2">
                     <span
                       className={`flex h-7 w-7 items-center justify-center rounded-lg text-xs font-black text-white shadow-sm sm:h-8 sm:w-8 sm:text-sm ${ruolo.color}`}
@@ -199,15 +199,15 @@ export default function RosaSocieta({
                             </span>
 
                             <div className="contents min-w-0 sm:block">
-                              <p className="min-w-0 self-center break-words text-sm font-black leading-tight text-blue-950 sm:truncate sm:text-[18px]">
+                              <p className="min-w-0 self-center truncate text-sm font-black leading-tight text-blue-950 sm:text-[18px]">
                                 <span>{player.giocatore}</span>
-                                <span className="mt-0.5 block break-words text-[11px] font-black uppercase leading-tight text-blue-950/65 sm:ml-2 sm:mt-0 sm:inline sm:text-[14px] sm:text-blue-950/80">
+                                <span className="ml-1 inline text-[9px] font-black uppercase leading-tight text-blue-950/60 sm:ml-2 sm:text-[14px] sm:text-blue-950/80">
                                   ({player.squadraReale})
                                 </span>
                               </p>
 
                               {stats && (
-                                <div className="order-4 col-span-3 grid grid-cols-4 gap-1 sm:mt-2 sm:flex sm:flex-nowrap sm:items-center sm:overflow-x-auto sm:whitespace-nowrap sm:pr-2">
+                                <div className="order-4 col-span-3 grid grid-cols-6 gap-0.5 sm:mt-2 sm:flex sm:flex-nowrap sm:items-center sm:overflow-x-auto sm:whitespace-nowrap sm:pr-2">
                                   <StatItem label="PG" value={formatStat(stats.partite)} />
 
                                   {isPortiere ? (
@@ -233,12 +233,12 @@ export default function RosaSocieta({
 
                           <div className="order-3 flex shrink-0 items-center justify-end gap-1 self-center sm:gap-2">
   {acquistoPiuCaro && (
-    <div className="flex w-9 flex-col items-center leading-none sm:-ml-2 sm:w-[46px]">
-      <span className="text-base drop-shadow-[0_0_8px_rgba(251,191,36,0.95)]">
+    <div className="flex w-5 items-center justify-center sm:-ml-2 sm:w-[46px] sm:flex-col sm:leading-none">
+      <span role="img" aria-label="Giocatore più pagato" title="Giocatore più pagato" className="text-sm drop-shadow-[0_0_8px_rgba(251,191,36,0.95)] sm:text-base">
         ⭐
       </span>
 
-      <span className="mt-0.5 text-[8px] font-black uppercase tracking-[0.04em] text-yellow-700">
+      <span className="mt-0.5 hidden text-[8px] font-black uppercase tracking-[0.04em] text-yellow-700 sm:block">
         Più caro
       </span>
     </div>

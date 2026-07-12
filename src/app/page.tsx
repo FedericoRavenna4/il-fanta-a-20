@@ -120,24 +120,24 @@ export default function Home() {
     <div className="overflow-hidden bg-[linear-gradient(180deg,#f8fbff_0%,#eef5fb_36%,#f8fafc_100%)]">
       <section className="relative mx-auto max-w-7xl px-4 pb-9 pt-8 sm:px-6 sm:pb-20 sm:pt-16 lg:pb-24 lg:pt-24">
         <div className="pointer-events-none absolute left-1/2 top-0 h-[34rem] w-[50rem] -translate-x-1/2 rounded-full bg-sky-200/35 blur-3xl" />
-        <div className="relative grid items-center gap-4 sm:gap-12 lg:grid-cols-[1.15fr_0.85fr]">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.28em] text-amber-500 sm:text-xs sm:tracking-[0.36em]">Il portale ufficiale</p>
-            <h1 className="mt-3 max-w-4xl text-3xl font-black uppercase leading-[0.96] tracking-[-0.035em] text-blue-950 sm:mt-6 sm:text-6xl sm:leading-[0.94] sm:tracking-[-0.045em] lg:text-[5.25rem] lg:leading-[0.91] lg:tracking-[-0.055em]">
+        <div className="relative grid grid-cols-[minmax(0,1fr)_76px] items-center gap-x-3 gap-y-4 sm:grid-cols-1 sm:gap-12 lg:grid-cols-[1.15fr_0.85fr]">
+          <div className="contents sm:block">
+            <p className="order-1 col-span-2 text-[10px] font-black uppercase tracking-[0.28em] text-amber-500 sm:text-xs sm:tracking-[0.36em]">Il portale ufficiale</p>
+            <h1 className="order-2 mt-0 max-w-4xl text-3xl font-black uppercase leading-[0.96] tracking-[-0.035em] text-blue-950 sm:mt-6 sm:text-6xl sm:leading-[0.94] sm:tracking-[-0.045em] lg:text-[5.25rem] lg:leading-[0.91] lg:tracking-[-0.055em]">
               Non è solo<br />Fantacalcio.<span className="mt-3 block">È <span className="text-blue-700">il Fanta a 20.</span></span>
             </h1>
-            <p className="mt-4 max-w-2xl border-l-2 border-amber-400 pl-3 text-sm font-semibold leading-6 text-slate-600 sm:mt-8 sm:pl-6 sm:text-lg sm:leading-8">
+            <p className="order-4 col-span-2 mt-0 max-w-2xl border-l-2 border-amber-400 pl-3 text-sm font-semibold leading-6 text-slate-600 sm:mt-8 sm:pl-6 sm:text-lg sm:leading-8">
               Venti partecipanti per lega, nessun giocatore doppione: ogni rosa è davvero unica. Nato nel 2023 come un gioco tra amici, oggi è un ecosistema di cinque leghe e cento società, con promozioni, retrocessioni, coppe e una memoria che cresce stagione dopo stagione.
               <span className="mt-2 block text-blue-950 sm:mt-4">Qui non giochi soltanto. Costruisci il tuo posto nella storia.</span>
             </p>
           </div>
 
-          <div className="relative mx-auto flex min-h-[150px] w-full max-w-lg items-center justify-center sm:min-h-[330px]">
+          <div className="relative order-3 mx-auto flex min-h-0 w-full max-w-lg items-center justify-center sm:min-h-[330px]">
             <div className="pointer-events-none absolute left-1/2 top-1/2 h-52 w-20 -translate-x-1/2 -translate-y-1/2 rotate-12 bg-sky-300/30 blur-[48px]" />
             <div className="pointer-events-none absolute left-[24%] top-[26%] h-px w-56 -rotate-12 bg-gradient-to-r from-transparent via-sky-300/70 to-transparent" />
             <div className="pointer-events-none absolute bottom-[26%] right-[18%] h-px w-48 rotate-12 bg-gradient-to-r from-transparent via-amber-300/60 to-transparent" />
             <div className="relative z-10">
-              <Image src="/logos/logo.png" alt="Logo Il Fanta a 20" width={310} height={310} priority className="h-auto w-32 drop-shadow-[0_30px_38px_rgba(15,23,42,0.24)] sm:w-72" />
+              <Image src="/logos/logo.png" alt="Logo Il Fanta a 20" width={310} height={310} priority className="h-auto w-16 drop-shadow-[0_18px_24px_rgba(15,23,42,0.22)] sm:w-72 sm:drop-shadow-[0_30px_38px_rgba(15,23,42,0.24)]" />
             </div>
           </div>
         </div>
@@ -183,7 +183,7 @@ export default function Home() {
               <div className="relative mt-4 grid gap-2 sm:mt-8 sm:grid-cols-3 sm:items-end sm:gap-3">
                 {podioRanking.map(({ team, ranking: rankingItem }, index) => (
                   <Link key={team.id} href={`/societa/${team.slug}`} className={`group flex flex-col items-center rounded-[1.5rem] border border-white/10 bg-white/[0.04] p-3 text-center transition hover:-translate-y-1 hover:bg-white/[0.08] sm:p-5 ${index === 0 ? "sm:min-h-64 sm:justify-center" : "sm:min-h-56 sm:justify-center"}`}>
-                    <div className={`${index === 0 ? "h-16 w-16 sm:h-28 sm:w-28" : "h-14 w-14 sm:h-24 sm:w-24"} flex items-center justify-center p-1`}><TeamLogo team={team} size={index === 0 ? 105 : 90} /></div>
+                    <div className={`${index === 0 ? "h-14 w-14 sm:h-28 sm:w-28" : "h-12 w-12 sm:h-24 sm:w-24"} flex items-center justify-center p-1`}><TeamLogo team={team} size={index === 0 ? 105 : 90} /></div>
                     <p className="mt-2 text-[10px] font-black uppercase tracking-[0.18em] text-white/45 sm:mt-4">{rankingItem.posizione}° posto</p>
                     <h3 className="mt-2 text-sm font-black uppercase leading-tight">{team.nome}</h3>
                     <p className="mt-2 text-xs font-bold text-sky-300">{rankingItem.puntiRanking.toLocaleString("it-IT")} pt</p>
@@ -234,9 +234,9 @@ export default function Home() {
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-300">{item.nota}</p>
                     <h3 className="pt-2 text-2xl font-black uppercase leading-tight sm:text-3xl">{item.nome}</h3>
                     <p className="pt-4 text-sm font-semibold leading-6 text-white/50">{item.descrizione}</p>
-                    <p className="pt-6 text-[10px] font-black uppercase tracking-[0.17em] text-white/80">Entra nella competizione <span className="ml-1 inline-block transition-transform group-hover:translate-x-1">→</span></p>
+                    <p className="pt-6 text-[10px] font-black uppercase tracking-[0.17em] text-white/80">{item.nome === "Campionati" || item.nome === "Coppe europee" ? "Entra nelle competizioni" : "Entra nella competizione"} <span className="ml-1 inline-block transition-transform group-hover:translate-x-1">→</span></p>
                   </div>
-                  <div className="flex h-32 items-center justify-center sm:h-full sm:min-h-52"><CompetitionArtwork nome={item.nome} immagini={item.immagini} /></div>
+                  <div className={`flex items-center justify-center sm:h-full sm:min-h-52 ${item.nome === "Scatto Promozione" ? "h-20" : "h-24"}`}><CompetitionArtwork nome={item.nome} immagini={item.immagini} /></div>
                 </div>
               </Link>
             ))}

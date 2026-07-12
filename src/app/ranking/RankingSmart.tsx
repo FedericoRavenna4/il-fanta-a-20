@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { RankingRow } from "@/lib/rankingRows";
+import AutoScrollName from "./AutoScrollName";
 
 const fascia = (posizione: number) => Math.ceil(posizione / 20);
 
@@ -64,9 +65,9 @@ export default function RankingSmart({ rows }: { rows: RankingRow[] }) {
       <div className="mt-6 overflow-hidden rounded-[2rem] border border-slate-200 bg-white/90 shadow-xl shadow-slate-200/60">
         <div className="border-b border-slate-200 p-4 sm:p-6"><p className="text-[9px] font-black uppercase tracking-[0.18em] text-amber-500 sm:text-[10px] sm:tracking-[0.2em]">Il Ranking</p><h3 className="mt-1 text-xl font-black uppercase text-blue-950 sm:text-2xl">La Top 10</h3></div>
         <div className="hidden grid-cols-[60px_minmax(0,1fr)_90px_150px_70px_80px] gap-3 bg-slate-50 px-6 py-3 text-[10px] font-black uppercase tracking-wider text-slate-400 lg:grid"><span>Pos.</span><span>Società</span><span>Ingresso</span><span>Lega attuale</span><span className="text-right">Trofei</span><span className="text-right text-blue-950">PT</span></div>
-        {rows.slice(0, 10).map((row) => (
+        {rows.slice(0, 10).map((row, index) => (
           <Link key={row.posizione} href={row.team ? `/societa/${row.team.slug}` : "#"} className="grid min-w-0 grid-cols-[32px_minmax(0,1fr)_48px] items-center gap-2 border-t border-slate-100 px-3 py-2 transition hover:bg-sky-50/60 sm:grid-cols-[52px_minmax(0,1fr)_auto] sm:gap-3 sm:px-5 sm:py-3 lg:grid-cols-[60px_minmax(0,1fr)_90px_150px_70px_80px] lg:px-6">
-            <span className="text-sm font-black text-blue-950">{row.posizione}°</span><div className="flex min-w-0 items-center gap-3">{row.team && <Image src={row.team.logo} alt="" width={42} height={42} className="h-10 w-10 object-contain" />}<span className="truncate text-base font-black uppercase text-blue-950">{row.team?.nome ?? row.nomeRanking}</span></div><span className="hidden text-sm font-bold text-slate-500 lg:block">{row.team?.stagioneIngresso ?? "—"}</span><span className="hidden truncate text-sm font-bold text-slate-500 lg:block">{row.team?.legaAttuale ?? "—"}</span><span className="hidden text-right text-sm font-black text-blue-950 lg:block">{row.trofei.totaleTrofei}</span><span className="text-right text-base font-black text-blue-950">{row.puntiRanking}</span>
+            <span className="text-sm font-black text-blue-950">{row.posizione}°</span><div className="flex min-w-0 items-center gap-3">{row.team && <Image src={row.team.logo} alt="" width={42} height={42} className="h-10 w-10 shrink-0 object-contain" />}<span className="min-w-0 text-base font-black uppercase text-blue-950"><AutoScrollName name={row.team?.nome ?? row.nomeRanking} index={index} /></span></div><span className="hidden text-sm font-bold text-slate-500 lg:block">{row.team?.stagioneIngresso ?? "—"}</span><span className="hidden truncate text-sm font-bold text-slate-500 lg:block">{row.team?.legaAttuale ?? "—"}</span><span className="hidden text-right text-sm font-black text-blue-950 lg:block">{row.trofei.totaleTrofei}</span><span className="text-right text-base font-black text-blue-950">{row.puntiRanking}</span>
           </Link>
         ))}
         <div className="border-t border-slate-200 p-4 text-center sm:p-5"><button type="button" onClick={() => { setFasciaAttiva(1); setOpen(true); }} className="min-h-12 w-full rounded-full bg-blue-950 px-4 py-3 text-xs font-black uppercase tracking-[0.08em] text-white transition hover:bg-blue-800 sm:w-auto sm:px-7 sm:tracking-[0.14em]">Vedi tutta la classifica del Ranking</button></div>
@@ -98,7 +99,7 @@ export default function RankingSmart({ rows }: { rows: RankingRow[] }) {
                   )}
                   <Link href={row.team ? `/societa/${row.team.slug}` : "#"} className="grid grid-cols-[44px_minmax(0,1fr)_52px_60px] items-center gap-2 border-b border-slate-100 px-2 py-3 transition hover:bg-white lg:grid-cols-[60px_minmax(220px,1fr)_90px_150px_65px_75px] lg:gap-3 lg:px-4">
                     <span className="font-black text-blue-950">{row.posizione}°</span>
-                    <div className="flex min-w-0 items-center gap-2 sm:gap-3">{row.team && <Image src={row.team.logo} alt="" width={40} height={40} className="h-8 w-8 shrink-0 object-contain sm:h-10 sm:w-10" />}<span className="truncate text-sm font-black uppercase text-blue-950 sm:text-base">{row.team?.nome ?? row.nomeRanking}</span></div>
+                    <div className="flex min-w-0 items-center gap-2 sm:gap-3">{row.team && <Image src={row.team.logo} alt="" width={40} height={40} className="h-8 w-8 shrink-0 object-contain sm:h-10 sm:w-10" />}<span className="min-w-0 text-sm font-black uppercase text-blue-950 sm:text-base"><AutoScrollName name={row.team?.nome ?? row.nomeRanking} index={index + 10} /></span></div>
                     <span className="hidden text-sm font-bold text-slate-500 lg:block">{row.team?.stagioneIngresso ?? "—"}</span>
                     <span className="hidden truncate text-sm font-bold text-slate-500 lg:block">{row.team?.legaAttuale ?? "—"}</span>
                     <span className="text-right text-sm font-black text-blue-950">{row.trofei.totaleTrofei}</span>

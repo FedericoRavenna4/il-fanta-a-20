@@ -52,6 +52,8 @@ export default function EmblemiSocieta({
   daDifendere: EmblemaVisuale[];
 }) {
   const [open, setOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [defenceExpanded, setDefenceExpanded] = useState(false);
   const ordinati = [...sbloccati].sort(
     (a, b) => ordineRarita.indexOf(a.rarita) - ordineRarita.indexOf(b.rarita)
   );
@@ -78,16 +80,25 @@ export default function EmblemiSocieta({
             <h2 className="mt-1 text-xl font-black uppercase tracking-tight text-blue-950">Emblemi</h2>
           </div>
           {ordinati.length > 6 && (
-            <button type="button" onClick={() => setOpen(true)} className="text-[10px] font-black uppercase tracking-[0.15em] text-blue-950 transition hover:text-blue-700">Vedi tutti</button>
+            <button type="button" onClick={() => setOpen(true)} className="hidden text-[10px] font-black uppercase tracking-[0.15em] text-blue-950 transition hover:text-blue-700 sm:block">Vedi tutti</button>
           )}
         </div>
 
         {ordinati.length > 0 ? (
-          <div className="mt-4 grid grid-cols-3 gap-x-2 gap-y-1">
-            {ordinati.slice(0, 6).map((emblema) => <Emblema key={emblema.chiave} emblema={emblema} />)}
+          <div className="mt-3 grid grid-cols-3 gap-x-2 gap-y-1 sm:mt-4">
+            {ordinati.map((emblema, index) => (
+              <div key={emblema.chiave} className={index < 3 || expanded ? (index < 6 ? "block" : "block sm:hidden") : index < 6 ? "hidden sm:block" : "hidden"}>
+                <Emblema emblema={emblema} />
+              </div>
+            ))}
           </div>
         ) : (
           <p className="mt-4 text-sm font-semibold text-slate-400">Nessun emblema sbloccato.</p>
+        )}
+        {ordinati.length > 3 && (
+          <button type="button" onClick={() => setExpanded((value) => !value)} aria-expanded={expanded} className="mt-2 min-h-11 w-full rounded-full border border-slate-200 bg-white px-4 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-blue-950 shadow-sm sm:hidden">
+            {expanded ? "Mostra meno" : "Visualizza tutti"}
+          </button>
         )}
       </div>
 
@@ -95,13 +106,22 @@ export default function EmblemiSocieta({
         <p className="text-[9px] font-black uppercase tracking-[0.22em] text-amber-600">Collezione Ufficiale</p>
         <h2 className="mt-1 text-xl font-black uppercase tracking-tight text-blue-950">Emblemi Da difendere</h2>
         {daDifendere.length > 0 ? (
-          <div className="mt-4 grid grid-cols-3 gap-x-2 gap-y-1">
-            {daDifendere.map((emblema) => <Emblema key={emblema.chiave} emblema={emblema} />)}
+          <div className="mt-3 grid grid-cols-3 gap-x-2 gap-y-1 sm:mt-4">
+            {daDifendere.map((emblema, index) => (
+              <div key={emblema.chiave} className={index < 3 || defenceExpanded ? "block" : "hidden sm:block"}>
+                <Emblema emblema={emblema} />
+              </div>
+            ))}
           </div>
         ) : (
           <p className="mt-4 rounded-2xl bg-white/70 px-4 py-4 text-sm font-semibold leading-6 text-slate-500 shadow-sm">
             Nessun emblema da difendere conquistato.
           </p>
+        )}
+        {daDifendere.length > 3 && (
+          <button type="button" onClick={() => setDefenceExpanded((value) => !value)} aria-expanded={defenceExpanded} className="mt-2 min-h-11 w-full rounded-full border border-amber-200 bg-white px-4 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-blue-950 shadow-sm sm:hidden">
+            {defenceExpanded ? "Mostra meno" : "Visualizza tutti"}
+          </button>
         )}
       </div>
 

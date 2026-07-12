@@ -11,6 +11,7 @@ import RosaSocieta from "./RosaSocieta";
 import StoriaSocieta from "./StoriaSocieta";
 import { getEmblemi } from "@/lib/emblemi";
 import EmblemiSocieta from "./EmblemiSocieta";
+import PalmaresSocieta from "./PalmaresSocieta";
 
 function getLegaGradient(lega: string) {
   if (lega === "Serie A") return "from-sky-500 via-sky-600 to-blue-900";
@@ -361,26 +362,7 @@ const emblemiDaDifendereVisuali = emblemiDaDifendere.map(toEmblemaVisuale);
             </div>
 
             {palmaresCards.length > 0 ? (
-              <div className="grid grid-cols-3 gap-x-1 gap-y-4">
-                {palmaresCards.map((item, index) => (
-                  <div
-                    key={index}
-                    className="group relative flex h-24 min-w-0 items-center justify-center transition duration-300 hover:-translate-y-1 sm:h-32"
-                  >
-                    <div className="pointer-events-none absolute top-7 h-20 w-20 bg-amber-300/0 blur-3xl transition group-hover:bg-amber-300/35" />
-                    <Image
-                      src={item.image}
-                      alt={`Trofeo ${item.label}`}
-                      width={124}
-                      height={124}
-                      className="relative max-h-[84px] max-w-[80px] object-contain drop-shadow-[0_14px_20px_rgba(15,23,42,0.27)] transition duration-300 group-hover:scale-105 sm:max-h-[116px] sm:max-w-[108px]"
-                    />
-                    <p className="absolute right-0 top-0 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-black text-blue-950 shadow-md">
-                      x{item.value}
-                    </p>
-                  </div>
-                ))}
-              </div>
+              <PalmaresSocieta items={palmaresCards} />
             ) : (
               <p className="rounded-2xl bg-slate-50 p-5 text-sm font-semibold text-slate-500">
                 Nessun trofeo ancora registrato.

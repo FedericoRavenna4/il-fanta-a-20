@@ -112,28 +112,28 @@ export function HallOfFameContent({ embedded = false }: { embedded?: boolean }) 
           href={`/societa/${teamPiuTitolato.slug}`}
           className={`group block overflow-hidden rounded-[2rem] border border-amber-400 bg-gradient-to-br from-amber-100 via-yellow-100 to-amber-50 text-blue-950 shadow-xl shadow-amber-200/60 transition hover:-translate-y-1 ${embedded ? "mb-7" : "mb-9"}`}
         >
-          <div className={`grid items-center gap-3 p-4 sm:gap-6 sm:p-7 ${embedded ? "lg:grid-cols-[1fr_220px]" : "lg:grid-cols-[1fr_280px] lg:p-8"}`}>
-            <div>
-              <p className="mb-4 text-sm font-black uppercase tracking-[0.28em] text-amber-800">
+          <div className={`grid grid-cols-[minmax(0,1fr)_76px] items-center gap-3 p-4 sm:grid-cols-1 sm:gap-6 sm:p-7 ${embedded ? "lg:grid-cols-[1fr_220px]" : "lg:grid-cols-[1fr_280px] lg:p-8"}`}>
+            <div className="contents sm:block">
+              <p className="order-1 col-span-2 mb-1 text-[10px] font-black uppercase tracking-[0.2em] text-amber-800 sm:mb-4 sm:text-sm sm:tracking-[0.28em]">
                 🏛️ Società più titolata
               </p>
 
-              <h2 className={`max-w-4xl break-words font-black leading-tight ${embedded ? "text-2xl sm:text-3xl md:text-4xl" : "text-3xl sm:text-4xl md:text-5xl"}`}>
+              <h2 className={`order-2 max-w-4xl break-words font-black leading-tight ${embedded ? "text-xl sm:text-3xl md:text-4xl" : "text-2xl sm:text-4xl md:text-5xl"}`}>
                 {teamPiuTitolato.nome}
               </h2>
 
-              <p className="mt-2 max-w-3xl text-sm font-semibold leading-5 text-amber-900 sm:mt-4 sm:text-base sm:leading-7">
+              <p className="order-4 col-span-2 mt-1 max-w-3xl text-xs font-semibold leading-5 text-amber-900 sm:mt-4 sm:text-base sm:leading-7">
                 La società con il maggior numero complessivo di trofei nella
                 storia del Fanta a 20.
               </p>
 
-              <div className="mt-5 flex w-full min-w-0 items-center gap-3 rounded-[1.5rem] border border-amber-300 bg-white/70 px-4 py-3 shadow-md shadow-amber-200/50 sm:inline-flex sm:w-auto sm:gap-5 sm:px-5">
+              <div className="order-5 col-span-2 mt-3 flex w-full min-w-0 items-center gap-3 rounded-[1.5rem] border border-amber-300 bg-white/70 px-3 py-2 shadow-md shadow-amber-200/50 sm:mt-5 sm:inline-flex sm:w-auto sm:gap-5 sm:px-5 sm:py-3">
                 <div>
                   <p className="text-xs font-black uppercase tracking-[0.22em] text-amber-800">
                     Trofei totali
                   </p>
 
-                  <p className="mt-1 text-5xl font-black leading-none text-blue-950">
+                  <p className="mt-1 text-3xl font-black leading-none text-blue-950 sm:text-5xl">
                     {societaPiuTitolata.totaleTrofei}
                   </p>
                 </div>
@@ -145,18 +145,18 @@ export function HallOfFameContent({ embedded = false }: { embedded?: boolean }) 
                 </p>
               </div>
 
-              <p className="mt-6 text-sm font-black text-blue-950 opacity-0 transition group-hover:opacity-100">
+              <p className="order-6 col-span-2 mt-3 text-xs font-black text-blue-950 opacity-0 transition group-hover:opacity-100 sm:mt-6 sm:text-sm">
                 Vai alla scheda →
               </p>
             </div>
 
-            <div className="flex items-center justify-center p-1 sm:p-4">
+            <div className="order-3 flex items-center justify-center p-0 sm:p-4">
               <Image
                 src={teamPiuTitolato.logo}
                 alt={teamPiuTitolato.nome}
                 width={300}
                 height={300}
-                className="max-h-32 w-auto object-contain drop-shadow-[0_18px_28px_rgba(30,41,59,0.35)] transition group-hover:scale-105 sm:max-h-72"
+                className="max-h-16 w-auto object-contain drop-shadow-[0_18px_28px_rgba(30,41,59,0.35)] transition group-hover:scale-105 sm:max-h-72"
               />
             </div>
           </div>
