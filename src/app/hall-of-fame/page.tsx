@@ -261,7 +261,7 @@ export function HallOfFameContent({ embedded = false }: { embedded?: boolean }) 
                               <p className="text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">
                                 Campione
                               </p>
-                              <p className="mt-1 truncate font-black uppercase text-blue-950">
+                              <p className="mt-1 truncate text-xs font-black uppercase text-blue-950 sm:text-base">
                                 {team!.nome}
                               </p>
                             </div>
@@ -289,7 +289,7 @@ export function HallOfFameContent({ embedded = false }: { embedded?: boolean }) 
                             </div>
 
                             <p
-                              className={`truncate font-black uppercase ${
+                              className={`truncate text-xs font-black uppercase sm:text-base ${
                                 isDark ? "text-white" : "text-blue-950"
                               }`}
                             >

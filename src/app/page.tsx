@@ -51,7 +51,8 @@ function TeamLogo({ team, size = 88 }: { team: Societa; size?: number }) {
 function CompetitionArtwork({ nome, immagini }: { nome: string; immagini: string[] }) {
   if (immagini.length === 1) {
     const isComposizione = immagini[0].startsWith("/competizioni/");
-    return <Image src={immagini[0]} alt="" width={420} height={280} className={`max-w-full object-contain drop-shadow-[0_16px_24px_rgba(15,23,42,0.18)] transition duration-500 group-hover:scale-[1.03] ${isComposizione ? "max-h-56 rounded-[1.2rem] [mask-image:linear-gradient(to_right,transparent,black_7%,black_93%,transparent)]" : "max-h-48"}`} />;
+    const mobileSize = nome === "Scatto Promozione" ? "max-h-10 max-w-14" : "max-h-12 max-w-20";
+    return <Image src={immagini[0]} alt="" width={420} height={280} className={`${mobileSize} h-auto w-auto object-contain drop-shadow-[0_10px_15px_rgba(15,23,42,0.16)] transition duration-500 sm:max-w-full sm:drop-shadow-[0_16px_24px_rgba(15,23,42,0.18)] sm:group-hover:scale-[1.03] ${isComposizione ? "sm:max-h-56 sm:rounded-[1.2rem] sm:[mask-image:linear-gradient(to_right,transparent,black_7%,black_93%,transparent)]" : "sm:max-h-48"}`} />;
   }
 
   const altPrincipale = nome === "Campionati" ? "Logo Serie A" : "Trofeo Champions League";
@@ -82,12 +83,14 @@ function SectionHeading({
   href?: string;
   linkLabel?: string;
 }) {
+  const isProtagoniste = eyebrow === "Le protagoniste";
+
   return (
-    <div className="mb-6 flex flex-col gap-3 sm:mb-10 sm:gap-6 lg:flex-row lg:items-end lg:justify-between">
+    <div className={`mb-6 flex flex-col gap-3 sm:mb-10 sm:gap-6 lg:flex-row lg:items-end lg:justify-between ${isProtagoniste ? "relative z-20 isolate opacity-100 [filter:none] [mask-image:none]" : ""}`}>
       <div className="max-w-3xl">
-        <p className={`text-[10px] font-black uppercase tracking-[0.24em] sm:text-xs sm:tracking-[0.3em] ${eyebrow === "Le protagoniste" ? "text-amber-600 sm:text-amber-500" : "text-amber-500"}`}>{eyebrow}</p>
-        <h2 className="mt-2 text-3xl font-black uppercase tracking-tight text-blue-950 sm:mt-3 sm:text-5xl">{title}</h2>
-        <p className={`mt-2 text-sm font-semibold leading-5 sm:mt-4 sm:text-lg sm:leading-7 ${eyebrow === "Le protagoniste" ? "text-slate-600 sm:text-slate-500" : "text-slate-500"}`}>{text}</p>
+        <p className={`text-[10px] font-black uppercase tracking-[0.24em] opacity-100 sm:text-xs sm:tracking-[0.3em] ${isProtagoniste ? "text-amber-600 sm:text-amber-500" : "text-amber-500"}`}>{eyebrow}</p>
+        <h2 className={`mt-2 text-3xl font-black uppercase tracking-tight opacity-100 sm:mt-3 sm:text-5xl ${isProtagoniste ? "bg-none text-blue-950 [background-clip:border-box] [background-image:none]" : "text-blue-950"}`}>{title}</h2>
+        <p className={`mt-2 text-sm font-semibold leading-5 opacity-100 sm:mt-4 sm:text-lg sm:leading-7 ${isProtagoniste ? "text-slate-600 sm:text-slate-500" : "text-slate-500"}`}>{text}</p>
       </div>
       {href && linkLabel && (
         <Link href={href} className="group/link inline-flex w-fit items-center gap-3 text-sm font-black uppercase tracking-[0.14em] text-blue-950">
@@ -120,7 +123,7 @@ export default function Home() {
   return (
     <div className="overflow-hidden bg-[linear-gradient(180deg,#f8fbff_0%,#eef5fb_36%,#f8fafc_100%)]">
       <section className="relative mx-auto max-w-7xl px-4 pb-9 pt-8 sm:px-6 sm:pb-20 sm:pt-16 lg:pb-24 lg:pt-24">
-        <div className="pointer-events-none absolute left-1/2 top-0 h-[34rem] w-[50rem] -translate-x-1/2 rounded-full bg-sky-200/35 blur-3xl" />
+        <div className="pointer-events-none absolute left-1/2 top-0 hidden h-[34rem] w-[50rem] -translate-x-1/2 rounded-full bg-sky-200/35 blur-3xl sm:block" />
         <div className="relative grid grid-cols-[minmax(0,1fr)_76px] items-center gap-x-3 gap-y-4 sm:grid-cols-1 sm:gap-12 lg:grid-cols-[1.15fr_0.85fr]">
           <div className="contents sm:block">
             <p className="order-1 col-span-2 text-[10px] font-black uppercase tracking-[0.28em] text-amber-500 sm:text-xs sm:tracking-[0.36em]">Il portale ufficiale</p>
