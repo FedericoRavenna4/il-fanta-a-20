@@ -252,21 +252,21 @@ export default function RegolamentoPage() {
       Il sistema campionati del Fanta a 20 è costruito su una vera piramide
       sportiva:{" "}
       <Link
-        href="/campionati#serie-a"
+        href="/competizioni#serie-a"
         className="font-bold text-blue-950 underline decoration-amber-400 decoration-2 underline-offset-4"
       >
         Serie A
       </Link>
       ,{" "}
       <Link
-        href="/campionati#serie-b"
+        href="/competizioni#serie-b"
         className="font-bold text-blue-950 underline decoration-amber-400 decoration-2 underline-offset-4"
       >
         Serie B
       </Link>{" "}
       e{" "}
       <Link
-        href="/campionati#serie-c"
+        href="/competizioni#serie-c"
         className="font-bold text-blue-950 underline decoration-amber-400 decoration-2 underline-offset-4"
       >
         Serie C
@@ -283,7 +283,7 @@ export default function RegolamentoPage() {
 
     <p>
       <Link
-        href="/campionati#scatto-promozione"
+        href="/competizioni#scatto-promozione"
         className="font-bold text-blue-950 underline decoration-amber-400 decoration-2 underline-offset-4"
       >
         Lo Scatto Promozione
@@ -296,14 +296,14 @@ export default function RegolamentoPage() {
     <p>
       Durante il girone di ritorno ogni lega disputa anche le{" "}
       <Link
-        href="/coppe#coppe-europee"
+        href="/competizioni#coppe-europee"
         className="font-bold text-blue-950 underline decoration-amber-400 decoration-2 underline-offset-4"
       >
         Coppe Europee
       </Link>
       , mentre tutte le 100 squadre partecipano alla{" "}
       <Link
-        href="/coppe#coppa-fanta-a-20"
+        href="/competizioni#coppa-fanta-a-20"
         className="font-bold text-blue-950 underline decoration-amber-400 decoration-2 underline-offset-4"
       >
         Coppa Fanta a 20

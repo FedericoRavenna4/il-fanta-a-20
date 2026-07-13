@@ -1,7 +1,7 @@
 import CoppaFanta from "./CoppaFanta";
 import CoppeEuropee from "./CoppeEuropee";
-import AlboDOroCoppe from "./AlboDOroCoppe";
 import PageHeader from "../components/PageHeader";
+import { redirect } from "next/navigation";
 
 export function CoppeContent({ embedded = false }: { embedded?: boolean }) {
   return (
@@ -14,12 +14,11 @@ export function CoppeContent({ embedded = false }: { embedded?: boolean }) {
       <div className="space-y-14">
         <CoppaFanta />
         <CoppeEuropee />
-        <AlboDOroCoppe />
       </div>
     </section>
   );
 }
 
 export default function CoppePage() {
-  return <CoppeContent />;
+  redirect("/competizioni#coppe");
 }

@@ -7,14 +7,22 @@ import type { Risultato } from "@/lib/risultati";
 const MIGLIOR_SECONDA_SERIE_C_ID = 25;
 
 const trofeiIcone: Record<string, string> = {
-  "Serie A": "/trofei/scudetto-a.png",
-  "Serie B": "/trofei/scudetto-b.png",
-  "Serie C": "/trofei/scudetto-c.png",
-  "Champions League": "/trofei/champions-league.png",
-  "Europa League": "/trofei/europa-league.png",
-  "Conference League": "/trofei/conference-league.png",
-  "Coppa Fanta a 20": "/trofei/coppa-fanta-a-20.png",
+  "Serie A": "/trofei/scudetto-a.png?v=20260713-1602",
+  "Serie B": "/trofei/scudetto-b.png?v=20260713-1602",
+  "Serie C": "/trofei/scudetto-c.png?v=20260713-1602",
+  "Champions League": "/trofei/champions-league.png?v=20260713-1602",
+  "Europa League": "/trofei/europa-league.png?v=20260713-1602",
+  "Conference League": "/trofei/conference-league.png?v=20260713-1602",
+  "Coppa Fanta a 20": "/trofei/coppa-fanta-a-20.png?v=20260713-1602",
 };
+
+function getTrofeoGlowClass(icona: string) {
+  if (icona.includes("scudetto-b") || icona.includes("conference")) return "drop-shadow-[0_0_24px_rgba(52,211,153,0.7)]";
+  if (icona.includes("scudetto-c")) return "drop-shadow-[0_0_24px_rgba(167,139,250,0.78)]";
+  if (icona.includes("champions")) return "drop-shadow-[0_0_26px_rgba(147,197,253,0.78)]";
+  if (icona.includes("europa")) return "drop-shadow-[0_0_24px_rgba(251,146,60,0.7)]";
+  return "drop-shadow-[0_0_26px_rgba(251,191,36,0.82)]";
+}
 
 function posizioneNumero(value: string) {
   const numero = Number(value);
@@ -405,11 +413,12 @@ export default function StoriaSocieta({
                           {vittoria && icona && (
                             <div className="pointer-events-none absolute right-1 top-1/2 flex h-20 w-20 -translate-y-1/2 items-center justify-center overflow-hidden lg:right-2 lg:top-[56%] lg:h-24 lg:w-24">
                               <Image
+  unoptimized
   src={icona}
   alt="Trofeo"
   width={108}
   height={108}
-  className="max-h-20 w-auto object-contain transition duration-300 group-hover:scale-110 drop-shadow-[0_0_28px_rgba(255,215,0,0.95)]"
+  className={`max-h-20 w-auto object-contain transition duration-300 group-hover:scale-105 ${getTrofeoGlowClass(icona)}`}
 />
                             </div>
                           )}

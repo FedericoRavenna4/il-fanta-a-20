@@ -1,4 +1,5 @@
 import PageHeader from "../components/PageHeader";
+import { redirect } from "next/navigation";
 const bonusIniziali = [
   ["1ª", "13 punti"],
   ["2ª", "8 punti"],
@@ -140,5 +141,5 @@ export function ScattoPromozioneContent({ embedded = false }: { embedded?: boole
 }
 
 export default function ScattoPromozionePage() {
-  return <ScattoPromozioneContent />;
+  redirect("/competizioni#scatto-promozione");
 }

@@ -9,30 +9,30 @@ const competizioni = [
   {
     nome: "Campionati",
     descrizione: "Cinque leghe, cento società e una piramide costruita su promozioni e retrocessioni.",
-    href: "/campionati",
+    href: "/competizioni#campionati",
     immagini: ["/competizioni/serie-a-b-c.png"],
     nota: "Serie A · Serie B · Serie C",
   },
   {
     nome: "Coppa Fanta a 20",
     descrizione: "Il torneo assoluto: tutte le società, un tabellone finale e un solo vincitore.",
-    href: "/coppe#coppa-fanta-a-20",
-    immagini: ["/trofei/coppa-fanta-a-20.png"],
-    nota: "100 società · 64 qualificate",
+    href: "/competizioni#coppa-fanta-a-20",
+    immagini: ["/trofei/coppa-fanta-a-20.png?v=20260713-1602"],
+    nota: "100 società · 1 vincitore",
   },
   {
     nome: "Coppe europee",
-    descrizione: "Champions, Europa e Conference League: il prestigio internazionale del Fanta a 20.",
-    href: "/coppe",
+    descrizione: "Champions, Europa e Conference League arricchiscono il girone di ritorno con tre trofei da conquistare.",
+    href: "/competizioni#coppe-europee",
     immagini: ["/competizioni/champions-europa-conference.png"],
-    nota: "Tre competizioni ufficiali",
+    nota: "Coppe interne",
   },
   {
-    nome: "Scatto Promozione",
+    nome: "Lo Scatto Promozione",
     descrizione: "La corsa della Serie C ispirata alla Formula 1 che assegna l’ultima promozione.",
-    href: "/scatto-promozione",
+    href: "/competizioni#scatto-promozione",
     immagini: ["/scatto-promozione/background.png"],
-    nota: "15 squadre · 9 giornate",
+    nota: "La corsa finale",
   },
 ];
 
@@ -52,7 +52,7 @@ function CompetitionArtwork({ nome, immagini }: { nome: string; immagini: string
   if (immagini.length === 1) {
     const isComposizione = immagini[0].startsWith("/competizioni/");
     const mobileSize = nome === "Scatto Promozione" ? "max-h-10 max-w-14" : "max-h-12 max-w-20";
-    return <Image src={immagini[0]} alt="" width={420} height={280} className={`${mobileSize} h-auto w-auto object-contain drop-shadow-[0_10px_15px_rgba(15,23,42,0.16)] transition duration-500 sm:max-w-full sm:drop-shadow-[0_16px_24px_rgba(15,23,42,0.18)] sm:group-hover:scale-[1.03] ${isComposizione ? "sm:max-h-56 sm:rounded-[1.2rem] sm:[mask-image:linear-gradient(to_right,transparent,black_7%,black_93%,transparent)]" : "sm:max-h-48"}`} />;
+    return <Image unoptimized={immagini[0].includes("?v=")} src={immagini[0]} alt="" width={420} height={280} className={`${mobileSize} h-auto w-auto object-contain drop-shadow-[0_10px_15px_rgba(15,23,42,0.16)] transition duration-500 sm:max-w-full sm:drop-shadow-[0_16px_24px_rgba(15,23,42,0.18)] sm:group-hover:scale-[1.03] ${isComposizione ? "sm:max-h-56 sm:rounded-[1.2rem] sm:[mask-image:linear-gradient(to_right,transparent,black_7%,black_93%,transparent)]" : "sm:max-h-48"}`} />;
   }
 
   const altPrincipale = nome === "Campionati" ? "Logo Serie A" : "Trofeo Champions League";
@@ -87,7 +87,7 @@ function SectionHeading({
 
   return (
     <div className={`mb-6 flex flex-col gap-3 sm:mb-10 sm:gap-6 lg:flex-row lg:items-end lg:justify-between ${isProtagoniste ? "relative z-20 isolate opacity-100 [filter:none] [mask-image:none]" : ""}`}>
-      <div className="max-w-3xl">
+      <div className="max-w-3xl lg:max-w-none">
         <p className={`text-[10px] font-black uppercase tracking-[0.24em] opacity-100 sm:text-xs sm:tracking-[0.3em] ${isProtagoniste ? "text-amber-600 sm:text-amber-500" : "text-amber-500"}`}>{eyebrow}</p>
         <h2 className={`mt-2 text-3xl font-black uppercase tracking-tight opacity-100 sm:mt-3 sm:text-5xl ${isProtagoniste ? "bg-none text-blue-950 [background-clip:border-box] [background-image:none]" : "text-blue-950"}`}>{title}</h2>
         <p className={`mt-2 text-sm font-semibold leading-5 opacity-100 sm:mt-4 sm:text-lg sm:leading-7 ${isProtagoniste ? "text-slate-600 sm:text-slate-500" : "text-slate-500"}`}>{text}</p>
@@ -132,7 +132,7 @@ export default function Home() {
             </h1>
             <p className="order-4 col-span-2 mt-0 max-w-2xl border-l-2 border-amber-400 pl-3 text-sm font-semibold leading-6 text-slate-600 sm:mt-8 sm:pl-6 sm:text-lg sm:leading-8">
               Venti partecipanti per lega, nessun giocatore doppione: ogni rosa è davvero unica. Nato nel 2023 come un gioco tra amici, oggi è un ecosistema di cinque leghe e cento società, con promozioni, retrocessioni, coppe e una memoria che cresce stagione dopo stagione.
-              <span className="mt-2 block text-blue-950 sm:mt-4">Qui non giochi soltanto. Costruisci il tuo posto nella storia.</span>
+              <span className="mt-2 block text-blue-950 sm:mt-4">Alcuni giocano. Altri cambiano il gioco.</span>
             </p>
           </div>
 
@@ -179,7 +179,7 @@ export default function Home() {
 
       <section className="border-y border-slate-200/80 bg-white/65 py-8 sm:py-16 lg:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <SectionHeading eyebrow={<><span className="sm:hidden">Numeri e storia</span><span className="hidden sm:inline">Numeri e memoria</span></>} title="Le statistiche" text="Il valore delle società prende forma attraverso ranking, record e trofei conquistati nel tempo." />
+          <SectionHeading eyebrow={<><span className="sm:hidden">Numeri e storia</span><span className="hidden sm:inline">Numeri e storia</span></>} title="Le statistiche" text="Il valore delle società prende forma attraverso ranking, record e trofei conquistati nel tempo." />
           <div className="grid gap-3 sm:gap-5 lg:grid-cols-[1.45fr_0.75fr]">
             <div className="relative flex flex-col overflow-hidden rounded-[2rem] bg-blue-950 p-4 text-white shadow-xl shadow-blue-950/15 sm:p-9">
               <div className="pointer-events-none absolute left-1/3 top-0 h-72 w-72 bg-sky-400/10 blur-[90px]" />
@@ -194,13 +194,13 @@ export default function Home() {
                   </Link>
                 ))}
               </div>
-              <Link href="/ranking" className="group/ranking relative mt-auto flex items-center justify-between border-t border-white/10 pt-6 text-[10px] font-black uppercase tracking-[0.17em] text-white/80">
+              <Link href="/statistiche#ranking" className="group/ranking relative mt-auto flex items-center justify-between border-t border-white/10 pt-6 text-[10px] font-black uppercase tracking-[0.17em] text-white/80">
                 <span>Visualizza il ranking completo</span>
                 <span className="transition-transform group-hover/ranking:translate-x-1" aria-hidden="true">→</span>
               </Link>
             </div>
             {teamPiuTitolato && (
-              <Link href="/hall-of-fame" className="group relative grid grid-cols-[52px_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 overflow-hidden rounded-[2rem] bg-[linear-gradient(145deg,#10264f,#071f45)] p-4 text-white shadow-xl shadow-blue-950/10 transition hover:-translate-y-1 hover:shadow-2xl sm:flex sm:flex-col sm:p-9">
+              <Link href="/statistiche#hall-of-fame" className="group relative grid grid-cols-[52px_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 overflow-hidden rounded-[2rem] bg-[linear-gradient(145deg,#10264f,#071f45)] p-4 text-white shadow-xl shadow-blue-950/10 transition hover:-translate-y-1 hover:shadow-2xl sm:flex sm:flex-col sm:p-9">
                 <div className="pointer-events-none absolute -right-10 top-8 h-44 w-44 bg-amber-300/10 blur-[55px]" />
                 <p className="relative col-span-3 text-[10px] font-black uppercase tracking-[0.2em] text-amber-300 sm:text-xs sm:tracking-[0.24em]">Hall of Fame</p>
                 <div className="relative flex h-12 w-12 items-center justify-center sm:mt-10 sm:h-28 sm:w-auto"><TeamLogo team={teamPiuTitolato} size={118} /></div>
@@ -216,20 +216,18 @@ export default function Home() {
       </section>
 
       <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-16 lg:py-20">
+        <div className="mb-6 grid items-center gap-4 sm:mb-11 sm:gap-8 md:grid-cols-[1fr_290px] lg:grid-cols-[1fr_380px]">
+            <div className="max-w-3xl lg:max-w-none">
+              <p className="text-xs font-black uppercase tracking-[0.3em] text-amber-500">Il sistema sportivo</p>
+              <h2 className="mt-2 text-3xl font-black uppercase tracking-tight text-blue-950 sm:mt-3 sm:text-5xl">Le competizioni</h2>
+              <p className="mt-3 text-sm font-semibold leading-5 text-slate-500 sm:mt-5 sm:text-lg sm:leading-7">Campionati e coppe: strade diverse per conquistare un posto nella storia.</p>
+            </div>
+            <div className="hidden h-36 md:block" aria-hidden="true" />
+          </div>
+
         <div className="relative overflow-hidden rounded-[2.5rem] bg-[linear-gradient(145deg,#071f45,#102f64)] p-4 text-white shadow-2xl shadow-blue-950/20 sm:p-10 lg:p-12">
           <div className="pointer-events-none absolute -right-20 -top-28 h-96 w-96 bg-sky-400/10 blur-[100px]" />
           <div className="pointer-events-none absolute -bottom-32 left-1/4 h-80 w-80 bg-amber-300/10 blur-[110px]" />
-          <div className="relative mb-6 grid items-center gap-4 sm:mb-11 sm:gap-8 md:grid-cols-[1fr_290px] lg:grid-cols-[1fr_380px]">
-            <div className="max-w-3xl">
-              <p className="text-xs font-black uppercase tracking-[0.3em] text-amber-300">Il sistema sportivo</p>
-              <h2 className="mt-2 text-3xl font-black uppercase tracking-tight sm:mt-3 sm:text-5xl">Le competizioni</h2>
-              <p className="mt-3 text-sm font-semibold leading-5 text-white/55 sm:mt-5 sm:text-lg sm:leading-7">Campionati e coppe: strade diverse per conquistare un posto nella storia.</p>
-            </div>
-            <div className="relative hidden h-36 items-center justify-center md:flex">
-              <div className="pointer-events-none absolute h-24 w-64 bg-amber-300/10 blur-[50px]" />
-              <Image src="/hall-of-fame/vetrina-trofei.png" alt="I trofei delle competizioni" width={420} height={190} className="relative max-h-36 w-full rounded-[1.4rem] object-cover object-center opacity-75 [mask-image:linear-gradient(to_right,transparent,black_12%,black_88%,transparent)] drop-shadow-[0_18px_26px_rgba(0,0,0,0.22)]" />
-            </div>
-          </div>
           <div className="relative grid gap-4 md:grid-cols-2">
             {competizioni.map((item) => (
               <Link key={item.nome} href={item.href} className="group relative min-h-0 overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.055] p-4 backdrop-blur-sm transition duration-300 hover:-translate-y-1 hover:border-white/25 hover:bg-white/[0.085] sm:min-h-80 sm:p-7">

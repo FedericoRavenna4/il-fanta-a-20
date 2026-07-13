@@ -62,9 +62,10 @@ export default function CompetizioniPage() {
         </section>
 
         <section className="border-t border-slate-200 pt-10 sm:pt-20">
-          <div className="mb-5 sm:mb-8"><p className="text-[10px] font-black uppercase tracking-[0.22em] text-amber-500 sm:text-xs sm:tracking-[0.28em]">La quarta promozione</p><h2 className="mt-2 text-3xl font-black uppercase tracking-tight text-blue-950 sm:text-5xl">Lo Scatto Promozione</h2></div>
+          <div className="mb-5 sm:mb-8"><p className="text-[10px] font-black uppercase tracking-[0.22em] text-amber-500 sm:text-xs sm:tracking-[0.28em]">La corsa finale</p><h2 className="mt-2 text-3xl font-black uppercase tracking-tight text-blue-950 sm:text-5xl">Lo Scatto Promozione</h2></div>
           <ScattoPromozioneContent embedded />
         </section>
+
       </div>
     </main>
   );

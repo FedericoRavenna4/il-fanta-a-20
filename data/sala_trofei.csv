@@ -23,6 +23,9 @@ Squadra_ID,Nome_Squadra,Totale_Trofei,Campionati,Champions_League,Europa_League,
 66,Ravengers FC,1,0,0,1,0,0
 86,Kakasertana,1,0,0,1,0,0
 94,Trapani,1,0,0,0,1,0
+59,PergoleTette,1,0,0,0,1,0
+74,Ternani,1,0,0,0,1,0
+91,US LATTINA CALCIO 1932,1,0,1,0,0,0
 5,IRoman,0,0,0,0,0,0
 8,Pisa and Love,0,0,0,0,0,0
 9,Brodena,0,0,0,0,0,0
@@ -61,7 +64,6 @@ Squadra_ID,Nome_Squadra,Totale_Trofei,Campionati,Champions_League,Europa_League,
 56,FC Arzignano VAcchiappo,0,0,0,0,0,0
 57,Lumezzanegger,0,0,0,0,0,0
 58,Novara,0,0,0,0,0,0
-59,PergoleTette,0,0,0,0,0,0
 60,Trento,0,0,0,0,0,0
 61,AGNELLINO,0,0,0,0,0,0
 63,Campobasta,0,0,0,0,0,0
@@ -74,7 +76,6 @@ Squadra_ID,Nome_Squadra,Totale_Trofei,Campionati,Champions_League,Europa_League,
 71,AcBra,0,0,0,0,0,0
 72,PEsaROTTI,0,0,0,0,0,0
 73,Rimiccoli,0,0,0,0,0,0
-74,Ternani,0,0,0,0,0,0
 75,Perugia,0,0,0,0,0,0
 76,Torres,0,0,0,0,0,0
 77,piantinese,0,0,0,0,0,0
@@ -90,7 +91,6 @@ Squadra_ID,Nome_Squadra,Totale_Trofei,Campionati,Champions_League,Europa_League,
 88,BIANCAVESE,0,0,0,0,0,0
 89,Benevengo,0,0,0,0,0,0
 90,acCattania,0,0,0,0,0,0
-91,US LATTINA CALCIO 1932,0,0,0,0,0,0
 92,Audace Cerignola,0,0,0,0,0,0
 93,SorrEnd,0,0,0,0,0,0
 95,Vosenza,0,0,0,0,0,0

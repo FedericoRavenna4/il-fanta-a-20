@@ -8,11 +8,12 @@ export default function BracketFinal() {
       </p>
       
       <Image
-        src="/trofei/coppa-fanta-a-20.png"
+        unoptimized
+        src="/trofei/coppa-fanta-a-20.png?v=20260713-1602"
         alt="Coppa Fanta a 20"
         width={130}
         height={130}
-        className="h-auto max-h-32 w-auto object-contain drop-shadow-[0_0_42px_rgba(251,191,36,1)] transition duration-300 hover:scale-110 hover:rotate-2 hover:drop-shadow-[0_0_70px_rgba(251,191,36,1)]"
+        className="h-auto max-h-28 w-auto object-contain drop-shadow-[0_0_36px_rgba(251,191,36,0.82)] transition duration-300 hover:scale-105 hover:drop-shadow-[0_0_54px_rgba(251,191,36,0.95)]"
       />
     </div>
   );

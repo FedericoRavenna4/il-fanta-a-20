@@ -3,10 +3,14 @@
 :root {
   --background: #f3f7fb;
   --foreground: #071f45;
+  --default-transition-duration: 260ms;
+  --default-transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 html {
   min-height: 100%;
+  scroll-behavior: smooth;
+  scroll-padding-top: 7rem;
 }
 
 body {
@@ -56,6 +60,10 @@ a {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
   .home-club-marquee {
     animation-play-state: paused;
   }

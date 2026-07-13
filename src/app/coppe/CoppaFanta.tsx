@@ -56,14 +56,15 @@ export default function CoppaFanta() {
           </div>
 
           <div className="relative hidden h-80 items-center justify-center lg:flex">
-            <div className="absolute h-72 w-72 rounded-full bg-amber-300/45 blur-3xl transition duration-500 group-hover:bg-amber-300/70" />
+            <div className="absolute h-64 w-64 rounded-full bg-amber-300/35 blur-3xl transition duration-500 group-hover:bg-amber-300/55" />
 
             <Image
-              src="/trofei/coppa-fanta-a-20.png"
+              unoptimized
+              src="/trofei/coppa-fanta-a-20.png?v=20260713-1602"
               alt="Coppa Fanta a 20"
               width={330}
               height={330}
-              className="relative h-auto max-h-80 w-auto object-contain drop-shadow-[0_0_50px_rgba(251,191,36,0.9)] transition duration-500 group-hover:scale-110 group-hover:rotate-2 group-hover:drop-shadow-[0_0_80px_rgba(251,191,36,1)]"
+              className="relative h-auto max-h-72 w-auto object-contain drop-shadow-[0_0_44px_rgba(251,191,36,0.72)] transition duration-500 group-hover:scale-105 group-hover:drop-shadow-[0_0_64px_rgba(251,191,36,0.9)]"
             />
           </div>
         </div>
@@ -117,21 +118,6 @@ export default function CoppaFanta() {
 
         <TabelloneCoppaFanta partite={tabellone} stagione="2025/26" />
 
-        <div className="mt-6 rounded-[1.35rem] border border-amber-200 bg-gradient-to-br from-amber-50 via-white to-white p-3 shadow-sm sm:mt-10 sm:rounded-[1.8rem] sm:p-8">
-          <p className="text-xs font-black uppercase tracking-[0.28em] text-amber-500">
-            Archivio
-          </p>
-
-          <h3 className="mt-1 text-xl font-black uppercase tracking-tight text-blue-950 sm:mt-2 sm:text-3xl">
-            Archivio della competizione
-          </h3>
-
-          <p className="mt-2 max-w-4xl text-xs font-semibold leading-5 text-slate-500 sm:mt-4 sm:text-sm sm:leading-7">
-            Lo storico della Coppa Fanta a 20 raccoglierà stagione dopo stagione
-            tabelloni, finaliste e vincitori della competizione più grande del
-            Fanta a 20.
-          </p>
-        </div>
       </div>
     </section>
   );

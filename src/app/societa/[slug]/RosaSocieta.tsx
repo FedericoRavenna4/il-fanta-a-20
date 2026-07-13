@@ -146,7 +146,7 @@ export default function RosaSocieta({
       </div>
 
       {rosaFiltrata.length > 0 ? (
-        <div className="grid gap-3 sm:gap-5 xl:grid-cols-2">
+        <div className="grid gap-3 sm:gap-5 lg:block lg:columns-2 lg:gap-5">
           {ruoli.map((ruolo) => {
             const giocatoriRuolo = rosaFiltrata
               .filter((player) => ruolo.keys.includes(normalizzaRuolo(player.ruolo)))
@@ -155,7 +155,7 @@ export default function RosaSocieta({
             return (
               <div
                 key={ruolo.short}
-                className="min-w-0 rounded-2xl border border-slate-100 bg-slate-50/90 p-2.5 shadow-inner shadow-white sm:p-4"
+                className={`min-w-0 break-inside-avoid-column rounded-2xl border border-slate-100 bg-slate-50/90 p-2.5 shadow-inner shadow-white sm:p-4 lg:mb-5 ${ruolo.short === "C" ? "lg:[break-before:column]" : ""}`}
               >
                 <div className="hidden sm:mb-4 sm:flex sm:items-center sm:justify-between sm:gap-3">
                   <div className="flex items-center gap-2">

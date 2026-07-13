@@ -163,16 +163,32 @@ const emblemi = getEmblemi();
 
   const palmaresCards = [
     {
-      value: trofei?.campionati ?? 0,
-      image: "/trofei/scudetto-a.png",
+      value: trofei?.campionatiSerieA ?? 0,
+      image: "/trofei/scudetto-a.png?v=20260713-1602",
       label: "Serie A",
       style:
         "border-sky-200 bg-gradient-to-br from-sky-200 via-sky-50 to-white shadow-sky-100",
       glow: "drop-shadow-[0_0_26px_rgba(14,165,233,0.85)]",
     },
     {
+      value: trofei?.campionatiSerieB ?? 0,
+      image: "/trofei/scudetto-b.png?v=20260713-1602",
+      label: "Serie B",
+      style:
+        "border-emerald-200 bg-gradient-to-br from-emerald-200 via-emerald-50 to-white shadow-emerald-100",
+      glow: "drop-shadow-[0_0_26px_rgba(16,185,129,0.8)]",
+    },
+    {
+      value: trofei?.campionatiSerieC ?? 0,
+      image: "/trofei/scudetto-c.png?v=20260713-1602",
+      label: "Serie C",
+      style:
+        "border-violet-200 bg-gradient-to-br from-violet-200 via-violet-50 to-white shadow-violet-100",
+      glow: "drop-shadow-[0_0_26px_rgba(139,92,246,0.8)]",
+    },
+    {
       value: trofei?.championsLeague ?? 0,
-      image: "/trofei/champions-league.png",
+      image: "/trofei/champions-league.png?v=20260713-1602",
       label: "Champions League",
       style:
         "border-blue-900/30 bg-gradient-to-br from-blue-950 via-blue-900 to-slate-900 shadow-blue-950/30",
@@ -181,7 +197,7 @@ const emblemi = getEmblemi();
     },
     {
       value: trofei?.europaLeague ?? 0,
-      image: "/trofei/europa-league.png",
+      image: "/trofei/europa-league.png?v=20260713-1602",
       label: "Europa League",
       style:
         "border-orange-400 bg-gradient-to-br from-orange-500 via-orange-300 to-orange-100 shadow-orange-200",
@@ -189,7 +205,7 @@ const emblemi = getEmblemi();
     },
     {
       value: trofei?.conferenceLeague ?? 0,
-      image: "/trofei/conference-league.png",
+      image: "/trofei/conference-league.png?v=20260713-1602",
       label: "Conference League",
       style:
         "border-emerald-900/30 bg-gradient-to-br from-emerald-900 via-emerald-700 to-slate-900 shadow-emerald-950/30",
@@ -198,7 +214,7 @@ const emblemi = getEmblemi();
     },
     {
       value: trofei?.coppaFantaA20 ?? 0,
-      image: "/trofei/coppa-fanta-a-20.png",
+      image: "/trofei/coppa-fanta-a-20.png?v=20260713-1602",
       label: "Coppa Fanta a 20",
       style:
         "border-amber-300 bg-gradient-to-br from-amber-300 via-yellow-100 to-white shadow-amber-200",
@@ -291,7 +307,7 @@ const emblemiDaDifendereVisuali = emblemiDaDifendere.map(toEmblemaVisuale);
 
             <div className="grid gap-2 sm:gap-4 md:grid-cols-3">
               <Link
-                href="/ranking"
+                href="/statistiche#ranking"
                 className="rounded-2xl bg-slate-50 p-3 transition hover:-translate-y-0.5 hover:bg-sky-50 hover:shadow-md sm:p-6"
               >
                 <p className="text-sm font-bold text-slate-500">Ranking</p>

@@ -7,7 +7,7 @@ const coppeEuropee = [
     href: "#champions-league",
     descrizione:
       "Il trofeo più prestigioso riservato alle migliori otto squadre del girone d'andata.",
-    image: "/trofei/champions-league.png",
+    image: "/trofei/champions-league.png?v=20260713-1602",
     className:
       "border-blue-900/30 bg-gradient-to-br from-blue-950 via-blue-900 to-slate-900 text-white shadow-blue-950/40",
   },
@@ -16,7 +16,7 @@ const coppeEuropee = [
     href: "#europa-league",
     descrizione:
       "Una coppa di carattere: può trasformare una stagione solida in una stagione da ricordare.",
-    image: "/trofei/europa-league.png",
+    image: "/trofei/europa-league.png?v=20260713-1602",
     className:
       "border-orange-400 bg-gradient-to-br from-orange-600 via-orange-400 to-orange-100 text-white shadow-orange-300/70",
   },
@@ -25,7 +25,7 @@ const coppeEuropee = [
     href: "#conference-league",
     descrizione:
       "Il trofeo della rivalsa: dà orgoglio e finale glorioso anche alle stagioni più complicate.",
-    image: "/trofei/conference-league.png",
+    image: "/trofei/conference-league.png?v=20260713-1602",
     className:
       "border-emerald-900/30 bg-gradient-to-br from-emerald-900 via-emerald-700 to-slate-900 text-white shadow-emerald-950/40",
   },
@@ -74,7 +74,8 @@ export default function HeroCoppe() {
           </div>
 
           <Image
-            src="/trofei/coppa-fanta-a-20.png"
+            unoptimized
+            src="/trofei/coppa-fanta-a-20.png?v=20260713-1602"
             alt="Coppa Fanta a 20"
             width={230}
             height={230}
@@ -105,6 +106,7 @@ export default function HeroCoppe() {
                 </div>
 
                 <Image
+                  unoptimized
                   src={coppa.image}
                   alt={coppa.nome}
                   width={145}

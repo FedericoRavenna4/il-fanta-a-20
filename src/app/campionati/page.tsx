@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { getSocieta } from "@/lib/societa";
 import PageHeader from "../components/PageHeader";
+import { redirect } from "next/navigation";
 
 const leghe = [
   {
@@ -79,7 +80,7 @@ export function CampionatiContent({ embedded = false }: { embedded?: boolean }) 
   {lega.nome}
 </h2>
 
-                    <p className="order-4 col-span-2 mt-1 max-w-3xl text-xs font-semibold leading-5 text-white/85 sm:mt-4 sm:text-base sm:leading-7">
+                    <p className="order-4 col-span-2 mt-1 max-w-3xl text-xs font-semibold leading-5 text-white/85 sm:mt-4 sm:text-base sm:leading-7 lg:max-w-none">
                       {lega.descrizione}
                     </p>
                   </div>
@@ -239,7 +240,7 @@ export function CampionatiContent({ embedded = false }: { embedded?: boolean }) 
   Serie C
 </h2>
 
-                <p className="order-4 col-span-2 mt-1 max-w-3xl text-xs font-semibold leading-5 text-white/85 sm:mt-4 sm:text-base sm:leading-7">
+                <p className="order-4 col-span-2 mt-1 max-w-3xl text-xs font-semibold leading-5 text-white/85 sm:mt-4 sm:text-base sm:leading-7 lg:max-w-none">
                   La base del sistema competitivo, divisa in tre gironi. Qui
                   nascono nuove rivalità e iniziano le scalate verso le leghe
                   superiori.
@@ -316,5 +317,5 @@ export function CampionatiContent({ embedded = false }: { embedded?: boolean }) 
 }
 
 export default function CampionatiPage() {
-  return <CampionatiContent />;
+  redirect("/competizioni#campionati");
 }

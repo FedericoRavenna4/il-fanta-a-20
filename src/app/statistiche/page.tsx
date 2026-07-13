@@ -18,7 +18,7 @@ const percorsi = [
     title: "L'Hall of Fame",
     text: "I club che hanno conquistato i titoli e scritto le pagine più prestigiose.",
     href: "#hall-of-fame",
-    image: "/hall-of-fame/vetrina-trofei.png",
+    image: "/hall-of-fame/vetrina-trofei.png?v=20260713-1602",
   },
 ];
 
@@ -28,10 +28,9 @@ export default function StatistichePage() {
   return (
     <main className="mx-auto max-w-7xl px-4 py-7 sm:px-5 sm:py-12 lg:px-6 lg:py-16">
       <PageHeader
-        eyebrow="Numeri e memoria storica"
+        eyebrow="Numeri e storia"
         title="Le Statistiche"
-        description="Ranking e Hall of Fame raccontano il valore, i successi e l’eredità sportiva delle società del Fanta a 20."
-      />
+        description="Ranking e Hall of Fame raccontano il valore, i successi e l’eredità sportiva delle società del Fanta a 20."/>
 
       <div className="mb-10 grid gap-3 sm:mb-20 sm:gap-5 md:grid-cols-2">
         {percorsi.map((item) => (
@@ -41,7 +40,7 @@ export default function StatistichePage() {
               <div><p className="text-[9px] font-black uppercase tracking-[0.2em] text-amber-300 sm:text-[10px] sm:tracking-[0.24em]">{item.eyebrow}</p><h2 className="mt-2 text-xl font-black uppercase sm:mt-3 sm:text-4xl">{item.title}</h2><p className="mt-2 text-xs font-semibold leading-5 text-white/55 sm:mt-4 sm:text-sm sm:leading-6">{item.text}</p><p className="mt-3 text-[9px] font-black uppercase tracking-[0.14em] text-white/80 sm:mt-7 sm:text-[10px] sm:tracking-[0.16em]">Esplora la sezione <span className="ml-1 inline-block transition-transform group-hover:translate-x-1">→</span></p></div>
               {item.image === "podio" ? (
                 <div className="flex h-20 items-end justify-center gap-1 sm:h-36 sm:gap-2" aria-hidden="true"><div className="flex h-11 w-6 items-center justify-center rounded-t-lg bg-white/15 text-sm font-black text-white/60 sm:h-20 sm:w-12 sm:rounded-t-xl sm:text-xl">2</div><div className="flex h-18 w-7 items-center justify-center rounded-t-lg bg-amber-300 text-base font-black text-blue-950 shadow-[0_0_30px_rgba(251,191,36,0.25)] sm:h-32 sm:w-14 sm:rounded-t-xl sm:text-2xl">1</div><div className="flex h-9 w-6 items-center justify-center rounded-t-lg bg-white/10 text-sm font-black text-white/45 sm:h-16 sm:w-12 sm:rounded-t-xl sm:text-xl">3</div></div>
-              ) : <Image src={item.image} alt="" width={220} height={180} className="max-h-40 w-full object-contain drop-shadow-[0_15px_22px_rgba(0,0,0,0.25)] transition duration-500 group-hover:scale-105" />}
+              ) : <Image unoptimized src={item.image} alt="" width={220} height={180} className="max-h-40 w-full object-contain drop-shadow-[0_15px_22px_rgba(0,0,0,0.25)] transition duration-500 group-hover:scale-105" />}
             </div>
           </Link>
         ))}

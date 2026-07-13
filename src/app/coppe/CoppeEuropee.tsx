@@ -6,7 +6,9 @@ const coppe = [
     descrizione:
       "La coppa più prestigiosa e ambita: il palcoscenico delle squadre che hanno dominato il girone di andata.",
     qualificate: "1° - 8° posto",
-    image: "/trofei/champions-league.png",
+    image: "/trofei/champions-league.png?v=20260713-1602",
+    artwork: "lg:drop-shadow-[0_0_36px_rgba(147,197,253,0.58)]",
+    light: "bg-[radial-gradient(circle_at_86%_42%,rgba(147,197,253,0.32),transparent_30%)]",
     style:
       "border-blue-900/30 bg-gradient-to-br from-blue-950 via-blue-900 to-slate-900 shadow-blue-950/40",
   },
@@ -15,7 +17,9 @@ const coppe = [
     descrizione:
       "Una competizione di grande valore per chi vive nella fascia centrale e vuole trasformare una stagione solida in un trofeo pesante.",
     qualificate: "9° - 14° posto",
-    image: "/trofei/europa-league.png",
+    image: "/trofei/europa-league.png?v=20260713-1602",
+    artwork: "lg:drop-shadow-[0_0_34px_rgba(251,146,60,0.48)]",
+    light: "bg-[radial-gradient(circle_at_86%_42%,rgba(251,191,36,0.3),transparent_30%)]",
     style:
       "border-orange-400 bg-gradient-to-br from-orange-600 via-orange-400 to-orange-100 shadow-orange-300/70",
   },
@@ -24,7 +28,9 @@ const coppe = [
     descrizione:
       "La coppa delle rivincite: un’occasione concreta per risollevare una stagione difficile e chiuderla con un titolo.",
     qualificate: "15° - 20° posto",
-    image: "/trofei/conference-league.png",
+    image: "/trofei/conference-league.png?v=20260713-1602",
+    artwork: "lg:drop-shadow-[0_0_34px_rgba(52,211,153,0.46)]",
+    light: "bg-[radial-gradient(circle_at_86%_42%,rgba(52,211,153,0.28),transparent_30%)]",
     style:
       "border-emerald-900/30 bg-gradient-to-br from-emerald-900 via-emerald-700 to-slate-900 shadow-emerald-950/40",
   },
@@ -73,16 +79,16 @@ export default function CoppeEuropee() {
             key={coppa.nome}
             className={`group relative overflow-hidden rounded-[2rem] border p-4 text-white shadow-xl transition duration-300 hover:-translate-y-1 sm:p-7 lg:min-h-[335px] ${coppa.style}`}
           >
-            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.12),transparent_42%),radial-gradient(circle_at_88%_42%,rgba(255,255,255,0.25),transparent_28%)]" />
+            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.12),transparent_42%)]" />
+            <div className={`pointer-events-none absolute inset-0 ${coppa.light}`} />
 
-            <Image
+<Image
+  unoptimized
   src={coppa.image}
   alt={coppa.nome}
   width={230}
   height={230}
-  className={`relative z-0 mx-auto mt-3 hidden h-24 w-full translate-y-0 object-contain opacity-90 drop-shadow-[0_0_26px_rgba(255,255,255,0.28)] transition duration-500 group-hover:scale-105 sm:mt-5 sm:block sm:h-36 lg:absolute lg:top-1/2 lg:mx-0 lg:mt-0 lg:h-auto lg:max-h-56 lg:w-auto lg:-translate-y-1/2 lg:opacity-100 lg:group-hover:scale-110 lg:group-hover:drop-shadow-[0_0_44px_rgba(255,255,255,0.55)] ${
-    coppa.nome === "Champions League" ? "lg:-right-12" : "lg:-right-6"
-  }`}
+  className={`relative z-0 mx-auto mt-3 hidden h-24 w-full translate-y-0 object-contain opacity-90 drop-shadow-[0_0_26px_rgba(255,255,255,0.28)] transition duration-500 group-hover:scale-105 sm:mt-5 sm:block sm:h-36 lg:absolute lg:right-4 lg:top-[48%] lg:mx-0 lg:mt-0 lg:h-44 lg:w-40 lg:-translate-y-1/2 lg:opacity-100 lg:group-hover:scale-105 ${coppa.artwork}`}
 />
 
 <div className="relative z-10 flex flex-col justify-between lg:min-h-[280px]">
@@ -91,7 +97,7 @@ export default function CoppeEuropee() {
   {coppa.nome}
 </h3>
 
-<p className="mt-2 max-w-none text-xs font-semibold leading-5 text-white/82 sm:mt-4 sm:text-[15px] sm:leading-7 lg:mt-5 lg:max-w-[68%]">
+<p className="mt-2 max-w-none text-xs font-semibold leading-5 text-white/82 sm:mt-4 sm:text-[15px] sm:leading-7 lg:mt-5 lg:max-w-[55%]">
                   {coppa.descrizione}
                 </p>
               </div>
