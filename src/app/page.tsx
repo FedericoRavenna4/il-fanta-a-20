@@ -215,8 +215,8 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-16 lg:py-20">
-        <div className="mb-6 grid items-center gap-4 sm:mb-11 sm:gap-8 md:grid-cols-[1fr_290px] lg:grid-cols-[1fr_380px]">
+      <section className="mx-auto max-w-7xl px-4 py-8 max-sm:py-6 sm:px-6 sm:py-16 lg:py-20">
+        <div className="mb-6 grid items-center gap-4 max-sm:mb-4 sm:mb-11 sm:gap-8 md:grid-cols-[1fr_290px] lg:grid-cols-[1fr_380px]">
             <div className="max-w-3xl lg:max-w-none">
               <p className="text-xs font-black uppercase tracking-[0.3em] text-amber-500">Il sistema sportivo</p>
               <h2 className="mt-2 text-3xl font-black uppercase tracking-tight text-blue-950 sm:mt-3 sm:text-5xl">Le competizioni</h2>
@@ -225,20 +225,20 @@ export default function Home() {
             <div className="hidden h-36 md:block" aria-hidden="true" />
           </div>
 
-        <div className="relative overflow-hidden rounded-[2.5rem] bg-[linear-gradient(145deg,#071f45,#102f64)] p-4 text-white shadow-2xl shadow-blue-950/20 sm:p-10 lg:p-12">
+        <div className="relative overflow-hidden rounded-[2.5rem] bg-[linear-gradient(145deg,#071f45,#102f64)] p-4 text-white shadow-2xl shadow-blue-950/20 max-sm:rounded-[1.5rem] max-sm:p-3 sm:p-10 lg:p-12">
           <div className="pointer-events-none absolute -right-20 -top-28 h-96 w-96 bg-sky-400/10 blur-[100px]" />
           <div className="pointer-events-none absolute -bottom-32 left-1/4 h-80 w-80 bg-amber-300/10 blur-[110px]" />
-          <div className="relative grid gap-4 md:grid-cols-2">
+          <div className="relative grid gap-4 max-sm:gap-2 md:grid-cols-2">
             {competizioni.map((item) => (
-              <Link key={item.nome} href={item.href} className="group relative min-h-0 overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.055] p-4 backdrop-blur-sm transition duration-300 hover:-translate-y-1 hover:border-white/25 hover:bg-white/[0.085] sm:min-h-80 sm:p-7">
-                <div className="grid h-full min-h-0 grid-cols-1 items-stretch gap-3 sm:min-h-64 sm:grid-cols-[1fr_230px] sm:gap-4">
+              <Link key={item.nome} href={item.href} className="group relative min-h-0 overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.055] p-4 backdrop-blur-sm transition duration-300 hover:-translate-y-1 hover:border-white/25 hover:bg-white/[0.085] max-sm:rounded-[1.15rem] max-sm:p-3 sm:min-h-80 sm:p-7">
+                <div className="grid h-full min-h-0 grid-cols-1 items-stretch gap-3 max-sm:block sm:min-h-64 sm:grid-cols-[1fr_230px] sm:gap-4">
                   <div className="relative z-10 grid h-full grid-rows-[auto_auto_auto_auto] sm:grid-rows-[1.5rem_4.5rem_1fr_auto]">
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-300">{item.nota}</p>
-                    <h3 className="pt-2 text-2xl font-black uppercase leading-tight sm:text-3xl">{item.nome}</h3>
-                    <p className="pt-4 text-sm font-semibold leading-6 text-white/50">{item.descrizione}</p>
-                    <p className="pt-6 text-[10px] font-black uppercase tracking-[0.17em] text-white/80">{item.nome === "Campionati" || item.nome === "Coppe europee" ? "Entra nelle competizioni" : "Entra nella competizione"} <span className="ml-1 inline-block transition-transform group-hover:translate-x-1">→</span></p>
+                    <h3 className="pt-2 text-2xl font-black uppercase leading-tight max-sm:pt-1 max-sm:text-lg sm:text-3xl">{item.nome}</h3>
+                    <p className="pt-4 text-sm font-semibold leading-6 text-white/50 max-sm:pt-1.5 max-sm:text-xs max-sm:leading-4">{item.descrizione}</p>
+                    <p className="pt-6 text-[10px] font-black uppercase tracking-[0.17em] text-white/80 max-sm:pt-3 max-sm:text-[9px]">{item.nome === "Campionati" || item.nome === "Coppe europee" ? "Entra nelle competizioni" : "Entra nella competizione"} <span className="ml-1 inline-block transition-transform group-hover:translate-x-1">→</span></p>
                   </div>
-                  <div className={`flex items-center justify-center sm:h-full sm:min-h-52 ${item.nome === "Scatto Promozione" ? "h-12" : "h-14"}`}><CompetitionArtwork nome={item.nome} immagini={item.immagini} /></div>
+                  <div className={`flex items-center justify-center max-sm:hidden sm:h-full sm:min-h-52 ${item.nome === "Scatto Promozione" ? "h-12" : "h-14"}`}><CompetitionArtwork nome={item.nome} immagini={item.immagini} /></div>
                 </div>
               </Link>
             ))}

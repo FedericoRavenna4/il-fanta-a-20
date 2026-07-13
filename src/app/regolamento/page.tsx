@@ -554,13 +554,17 @@ export default function RegolamentoPage() {
   </div>
 </article>
 )}
-<section className="mt-10 overflow-hidden rounded-[2rem] border border-slate-200 bg-gradient-to-br from-blue-950 via-[#142b69] to-slate-950 px-5 py-9 text-white shadow-xl sm:mt-14 sm:px-8 sm:py-12 lg:px-10 lg:py-14">
+<section className="mt-10 overflow-hidden rounded-[2rem] border border-slate-200 bg-gradient-to-br from-blue-950 via-[#142b69] to-slate-950 px-5 py-9 text-white shadow-xl max-sm:mt-8 max-sm:rounded-[1.5rem] max-sm:px-4 max-sm:py-6 sm:mt-14 sm:px-8 sm:py-12 lg:px-10 lg:py-14">
   <div className="mx-auto max-w-4xl text-center">
-    <h2 className="text-3xl font-black uppercase tracking-[0.02em] sm:text-4xl lg:text-5xl">
+    <h2 className="text-3xl font-black uppercase tracking-[0.02em] max-sm:text-2xl sm:text-4xl lg:text-5xl">
       Il Regolamento
     </h2>
 
-    <p className="mt-6 text-lg leading-9 text-white/75">
+    <p className="mt-3 text-sm font-semibold leading-5 text-white/75 sm:hidden">
+      Scarica il regolamento completo in PDF.
+    </p>
+
+    <p className="mt-6 hidden text-lg leading-9 text-white/75 sm:block">
       Le sezioni presenti in questa pagina rappresentano una panoramica delle
       principali regole del Fanta a 20. Per consultare ogni dettaglio del
       regolamento ufficiale, comprese tutte le casistiche e le norme di gioco,
@@ -572,9 +576,10 @@ export default function RegolamentoPage() {
       href="/regolamento.pdf"
       target="_blank"
       rel="noopener noreferrer"
-      className="group mx-auto mt-8 inline-flex w-full items-center justify-center rounded-full bg-amber-400 px-5 py-4 text-center text-sm font-black uppercase tracking-[0.12em] text-blue-950 transition-all duration-300 hover:-translate-y-1 hover:bg-amber-300 hover:shadow-[0_0_40px_rgba(251,191,36,0.45)] sm:mt-10 sm:w-auto sm:px-10 sm:py-5 sm:text-lg sm:tracking-[0.18em]"
+      className="group mx-auto mt-8 inline-flex w-full items-center justify-center rounded-full bg-amber-400 px-5 py-4 text-center text-sm font-black uppercase tracking-[0.12em] text-blue-950 transition-all duration-300 hover:-translate-y-1 hover:bg-amber-300 hover:shadow-[0_0_40px_rgba(251,191,36,0.45)] max-sm:mt-5 max-sm:min-h-11 max-sm:py-3 max-sm:text-xs sm:mt-10 sm:w-auto sm:px-10 sm:py-5 sm:text-lg sm:tracking-[0.18em]"
     >
-      📄 Regolamento completo · Scarica qui
+      <span className="sm:hidden">Scarica il PDF</span>
+      <span className="hidden sm:inline">📄 Regolamento completo · Scarica qui</span>
     </a>
   </div>
 </section>

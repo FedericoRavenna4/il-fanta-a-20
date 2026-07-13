@@ -265,7 +265,7 @@ const emblemiDaDifendereVisuali = emblemiDaDifendere.map(toEmblemaVisuale);
               {team.legaAttuale}
             </p>
 
-            <div className="mb-5 flex flex-wrap justify-center gap-2 sm:mb-8 sm:gap-3">
+            <div className="hidden flex-wrap justify-center sm:mb-8 sm:flex sm:gap-3">
               {team.leader && (
                 <div className="rounded-full border border-red-200 bg-red-100 px-4 py-2 text-sm font-bold text-red-700">
                   ⭐ Ranking Leader

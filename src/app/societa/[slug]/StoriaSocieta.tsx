@@ -292,7 +292,7 @@ export default function StoriaSocieta({
     <>
       {!isNewEntry && (
         <section className="mt-7 rounded-[2rem] border border-slate-200 bg-white/90 p-3 shadow-xl shadow-slate-200/60 sm:mt-10 sm:p-8">
-          <div className="mb-5 sm:mb-8">
+          <div className="mb-5 max-sm:mb-4 sm:mb-8">
             <p className="mb-2 text-xs font-black uppercase tracking-[0.25em] text-slate-400">
               Archivio risultati
             </p>
@@ -307,16 +307,16 @@ export default function StoriaSocieta({
           </div>
 
           {stagioniDisponibili.length > 0 && (
-            <div className="relative mb-6 flex items-center justify-center sm:mb-10">
+            <div className="relative mb-6 flex items-center justify-center max-sm:mb-4 sm:mb-10">
               <div className="hidden h-px flex-1 bg-gradient-to-r from-transparent via-slate-300 to-slate-300 sm:block" />
 
               <div className="relative w-full max-w-[300px] sm:mx-6">
                 <button
                   type="button"
                   onClick={() => setMenuStagioniAperto((open) => !open)}
-                  className="flex w-full min-w-0 items-center justify-center gap-3 rounded-full border border-sky-100 bg-gradient-to-r from-sky-50 via-white to-sky-50 px-4 py-3 shadow-md transition hover:-translate-y-0.5 hover:shadow-lg sm:min-w-[300px] sm:px-8"
+                  className="flex w-full min-w-0 items-center justify-center gap-3 rounded-full border border-sky-100 bg-gradient-to-r from-sky-50 via-white to-sky-50 px-4 py-3 shadow-md transition hover:-translate-y-0.5 hover:shadow-lg max-sm:gap-2 max-sm:py-2 sm:min-w-[300px] sm:px-8"
                 >
-                  <span className="text-xl font-black tracking-tight text-blue-950">
+                  <span className="text-xl font-black tracking-tight text-blue-950 max-sm:text-base">
                     {stagioneSelezionata === "Tutto"
                       ? "Tutta la storia"
                       : stagioneSelezionata}
@@ -366,7 +366,7 @@ export default function StoriaSocieta({
           )}
 
           {risultati.length > 0 ? (
-            <div className="space-y-4 sm:space-y-6">
+            <div className="space-y-4 max-sm:space-y-4 sm:space-y-6">
               {Object.entries(risultatiPerStagione).map(([stagione, items]) => {
   const itemsOrdinati = [...items].sort((a, b) => {
     const ordine = (item: Risultato) => {
@@ -389,14 +389,14 @@ export default function StoriaSocieta({
   });
 
   return (
-                <div key={stagione} className="space-y-4">
+                <div key={stagione} className="space-y-4 max-sm:space-y-2.5">
                   {stagioneSelezionata === "Tutto" && (
                     <h3 className="text-sm font-black uppercase tracking-[0.25em] text-slate-400">
                       {stagione}
                     </h3>
                   )}
 
-                  <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  <div className="grid gap-4 max-sm:flex max-sm:gap-2 max-sm:overflow-x-auto max-sm:pb-1 max-sm:[scrollbar-width:none] max-sm:[&::-webkit-scrollbar]:hidden md:grid-cols-2 xl:grid-cols-3">
                     {itemsOrdinati.map((item, index) => {
                       const risultato = formatRisultato(item);
                       const vittoria = isVittoria(item);
@@ -405,13 +405,13 @@ export default function StoriaSocieta({
                       return (
                         <div
                           key={`${item.stagioneId}-${item.competizione}-${index}`}
-                          className={`group relative min-h-[84px] overflow-hidden rounded-[1.35rem] border px-4 py-3 shadow-md transition hover:-translate-y-0.5 hover:shadow-lg lg:h-[76px] lg:min-h-0 lg:px-5 ${getCardStyle(
+                          className={`group relative min-h-[84px] overflow-hidden rounded-[1.35rem] border px-4 py-3 shadow-md transition hover:-translate-y-0.5 hover:shadow-lg max-sm:aspect-square max-sm:h-[116px] max-sm:min-h-0 max-sm:w-[116px] max-sm:shrink-0 max-sm:rounded-[1rem] max-sm:px-3 max-sm:py-2.5 max-sm:hover:translate-y-0 lg:h-[76px] lg:min-h-0 lg:px-5 ${getCardStyle(
   item,
   vittoria
 )}`}
                         >
                           {vittoria && icona && (
-                            <div className="pointer-events-none absolute right-1 top-1/2 flex h-20 w-20 -translate-y-1/2 items-center justify-center overflow-hidden lg:right-2 lg:top-[56%] lg:h-24 lg:w-24">
+                            <div className="pointer-events-none absolute right-1 top-1/2 flex h-20 w-20 -translate-y-1/2 items-center justify-center overflow-hidden max-sm:hidden lg:right-2 lg:top-[56%] lg:h-24 lg:w-24">
                               <Image
   unoptimized
   src={icona}
@@ -423,9 +423,9 @@ export default function StoriaSocieta({
                             </div>
                           )}
 
-                          <div className={`relative z-10 flex h-full min-w-0 flex-col justify-center ${vittoria && icona ? "max-w-[calc(100%-4.5rem)] lg:max-w-[68%]" : "max-w-full lg:max-w-[68%]"}`}>
+                          <div className={`relative z-10 flex h-full min-w-0 flex-col justify-center max-sm:max-w-full ${vittoria && icona ? "max-w-[calc(100%-4.5rem)] lg:max-w-[68%]" : "max-w-full lg:max-w-[68%]"}`}>
                             <h4
-                              className={`line-clamp-1 text-[12px] font-black uppercase tracking-[0.12em] ${
+                              className={`line-clamp-1 text-[12px] font-black uppercase tracking-[0.12em] max-sm:text-[9px] max-sm:tracking-[0.08em] ${
                                 isDarkCard(item)
                                   ? "text-white/70"
                                   : "text-blue-950/60"
@@ -435,7 +435,7 @@ export default function StoriaSocieta({
                             </h4>
 
                             <p
-                              className={`mt-2 break-words text-[14px] font-black uppercase leading-tight tracking-tight lg:whitespace-nowrap lg:text-[15px] lg:leading-none ${
+                              className={`mt-2 break-words text-[14px] font-black uppercase leading-tight tracking-tight max-sm:mt-1.5 max-sm:text-[12px] max-sm:leading-4 lg:whitespace-nowrap lg:text-[15px] lg:leading-none ${
                                 isDarkCard(item)
                                   ? "text-white"
                                   : "text-blue-950"
