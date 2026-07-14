@@ -55,21 +55,27 @@ export default function SocietaClient({ societa }: { societa: Societa[] }) {
           className="mx-auto block min-h-12 w-full max-w-3xl rounded-[1.25rem] border border-slate-200 bg-white px-4 py-4 text-base text-slate-700 shadow-lg outline-none transition-all duration-300 placeholder:text-slate-400 focus:border-blue-900 focus:shadow-xl sm:px-6 sm:py-5 sm:text-lg"
         />
 
-        <div className="mt-8 flex flex-wrap justify-center gap-3 max-sm:justify-start max-sm:gap-1.5 max-sm:overflow-x-auto max-sm:pb-1 max-sm:[scrollbar-width:none] max-sm:[&::-webkit-scrollbar]:hidden">
-          {filters.map((item) => (
-            <button
-              key={item.value}
-              onClick={() => setFilter(item.value)}
-              className={`min-h-11 rounded-full px-4 py-2.5 text-xs font-bold transition-all duration-300 max-sm:min-h-10 max-sm:shrink-0 max-sm:px-2.5 max-sm:py-1.5 max-sm:text-[11px] sm:px-5 sm:py-3 sm:text-sm ${
-                filter === item.value
-                  ? "bg-blue-950 text-white shadow-lg shadow-blue-950/20"
-                  : "border border-slate-200 bg-white text-slate-600 hover:-translate-y-0.5 hover:border-blue-900 hover:text-blue-900 hover:shadow-md"
-              }`}
-            >
-              <span className="sm:hidden">{item.mobileLabel}</span>
-              <span className="hidden sm:inline">{item.value}</span>
-            </button>
-          ))}
+        <div className="mt-8 max-sm:mt-5">
+          <p className="mb-2 text-center text-[9px] font-black uppercase tracking-[0.22em] text-slate-400 sm:hidden">
+            Leghe
+          </p>
+          <div className="flex flex-wrap justify-center gap-3 max-sm:flex-nowrap max-sm:gap-1.5">
+            {filters.map((item) => (
+              <button
+                key={item.value}
+                onClick={() => setFilter(item.value)}
+                aria-pressed={filter === item.value}
+                className={`min-h-11 rounded-full px-4 py-2.5 text-xs font-bold transition-all duration-300 max-sm:min-h-9 max-sm:min-w-0 max-sm:px-2.5 max-sm:py-1.5 max-sm:text-[10px] max-sm:shadow-sm sm:px-5 sm:py-3 sm:text-sm ${
+                  filter === item.value
+                    ? "bg-blue-950 text-white shadow-lg shadow-blue-950/20 max-sm:border max-sm:border-blue-950 max-sm:ring-2 max-sm:ring-blue-950/10 max-sm:ring-offset-1"
+                    : "border border-slate-200 bg-white text-slate-600 hover:-translate-y-0.5 hover:border-blue-900 hover:text-blue-900 hover:shadow-md max-sm:border-slate-300 max-sm:bg-white/90"
+                }`}
+              >
+                <span className="sm:hidden">{item.mobileLabel}</span>
+                <span className="hidden sm:inline">{item.value}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

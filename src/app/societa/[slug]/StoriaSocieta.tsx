@@ -81,6 +81,19 @@ function getCompetizioneTitolo(item: Risultato) {
   if (item.competizione === "Campionato") return item.lega;
   return item.competizione;
 }
+
+function getCompetizioneTitoloMobile(item: Risultato) {
+  if (item.competizione === "Campionato") {
+    if (item.lega.startsWith("Serie C")) return "Serie C";
+    return item.lega;
+  }
+
+  if (item.competizione === "Champions League") return "Champions";
+  if (item.competizione === "Europa League") return "Europa";
+  if (item.competizione === "Conference League") return "Conference";
+  if (item.competizione === "Coppa Fanta a 20") return "Coppa FA20";
+  return item.competizione;
+}
 function getCategoriaRisultato(item: Risultato) {
   if (item.competizione === "Campionato") return "campionato";
 
@@ -163,6 +176,36 @@ function formatRisultato(item: Risultato) {
   if (lower.startsWith("girone")) {
     return "Gironi di qualificazione";
   }
+
+  return formatFase(risultato);
+}
+
+function formatRisultatoMobile(item: Risultato, vittoria: boolean) {
+  if (vittoria) return "Win";
+
+  const risultato = item.risultatoTesto.trim();
+  const lower = risultato.toLowerCase();
+
+  if (item.competizione === "Campionato") {
+    const numero = posizioneNumero(risultato);
+    return numero ? `${numero}°` : risultato;
+  }
+
+  if (lower.includes("qualificazione")) {
+    const numero = risultato.match(/\d+/)?.[0];
+    return numero ? `${numero}°` : "Gir.";
+  }
+
+  if (lower.startsWith("girone")) {
+    const numero = risultato.match(/\d+/)?.[0];
+    return numero ? `Gir. ${numero}` : "Gir.";
+  }
+
+  if (lower.includes("gironi")) return "Gir.";
+  if (lower.includes("ottav")) return "Ott.";
+  if (lower.includes("quart")) return "QF";
+  if (lower.includes("semifinale")) return "SF";
+  if (lower.includes("final")) return "F";
 
   return formatFase(risultato);
 }
@@ -396,7 +439,7 @@ export default function StoriaSocieta({
                     </h3>
                   )}
 
-                  <div className="grid gap-4 max-sm:flex max-sm:gap-2 max-sm:overflow-x-auto max-sm:pb-1 max-sm:[scrollbar-width:none] max-sm:[&::-webkit-scrollbar]:hidden md:grid-cols-2 xl:grid-cols-3">
+                  <div className="grid gap-4 max-sm:grid-cols-3 max-sm:gap-1.5 md:grid-cols-2 xl:grid-cols-3">
                     {itemsOrdinati.map((item, index) => {
                       const risultato = formatRisultato(item);
                       const vittoria = isVittoria(item);
@@ -405,43 +448,51 @@ export default function StoriaSocieta({
                       return (
                         <div
                           key={`${item.stagioneId}-${item.competizione}-${index}`}
-                          className={`group relative min-h-[84px] overflow-hidden rounded-[1.35rem] border px-4 py-3 shadow-md transition hover:-translate-y-0.5 hover:shadow-lg max-sm:aspect-square max-sm:h-[116px] max-sm:min-h-0 max-sm:w-[116px] max-sm:shrink-0 max-sm:rounded-[1rem] max-sm:px-3 max-sm:py-2.5 max-sm:hover:translate-y-0 lg:h-[76px] lg:min-h-0 lg:px-5 ${getCardStyle(
+                          className={`group relative min-h-[84px] overflow-hidden rounded-[1.35rem] border px-4 py-3 shadow-md transition hover:-translate-y-0.5 hover:shadow-lg max-sm:aspect-square max-sm:h-auto max-sm:min-h-0 max-sm:min-w-0 max-sm:rounded-[0.85rem] max-sm:px-2 max-sm:py-2 max-sm:hover:translate-y-0 lg:h-[76px] lg:min-h-0 lg:px-5 ${getCardStyle(
   item,
   vittoria
 )}`}
                         >
                           {vittoria && icona && (
-                            <div className="pointer-events-none absolute right-2 top-1/2 flex h-16 w-16 -translate-y-1/2 items-center justify-center max-sm:right-1 max-sm:h-10 max-sm:w-10 lg:right-2 lg:h-16 lg:w-16">
+                            <div className="pointer-events-none absolute right-2 top-1/2 hidden h-16 w-16 -translate-y-1/2 items-center justify-center sm:flex lg:right-2 lg:h-16 lg:w-16">
                               <Image
   unoptimized
   src={icona}
   alt="Trofeo"
   width={56}
   height={56}
-  className={`h-auto max-h-14 w-auto max-w-14 object-contain transition duration-300 group-hover:scale-105 max-sm:max-h-9 max-sm:max-w-9 ${getTrofeoGlowClass(icona)}`}
+  className={`h-auto max-h-14 w-auto max-w-14 object-contain transition duration-300 group-hover:scale-105 ${getTrofeoGlowClass(icona)}`}
 />
                             </div>
                           )}
 
-                          <div className={`relative z-10 flex h-full min-w-0 flex-col justify-center ${vittoria && icona ? "max-w-[calc(100%-4.5rem)] max-sm:max-w-[calc(100%-3rem)] lg:max-w-[68%]" : "max-w-full lg:max-w-[68%]"}`}>
+                          <div className={`relative z-10 flex h-full min-w-0 flex-col justify-center max-sm:max-w-full ${vittoria && icona ? "max-w-[calc(100%-4.5rem)] lg:max-w-[68%]" : "max-w-full lg:max-w-[68%]"}`}>
                             <h4
-                              className={`line-clamp-1 text-[12px] font-black uppercase tracking-[0.12em] max-sm:text-[9px] max-sm:tracking-[0.08em] ${
+                              className={`line-clamp-1 text-[12px] font-black uppercase tracking-[0.12em] max-sm:text-[8px] max-sm:tracking-[0.03em] ${
                                 isDarkCard(item)
                                   ? "text-white/70"
                                   : "text-blue-950/60"
                               }`}
                             >
-                              {getCompetizioneTitolo(item)}
+                              <span className="sm:hidden">
+                                {getCompetizioneTitoloMobile(item)}
+                              </span>
+                              <span className="hidden sm:inline">
+                                {getCompetizioneTitolo(item)}
+                              </span>
                             </h4>
 
                             <p
-                              className={`mt-2 break-words text-[14px] font-black uppercase leading-tight tracking-tight max-sm:mt-1.5 max-sm:text-[12px] max-sm:leading-4 lg:whitespace-nowrap lg:text-[15px] lg:leading-none ${
+                              className={`mt-2 break-words text-[14px] font-black uppercase leading-tight tracking-tight max-sm:mt-1 max-sm:text-[13px] max-sm:leading-none lg:whitespace-nowrap lg:text-[15px] lg:leading-none ${
                                 isDarkCard(item)
                                   ? "text-white"
                                   : "text-blue-950"
                               }`}
                             >
-                              {risultato}
+                              <span className="sm:hidden">
+                                {formatRisultatoMobile(item, vittoria)}
+                              </span>
+                              <span className="hidden sm:inline">{risultato}</span>
                             </p>
                           </div>
                         </div>

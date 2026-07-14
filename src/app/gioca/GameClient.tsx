@@ -123,7 +123,7 @@ export default function GameClient({ teams }: { teams: GameTeam[] }) {
   }
 
   return (
-    <section className="mx-auto max-w-6xl overflow-hidden rounded-[1.5rem] border border-slate-300/80 bg-[#020817] shadow-[0_34px_95px_rgba(15,23,42,0.24),0_0_45px_rgba(56,189,248,0.06)] ring-1 ring-white/80 sm:rounded-[2rem]">
+    <section className="mx-auto max-w-6xl overflow-hidden rounded-[1.1rem] border border-slate-300/80 bg-[#020817] shadow-[0_34px_95px_rgba(15,23,42,0.24),0_0_45px_rgba(56,189,248,0.06)] ring-1 ring-white/80 sm:rounded-[2rem]">
       <GameHud
         team={team}
         snapshot={snapshot}
@@ -149,19 +149,23 @@ export default function GameClient({ teams }: { teams: GameTeam[] }) {
         />
 
         {status === "ready" && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#020817]/78 p-4 backdrop-blur-sm">
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#020817]/78 p-2 backdrop-blur-sm sm:p-4">
             <div className="w-full max-w-md text-center text-white">
               <div className="mx-auto flex h-14 w-14 items-center justify-center sm:h-20 sm:w-20">
                 <Image src={team.logo} alt={`Stemma ${team.nome}`} width={96} height={96} priority className="max-h-full max-w-full object-contain drop-shadow-[0_15px_25px_rgba(0,0,0,0.45)]" />
               </div>
               <p className="mt-3 text-[9px] font-black uppercase tracking-[0.24em] text-amber-300">{team.nome}</p>
               <h2 className="mt-1 text-2xl font-black uppercase tracking-tight sm:text-4xl">Pronto alla corsa</h2>
-              <p className="mx-auto mt-1.5 max-w-sm text-xs font-semibold leading-4 text-white/55 sm:mt-2 sm:text-sm sm:leading-5">
+              <p className="mx-auto mt-1 max-w-sm text-[9px] font-semibold leading-3 text-white/58 sm:hidden">
+                Scorri verso l&apos;alto per saltare<br />
+                Scorri verso il basso per abbassarti
+              </p>
+              <p className="mx-auto mt-2 hidden max-w-sm text-sm font-semibold leading-5 text-white/55 sm:block">
                 Touch: sinistra per abbassarti, destra per saltare. Mouse: sinistro salta, destro abbassa. Tastiera: ↓, ↑ o Spazio.
               </p>
-              <div className="mt-3 flex items-center justify-center gap-2 sm:mt-5">
-                <button type="button" onClick={startGame} className="min-h-10 rounded-full bg-amber-300 px-6 text-[9px] font-black uppercase tracking-[0.16em] text-blue-950 transition hover:bg-amber-200 sm:min-h-12 sm:px-8 sm:text-[10px]">Inizia la corsa</button>
-                <button type="button" onClick={() => returnToGameHome(false)} className="min-h-10 rounded-full border border-white/15 bg-white/[0.06] px-4 text-[9px] font-black uppercase tracking-[0.13em] text-white transition hover:bg-white/10 sm:min-h-12 sm:px-6 sm:text-[10px]">Cambia società</button>
+              <div className="mt-2 flex items-center justify-center gap-1.5 sm:mt-5 sm:gap-2">
+                <button type="button" onClick={startGame} className="min-h-9 rounded-full bg-amber-300 px-4 text-[8px] font-black uppercase tracking-[0.12em] text-blue-950 transition hover:bg-amber-200 sm:min-h-12 sm:px-8 sm:text-[10px] sm:tracking-[0.16em]">Inizia la corsa</button>
+                <button type="button" onClick={() => returnToGameHome(false)} className="min-h-9 rounded-full border border-white/15 bg-white/[0.06] px-3 text-[8px] font-black uppercase tracking-[0.1em] text-white transition hover:bg-white/10 sm:min-h-12 sm:px-6 sm:text-[10px] sm:tracking-[0.13em]">Cambia società</button>
               </div>
             </div>
           </div>

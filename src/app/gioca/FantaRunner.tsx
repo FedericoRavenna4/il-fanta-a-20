@@ -136,6 +136,12 @@ export default function FantaRunner({
   const statusRef = useRef(status);
   const bestRef = useRef(best);
   const reducedMotionRef = useRef(false);
+  const touchGestureRef = useRef({
+    pointerId: -1,
+    startX: 0,
+    startY: 0,
+    triggered: false,
+  });
 
   useEffect(() => {
     statusRef.current = status;
@@ -290,18 +296,69 @@ export default function FantaRunner({
       width={GAME_WIDTH}
       height={GAME_HEIGHT}
       onPointerDown={(event) => {
-        event.preventDefault();
         if (event.pointerType === "mouse") {
+          event.preventDefault();
           if (event.button === 0) jump();
           if (event.button === 2) duck();
           return;
         }
-        const bounds = event.currentTarget.getBoundingClientRect();
-        if (event.clientX - bounds.left < bounds.width / 2) duck();
-        else jump();
+
+        if (!window.matchMedia("(max-width: 639px)").matches) {
+          event.preventDefault();
+          const bounds = event.currentTarget.getBoundingClientRect();
+          if (event.clientX - bounds.left < bounds.width / 2) duck();
+          else jump();
+          return;
+        }
+
+        event.preventDefault();
+        touchGestureRef.current = {
+          pointerId: event.pointerId,
+          startX: event.clientX,
+          startY: event.clientY,
+          triggered: false,
+        };
+        event.currentTarget.setPointerCapture(event.pointerId);
+      }}
+      onPointerMove={(event) => {
+        const gesture = touchGestureRef.current;
+        if (
+          event.pointerType === "mouse" ||
+          gesture.pointerId !== event.pointerId ||
+          gesture.triggered
+        ) {
+          return;
+        }
+
+        event.preventDefault();
+        const deltaX = event.clientX - gesture.startX;
+        const deltaY = event.clientY - gesture.startY;
+        const minimumDistance = 28;
+
+        if (
+          Math.abs(deltaY) < minimumDistance ||
+          Math.abs(deltaY) <= Math.abs(deltaX) * 1.15
+        ) {
+          return;
+        }
+
+        gesture.triggered = true;
+        if (deltaY < 0) jump();
+        else duck();
+      }}
+      onPointerUp={(event) => {
+        if (touchGestureRef.current.pointerId !== event.pointerId) return;
+        if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+          event.currentTarget.releasePointerCapture(event.pointerId);
+        }
+        touchGestureRef.current.pointerId = -1;
+      }}
+      onPointerCancel={(event) => {
+        if (touchGestureRef.current.pointerId !== event.pointerId) return;
+        touchGestureRef.current.pointerId = -1;
       }}
       onContextMenu={(event) => event.preventDefault()}
-      aria-label={`Campo di gioco. Su touch usa la parte sinistra per abbassarti e la destra per saltare. Da desktop usa il click sinistro per saltare e il click destro per abbassarti con ${team.nome}.`}
+      aria-label={`Campo di gioco. Su touch scorri verso l'alto per saltare e verso il basso per abbassarti. Da desktop usa il click sinistro per saltare e il click destro per abbassarti con ${team.nome}.`}
       className="block aspect-[9/5] w-full touch-none bg-[#020817] outline-none"
     />
   );

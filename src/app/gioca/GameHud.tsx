@@ -28,16 +28,16 @@ export default function GameHud({
     ((snapshot.threshold - scaleStart) / scaleLength) * 100;
 
   return (
-    <div className="border-b border-white/10 bg-[linear-gradient(135deg,#06142c_0%,#0c2c52_52%,#07162f_100%)] px-2.5 py-1.5 text-white shadow-[inset_0_-1px_0_rgba(255,255,255,0.04)] sm:px-4 sm:py-2">
-      <div className="grid grid-cols-[minmax(60px,1fr)_auto_repeat(4,minmax(28px,auto))] items-center gap-0.5 border-b border-white/[0.07] pb-1.5 sm:grid-cols-[minmax(160px,1fr)_auto_repeat(4,minmax(58px,auto))] sm:gap-1">
-        <p className="min-w-0 truncate pr-1 text-[9px] font-black uppercase tracking-tight text-white sm:text-xs">
+    <div className="border-b border-white/10 bg-[linear-gradient(135deg,#06142c_0%,#0c2c52_52%,#07162f_100%)] px-1.5 py-1 text-white shadow-[inset_0_-1px_0_rgba(255,255,255,0.04)] sm:px-4 sm:py-2">
+      <div className="grid grid-cols-4 items-center gap-x-0.5 gap-y-1 border-b border-white/[0.07] pb-1 sm:grid-cols-[minmax(160px,1fr)_auto_repeat(4,minmax(58px,auto))] sm:gap-1 sm:pb-1.5">
+        <p className="col-span-3 min-w-0 truncate px-1 text-[8px] font-black uppercase tracking-tight text-white sm:col-span-1 sm:pl-0 sm:pr-1 sm:text-xs">
           {team.nome}
         </p>
         <button
           type="button"
           onClick={onPause}
           disabled={!canPause}
-          className="min-h-8 rounded-full border border-white/10 bg-white/[0.06] px-2 text-[7px] font-black uppercase tracking-[0.08em] transition enabled:hover:bg-white/10 disabled:opacity-30 sm:px-3"
+          className="min-h-6 rounded-full border border-white/10 bg-white/[0.06] px-1.5 text-[6px] font-black uppercase tracking-[0.06em] transition enabled:hover:bg-white/10 disabled:opacity-30 sm:min-h-8 sm:px-3 sm:text-[7px] sm:tracking-[0.08em]"
         >
           {paused ? "Riprendi" : "Pausa"}
         </button>
@@ -47,8 +47,8 @@ export default function GameHud({
         <TopValue label="Metri" value={`${formatNumber(snapshot.distance)} m`} />
       </div>
 
-      <div className={`mx-auto grid max-w-2xl grid-cols-[72px_minmax(0,1fr)] items-center gap-2 pb-0.5 pt-1.5 transition duration-300 sm:grid-cols-[88px_minmax(0,1fr)] sm:gap-4 ${danger ? "animate-pulse" : ""}`}>
-        <div className="flex h-16 w-16 items-center justify-center justify-self-start sm:h-20 sm:w-20">
+      <div className={`mx-auto grid max-w-2xl grid-cols-[52px_minmax(0,1fr)] items-center gap-1 pb-0 pt-1 transition duration-300 sm:grid-cols-[88px_minmax(0,1fr)] sm:gap-4 sm:pb-0.5 sm:pt-1.5 ${danger ? "animate-pulse" : ""}`}>
+        <div className="flex h-12 w-12 items-center justify-center justify-self-start sm:h-20 sm:w-20">
           <Image
             src={team.logo}
             alt={`Stemma ${team.nome}`}
@@ -74,7 +74,7 @@ export default function GameHud({
                   </span>
                 )}
               </p>
-              <p className={`text-[2rem] font-black leading-[0.88] tracking-[-0.05em] tabular-nums sm:text-[2.35rem] ${danger ? "text-rose-200" : "text-amber-300"}`}>
+              <p className={`text-[1.65rem] font-black leading-[0.86] tracking-[-0.05em] tabular-nums sm:text-[2.35rem] ${danger ? "text-rose-200" : "text-amber-300"}`}>
                 {formatRating(snapshot.teamRating)}
               </p>
             </div>
@@ -101,9 +101,9 @@ export default function GameHud({
 
 function TopValue({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) {
   return (
-    <div className="min-w-0 border-l border-white/10 px-1 text-center sm:px-3">
+    <div className="min-w-0 border-l border-white/10 px-0.5 text-center sm:px-3">
       <p className="text-[6px] font-black uppercase tracking-[0.11em] text-white/32">{label}</p>
-      <p className={`truncate text-[9px] font-black tabular-nums sm:text-xs ${accent ? "text-amber-300" : "text-white"}`}>{value}</p>
+      <p className={`truncate text-[8px] font-black tabular-nums sm:text-xs ${accent ? "text-amber-300" : "text-white"}`}>{value}</p>
     </div>
   );
 }
