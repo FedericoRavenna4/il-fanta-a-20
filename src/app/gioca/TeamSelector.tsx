@@ -1,24 +1,32 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { GameTeam } from "@/lib/game/types";
 
 export default function TeamSelector({
   teams,
+  initialTeamSlug,
   onSelect,
 }: {
   teams: GameTeam[];
+  initialTeamSlug?: string;
   onSelect: (team: GameTeam) => void;
 }) {
+  const initialTeam = teams.find((team) => team.slug === initialTeamSlug) ?? null;
   const [search, setSearch] = useState("");
-  const [selectedTeam, setSelectedTeam] = useState<GameTeam | null>(teams[0] ?? null);
+  const [selectedTeam, setSelectedTeam] = useState<GameTeam | null>(
+    initialTeam ?? teams[0] ?? null
+  );
+  const [confirmationTeam, setConfirmationTeam] = useState<GameTeam | null>(initialTeam);
   const buttonRefs = useRef(new Map<string, HTMLButtonElement>());
   const ribbonRef = useRef<HTMLDivElement>(null);
   const scrollTrackRef = useRef<HTMLDivElement>(null);
   const scrollThumbRef = useRef<HTMLSpanElement>(null);
   const thumbRatioRef = useRef(0.12);
   const scrollBarDragRef = useRef({ active: false, pointerId: -1 });
+  const confirmButtonRef = useRef<HTMLButtonElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
   const dragRef = useRef({
     active: false,
     moved: false,
@@ -45,14 +53,17 @@ export default function TeamSelector({
     filteredTeams[0] ??
     null;
 
+  const isInfinite = search.trim().length === 0 && filteredTeams.length > 1;
+
   const carouselTeams = useMemo(
-    () => [0, 1, 2].flatMap((replica) =>
+    () => (isInfinite ? [0, 1, 2] : [1]).flatMap((replica) =>
       filteredTeams.map((team) => ({ team, replica }))
     ),
-    [filteredTeams]
+    [filteredTeams, isInfinite]
   );
 
   const getCarouselSegmentWidth = useCallback(() => {
+    if (!isInfinite) return 0;
     const firstTeam = filteredTeams[0];
     if (!firstTeam) return 0;
     const firstCopy = buttonRefs.current.get(`0-${firstTeam.id}`);
@@ -61,12 +72,19 @@ export default function TeamSelector({
       ? ribbonRef.current.scrollWidth / 3
       : 0;
     return middleCopy.offsetLeft - firstCopy.offsetLeft;
-  }, [filteredTeams]);
+  }, [filteredTeams, isInfinite]);
 
   const updateScrollIndicator = useCallback(() => {
     const ribbon = ribbonRef.current;
     const segmentWidth = getCarouselSegmentWidth();
-    if (!ribbon || !segmentWidth) return;
+    if (!ribbon) return;
+    if (!segmentWidth) {
+      if (scrollThumbRef.current) {
+        scrollThumbRef.current.style.width = "100%";
+        scrollThumbRef.current.style.left = "0";
+      }
+      return;
+    }
     const localOffset = ((ribbon.scrollLeft % segmentWidth) + segmentWidth) % segmentWidth;
     const progress = localOffset / segmentWidth;
     const ratio = Math.max(0.1, Math.min(0.28, ribbon.clientWidth / segmentWidth));
@@ -82,7 +100,7 @@ export default function TeamSelector({
     const ribbon = ribbonRef.current;
     if (!ribbon || !filteredTeams.length) return;
     const frame = requestAnimationFrame(() => {
-      ribbon.scrollLeft = getCarouselSegmentWidth();
+      ribbon.scrollLeft = isInfinite ? getCarouselSegmentWidth() : 0;
       updateScrollIndicator();
     });
     const observer = new ResizeObserver(updateScrollIndicator);
@@ -91,7 +109,46 @@ export default function TeamSelector({
       cancelAnimationFrame(frame);
       observer.disconnect();
     };
-  }, [filteredTeams, getCarouselSegmentWidth, updateScrollIndicator]);
+  }, [filteredTeams, getCarouselSegmentWidth, isInfinite, updateScrollIndicator]);
+
+  useEffect(() => {
+    if (!confirmationTeam) return;
+    previousFocusRef.current = document.activeElement as HTMLElement | null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const frame = requestAnimationFrame(() => confirmButtonRef.current?.focus());
+
+    function handleDialogKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setConfirmationTeam(null);
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const dialog = confirmButtonRef.current?.closest<HTMLElement>("[role='dialog']");
+      const focusable = Array.from(
+        dialog?.querySelectorAll<HTMLElement>("button:not([disabled])") ?? []
+      );
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+
+    window.addEventListener("keydown", handleDialogKeyDown);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("keydown", handleDialogKeyDown);
+      document.body.style.overflow = previousOverflow;
+      previousFocusRef.current?.focus();
+    };
+  }, [confirmationTeam]);
 
   function selectAndCenter(team: GameTeam, replica = 1) {
     setSelectedTeam(team);
@@ -102,6 +159,11 @@ export default function TeamSelector({
         inline: "center",
       });
     });
+  }
+
+  function chooseTeam(team: GameTeam, replica = 1) {
+    selectAndCenter(team, replica);
+    setConfirmationTeam(team);
   }
 
   function beginDrag(event: React.PointerEvent<HTMLDivElement>) {
@@ -117,7 +179,7 @@ export default function TeamSelector({
       startX: event.clientX,
       startScroll: ribbon.scrollLeft,
       lastX: event.clientX,
-      lastTime: performance.now(),
+      lastTime: event.timeStamp,
       velocity: 0,
       frame: 0,
       pendingTeamId: Number(teamButton?.dataset.teamId ?? 0),
@@ -135,7 +197,7 @@ export default function TeamSelector({
       drag.moved = true;
     }
     ribbon.scrollLeft = drag.startScroll - delta * 1.28;
-    const now = performance.now();
+    const now = event.timeStamp;
     const elapsed = Math.max(8, now - drag.lastTime);
     drag.velocity = (drag.lastX - event.clientX) / elapsed;
     drag.lastX = event.clientX;
@@ -151,7 +213,7 @@ export default function TeamSelector({
 
     if (!drag.moved && drag.pendingTeamId) {
       const team = teams.find((candidate) => candidate.id === drag.pendingTeamId);
-      if (team) selectAndCenter(team, drag.pendingReplica);
+      if (team) chooseTeam(team, drag.pendingReplica);
     }
 
     let velocity = drag.moved ? drag.velocity * 18 : 0;
@@ -168,6 +230,16 @@ export default function TeamSelector({
     window.setTimeout(() => {
       drag.moved = false;
     }, 0);
+  }
+
+  function cancelDrag(event: React.PointerEvent<HTMLDivElement>) {
+    const ribbon = ribbonRef.current;
+    cancelAnimationFrame(dragRef.current.frame);
+    dragRef.current.active = false;
+    dragRef.current.moved = false;
+    if (ribbon?.hasPointerCapture(event.pointerId)) {
+      ribbon.releasePointerCapture(event.pointerId);
+    }
   }
 
   function selectClosestLogo() {
@@ -191,7 +263,7 @@ export default function TeamSelector({
 
   function preserveInfiniteLoop() {
     const ribbon = ribbonRef.current;
-    if (!ribbon || !filteredTeams.length) return;
+    if (!ribbon || !filteredTeams.length || !isInfinite) return;
     const segmentWidth = getCarouselSegmentWidth();
     if (!segmentWidth) return;
 
@@ -278,76 +350,32 @@ export default function TeamSelector({
       <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(circle_at_50%_0%,rgba(125,211,252,0.2),transparent_68%)]" />
       <div className="pointer-events-none absolute inset-x-16 top-0 h-px bg-gradient-to-r from-transparent via-sky-300/70 to-transparent" />
 
-      <div className="relative grid items-center gap-4 border-b border-slate-200/80 px-4 py-4 sm:px-7 sm:py-6 lg:grid-cols-[minmax(0,1fr)_minmax(340px,0.62fr)]">
-        <div>
+      <div className="relative grid items-end gap-3 border-b border-slate-200/80 px-4 py-3 sm:grid-cols-[minmax(0,1fr)_minmax(280px,0.55fr)] sm:px-7 sm:py-4">
+        <div className="min-w-0">
           <p className="text-[9px] font-black uppercase tracking-[0.22em] text-amber-600">
             La tua corsa
           </p>
-          <h2 className="mt-1.5 text-2xl font-black uppercase tracking-[-0.03em] text-blue-950 sm:text-3xl">
-            Scegli la protagonista
+          <h2 className="mt-1 text-xl font-black uppercase tracking-[-0.03em] text-blue-950 sm:text-2xl">
+            Scegli la società
           </h2>
-          <p className="mt-1.5 max-w-xl text-sm font-semibold leading-5 text-slate-500">
-            Fai scorrere gli stemmi e porta in campo la tua società.
+          <p className="mt-1 max-w-xl text-xs font-semibold leading-4 text-slate-500 sm:text-sm">
+            Scorri, scegli lo stemma e conferma la tua corsa.
           </p>
-          <label className="mt-3 block max-w-xl">
-            <span className="sr-only">Cerca una società</span>
-            <input
-              type="search"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Cerca società o lega..."
-              className="min-h-11 w-full rounded-xl border border-slate-200 bg-white/80 px-3.5 text-sm font-semibold text-blue-950 outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:ring-4 focus:ring-blue-100/70"
-            />
-          </label>
         </div>
-
-        <div className="relative flex min-h-28 items-center overflow-hidden rounded-2xl border border-blue-100 bg-[linear-gradient(135deg,rgba(239,246,255,0.94),rgba(255,255,255,0.98))] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] sm:px-5">
-          <div className="pointer-events-none absolute -right-8 -top-10 h-32 w-32 rounded-full bg-sky-200/35 blur-3xl" />
-          {activeTeam ? (
-            <div className="relative flex w-full items-center gap-3.5">
-              <div className="flex h-20 w-20 shrink-0 items-center justify-center sm:h-24 sm:w-24">
-                <Image
-                  src={activeTeam.logo}
-                  alt={`Stemma ${activeTeam.nome}`}
-                  width={96}
-                  height={96}
-                  priority
-                  className="max-h-full max-w-full object-contain drop-shadow-[0_12px_18px_rgba(15,23,42,0.2)]"
-                />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-[8px] font-black uppercase tracking-[0.18em] text-amber-600">
-                  Società selezionata
-                </p>
-                <p className="mt-1 line-clamp-2 text-lg font-black uppercase leading-[1.05] text-blue-950 sm:text-xl">
-                  {activeTeam.nome}
-                </p>
-                <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.14em] text-slate-400">
-                  {activeTeam.lega}
-                </p>
-                <button
-                  type="button"
-                  onClick={() => onSelect(activeTeam)}
-                  className="mt-3 min-h-10 rounded-full bg-blue-950 px-5 text-[9px] font-black uppercase tracking-[0.15em] text-white shadow-[0_8px_20px_rgba(23,37,84,0.2)] transition hover:-translate-y-0.5 hover:bg-blue-900 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-200"
-                >
-                  Entra in campo
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div>
-              <p className="font-black uppercase text-blue-950">Nessuna società trovata</p>
-              <p className="mt-1 text-xs font-semibold text-slate-500">Prova una ricerca differente.</p>
-            </div>
-          )}
-        </div>
+        <label className="block min-w-0">
+          <span className="sr-only">Cerca una società</span>
+          <input
+            type="search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Cerca società o lega..."
+            className="min-h-10 w-full rounded-xl border border-slate-200 bg-white/85 px-3.5 text-sm font-semibold text-blue-950 outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:ring-4 focus:ring-blue-100/70 sm:min-h-11"
+          />
+        </label>
       </div>
 
       <div className="relative px-3 py-4 sm:px-5 sm:py-5">
-        <div className="mb-2.5 flex items-center justify-between px-1">
-          <p className="text-[8px] font-black uppercase tracking-[0.17em] text-slate-400">
-            {filteredTeams.length} stemmi
-          </p>
+        <div className="mb-1.5 flex items-center justify-end px-1">
           <p className="text-[8px] font-bold uppercase tracking-[0.14em] text-slate-400">
             Scorri per esplorare
           </p>
@@ -357,7 +385,7 @@ export default function TeamSelector({
           <button
             type="button"
             onClick={() => moveSelection(-1)}
-            disabled={!filteredTeams.length}
+            disabled={filteredTeams.length <= 1}
             aria-label="Società precedente"
             className="absolute left-0 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-lg font-black text-blue-950 shadow-lg transition hover:bg-blue-50 disabled:hidden"
           >
@@ -369,9 +397,9 @@ export default function TeamSelector({
             onPointerDown={beginDrag}
             onPointerMove={dragRibbon}
             onPointerUp={endDrag}
-            onPointerCancel={endDrag}
+            onPointerCancel={cancelDrag}
             onScroll={preserveInfiniteLoop}
-            className="flex cursor-grab items-center gap-3 overflow-x-auto px-12 py-5 overscroll-x-contain touch-pan-y select-none [scrollbar-width:none] active:cursor-grabbing [&::-webkit-scrollbar]:hidden sm:gap-5 sm:px-14 sm:py-6"
+            className={`flex items-center gap-3 overflow-x-auto px-12 py-6 overscroll-x-contain touch-pan-y select-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:gap-5 sm:px-14 sm:py-7 ${isInfinite ? "cursor-grab active:cursor-grabbing" : filteredTeams.length === 1 ? "justify-center" : "cursor-grab active:cursor-grabbing"}`}
           >
             {carouselTeams.map(({ team, replica }) => {
               const selected = activeTeam?.id === team.id;
@@ -389,11 +417,11 @@ export default function TeamSelector({
                   tabIndex={replica === 1 ? 0 : -1}
                   title={team.nome}
                   onClick={(event) => {
-                    if (event.detail === 0) selectAndCenter(team, replica);
+                    if (event.detail === 0) chooseTeam(team, replica);
                   }}
                   aria-pressed={selected}
                   aria-label={`Seleziona ${team.nome}`}
-                  className={`group relative flex h-[76px] w-[76px] shrink-0 items-center justify-center rounded-full border border-transparent bg-transparent opacity-100 outline-none transition-transform duration-300 sm:h-[88px] sm:w-[88px] ${
+                  className={`group relative flex h-[84px] w-[84px] shrink-0 items-center justify-center rounded-full border border-transparent bg-transparent opacity-100 outline-none transition-transform duration-300 sm:h-[100px] sm:w-[100px] ${
                     selected
                       ? "z-[2] -translate-y-1 scale-[1.16]"
                       : "scale-[0.94] hover:scale-100"
@@ -410,9 +438,9 @@ export default function TeamSelector({
                   <Image
                     src={team.logo}
                     alt=""
-                    width={58}
-                    height={58}
-                    className={`h-[76%] w-[76%] object-contain transition duration-300 ${selected ? "drop-shadow-[0_16px_22px_rgba(15,23,42,0.3)]" : "drop-shadow-[0_8px_12px_rgba(15,23,42,0.16)]"}`}
+                    width={72}
+                    height={72}
+                    className={`h-[80%] w-[80%] object-contain transition duration-300 ${selected ? "drop-shadow-[0_16px_22px_rgba(15,23,42,0.3)]" : "drop-shadow-[0_8px_12px_rgba(15,23,42,0.16)]"}`}
                   />
                 </button>
               );
@@ -422,7 +450,7 @@ export default function TeamSelector({
           <button
             type="button"
             onClick={() => moveSelection(1)}
-            disabled={!filteredTeams.length}
+            disabled={filteredTeams.length <= 1}
             aria-label="Società successiva"
             className="absolute right-0 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white/95 text-lg font-black text-blue-950 shadow-lg transition hover:bg-blue-50 disabled:hidden"
           >
@@ -430,6 +458,7 @@ export default function TeamSelector({
           </button>
         </div>
 
+        {isInfinite && (
         <div className="mx-auto mt-1.5 max-w-3xl px-8 sm:mt-2">
           <div
             ref={scrollTrackRef}
@@ -455,7 +484,87 @@ export default function TeamSelector({
             />
           </div>
         </div>
+        )}
+
+        {!filteredTeams.length && (
+          <div className="mx-auto my-5 max-w-md rounded-2xl border border-dashed border-slate-300 bg-white/70 px-5 py-7 text-center">
+            <p className="font-black uppercase text-blue-950">Nessuna società trovata</p>
+            <p className="mt-1 text-xs font-semibold text-slate-500">Prova una ricerca differente.</p>
+          </div>
+        )}
       </div>
+
+      {confirmationTeam && (
+        <div
+          className="fixed inset-0 z-[150] flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm motion-safe:animate-[team-confirmation-backdrop_180ms_ease-out]"
+          onPointerDown={(event) => {
+            if (event.target === event.currentTarget) setConfirmationTeam(null);
+          }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="team-confirmation-title"
+            className="relative w-full max-w-sm overflow-hidden rounded-[1.6rem] border border-white/80 bg-[linear-gradient(145deg,#ffffff,#eef5fb)] p-5 text-center shadow-[0_34px_100px_rgba(2,8,23,0.35)] motion-safe:animate-[team-confirmation-panel_220ms_cubic-bezier(0.22,1,0.36,1)] sm:p-6"
+          >
+            <span className="pointer-events-none absolute left-1/2 top-0 h-32 w-48 -translate-x-1/2 rounded-full bg-sky-200/45 blur-3xl" />
+            <button
+              type="button"
+              onClick={() => setConfirmationTeam(null)}
+              aria-label="Chiudi conferma"
+              className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white/80 text-lg font-black text-slate-500 transition hover:bg-white hover:text-blue-950 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-200"
+            >
+              ×
+            </button>
+            <div className="relative mx-auto flex h-24 w-24 items-center justify-center sm:h-28 sm:w-28">
+              <Image
+                src={confirmationTeam.logo}
+                alt={`Stemma ${confirmationTeam.nome}`}
+                width={112}
+                height={112}
+                priority
+                className="max-h-full max-w-full object-contain drop-shadow-[0_16px_24px_rgba(15,23,42,0.24)]"
+              />
+            </div>
+            <p className="relative mt-2 text-[8px] font-black uppercase tracking-[0.2em] text-amber-600">
+              Società scelta
+            </p>
+            <h3 id="team-confirmation-title" className="relative mt-1 text-xl font-black uppercase leading-tight tracking-tight text-blue-950">
+              Hai scelto {confirmationTeam.nome}. Sei pronto?
+            </h3>
+            <p className="relative mt-2 text-xs font-semibold text-slate-500">
+              {confirmationTeam.lega} · Il tuo stemma è pronto a correre.
+            </p>
+            <div className="relative mt-5 grid gap-2">
+              <button
+                ref={confirmButtonRef}
+                type="button"
+                onClick={() => onSelect(confirmationTeam)}
+                className="min-h-11 rounded-full bg-blue-950 px-6 text-[9px] font-black uppercase tracking-[0.15em] text-white shadow-[0_12px_28px_rgba(23,37,84,0.22)] transition hover:-translate-y-0.5 hover:bg-blue-900 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-200"
+              >
+                Scendi in campo
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmationTeam(null)}
+                className="min-h-10 rounded-full text-[9px] font-black uppercase tracking-[0.13em] text-slate-500 transition hover:bg-white/70 hover:text-blue-950 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-100"
+              >
+                Cambia società
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      <style jsx global>{`
+        @keyframes team-confirmation-backdrop {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes team-confirmation-panel {
+          from { opacity: 0; transform: translateY(10px) scale(0.98); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+      `}</style>
     </section>
   );
 }

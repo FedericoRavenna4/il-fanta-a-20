@@ -45,9 +45,13 @@ export type RunnerEntity = {
   height: number;
   alreadyHit?: boolean;
   rewarded?: boolean;
-  motion?: "ground" | "falling";
+  motion?: "ground" | "falling" | "floating" | "sine" | "diagonal";
   velocityY?: number;
   targetY?: number;
+  originY?: number;
+  amplitude?: number;
+  phase?: number;
+  motionSpeed?: number;
 };
 
 export type GroundPit = {
@@ -99,5 +103,11 @@ export type GameScenario = {
   ground: string;
   accent: string;
   secondary: string;
+  grassLight: string;
+  grassDark: string;
+  stand: string;
+  crowd: string;
+  wear: number;
+  lightIntensity: number;
   decor: "terraces" | "towers" | "stadium" | "cup" | "europa" | "champions";
 };

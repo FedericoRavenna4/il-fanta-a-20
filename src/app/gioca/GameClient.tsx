@@ -34,8 +34,17 @@ function createEmptySnapshot(best = 0): GameSnapshot {
   };
 }
 
-export default function GameClient({ teams }: { teams: GameTeam[] }) {
+export default function GameClient({
+  teams,
+  initialTeamSlug,
+}: {
+  teams: GameTeam[];
+  initialTeamSlug?: string;
+}) {
   const [team, setTeam] = useState<GameTeam | null>(null);
+  const [initialSelectionAvailable, setInitialSelectionAvailable] = useState(
+    Boolean(initialTeamSlug)
+  );
   const [status, setStatus] = useState<GameStatus>("selecting");
   const [runId, setRunId] = useState(0);
   const [best, setBest] = useState(0);
@@ -50,6 +59,7 @@ export default function GameClient({ teams }: { teams: GameTeam[] }) {
     setIsNewRecord(false);
     setFinalResult(null);
     setSnapshot(createEmptySnapshot(savedBest));
+    setInitialSelectionAvailable(false);
     setStatus("ready");
   }, []);
 
@@ -119,7 +129,13 @@ export default function GameClient({ teams }: { teams: GameTeam[] }) {
   }, [startGame, status]);
 
   if (!team || status === "selecting") {
-    return <TeamSelector teams={teams} onSelect={selectTeam} />;
+    return (
+      <TeamSelector
+        teams={teams}
+        initialTeamSlug={initialSelectionAvailable ? initialTeamSlug : undefined}
+        onSelect={selectTeam}
+      />
+    );
   }
 
   return (

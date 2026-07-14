@@ -265,6 +265,14 @@ const emblemiDaDifendereVisuali = emblemiDaDifendere.map(toEmblemaVisuale);
               {team.legaAttuale}
             </p>
 
+            <Link
+              href={`/gioca?societa=${encodeURIComponent(team.slug)}`}
+              className="mb-5 inline-flex min-h-10 items-center gap-2 rounded-full border border-blue-950/10 bg-blue-950 px-5 text-[9px] font-black uppercase tracking-[0.14em] text-white shadow-[0_10px_26px_rgba(23,37,84,0.16)] transition hover:-translate-y-0.5 hover:bg-blue-900 hover:shadow-[0_14px_32px_rgba(23,37,84,0.22)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-200 sm:mb-8 sm:min-h-11 sm:px-6 sm:text-[10px]"
+            >
+              Scendi in campo con questa società
+              <span aria-hidden="true">→</span>
+            </Link>
+
             <div className="hidden flex-wrap justify-center sm:mb-8 sm:flex sm:gap-3">
               {team.leader && (
                 <div className="rounded-full border border-red-200 bg-red-100 px-4 py-2 text-sm font-bold text-red-700">

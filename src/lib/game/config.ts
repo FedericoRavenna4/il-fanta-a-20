@@ -22,16 +22,31 @@ export const FLOW_RATING_REWARD = 0.5;
 
 export const SPEED_CONFIG = {
   initial: 292,
-  growthPerSecond: 1.72,
-  maximum: 760,
-  levelEverySeconds: 22,
+  maximum: 780,
+} as const;
+
+export const DIFFICULTY_CONFIG = {
+  rampSeconds: 270,
+  targetDistance: 3300,
+  targetScore: 18000,
+  scenarioStepsToMaximum: 11,
+  weights: {
+    duration: 0.38,
+    distance: 0.28,
+    score: 0.17,
+    competition: 0.17,
+  },
+  speedCurvePower: 1.12,
+  movingMalusBaseChance: 0.1,
+  movingMalusMaximumChance: 0.42,
+  bonusTrailBaseChance: 0.08,
+  bonusTrailMaximumChance: 0.28,
+  tacticalBonusChance: 0.34,
 } as const;
 
 export const SPAWN_CONFIG = {
-  difficultyRampSeconds: 270,
   initialInterval: 1.55,
   minimumInterval: 0.56,
-  intervalReductionPerSecond: 0.00365,
   randomInterval: 0.42,
   minimumClearDistance: 110,
   speedDistanceFactor: 0.76,
@@ -179,10 +194,10 @@ export const MALUS_POOL = Object.values(EVENT_DEFINITIONS).filter(
 );
 
 export const GAME_SCENARIOS: GameScenario[] = [
-  { id: "serie-c", name: "Serie C", subtitle: "La corsa comincia dal basso", skyTop: "#24120d", skyBottom: "#8b4a2d", ground: "#170c09", accent: "#e19a66", secondary: "#9f5c3c", decor: "terraces" },
-  { id: "serie-b", name: "Serie B", subtitle: "Il salto verso l'élite", skyTop: "#18202b", skyBottom: "#707d8e", ground: "#111821", accent: "#e2e8f0", secondary: "#94a3b8", decor: "towers" },
-  { id: "serie-a", name: "Serie A", subtitle: "Il palcoscenico più alto", skyTop: "#03152f", skyBottom: "#0757a5", ground: "#06162d", accent: "#7dd3fc", secondary: "#2563eb", decor: "stadium" },
-  { id: "coppa", name: "Coppa Fanta a 20", subtitle: "Dentro o fuori", skyTop: "#170d2c", skyBottom: "#6b3295", ground: "#170d27", accent: "#d8b4fe", secondary: "#8b5cf6", decor: "cup" },
-  { id: "europa", name: "Europa League", subtitle: "Le notti continentali", skyTop: "#2b1005", skyBottom: "#b94b12", ground: "#2a1007", accent: "#fdba74", secondary: "#f97316", decor: "europa" },
-  { id: "champions", name: "Champions", subtitle: "Dove nasce la leggenda", skyTop: "#010611", skyBottom: "#102d63", ground: "#040b1d", accent: "#93c5fd", secondary: "#1d4ed8", decor: "champions" },
+  { id: "serie-c", name: "Serie C", subtitle: "La corsa comincia dal basso", skyTop: "#17251f", skyBottom: "#55705c", ground: "#173d25", accent: "#d6b27a", secondary: "#76563c", grassLight: "#397a43", grassDark: "#285f34", stand: "#4b5563", crowd: "#94a3b8", wear: 0.72, lightIntensity: 0.35, decor: "terraces" },
+  { id: "serie-b", name: "Serie B", subtitle: "Il salto verso l'élite", skyTop: "#10243a", skyBottom: "#61788a", ground: "#123e29", accent: "#dbeafe", secondary: "#64748b", grassLight: "#31834a", grassDark: "#21663a", stand: "#475569", crowd: "#cbd5e1", wear: 0.42, lightIntensity: 0.5, decor: "towers" },
+  { id: "serie-a", name: "Serie A", subtitle: "Il palcoscenico più alto", skyTop: "#03152f", skyBottom: "#0757a5", ground: "#0b3e25", accent: "#7dd3fc", secondary: "#2563eb", grassLight: "#2f9a50", grassDark: "#217b40", stand: "#1e3a5f", crowd: "#dbeafe", wear: 0.16, lightIntensity: 0.78, decor: "stadium" },
+  { id: "coppa", name: "Coppa Fanta a 20", subtitle: "Dentro o fuori", skyTop: "#170d2c", skyBottom: "#6b3295", ground: "#0d4628", accent: "#f5d77b", secondary: "#8b5cf6", grassLight: "#35a85b", grassDark: "#218146", stand: "#312e81", crowd: "#f5d0fe", wear: 0.08, lightIntensity: 0.9, decor: "cup" },
+  { id: "europa", name: "Europa League", subtitle: "Le notti continentali", skyTop: "#180803", skyBottom: "#9a3412", ground: "#0b4529", accent: "#fdba74", secondary: "#f97316", grassLight: "#35a75a", grassDark: "#207d43", stand: "#431407", crowd: "#fed7aa", wear: 0.05, lightIntensity: 0.92, decor: "europa" },
+  { id: "champions", name: "Champions", subtitle: "Dove nasce la leggenda", skyTop: "#010611", skyBottom: "#102d63", ground: "#073d28", accent: "#bfdbfe", secondary: "#1d4ed8", grassLight: "#36aa5d", grassDark: "#207f45", stand: "#111c44", crowd: "#dbeafe", wear: 0.02, lightIntensity: 1, decor: "champions" },
 ];

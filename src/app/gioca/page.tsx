@@ -8,7 +8,15 @@ export const metadata: Metadata = {
   description: "Entra nella Sala Giochi ufficiale del Fanta a 20 e porta la tua società in corsa.",
 };
 
-export default function GiocaPage() {
+export default async function GiocaPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ societa?: string | string[] }>;
+}) {
+  const params = await searchParams;
+  const requestedTeam = Array.isArray(params.societa)
+    ? params.societa[0]
+    : params.societa;
   const teams: GameTeam[] = getSocieta()
     .map((team) => ({
       id: team.id,
@@ -48,7 +56,7 @@ export default function GiocaPage() {
           </div>
         </header>
 
-        <GameClient teams={teams} />
+        <GameClient teams={teams} initialTeamSlug={requestedTeam} />
 
         <section className="mt-4 grid gap-2 sm:mt-5 sm:grid-cols-2 lg:grid-cols-4">
           <Rule code="CTRL" title="Due movimenti" text="Salta gli ostacoli bassi e abbassati sotto quelli sospesi." />
