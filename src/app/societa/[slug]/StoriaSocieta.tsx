@@ -411,19 +411,19 @@ export default function StoriaSocieta({
 )}`}
                         >
                           {vittoria && icona && (
-                            <div className="pointer-events-none absolute right-1 top-1/2 flex h-20 w-20 -translate-y-1/2 items-center justify-center overflow-hidden max-sm:hidden lg:right-2 lg:top-[56%] lg:h-24 lg:w-24">
+                            <div className="pointer-events-none absolute right-2 top-1/2 flex h-16 w-16 -translate-y-1/2 items-center justify-center max-sm:right-1 max-sm:h-10 max-sm:w-10 lg:right-2 lg:h-16 lg:w-16">
                               <Image
   unoptimized
   src={icona}
   alt="Trofeo"
-  width={108}
-  height={108}
-  className={`max-h-20 w-auto object-contain transition duration-300 group-hover:scale-105 ${getTrofeoGlowClass(icona)}`}
+  width={56}
+  height={56}
+  className={`h-auto max-h-14 w-auto max-w-14 object-contain transition duration-300 group-hover:scale-105 max-sm:max-h-9 max-sm:max-w-9 ${getTrofeoGlowClass(icona)}`}
 />
                             </div>
                           )}
 
-                          <div className={`relative z-10 flex h-full min-w-0 flex-col justify-center max-sm:max-w-full ${vittoria && icona ? "max-w-[calc(100%-4.5rem)] lg:max-w-[68%]" : "max-w-full lg:max-w-[68%]"}`}>
+                          <div className={`relative z-10 flex h-full min-w-0 flex-col justify-center ${vittoria && icona ? "max-w-[calc(100%-4.5rem)] max-sm:max-w-[calc(100%-3rem)] lg:max-w-[68%]" : "max-w-full lg:max-w-[68%]"}`}>
                             <h4
                               className={`line-clamp-1 text-[12px] font-black uppercase tracking-[0.12em] max-sm:text-[9px] max-sm:tracking-[0.08em] ${
                                 isDarkCard(item)

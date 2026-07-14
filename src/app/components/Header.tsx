@@ -222,6 +222,14 @@ export default function Header() {
           </div>
 
           <Link
+            href="/gioca"
+            onClick={closeMenu}
+            className="rounded-full px-4 py-2 transition hover:bg-blue-950 hover:text-white"
+          >
+            Gioca
+          </Link>
+
+          <Link
             href="/regolamento"
             onClick={closeMenu}
             className="rounded-full px-4 py-2 transition hover:bg-blue-950 hover:text-white"
@@ -254,6 +262,7 @@ export default function Header() {
             { href: "/societa", title: "Società", text: "Le 100 protagoniste" },
             { href: "/statistiche", title: "Statistiche", text: "Ranking e Hall of Fame" },
             { href: "/competizioni", title: "Competizioni", text: "Campionati, coppe e promozioni" },
+            { href: "/gioca", title: "Gioca", text: "Il runner arcade del Fanta a 20" },
             { href: "/regolamento", title: "Regolamento", text: "Le regole ufficiali" },
           ].map((item) => (
             <Link key={item.href} href={item.href} onClick={closeMenu} className="flex min-h-14 flex-col justify-center rounded-[1.1rem] border border-slate-100 bg-slate-50/80 px-4 py-3 active:bg-sky-50">
