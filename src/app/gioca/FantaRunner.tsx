@@ -162,6 +162,8 @@ type Runtime = {
   nextBossAt: number;
   reducedPerformance: boolean;
   mobileVisualScale: number;
+  mobileLayout: boolean;
+  worldWidth: number;
 };
 
 const PLAYER_GROUND_Y = GROUND_Y - PLAYER_SIZE;
@@ -179,12 +181,22 @@ const BONUS_RAFFICA_POOL: Array<{ kind: EventKind; weight: number }> = [
   { kind: "goal", weight: 4 },
 ];
 const RAFFICA_OVERLAY_CACHE = new Map<string, HTMLCanvasElement>();
-const LOGICAL_VIEWPORT = { width: GAME_WIDTH, height: GAME_HEIGHT } as const;
+const MOBILE_GAME_WIDTH = 540;
+const MOBILE_GAME_HEIGHT = 820;
+const MOBILE_WORLD_OFFSET_Y = 266;
+const MOBILE_OBSTACLE_SCALE: Record<PhysicalObstacleKind, number> = {
+  cornerFlag: 0.78,
+  stretcher: 0.64,
+  slidingTackle: 0.68,
+  var: 0.7,
+};
 
 type CanvasRenderState = {
   context: CanvasRenderingContext2D | null;
   dirty: boolean;
   dprLimit: number;
+  logicalWidth: number;
+  logicalHeight: number;
 };
 
 type PerformanceMonitor = {
@@ -269,6 +281,8 @@ function createRuntime(): Runtime {
     ),
     reducedPerformance: false,
     mobileVisualScale: 1,
+    mobileLayout: false,
+    worldWidth: GAME_WIDTH,
   };
 }
 
@@ -302,6 +316,8 @@ function FantaRunner({
     context: null,
     dirty: true,
     dprLimit: 1.5,
+    logicalWidth: GAME_WIDTH,
+    logicalHeight: GAME_HEIGHT,
   });
   const performanceRef = useRef<PerformanceMonitor>({
     windowStartedAt: 0,
@@ -332,7 +348,7 @@ function FantaRunner({
     let backgroundTimer: ReturnType<typeof setTimeout> | null = null;
     let idleCallback = 0;
     const mobile = window.matchMedia("(max-width: 639px)").matches;
-    runtimeRef.current.mobileVisualScale = mobile ? 1.16 : 1;
+    configureMobileRuntime(runtimeRef.current, renderStateRef.current, mobile);
     renderStateRef.current.dprLimit = mobile ? 1.25 : 1.5;
     renderStateRef.current.dirty = true;
     onAssetsReady(false);
@@ -403,7 +419,8 @@ function FantaRunner({
 
   useEffect(() => {
     const runtime = createRuntime();
-    runtime.mobileVisualScale = window.matchMedia("(max-width: 639px)").matches ? 1.16 : 1;
+    const mobile = window.matchMedia("(max-width: 639px)").matches;
+    configureMobileRuntime(runtime, renderStateRef.current, mobile);
     runtime.playerVisible = true;
     runtimeRef.current = runtime;
     performanceRef.current = {
@@ -414,7 +431,6 @@ function FantaRunner({
       lastLogAt: 0,
       hudUpdates: 0,
     };
-    renderStateRef.current.dprLimit = window.matchMedia("(max-width: 639px)").matches ? 1.25 : 1.5;
     renderStateRef.current.dirty = true;
     onSnapshot(toSnapshot(runtimeRef.current, bestRef.current, 0));
   }, [onSnapshot, runId]);
@@ -660,7 +676,7 @@ function FantaRunner({
       }}
       onContextMenu={(event) => event.preventDefault()}
       aria-label={`Campo di gioco. Tocca o fai click e mantieni la pressione per modulare il salto; scorri verso il basso o usa il click destro per abbassarti con ${team.nome}.`}
-      className="block aspect-[9/5] w-full touch-none bg-[#020817] outline-none"
+      className="block aspect-[9/5] w-full touch-none bg-[#020817] outline-none max-sm:aspect-auto max-sm:h-full"
     />
   );
 }
@@ -685,12 +701,33 @@ function prepareCanvas(
 
   const context = state.context ?? canvas.getContext("2d", { alpha: false });
   if (!context) throw new Error("Canvas 2D non disponibile");
-  context.setTransform(pixelWidth / GAME_WIDTH, 0, 0, pixelHeight / GAME_HEIGHT, 0, 0);
+  context.setTransform(
+    pixelWidth / state.logicalWidth,
+    0,
+    0,
+    pixelHeight / state.logicalHeight,
+    0,
+    0
+  );
   context.imageSmoothingEnabled = true;
   context.imageSmoothingQuality = "high";
   state.context = context;
   state.dirty = false;
   return context;
+}
+
+function configureMobileRuntime(
+  runtime: Runtime,
+  renderState: CanvasRenderState,
+  mobile: boolean
+) {
+  runtime.mobileLayout = mobile;
+  runtime.mobileVisualScale = mobile ? 0.92 : 1;
+  runtime.worldWidth = mobile ? MOBILE_GAME_WIDTH : GAME_WIDTH;
+  renderState.logicalWidth = mobile ? MOBILE_GAME_WIDTH : GAME_WIDTH;
+  renderState.logicalHeight = mobile ? MOBILE_GAME_HEIGHT : GAME_HEIGHT;
+  renderState.dprLimit = mobile ? 1.25 : 1.5;
+  renderState.dirty = true;
 }
 
 function updatePerformanceMonitor(
@@ -953,7 +990,7 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
           )
         );
         entity.x = Math.min(
-          GAME_WIDTH + 190,
+          runtime.worldWidth + 190,
           entity.x + (
             worldSpeed * (1.08 + proximity * 0.36) + (entity.fleeVelocityX ?? 0)
           ) * delta * gimenezStrength
@@ -1045,7 +1082,7 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
       awardPerfectPass(runtime);
     }
 
-    if (entity.fleeing && entity.x > GAME_WIDTH + 150) {
+    if (entity.fleeing && entity.x > runtime.worldWidth + 150) {
       releaseEntity(runtime, entity);
     } else if (entity.x + entity.width > -40) remainingEntities.push(entity);
     else releaseEntity(runtime, entity);
@@ -1190,7 +1227,7 @@ function tryStartRaffica(
     title: type === "malus" ? "Raffica di Malus" : "Raffica di Bonus",
     subtitle: type === "malus" ? "Resisti alla pressione" : "Precisione e tempismo",
     tone: type,
-    until: time + 5600,
+    until: time + 4500,
   };
   return true;
 }
@@ -1235,7 +1272,7 @@ function updateRaffica(
     motion = Math.random() < 0.18 ? "floating" : "ground";
   }
 
-  const burstStartX = GAME_WIDTH + Math.max(34, speed * (0.035 + Math.random() * 0.065));
+  const burstStartX = runtime.worldWidth + Math.max(34, speed * (0.035 + Math.random() * 0.065));
   const pushed = pushEvent(
     runtime,
     kind,
@@ -1326,7 +1363,7 @@ function trySpawnPowerUp(runtime: Runtime) {
   const width = definition.width * runtime.mobileVisualScale;
   const height = definition.height * runtime.mobileVisualScale;
   const y = GROUND_Y - height - (Math.random() < 0.55 ? 34 : 78);
-  const entity = acquireEntity(runtime, "powerup", definition.kind, GAME_WIDTH + 70, y, width, height);
+  const entity = acquireEntity(runtime, "powerup", definition.kind, runtime.worldWidth + 70, y, width, height);
   entity.motion = "floating";
   entity.originY = y;
   entity.amplitude = 8;
@@ -1350,7 +1387,7 @@ function activatePowerUp(runtime: Runtime, kind: PowerUpKind, time: number) {
     title: definition.name,
     subtitle: definition.effect,
     tone: kind === "gimenez" ? "malus" : "bonus",
-    until: time + 5600,
+    until: time + 4500,
   };
 }
 
@@ -1415,7 +1452,7 @@ function updateBoss(
       title: "Boss 20",
       subtitle: "Sopravvivi per conquistare +3",
       tone: "malus",
-      until: time + 5600,
+      until: time + 4500,
     };
     return;
   }
@@ -1429,7 +1466,7 @@ function updateBoss(
       : motionRoll < 0.72
         ? "serpentine"
         : "falling";
-    pushEvent(runtime, kind, GAME_WIDTH - 205 + Math.random() * 24, Math.random() < 0.7 ? 0 : 1, {
+    pushEvent(runtime, kind, runtime.worldWidth - 205 + Math.random() * 24, Math.random() < 0.7 ? 0 : 1, {
       burst: true,
       falling: projectileMotion === "falling",
       fallSpeed: projectileMotion === "falling" ? 80 + difficulty * 45 : undefined,
@@ -1509,7 +1546,7 @@ function spawnNext(runtime: Runtime, speed: number, difficulty: number) {
     difficulty,
     teamRating: runtime.teamRating,
   });
-  const startX = GAME_WIDTH + Math.max(40, speed * 0.08);
+  const startX = runtime.worldWidth + Math.max(runtime.mobileLayout ? 70 : 40, speed * (runtime.mobileLayout ? 0.14 : 0.08));
 
   if (decision.type === "breather") {
     runtime.lastSpawnCategory = "space";
@@ -1552,8 +1589,10 @@ function spawnNext(runtime: Runtime, speed: number, difficulty: number) {
   }
 
   if (decision.type === "sequence") {
-    const actionWindow = 0.98 - difficulty * 0.24;
-    const gap = speed * actionWindow + 135;
+    const actionWindow = runtime.mobileLayout
+      ? 1.16 - difficulty * 0.18
+      : 0.98 - difficulty * 0.24;
+    const gap = speed * actionWindow + (runtime.mobileLayout ? 150 : 135);
     decision.kinds.forEach((kind, index) => {
       pushPhysicalObstacle(runtime, kind, startX + gap * index, difficulty);
     });
@@ -1730,10 +1769,18 @@ function pushPhysicalObstacle(
     return false;
   }
   const baseDimensions = getPhysicalDimensions(kind);
+  const obstacleScale = runtime.mobileLayout ? MOBILE_OBSTACLE_SCALE[kind] : 1;
   const dimensions = {
-    width: baseDimensions.width * runtime.mobileVisualScale,
-    height: baseDimensions.height * runtime.mobileVisualScale,
+    width: baseDimensions.width * obstacleScale,
+    height: baseDimensions.height * obstacleScale,
   };
+  const clearance = runtime.mobileLayout ? 105 : 72;
+  if (runtime.entities.some((entity) =>
+    entity.type === "physical" &&
+    Math.abs(entity.x - x) < (entity.width + dimensions.width) / 2 + clearance
+  )) {
+    return false;
+  }
   const movingObstacle = kind === "slidingTackle";
   const entity = acquireEntity(runtime, "physical", kind, x, GROUND_Y - dimensions.height, dimensions.width, dimensions.height);
   entity.alreadyHit = false;
@@ -2143,19 +2190,22 @@ function drawGame(
   time: number,
   reducedMotion: boolean
 ) {
-  context.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+  const viewport = getLogicalCanvasViewport(context);
+  context.clearRect(0, 0, viewport.width, viewport.height);
   const scenario = getStageScenario(runtime);
   const reducedEffects = reducedMotion || runtime.reducedPerformance;
 
   const hasAssetBackground = drawAssetBackground(context, runtime, assets);
-  if (hasAssetBackground) {
-    drawAssetHazards(context, runtime, assets);
-  } else {
+  if (!hasAssetBackground) {
     drawScenario(context, scenario, runtime, 1, reducedMotion);
     drawGround(context, scenario, runtime.pits, 1);
   }
   drawSpeedComfortOverlay(context, runtime);
   drawRafficaOverlay(context, runtime);
+
+  context.save();
+  if (runtime.mobileLayout) context.translate(0, MOBILE_WORLD_OFFSET_Y);
+  if (hasAssetBackground) drawAssetHazards(context, runtime, assets);
   drawBoss(context, runtime, assets);
   runtime.entities.forEach((entity) =>
     drawEntity(context, entity, assets, runtime.elapsed, reducedEffects)
@@ -2165,6 +2215,7 @@ function drawGame(
   }
   drawGoalCelebration(context, runtime, time, scenario);
   drawEventFeedback(context, runtime, time);
+  context.restore();
 }
 
 function getStageScenario(runtime: Runtime) {
@@ -2394,8 +2445,12 @@ function drawSpeedComfortOverlay(
 }
 
 function getLogicalCanvasViewport(context: CanvasRenderingContext2D) {
-  void context;
-  return LOGICAL_VIEWPORT;
+  const transform = context.getTransform();
+  const canvas = context.canvas;
+  return {
+    width: canvas.width / Math.max(0.0001, Math.abs(transform.a)),
+    height: canvas.height / Math.max(0.0001, Math.abs(transform.d)),
+  };
 }
 
 function drawAssetHazards(
@@ -2923,13 +2978,14 @@ function drawBoss(
   if (!runtime.boss || runtime.boss.phase === "warning") return;
   const image = assets.get("event.boss");
   if (!image) return;
-  const width = 250 * runtime.mobileVisualScale;
-  const height = 375 * runtime.mobileVisualScale;
+  const bossScale = runtime.mobileLayout ? 0.76 : runtime.mobileVisualScale;
+  const width = 250 * bossScale;
+  const height = 375 * bossScale;
   const shotProgress = Math.max(0, 1 - (runtime.elapsed - runtime.boss.lastShotAt) / 0.32);
   const exitProgress = runtime.boss.phase === "exiting"
     ? 1 - clamp01(runtime.boss.timer / 0.7)
     : 0;
-  const x = GAME_WIDTH - width - 12 + Math.sin(runtime.elapsed * 0.62) * 9 + shotProgress * 15 + exitProgress * 95;
+  const x = runtime.worldWidth - width - 12 + Math.sin(runtime.elapsed * 0.62) * 9 + shotProgress * 15 + exitProgress * 95;
   const y = GROUND_Y - height - 2 + Math.sin(runtime.elapsed * 0.82) * 11;
   context.save();
   context.globalAlpha = 0.94 * (1 - exitProgress);
@@ -3276,17 +3332,17 @@ function drawGoalCelebration(
   );
   context.stroke();
   context.fillStyle = "rgba(2,8,23,0.78)";
-  roundedRect(context, GAME_WIDTH / 2 - 105, 88, 210, 76, 15);
+  roundedRect(context, runtime.worldWidth / 2 - 105, 88, 210, 76, 15);
   context.fill();
   context.textAlign = "center";
   context.fillStyle = "#fde68a";
   context.font = "900 30px sans-serif";
-  context.fillText("GOL!", GAME_WIDTH / 2, 120);
+  context.fillText("GOL!", runtime.worldWidth / 2, 120);
   context.fillStyle = "#ffffff";
   context.font = "900 17px sans-serif";
   context.fillText(
     `${runtime.goalCelebrationGoals}–0`,
-    GAME_WIDTH / 2,
+    runtime.worldWidth / 2,
     147
   );
   context.restore();
@@ -3304,7 +3360,7 @@ function drawEventFeedback(
   const progress = clamp01((time - runtime.messageStartedAt) / duration);
   const fade = progress < 0.7 ? 1 : 1 - (progress - 0.7) / 0.3;
   const isShieldMessage = runtime.message === "MALUS ANNULLATO";
-  const x = Math.min(GAME_WIDTH - 74, runtime.playerX + PLAYER_SIZE + 42);
+  const x = Math.min(runtime.worldWidth - 74, runtime.playerX + PLAYER_SIZE + 42);
   const y = Math.max(42, runtime.playerY + 18 - progress * 28);
 
   context.save();

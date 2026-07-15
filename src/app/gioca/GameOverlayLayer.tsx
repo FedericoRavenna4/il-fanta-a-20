@@ -16,7 +16,7 @@ export default function GameOverlayLayer({
       {presentation && (
         <div
           key={`${presentation.asset}-${presentation.title}`}
-          className="absolute inset-0 flex items-center justify-center"
+          className="absolute inset-0 flex items-start justify-center pt-[13%] sm:pt-[10%]"
         >
           <div className="special-presentation relative aspect-[3/2] w-[min(72%,270px)] sm:w-[min(62%,480px)]">
             <Image
@@ -53,7 +53,7 @@ export default function GameOverlayLayer({
           100% { opacity: 0; transform: translateY(-2%) scale(.96); }
         }
         .special-presentation {
-          animation: special-presentation-in 5.6s cubic-bezier(.2,.8,.2,1) both;
+          animation: special-presentation-in 4.5s cubic-bezier(.2,.8,.2,1) both;
           will-change: transform, opacity;
         }
         @media (prefers-reduced-motion: reduce) { .special-presentation { animation: none; } }

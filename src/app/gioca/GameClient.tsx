@@ -200,8 +200,7 @@ export default function GameClient({
             aria-modal="true"
             aria-label={`Partita con ${team.nome}`}
             tabIndex={-1}
-            className="game-modal-panel relative max-w-full overflow-hidden rounded-[1rem] border border-white/15 bg-[linear-gradient(180deg,#06162d,#020817)] shadow-[0_35px_110px_rgba(2,8,23,.68),0_0_48px_rgba(56,189,248,.1)] outline-none max-sm:flex max-sm:h-[min(88dvh,760px)] max-sm:flex-col sm:rounded-[1.6rem]"
-            style={{ width: "min(97vw, calc((100dvh - 7rem) * 1.8), 1280px)" }}
+            className="game-modal-panel relative max-w-full overflow-hidden rounded-[1rem] border border-white/15 bg-[linear-gradient(180deg,#06162d,#020817)] shadow-[0_35px_110px_rgba(2,8,23,.68),0_0_48px_rgba(56,189,248,.1)] outline-none max-sm:flex max-sm:flex-col sm:rounded-[1.6rem]"
           >
             <div className="absolute right-2 top-2 z-30 flex items-center gap-1.5 sm:right-3 sm:top-3">
               {(status === "running" || status === "paused") && (
@@ -226,7 +225,7 @@ export default function GameClient({
             <GameHud team={team} snapshot={snapshot} />
 
             <div className="relative overflow-hidden max-sm:flex max-sm:flex-1 max-sm:items-center max-sm:bg-[radial-gradient(ellipse_at_center,rgba(14,55,92,.38),transparent_70%)]">
-              <div className="relative w-full overflow-hidden max-sm:scale-[1.12]">
+              <div className="relative w-full overflow-hidden max-sm:h-full">
                 <FantaRunner
                 team={team}
                 status={status}
@@ -276,7 +275,16 @@ export default function GameClient({
             @keyframes game-modal-backdrop-in { from { opacity:0; } to { opacity:1; } }
             @keyframes game-modal-panel-in { from { opacity:0; transform:translate3d(0,12px,0) scale(.975); } to { opacity:1; transform:none; } }
             .game-modal-backdrop { animation:game-modal-backdrop-in 260ms ease-out both; }
-            .game-modal-panel { animation:game-modal-panel-in 420ms cubic-bezier(.2,.8,.2,1) both; }
+            .game-modal-panel {
+              width:min(97vw,calc((100dvh - 7rem) * 1.8),1280px);
+              animation:game-modal-panel-in 420ms cubic-bezier(.2,.8,.2,1) both;
+            }
+            @media (max-width:639px) {
+              .game-modal-panel {
+                width:min(calc(100vw - .7rem),calc((100dvh - .7rem) * 9 / 16));
+                height:min(calc(100dvh - .7rem),calc((100vw - .7rem) * 16 / 9));
+              }
+            }
             @media (prefers-reduced-motion:reduce) { .game-modal-backdrop,.game-modal-panel { animation-duration:1ms; } }
           `}</style>
         </div>,

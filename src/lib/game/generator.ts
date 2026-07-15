@@ -45,7 +45,6 @@ export type SpawnDecision =
 
 export function createSpawnDecision({
   elapsed,
-  teamRating = 62,
   difficulty: suppliedDifficulty,
   random = Math.random,
 }: {
@@ -94,21 +93,19 @@ export function createSpawnDecision({
     SPAWN_CONFIG.malusMaximumChance,
     difficulty
   );
-  const initialBonusProgress = teamRating <= SPAWN_CONFIG.initialBonusStrongRatingEnd
-    ? 1
-    : Math.max(
-        0,
-        Math.min(
-          1,
-          (SPAWN_CONFIG.initialBonusRatingEnd - teamRating) /
-            (SPAWN_CONFIG.initialBonusRatingEnd - SPAWN_CONFIG.initialBonusStrongRatingEnd)
-        )
-      );
+  const opening = SPAWN_CONFIG.openingBonus;
+  const openingExtraChance = elapsed <= opening.strongUntilSeconds
+    ? opening.strongExtraChance
+    : elapsed < opening.moderateUntilSeconds
+      ? opening.moderateExtraChance *
+        (opening.moderateUntilSeconds - elapsed) /
+        (opening.moderateUntilSeconds - opening.strongUntilSeconds)
+      : 0;
   const bonusChance = interpolate(
     SPAWN_CONFIG.bonusBaseChance,
     SPAWN_CONFIG.bonusMaximumChance,
     difficulty
-  ) + SPAWN_CONFIG.initialBonusExtraChance * initialBonusProgress;
+  ) + openingExtraChance;
   const roll = random();
 
   if (roll < pitChance) {
@@ -196,8 +193,8 @@ export function createSpawnDecision({
   return {
     type: "event",
     event:
-      teamRating <= SPAWN_CONFIG.initialBonusRatingEnd &&
-      random() < SPAWN_CONFIG.initialPreferredBonusChance
+      elapsed <= opening.moderateUntilSeconds &&
+      random() < opening.preferredAssistCleanSheetChance
         ? weightedPick(INITIAL_BONUS_POOL, random)
         : weightedPick(BONUS_POOL, random),
     heightLevel,
