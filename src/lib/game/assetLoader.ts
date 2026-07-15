@@ -1,39 +1,118 @@
 import {
   GAME_ASSET_ENTRIES,
   GAME_ASSETS,
-  PRIORITY_GAME_ASSET_KEYS,
   type GameAssetKey,
 } from "./assets";
 
 export type GameImageMap = ReadonlyMap<GameAssetKey, HTMLImageElement>;
+export type AssetProgressCallback = (progress: number) => void;
 
-let assetPromise: Promise<GameImageMap> | null = null;
-let overlayAssetPromise: Promise<void> | null = null;
+const entryMap = new Map(GAME_ASSET_ENTRIES);
+const images = new Map<GameAssetKey, HTMLImageElement>();
+const requests = new Map<GameAssetKey, Promise<void>>();
+const teamLogos = new Map<string, HTMLImageElement>();
+const teamLogoRequests = new Map<string, Promise<HTMLImageElement>>();
 const overlayImages: HTMLImageElement[] = [];
 
-export function preloadGameAssets(): Promise<GameImageMap> {
-  if (assetPromise) return assetPromise;
+const ESSENTIAL_KEYS: GameAssetKey[] = [
+  "background.stage1Stadium",
+  "background.stage1Ground",
+  "hazard.stage1",
+  "obstacle.cornerFlag",
+  "obstacle.stretcher",
+  "obstacle.slidingTackle",
+  "obstacle.var",
+  "bonus.assist",
+  "bonus.cleanSheet",
+  "bonus.goal",
+  "bonus.hatTrick",
+  "malus.yellowCard",
+  "malus.concededGoal",
+  "malus.redCard",
+  "malus.ownGoal",
+  "malus.missedPenalty",
+];
 
-  assetPromise = (async () => {
-    const images = new Map<GameAssetKey, HTMLImageElement>();
-    const entryMap = new Map(GAME_ASSET_ENTRIES);
+const SECONDARY_KEYS = GAME_ASSET_ENTRIES
+  .map(([key]) => key)
+  .filter((key) => !ESSENTIAL_KEYS.includes(key));
 
-    await Promise.all(
-      PRIORITY_GAME_ASSET_KEYS.map((key) => loadAsset(key, entryMap.get(key), images))
-    );
+let essentialPromise: Promise<GameImageMap> | null = null;
+let fullPromise: Promise<GameImageMap> | null = null;
+let secondaryPromise: Promise<GameImageMap> | null = null;
+let overlayAssetPromise: Promise<void> | null = null;
 
-    await Promise.all(
-      GAME_ASSET_ENTRIES.filter(([key]) => !PRIORITY_GAME_ASSET_KEYS.includes(key)).map(
-        ([key, path]) => loadAsset(key, path, images)
-      )
-    );
+export function preloadEssentialGameAssets(
+  onProgress?: AssetProgressCallback
+): Promise<GameImageMap> {
+  if (essentialPromise) {
+    onProgress?.(1);
+    return essentialPromise;
+  }
+  essentialPromise = loadKeys(ESSENTIAL_KEYS, onProgress).then(() => images);
+  return essentialPromise;
+}
 
+export function preloadGameAssets(
+  onProgress?: AssetProgressCallback
+): Promise<GameImageMap> {
+  if (fullPromise) {
+    onProgress?.(1);
+    return fullPromise;
+  }
+  fullPromise = (async () => {
+    await loadKeys(ESSENTIAL_KEYS, (progress) => onProgress?.(progress * 0.58));
+    await loadKeys(SECONDARY_KEYS, (progress) => onProgress?.(0.58 + progress * 0.42));
     void preloadOverlayAssets();
-
     return images;
   })();
+  return fullPromise;
+}
 
-  return assetPromise;
+export function preloadSecondaryGameAssets(): Promise<GameImageMap> {
+  if (secondaryPromise) return secondaryPromise;
+  secondaryPromise = (async () => {
+    for (let index = 0; index < SECONDARY_KEYS.length; index += 3) {
+      await Promise.all(SECONDARY_KEYS.slice(index, index + 3).map((key) => loadAsset(key)));
+    }
+    await preloadOverlayAssets();
+    return images;
+  })();
+  return secondaryPromise;
+}
+
+export function preloadTeamLogo(path: string): Promise<HTMLImageElement> {
+  const cached = teamLogos.get(path);
+  if (cached) return Promise.resolve(cached);
+  const pending = teamLogoRequests.get(path);
+  if (pending) return pending;
+
+  const request = new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new Image();
+    image.decoding = "async";
+    image.onload = async () => {
+      try { await image.decode?.(); } catch { /* onload garantisce comunque l'asset. */ }
+      teamLogos.set(path, image);
+      resolve(image);
+    };
+    image.onerror = () => reject(new Error(`Impossibile caricare ${path}`));
+    image.src = path;
+  }).finally(() => teamLogoRequests.delete(path));
+  teamLogoRequests.set(path, request);
+  return request;
+}
+
+async function loadKeys(
+  keys: GameAssetKey[],
+  onProgress?: AssetProgressCallback
+) {
+  let completed = 0;
+  onProgress?.(0);
+  await Promise.all(keys.map(async (key) => {
+    await loadAsset(key);
+    completed += 1;
+    onProgress?.(completed / keys.length);
+  }));
 }
 
 function preloadOverlayAssets() {
@@ -49,44 +128,44 @@ function preloadOverlayAssets() {
     GAME_ASSETS.events.bonusBurst,
     GAME_ASSETS.events.malusBurst,
   ];
-  overlayAssetPromise = new Promise<void>((resolve) => {
-    window.setTimeout(async () => {
-      await Promise.all(paths.map((path) => new Promise<void>((done) => {
-        const image = new Image();
-        image.decoding = "async";
-        image.onload = () => done();
-        image.onerror = () => done();
-        image.src = path;
-        overlayImages.push(image);
-      })));
-      resolve();
-    }, 0);
-  });
+  overlayAssetPromise = Promise.all(paths.map(loadOverlayImage)).then(() => undefined);
   return overlayAssetPromise;
 }
 
-async function loadAsset(
-  key: GameAssetKey,
-  path: string | undefined,
-  images: Map<GameAssetKey, HTMLImageElement>
-) {
-  if (!path || images.has(key)) return;
-  const image = new Image();
-  image.decoding = "async";
-  image.src = path;
+function loadOverlayImage(path: string) {
+  return new Promise<void>((resolve) => {
+    const image = new Image();
+    image.decoding = "async";
+    image.onload = () => resolve();
+    image.onerror = () => resolve();
+    image.src = path;
+    overlayImages.push(image);
+  });
+}
 
-  try {
-    await new Promise<void>((resolve, reject) => {
-      image.onload = () => resolve();
-      image.onerror = () => reject(new Error(`Impossibile caricare ${path}`));
-    });
-    images.set(key, image);
-  } catch (error) {
-    if (process.env.NODE_ENV !== "production") {
-      console.warn(`[FantaRunner] Asset non disponibile: ${key}`, error);
-    }
-  } finally {
-    image.onload = null;
-    image.onerror = null;
-  }
+function loadAsset(key: GameAssetKey) {
+  if (images.has(key)) return Promise.resolve();
+  const pending = requests.get(key);
+  if (pending) return pending;
+  const path = entryMap.get(key);
+  if (!path) return Promise.resolve();
+
+  const request = new Promise<void>((resolve) => {
+    const image = new Image();
+    image.decoding = "async";
+    image.onload = async () => {
+      try { await image.decode?.(); } catch { /* onload è sufficiente come fallback. */ }
+      images.set(key, image);
+      resolve();
+    };
+    image.onerror = () => {
+      if (process.env.NODE_ENV !== "production") {
+        console.warn(`[FantaRunner] Asset non disponibile: ${key}`);
+      }
+      resolve();
+    };
+    image.src = path;
+  }).finally(() => requests.delete(key));
+  requests.set(key, request);
+  return request;
 }

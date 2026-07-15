@@ -32,7 +32,13 @@ import {
   TEAM_RATING_THRESHOLD,
 } from "@/lib/game/config";
 import { createSpawnDecision, getSafeSpawnInterval } from "@/lib/game/generator";
-import { preloadGameAssets, type GameImageMap } from "@/lib/game/assetLoader";
+import {
+  preloadEssentialGameAssets,
+  preloadGameAssets,
+  preloadSecondaryGameAssets,
+  preloadTeamLogo,
+  type GameImageMap,
+} from "@/lib/game/assetLoader";
 import {
   BACKGROUND_STAGE_CONFIG,
   BACKGROUND_TRANSITION_CONFIG,
@@ -155,6 +161,7 @@ type Runtime = {
   } | null;
   nextBossAt: number;
   reducedPerformance: boolean;
+  mobileVisualScale: number;
 };
 
 const PLAYER_GROUND_Y = GROUND_Y - PLAYER_SIZE;
@@ -261,6 +268,7 @@ function createRuntime(): Runtime {
       BOSS_CONFIG.initialWindowSeconds.maximum
     ),
     reducedPerformance: false,
+    mobileVisualScale: 1,
   };
 }
 
@@ -272,6 +280,7 @@ function FantaRunner({
   onSnapshot,
   onGameOver,
   onAssetsReady,
+  onLoadProgress,
 }: {
   team: GameTeam;
   status: GameStatus;
@@ -280,6 +289,7 @@ function FantaRunner({
   onSnapshot: (snapshot: GameSnapshot) => void;
   onGameOver: (snapshot: GameSnapshot) => void;
   onAssetsReady: (ready: boolean) => void;
+  onLoadProgress: (progress: number) => void;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const runtimeRef = useRef<Runtime>(createRuntime());
@@ -311,7 +321,6 @@ function FantaRunner({
 
   useEffect(() => {
     statusRef.current = status;
-    runtimeRef.current.playerVisible = status !== "ready";
   }, [status]);
 
   useEffect(() => {
@@ -319,52 +328,68 @@ function FantaRunner({
   }, [best]);
 
   useEffect(() => {
-    const image = new Image();
-    image.decoding = "async";
-    image.src = team.logo;
-    image.onload = () => {
-      const canvas = canvasRef.current;
-      if (!canvas || statusRef.current === "running") return;
-      const context = prepareCanvas(canvas, renderStateRef.current, true);
-      drawGame(
-        context,
-        runtimeRef.current,
-        image,
-        assetsRef.current,
-        performance.now(),
-        reducedMotionRef.current
-      );
-    };
-    logoRef.current = image;
-    return () => {
-      image.onload = null;
-      logoRef.current = null;
-    };
-  }, [team.logo]);
-
-  useEffect(() => {
     let cancelled = false;
+    let backgroundTimer: ReturnType<typeof setTimeout> | null = null;
+    let idleCallback = 0;
+    const mobile = window.matchMedia("(max-width: 639px)").matches;
+    runtimeRef.current.mobileVisualScale = mobile ? 1.16 : 1;
+    renderStateRef.current.dprLimit = mobile ? 1.25 : 1.5;
+    renderStateRef.current.dirty = true;
     onAssetsReady(false);
-    preloadGameAssets().then((images) => {
+    onLoadProgress(0);
+    const logoPromise = preloadTeamLogo(team.logo).then((logo) => {
+      if (!cancelled) onLoadProgress(0.14);
+      return logo;
+    });
+    const assetPromise = mobile
+      ? preloadEssentialGameAssets((progress) => {
+          if (!cancelled) onLoadProgress(0.14 + progress * 0.86);
+        })
+      : preloadGameAssets((progress) => {
+          if (!cancelled) onLoadProgress(0.14 + progress * 0.86);
+        });
+
+    Promise.all([logoPromise, assetPromise]).then(([logo, images]) => {
       if (cancelled) return;
+      logoRef.current = logo;
       assetsRef.current = images;
-      onAssetsReady(true);
       const canvas = canvasRef.current;
-      if (!canvas || statusRef.current === "running") return;
+      if (!canvas) return;
+      runtimeRef.current.playerVisible = true;
       const context = prepareCanvas(canvas, renderStateRef.current, true);
       drawGame(
         context,
         runtimeRef.current,
-        logoRef.current,
+        logo,
         images,
         performance.now(),
         reducedMotionRef.current
       );
+      onLoadProgress(1);
+      requestAnimationFrame(() => {
+        if (!cancelled) onAssetsReady(true);
+      });
+
+      if (mobile) {
+        const loadSecondary = () => { if (!cancelled) void preloadSecondaryGameAssets(); };
+        const requestIdle = (window as Window & {
+          requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number;
+        }).requestIdleCallback;
+        if (requestIdle) {
+          idleCallback = requestIdle(loadSecondary, { timeout: 2600 });
+        } else {
+          backgroundTimer = globalThis.setTimeout(loadSecondary, 1100);
+        }
+      }
     });
     return () => {
       cancelled = true;
+      if (backgroundTimer !== null) clearTimeout(backgroundTimer);
+      if (idleCallback) {
+        window.cancelIdleCallback(idleCallback);
+      }
     };
-  }, [onAssetsReady]);
+  }, [onAssetsReady, onLoadProgress, team.logo]);
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -378,7 +403,8 @@ function FantaRunner({
 
   useEffect(() => {
     const runtime = createRuntime();
-    runtime.playerVisible = statusRef.current !== "ready";
+    runtime.mobileVisualScale = window.matchMedia("(max-width: 639px)").matches ? 1.16 : 1;
+    runtime.playerVisible = true;
     runtimeRef.current = runtime;
     performanceRef.current = {
       windowStartedAt: 0,
@@ -388,7 +414,7 @@ function FantaRunner({
       lastLogAt: 0,
       hudUpdates: 0,
     };
-    renderStateRef.current.dprLimit = 1.5;
+    renderStateRef.current.dprLimit = window.matchMedia("(max-width: 639px)").matches ? 1.25 : 1.5;
     renderStateRef.current.dirty = true;
     onSnapshot(toSnapshot(runtimeRef.current, bestRef.current, 0));
   }, [onSnapshot, runId]);
@@ -915,6 +941,10 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
         const direction = entityCenterY <= playerCenterY ? -1 : 1;
         const proximity = 1 - clamp01(Math.max(0, horizontalDistance) / 340);
         entity.fleeing = true;
+        entity.fleeVelocityX = Math.min(
+          worldSpeed * 1.85,
+          (entity.fleeVelocityX ?? 0) + worldSpeed * delta * 2.4
+        );
         entity.y = Math.max(
           GROUND_Y - entity.height - 120,
           Math.min(
@@ -923,8 +953,10 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
           )
         );
         entity.x = Math.min(
-          GAME_WIDTH + 110,
-          entity.x + worldSpeed * delta * (0.72 + proximity * 0.42) * gimenezStrength
+          GAME_WIDTH + 190,
+          entity.x + (
+            worldSpeed * (1.08 + proximity * 0.36) + (entity.fleeVelocityX ?? 0)
+          ) * delta * gimenezStrength
         );
       }
     }
@@ -972,7 +1004,11 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
       EVENT_DEFINITIONS[entity.kind as EventKind].category === "bonus"
         ? expandRect(playerRect, 10 * getPowerUpStrength(runtime, "lukaku"))
         : playerRect;
-    const hit = intersects(collisionPlayerRect, entityRect);
+    const protectedByGimenez =
+      entity.type === "event" &&
+      EVENT_DEFINITIONS[entity.kind as EventKind].category === "bonus" &&
+      getPowerUpStrength(runtime, "gimenez") > 0;
+    const hit = !protectedByGimenez && intersects(collisionPlayerRect, entityRect);
 
     if (hit) {
       if (entity.type === "event") {
@@ -1009,7 +1045,9 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
       awardPerfectPass(runtime);
     }
 
-    if (entity.x + entity.width > -40) remainingEntities.push(entity);
+    if (entity.fleeing && entity.x > GAME_WIDTH + 150) {
+      releaseEntity(runtime, entity);
+    } else if (entity.x + entity.width > -40) remainingEntities.push(entity);
     else releaseEntity(runtime, entity);
   }
   runtime.entities = remainingEntities;
@@ -1285,8 +1323,10 @@ function trySpawnPowerUp(runtime: Runtime) {
     runtime.entities.some((entity) => entity.type === "powerup")
   ) return false;
   const definition = pickPowerUp();
-  const y = GROUND_Y - definition.height - (Math.random() < 0.55 ? 34 : 78);
-  const entity = acquireEntity(runtime, "powerup", definition.kind, GAME_WIDTH + 70, y, definition.width, definition.height);
+  const width = definition.width * runtime.mobileVisualScale;
+  const height = definition.height * runtime.mobileVisualScale;
+  const y = GROUND_Y - height - (Math.random() < 0.55 ? 34 : 78);
+  const entity = acquireEntity(runtime, "powerup", definition.kind, GAME_WIDTH + 70, y, width, height);
   entity.motion = "floating";
   entity.originY = y;
   entity.amplitude = 8;
@@ -1602,7 +1642,11 @@ function pushEvent(
   const minimumDistance = options.burst
     ? ENTITY_DENSITY_CONFIG.burstCollectibleDistance
     : ENTITY_DENSITY_CONFIG.minimumCollectibleDistance;
-  const dimensions = getEventDimensions(kind);
+  const baseDimensions = getEventDimensions(kind);
+  const dimensions = {
+    width: baseDimensions.width * runtime.mobileVisualScale,
+    height: baseDimensions.height * runtime.mobileVisualScale,
+  };
   if (
     runtime.entities.some(
       (entity) =>
@@ -1685,17 +1729,22 @@ function pushPhysicalObstacle(
   ) {
     return false;
   }
-  const dimensions = getPhysicalDimensions(kind);
+  const baseDimensions = getPhysicalDimensions(kind);
+  const dimensions = {
+    width: baseDimensions.width * runtime.mobileVisualScale,
+    height: baseDimensions.height * runtime.mobileVisualScale,
+  };
+  const movingObstacle = kind === "slidingTackle";
   const entity = acquireEntity(runtime, "physical", kind, x, GROUND_Y - dimensions.height, dimensions.width, dimensions.height);
   entity.alreadyHit = false;
   entity.rewarded = false;
-  entity.motion = kind === "slidingTackle" ? "rush" : "ground";
+  entity.motion = movingObstacle ? "rush" : "ground";
   entity.horizontalSpeedFactor =
-      kind === "slidingTackle"
+      movingObstacle
         ? 1.24 + difficulty * 0.56 + Math.random() * 0.16
         : 1;
-  entity.rotation = kind === "slidingTackle" ? -0.045 : 0;
-  entity.angularVelocity = kind === "slidingTackle" ? 0.035 + Math.random() * 0.035 : 0;
+  entity.rotation = movingObstacle ? -0.045 : 0;
+  entity.angularVelocity = movingObstacle ? 0.035 + Math.random() * 0.035 : 0;
   runtime.entities.push(entity);
   return true;
 }
@@ -1720,6 +1769,7 @@ function acquireEntity(
   entity.alreadyHit = undefined;
   entity.rewarded = undefined;
   entity.fleeing = undefined;
+  entity.fleeVelocityX = undefined;
   entity.motion = undefined;
   entity.velocityY = undefined;
   entity.accelerationY = undefined;
@@ -1962,12 +2012,15 @@ function getEventDimensions(kind: EventKind) {
 
 function getObstacleHitbox(entity: RunnerEntity) {
   const kind = entity.kind as PhysicalObstacleKind;
-  const hitbox = OBSTACLE_SPRITES[kind].hitbox;
+  const sprite = OBSTACLE_SPRITES[kind];
+  const hitbox = sprite.hitbox;
+  const scaleX = entity.width / sprite.width;
+  const scaleY = entity.height / sprite.height;
   return {
-    x: entity.x + hitbox.x,
-    y: entity.y + hitbox.y,
-    width: hitbox.width,
-    height: hitbox.height,
+    x: entity.x + hitbox.x * scaleX,
+    y: entity.y + hitbox.y * scaleY,
+    width: hitbox.width * scaleX,
+    height: hitbox.height * scaleY,
   };
 }
 
@@ -1981,21 +2034,26 @@ function getEventHitbox(entity: RunnerEntity) {
       height: entity.height - 10,
     };
   }
+  const scaleX = entity.width / sprite.width;
+  const scaleY = entity.height / sprite.height;
   return {
-    x: entity.x + sprite.hitbox.x,
-    y: entity.y + sprite.hitbox.y,
-    width: sprite.hitbox.width,
-    height: sprite.hitbox.height,
+    x: entity.x + sprite.hitbox.x * scaleX,
+    y: entity.y + sprite.hitbox.y * scaleY,
+    width: sprite.hitbox.width * scaleX,
+    height: sprite.hitbox.height * scaleY,
   };
 }
 
 function getPowerUpHitbox(entity: RunnerEntity) {
-  const hitbox = POWER_UP_CONFIG[entity.kind as PowerUpKind].hitbox;
+  const definition = POWER_UP_CONFIG[entity.kind as PowerUpKind];
+  const hitbox = definition.hitbox;
+  const scaleX = entity.width / definition.width;
+  const scaleY = entity.height / definition.height;
   return {
-    x: entity.x + hitbox.x,
-    y: entity.y + hitbox.y,
-    width: hitbox.width,
-    height: hitbox.height,
+    x: entity.x + hitbox.x * scaleX,
+    y: entity.y + hitbox.y * scaleY,
+    width: hitbox.width * scaleX,
+    height: hitbox.height * scaleY,
   };
 }
 
@@ -2023,7 +2081,11 @@ function getPlayerHitbox(runtime: Runtime, time: number) {
       height: PLAYER_SIZE - 7,
     };
   }
-  return expandRect(hitbox, 24 * getPowerUpStrength(runtime, "lukaku"));
+  return expandRect(
+    hitbox,
+    24 * getPowerUpStrength(runtime, "lukaku") +
+      (runtime.mobileVisualScale - 1) * PLAYER_SIZE * 0.34
+  );
 }
 
 function expandRect(
@@ -2217,7 +2279,17 @@ function drawGroundTiles(
   const localOffset = ((offset % step) + step) % step;
   const firstX = -Math.floor(localOffset);
   for (let tileX = firstX; tileX < viewport.width; tileX += step) {
-    context.drawImage(image, tileX, y, tileWidth, tileHeight);
+    context.drawImage(
+      image,
+      1,
+      0,
+      Math.max(1, image.naturalWidth - 2),
+      image.naturalHeight,
+      tileX,
+      y,
+      tileWidth,
+      tileHeight
+    );
   }
 }
 
@@ -2518,10 +2590,11 @@ function drawPlayer(
   const falling = runtime.velocityY > 80;
   const centerX = runtime.playerX + PLAYER_SIZE / 2 + jitter;
   const groundedBottom = runtime.playerY + PLAYER_SIZE;
-  const centerY = crouching
+  const centerY = (crouching
     ? groundedBottom - PLAYER_SIZE * 0.41
-    : runtime.playerY + PLAYER_SIZE / 2 + (airborne ? 0 : runCycle * 1.4);
-  const lukakuScale = 1 + lukakuStrength * 0.82;
+    : runtime.playerY + PLAYER_SIZE / 2 + (airborne ? 0 : runCycle * 1.4)) -
+      (runtime.mobileVisualScale - 1) * PLAYER_SIZE * 0.5;
+  const lukakuScale = (1 + lukakuStrength * 0.82) * runtime.mobileVisualScale;
   const playerScale = (hitReaction
       ? 0.92
       : airborne
@@ -2850,8 +2923,8 @@ function drawBoss(
   if (!runtime.boss || runtime.boss.phase === "warning") return;
   const image = assets.get("event.boss");
   if (!image) return;
-  const width = 250;
-  const height = 375;
+  const width = 250 * runtime.mobileVisualScale;
+  const height = 375 * runtime.mobileVisualScale;
   const shotProgress = Math.max(0, 1 - (runtime.elapsed - runtime.boss.lastShotAt) / 0.32);
   const exitProgress = runtime.boss.phase === "exiting"
     ? 1 - clamp01(runtime.boss.timer / 0.7)

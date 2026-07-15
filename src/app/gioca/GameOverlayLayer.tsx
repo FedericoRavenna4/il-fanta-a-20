@@ -69,10 +69,10 @@ function EffectTimer({ tone, text, seconds, asset, color }: { tone: "bonus" | "m
       ? "border-amber-200/25 text-amber-50"
       : "border-sky-200/25 text-sky-50";
   return (
-    <span className={`grid min-w-[112px] grid-cols-[auto_1fr] items-center gap-x-2 rounded-xl border bg-slate-950/88 px-2.5 py-1.5 text-white shadow-[0_8px_20px_rgba(2,8,23,.34),inset_0_1px_0_rgba(255,255,255,.06)] sm:min-w-[136px] sm:px-3 sm:py-2 ${colors}`}>
+    <span className={`grid min-w-[126px] grid-cols-[auto_1fr] items-center gap-x-2 rounded-xl border bg-slate-950/88 px-3 py-2 text-white shadow-[0_8px_20px_rgba(2,8,23,.34),inset_0_1px_0_rgba(255,255,255,.06)] sm:min-w-[136px] sm:px-3 sm:py-2 ${colors}`}>
       {asset ? <Image src={asset} alt="" width={28} height={38} unoptimized className="row-span-2 h-9 w-6 object-contain sm:h-10 sm:w-7" /> : <span className="row-span-2 h-7 w-1 rounded-full bg-current opacity-75" />}
       <span className="truncate text-[8px] font-black uppercase leading-none tracking-[0.1em] sm:text-[9px]">{text}</span>
-      <strong className="text-2xl font-black leading-none tabular-nums sm:text-3xl" style={color ? { color } : undefined}>{Math.ceil(seconds)}&quot;</strong>
+      <strong className="text-3xl font-black leading-none tabular-nums sm:text-3xl" style={color ? { color } : undefined}>{Math.ceil(seconds)}&quot;</strong>
     </span>
   );
 }

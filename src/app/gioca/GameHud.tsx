@@ -21,7 +21,7 @@ export default function GameHud({ team, snapshot }: {
   return (
     <div className={`border-b px-2.5 py-1.5 text-white transition-colors duration-700 sm:px-5 sm:py-2.5 ${hudTone}`}>
       <div className="min-w-0 border-b border-white/[.08] pb-1.5 pr-[7.6rem] sm:pb-2 sm:pr-36">
-        <p className="truncate text-[11px] font-black uppercase tracking-[-.015em] text-white sm:text-base">
+        <p className="truncate text-[13px] font-black uppercase tracking-[-.015em] text-white sm:text-base">
           {team.nome}
         </p>
       </div>
@@ -33,12 +33,12 @@ export default function GameHud({ team, snapshot }: {
         </div>
 
         <div className="min-w-0 text-center">
-          <p className={`text-[6px] font-black uppercase tracking-[.2em] sm:text-[7px] ${warning ? "text-rose-100" : "text-white/52"}`}>
+          <p className={`text-[7px] font-black uppercase tracking-[.2em] sm:text-[7px] ${warning ? "text-rose-100" : "text-white/52"}`}>
             Voto · vita
           </p>
           <div className="flex h-8 items-center justify-center gap-1 sm:h-10 sm:gap-2">
             {warning && <span aria-hidden="true" className={`life-warning-icon text-[1.25rem] leading-none sm:text-[1.75rem] ${critical ? "text-rose-300" : "text-amber-200"}`}>⚠</span>}
-            <strong className={`min-w-[60px] text-center text-[1.65rem] font-black leading-none tracking-[-.04em] tabular-nums sm:min-w-[88px] sm:text-[2.25rem] ${critical ? "text-rose-200" : warning ? "text-amber-200" : "text-amber-300"}`}>
+            <strong className={`min-w-[66px] text-center text-[1.9rem] font-black leading-none tracking-[-.04em] tabular-nums sm:min-w-[88px] sm:text-[2.25rem] ${critical ? "text-rose-200" : warning ? "text-amber-200" : "text-amber-300"}`}>
               {formatRating(snapshot.teamRating)}
             </strong>
             {warning && <span aria-hidden="true" className={`life-warning-icon text-[1.25rem] leading-none sm:text-[1.75rem] ${critical ? "text-rose-300" : "text-amber-200"}`}>⚠</span>}
@@ -61,7 +61,7 @@ export default function GameHud({ team, snapshot }: {
         <div className="space-y-1 border-l border-white/10 pl-1.5 text-center sm:pl-3">
           <div>
             <p className="text-[6px] font-black uppercase tracking-[.13em] text-amber-100/55 sm:text-[7px]">Punti</p>
-            <strong key={Math.floor(snapshot.score / 250)} className="score-value-pop block truncate text-base font-black leading-none tabular-nums text-amber-300 sm:text-2xl">
+            <strong key={Math.floor(snapshot.score / 250)} className="score-value-pop block truncate text-xl font-black leading-none tabular-nums text-amber-300 sm:text-2xl">
               {formatNumber(snapshot.score)}
             </strong>
           </div>
@@ -83,7 +83,7 @@ export default function GameHud({ team, snapshot }: {
 }
 
 function Metric({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) {
-  return <div className="min-w-0"><p className="text-[6px] font-black uppercase tracking-[.11em] text-white/36 sm:text-[7px]">{label}</p><p className={`truncate text-[9px] font-black leading-none tabular-nums sm:text-sm ${accent ? "text-amber-300" : "text-white"}`}>{value}</p></div>;
+  return <div className="min-w-0"><p className="text-[7px] font-black uppercase tracking-[.11em] text-white/36 sm:text-[7px]">{label}</p><p className={`truncate text-[11px] font-black leading-none tabular-nums sm:text-sm ${accent ? "text-amber-300" : "text-white"}`}>{value}</p></div>;
 }
 
 function formatNumber(value: number) { return Math.round(value).toLocaleString("it-IT"); }

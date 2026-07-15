@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { createPortal } from "react-dom";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -54,10 +55,12 @@ export default function GameClient({
   const [runId, setRunId] = useState(0);
   const [best, setBest] = useState(0);
   const [assetsReady, setAssetsReady] = useState(false);
+  const [loadProgress, setLoadProgress] = useState(0);
   const [isNewRecord, setIsNewRecord] = useState(false);
   const [snapshot, setSnapshot] = useState<GameSnapshot>(() => createEmptySnapshot());
   const [finalResult, setFinalResult] = useState<GameSnapshot | null>(null);
   const dialogRef = useRef<HTMLElement>(null);
+  const selectionRootRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const modalOpen = Boolean(team) && status !== "selecting";
 
@@ -69,6 +72,7 @@ export default function GameClient({
     setFinalResult(null);
     setSnapshot(createEmptySnapshot(savedBest));
     setAssetsReady(false);
+    setLoadProgress(0);
     setInitialSelectionAvailable(false);
     setStatus("ready");
   }, []);
@@ -109,6 +113,7 @@ export default function GameClient({
     setFinalResult(null);
     setSnapshot(createEmptySnapshot());
     setAssetsReady(false);
+    setLoadProgress(0);
     setSelectorVersion((current) => current + 1);
   }, [status]);
 
@@ -158,6 +163,17 @@ export default function GameClient({
   }, [modalOpen]);
 
   useEffect(() => {
+    const selectionRoot = selectionRootRef.current;
+    if (!selectionRoot || !modalOpen) return;
+    selectionRoot.inert = true;
+    selectionRoot.setAttribute("aria-hidden", "true");
+    return () => {
+      selectionRoot.inert = false;
+      selectionRoot.removeAttribute("aria-hidden");
+    };
+  }, [modalOpen]);
+
+  useEffect(() => {
     if (!modalOpen) return;
     previousFocusRef.current = document.activeElement as HTMLElement | null;
     const frame = requestAnimationFrame(() => dialogRef.current?.focus());
@@ -184,7 +200,7 @@ export default function GameClient({
             aria-modal="true"
             aria-label={`Partita con ${team.nome}`}
             tabIndex={-1}
-            className="game-modal-panel relative max-w-full overflow-hidden rounded-[1rem] border border-white/15 bg-[#020817] shadow-[0_35px_110px_rgba(2,8,23,.68),0_0_48px_rgba(56,189,248,.1)] outline-none sm:rounded-[1.6rem]"
+            className="game-modal-panel relative max-w-full overflow-hidden rounded-[1rem] border border-white/15 bg-[linear-gradient(180deg,#06162d,#020817)] shadow-[0_35px_110px_rgba(2,8,23,.68),0_0_48px_rgba(56,189,248,.1)] outline-none max-sm:flex max-sm:h-[min(88dvh,760px)] max-sm:flex-col sm:rounded-[1.6rem]"
             style={{ width: "min(97vw, calc((100dvh - 7rem) * 1.8), 1280px)" }}
           >
             <div className="absolute right-2 top-2 z-30 flex items-center gap-1.5 sm:right-3 sm:top-3">
@@ -209,8 +225,9 @@ export default function GameClient({
 
             <GameHud team={team} snapshot={snapshot} />
 
-            <div className="relative overflow-hidden">
-              <FantaRunner
+            <div className="relative overflow-hidden max-sm:flex max-sm:flex-1 max-sm:items-center max-sm:bg-[radial-gradient(ellipse_at_center,rgba(14,55,92,.38),transparent_70%)]">
+              <div className="relative w-full overflow-hidden max-sm:scale-[1.12]">
+                <FantaRunner
                 team={team}
                 status={status}
                 runId={runId}
@@ -218,16 +235,11 @@ export default function GameClient({
                 onSnapshot={setSnapshot}
                 onGameOver={handleGameOver}
                 onAssetsReady={setAssetsReady}
+                onLoadProgress={setLoadProgress}
               />
-              <GameOverlayLayer presentation={snapshot.presentation} snapshot={snapshot} />
+                <GameOverlayLayer presentation={snapshot.presentation} snapshot={snapshot} />
 
-              {status === "ready" && (
-                <div className="game-ready-curtain pointer-events-none absolute inset-0 z-[9] flex items-center justify-center bg-[#020817]/88 backdrop-blur-sm">
-                  <span className="text-[9px] font-black uppercase tracking-[.24em] text-sky-100/75">Preparazione del campo</span>
-                </div>
-              )}
-
-              {status === "paused" && (
+                {status === "paused" && (
                 <div className="absolute inset-0 z-20 flex items-center justify-center bg-[#020817]/84 p-4 backdrop-blur-md">
                   <div className="text-center text-white">
                     <p className="text-[9px] font-black uppercase tracking-[.24em] text-amber-300">Sessione sospesa</p>
@@ -240,19 +252,32 @@ export default function GameClient({
                 </div>
               )}
 
-              {status === "gameOver" && finalResult && (
+                {status === "gameOver" && finalResult && (
                 <GameOver team={team} result={finalResult} isNewRecord={isNewRecord} onRetry={startGame} onReturn={() => returnToGameHome(false)} />
-              )}
+                )}
+              </div>
             </div>
+
+            {status === "ready" && (
+              <div className="game-loading-screen absolute inset-0 z-40 flex flex-col items-center justify-center bg-[radial-gradient(circle_at_50%_38%,#123d69_0%,#071a34_34%,#020817_76%)] px-6 text-center text-white">
+                <div className="flex h-24 w-24 items-center justify-center sm:h-28 sm:w-28">
+                  <Image src={team.logo} alt="" width={160} height={160} unoptimized priority className="max-h-full max-w-full object-contain drop-shadow-[0_14px_22px_rgba(0,0,0,.42)]" />
+                </div>
+                <p className="mt-5 text-[9px] font-black uppercase tracking-[.26em] text-sky-200/75">Sala Giochi ufficiale</p>
+                <h2 className="mt-1 text-lg font-black uppercase tracking-[-.025em] sm:text-xl">Preparazione del campo</h2>
+                <div className="mt-5 h-1.5 w-full max-w-[240px] overflow-hidden rounded-full bg-white/10" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(loadProgress * 100)}>
+                  <span className="block h-full rounded-full bg-gradient-to-r from-sky-400 to-amber-300 transition-[width] duration-200" style={{ width: `${Math.max(4, loadProgress * 100)}%` }} />
+                </div>
+                <p className="mt-2 text-[9px] font-bold tabular-nums text-white/45">{Math.round(loadProgress * 100)}%</p>
+              </div>
+            )}
           </section>
           <style jsx global>{`
             @keyframes game-modal-backdrop-in { from { opacity:0; } to { opacity:1; } }
             @keyframes game-modal-panel-in { from { opacity:0; transform:translate3d(0,12px,0) scale(.975); } to { opacity:1; transform:none; } }
-            @keyframes game-ready-reveal { 0%,55% { opacity:1; } 100% { opacity:0; } }
             .game-modal-backdrop { animation:game-modal-backdrop-in 260ms ease-out both; }
             .game-modal-panel { animation:game-modal-panel-in 420ms cubic-bezier(.2,.8,.2,1) both; }
-            .game-ready-curtain { animation:game-ready-reveal 520ms ease-out both; }
-            @media (prefers-reduced-motion:reduce) { .game-modal-backdrop,.game-modal-panel,.game-ready-curtain { animation-duration:1ms; } }
+            @media (prefers-reduced-motion:reduce) { .game-modal-backdrop,.game-modal-panel { animation-duration:1ms; } }
           `}</style>
         </div>,
         document.body
@@ -261,12 +286,14 @@ export default function GameClient({
 
   return (
     <>
-      <TeamSelector
-        key={selectorVersion}
-        teams={teams}
-        initialTeamSlug={initialSelectionAvailable ? initialTeamSlug : undefined}
-        onSelect={selectTeam}
-      />
+      <div ref={selectionRootRef}>
+        <TeamSelector
+          key={selectorVersion}
+          teams={teams}
+          initialTeamSlug={initialSelectionAvailable ? initialTeamSlug : undefined}
+          onSelect={selectTeam}
+        />
+      </div>
       {gameModal}
     </>
   );

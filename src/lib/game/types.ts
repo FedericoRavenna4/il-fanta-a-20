@@ -47,6 +47,7 @@ export type RunnerEntity = {
   alreadyHit?: boolean;
   rewarded?: boolean;
   fleeing?: boolean;
+  fleeVelocityX?: number;
   motion?: "ground" | "falling" | "floating" | "sine" | "diagonal" | "serpentine" | "rush";
   velocityY?: number;
   accelerationY?: number;
