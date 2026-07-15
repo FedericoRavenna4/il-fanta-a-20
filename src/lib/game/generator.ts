@@ -7,10 +7,18 @@ type ObstacleSequence = [
   ...PhysicalObstacleKind[],
 ];
 
-const FALLING_MALUS_POOL = MALUS_POOL.map((event) => ({
-  ...event,
-  weight: event.kind === "redCard" ? 2 : event.weight,
-}));
+const FALLING_MALUS_POOL = MALUS_POOL;
+const INITIAL_BONUS_POOL = BONUS_POOL.filter(
+  (event) => event.kind === "assist" || event.kind === "cleanSheet"
+);
+const OBSTACLE_PATTERNS: ObstacleSequence[] = [
+  ["cornerFlag", "stretcher"],
+  ["var", "slidingTackle"],
+  ["stretcher", "cornerFlag"],
+  ["slidingTackle", "var"],
+  ["cornerFlag", "var", "stretcher"],
+  ["stretcher", "slidingTackle", "cornerFlag"],
+];
 
 export type SpawnDecision =
   | {
@@ -23,19 +31,26 @@ export type SpawnDecision =
       fallSpeed?: number;
       amplitude?: number;
       motionSpeed?: number;
+      horizontalSpeedFactor?: number;
+      angularVelocity?: number;
+      accelerationY?: number;
+      bouncesRemaining?: number;
       trail?: number;
       trailRise?: number;
     }
   | { type: "physical"; kind: PhysicalObstacleKind; bonus?: EventDefinition }
   | { type: "sequence"; kinds: ObstacleSequence }
-  | { type: "pit"; width: number; bonus?: EventDefinition };
+  | { type: "pit"; width: number; bonus?: EventDefinition }
+  | { type: "breather" };
 
 export function createSpawnDecision({
   elapsed,
+  teamRating = 62,
   difficulty: suppliedDifficulty,
   random = Math.random,
 }: {
   elapsed: number;
+  teamRating?: number;
   difficulty?: number;
   random?: () => number;
 }): SpawnDecision {
@@ -44,26 +59,31 @@ export function createSpawnDecision({
     if (protectedRoll < 0.3) {
       return {
         type: "event",
-        event: weightedPick(BONUS_POOL, random),
+        event: weightedPick(INITIAL_BONUS_POOL, random),
         heightLevel: random() > 0.52 ? 1 : 0,
       };
     }
-    if (protectedRoll < 0.55) {
+    if (protectedRoll < 0.62) {
       return {
         type: "event",
         event: weightedPick(MALUS_POOL, random),
         heightLevel: 0,
       };
     }
-    return { type: "physical", kind: pickPhysicalKind(random, false) };
+    if (protectedRoll < 0.65) {
+      return { type: "physical", kind: pickPhysicalKind(random) };
+    }
+    return { type: "breather" };
   }
 
   const difficulty = suppliedDifficulty ?? getFallbackDifficulty(elapsed);
-  const pitChance = interpolate(
-    SPAWN_CONFIG.pitBaseChance,
-    SPAWN_CONFIG.pitMaximumChance,
-    difficulty
-  );
+  const pitChance = SPAWN_CONFIG.hazardsEnabled
+    ? interpolate(
+        SPAWN_CONFIG.pitBaseChance,
+        SPAWN_CONFIG.pitMaximumChance,
+        difficulty
+      )
+    : 0;
   const physicalChance = interpolate(
     SPAWN_CONFIG.physicalBaseChance,
     SPAWN_CONFIG.physicalMaximumChance,
@@ -74,6 +94,21 @@ export function createSpawnDecision({
     SPAWN_CONFIG.malusMaximumChance,
     difficulty
   );
+  const initialBonusProgress = teamRating <= SPAWN_CONFIG.initialBonusStrongRatingEnd
+    ? 1
+    : Math.max(
+        0,
+        Math.min(
+          1,
+          (SPAWN_CONFIG.initialBonusRatingEnd - teamRating) /
+            (SPAWN_CONFIG.initialBonusRatingEnd - SPAWN_CONFIG.initialBonusStrongRatingEnd)
+        )
+      );
+  const bonusChance = interpolate(
+    SPAWN_CONFIG.bonusBaseChance,
+    SPAWN_CONFIG.bonusMaximumChance,
+    difficulty
+  ) + SPAWN_CONFIG.initialBonusExtraChance * initialBonusProgress;
   const roll = random();
 
   if (roll < pitChance) {
@@ -98,7 +133,7 @@ export function createSpawnDecision({
     }
     return {
       type: "physical",
-      kind: pickPhysicalKind(random, elapsed > 14),
+      kind: pickPhysicalKind(random),
       bonus:
         random() < DIFFICULTY_CONFIG.tacticalBonusChance * 0.72
           ? weightedPick(BONUS_POOL, random)
@@ -119,7 +154,7 @@ export function createSpawnDecision({
     const motion: RunnerEntity["motion"] = falling
       ? "falling"
       : movingRoll < 0.42
-        ? "floating"
+        ? "serpentine"
         : movingRoll < 0.78
           ? "sine"
           : "diagonal";
@@ -132,11 +167,19 @@ export function createSpawnDecision({
       heightLevel: !falling && random() > 0.78 && difficulty > 0.22 ? 1 : 0,
       falling,
       motion: moving ? motion : falling ? "falling" : "ground",
-      xOffset: falling ? -690 + random() * 540 : 0,
-      fallSpeed: falling ? 145 + difficulty * 170 + random() * 45 : 0,
-      amplitude: moving ? 18 + random() * (20 + difficulty * 18) : 0,
-      motionSpeed: moving ? 1.25 + random() * 1.35 + difficulty * 0.8 : 0,
+      xOffset: falling ? -80 + random() * 150 : 0,
+      fallSpeed: falling ? 75 + difficulty * 85 + random() * 55 : 0,
+      amplitude: moving ? 12 + random() * (12 + difficulty * 10) : 0,
+      motionSpeed: moving ? 1.05 + random() * 0.75 + difficulty * 0.45 : 0,
+      horizontalSpeedFactor: 1,
+      angularVelocity: falling ? (random() - 0.5) * (2.8 + difficulty * 1.2) : 0,
+      accelerationY: falling ? 430 + difficulty * 310 : 0,
+      bouncesRemaining: falling ? 1 : 0,
     };
+  }
+
+  if (roll >= pitChance + physicalChance + malusChance + bonusChance) {
+    return { type: "breather" };
   }
 
   const heightRoll = random();
@@ -152,11 +195,16 @@ export function createSpawnDecision({
   );
   return {
     type: "event",
-    event: weightedPick(BONUS_POOL, random),
+    event:
+      teamRating <= SPAWN_CONFIG.initialBonusRatingEnd &&
+      random() < SPAWN_CONFIG.initialPreferredBonusChance
+        ? weightedPick(INITIAL_BONUS_POOL, random)
+        : weightedPick(BONUS_POOL, random),
     heightLevel,
-    motion: random() < 0.32 ? "floating" : "ground",
-    amplitude: 10 + random() * 15,
-    motionSpeed: 1 + random() * 1.2,
+    motion: random() < 0.18 ? (random() < 0.62 ? "floating" : "sine") : "ground",
+    amplitude: 8 + random() * 8,
+    motionSpeed: 0.9 + random() * 0.6,
+    horizontalSpeedFactor: 1,
     trail: random() < trailChance ? (random() < difficulty * 0.35 ? 3 : 2) : 1,
     trailRise: random() > 0.5 ? 28 : -28,
   };
@@ -196,29 +244,19 @@ function createObstacleSequence(
   difficulty: number,
   random: () => number
 ): ObstacleSequence {
-  const lowKinds: PhysicalObstacleKind[] = ["barrier", "block", "platform"];
-  const firstLow = lowKinds[Math.floor(random() * lowKinds.length)];
-  const secondLow = lowKinds[Math.floor(random() * lowKinds.length)];
-  const triple = difficulty > 0.48 && random() < 0.12 + difficulty * 0.24;
-
-  if (triple) {
-    return random() > 0.5
-      ? [firstLow, "overhead", secondLow]
-      : ["overhead", firstLow, "overhead"];
-  }
-
-  return random() > 0.5
-    ? [firstLow, "overhead"]
-    : ["overhead", firstLow];
+  const candidates = difficulty > 0.48
+    ? OBSTACLE_PATTERNS
+    : OBSTACLE_PATTERNS.filter((pattern) => pattern.length === 2);
+  return candidates[Math.floor(random() * candidates.length)];
 }
 
-function pickPhysicalKind(
-  random: () => number,
-  includeOverhead: boolean
-): PhysicalObstacleKind {
-  const kinds: PhysicalObstacleKind[] = includeOverhead
-    ? ["barrier", "sign", "block", "overhead", "platform"]
-    : ["barrier", "sign", "block", "platform"];
+function pickPhysicalKind(random: () => number): PhysicalObstacleKind {
+  const kinds: PhysicalObstacleKind[] = [
+    "cornerFlag",
+    "stretcher",
+    "slidingTackle",
+    "var",
+  ];
   return kinds[Math.floor(random() * kinds.length)];
 }
 

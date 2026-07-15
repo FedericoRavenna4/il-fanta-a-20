@@ -15,6 +15,8 @@ export type GameTeam = {
 };
 
 export type EventCategory = "bonus" | "malus";
+export type RafficaType = "malus" | "bonus";
+export type PowerUpKind = "luperto" | "lukaku" | "dybala" | "nico-paz" | "gimenez";
 
 export type EventKind =
   | "yellowCard"
@@ -29,24 +31,29 @@ export type EventKind =
   | "hatTrick";
 
 export type PhysicalObstacleKind =
-  | "barrier"
-  | "sign"
-  | "block"
-  | "overhead"
-  | "platform";
+  | "cornerFlag"
+  | "stretcher"
+  | "slidingTackle"
+  | "var";
 
 export type RunnerEntity = {
   id: number;
-  type: "event" | "physical";
-  kind: EventKind | PhysicalObstacleKind;
+  type: "event" | "physical" | "powerup";
+  kind: EventKind | PhysicalObstacleKind | PowerUpKind;
   x: number;
   y: number;
   width: number;
   height: number;
   alreadyHit?: boolean;
   rewarded?: boolean;
-  motion?: "ground" | "falling" | "floating" | "sine" | "diagonal";
+  fleeing?: boolean;
+  motion?: "ground" | "falling" | "floating" | "sine" | "diagonal" | "serpentine" | "rush";
   velocityY?: number;
+  accelerationY?: number;
+  horizontalSpeedFactor?: number;
+  rotation?: number;
+  angularVelocity?: number;
+  bouncesRemaining?: number;
   targetY?: number;
   originY?: number;
   amplitude?: number;
@@ -54,10 +61,24 @@ export type RunnerEntity = {
   motionSpeed?: number;
 };
 
+export type ActivePowerUpSnapshot = {
+  kind: PowerUpKind;
+  remaining: number;
+  charges: number;
+};
+
+export type SpecialPresentation = {
+  asset: string;
+  title: string;
+  subtitle: string;
+  tone: "bonus" | "malus" | "neutral";
+};
+
 export type GroundPit = {
   id: number;
   x: number;
   width: number;
+  stage?: 1 | 2 | 3;
   rewarded?: boolean;
 };
 
@@ -79,6 +100,11 @@ export type GameSnapshot = {
   malusesCollected: number;
   message: string;
   gameOverReason: string;
+  rafficaType: RafficaType | null;
+  rafficaRemaining: number;
+  activePowerUps: ActivePowerUpSnapshot[];
+  presentation: SpecialPresentation | null;
+  bossRemaining: number;
 };
 
 export type EventDefinition = {

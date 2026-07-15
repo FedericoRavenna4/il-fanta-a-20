@@ -37,7 +37,7 @@ export default async function GiocaPage({
         <header className="relative mb-5 overflow-hidden rounded-[1.6rem] border border-white/15 bg-[linear-gradient(125deg,#051329_0%,#0b2d57_56%,#164878_100%)] px-5 py-6 text-white shadow-[0_30px_90px_rgba(15,23,42,0.22),inset_0_1px_0_rgba(255,255,255,0.1)] sm:mb-7 sm:rounded-[2rem] sm:px-8 sm:py-8 lg:px-10">
           <div className="pointer-events-none absolute -right-16 -top-24 h-72 w-72 rounded-full bg-sky-300/20 blur-[70px]" />
           <div className="pointer-events-none absolute bottom-0 left-0 h-px w-full bg-gradient-to-r from-transparent via-sky-200/55 to-transparent" />
-          <div className="relative grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+          <div className="relative">
             <div>
               <p className="text-[9px] font-black uppercase tracking-[0.28em] text-amber-300 sm:text-[10px]">
                 Il Fanta a 20 · Arcade Room
@@ -48,10 +48,6 @@ export default async function GiocaPage({
               <p className="mt-3 max-w-2xl text-sm font-semibold leading-5 text-white/62 sm:text-base sm:leading-7">
                 Scegli il tuo stemma, entra in campo e trasforma ogni corsa in un nuovo record.
               </p>
-            </div>
-            <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.06] px-3 py-2 backdrop-blur-md">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-300 shadow-[0_0_10px_rgba(110,231,183,0.75)]" />
-              <span className="text-[8px] font-black uppercase tracking-[0.18em] text-white/60">Sistema pronto</span>
             </div>
           </div>
         </header>

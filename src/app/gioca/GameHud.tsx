@@ -1,120 +1,90 @@
 "use client";
 
-import Image from "next/image";
 import type { GameSnapshot, GameTeam } from "@/lib/game/types";
 
-export default function GameHud({
-  team,
-  snapshot,
-  onPause,
-  paused,
-  canPause,
-}: {
+export default function GameHud({ team, snapshot }: {
   team: GameTeam;
   snapshot: GameSnapshot;
-  onPause: () => void;
-  paused: boolean;
-  canPause: boolean;
 }) {
-  const danger = snapshot.teamRating <= snapshot.threshold + 0.5;
-  const scaleStart = 61.5;
-  const scaleEnd = Math.max(66, snapshot.nextGoalThreshold);
-  const scaleLength = scaleEnd - scaleStart;
-  const ratingProgress = Math.max(
-    0,
-    Math.min(100, ((snapshot.teamRating - scaleStart) / scaleLength) * 100)
-  );
-  const thresholdPosition =
-    ((snapshot.threshold - scaleStart) / scaleLength) * 100;
+  const warning = snapshot.teamRating <= 64;
+  const critical = snapshot.teamRating <= 62.5;
+  const nextGoal = snapshot.nextGoalThreshold;
+  const ratingProgress = Math.max(0, Math.min(100,
+    ((snapshot.teamRating - snapshot.threshold) / Math.max(1, nextGoal - snapshot.threshold)) * 100
+  ));
+  const hudTone = snapshot.rafficaType === "malus"
+    ? "border-rose-300/22 bg-[linear-gradient(135deg,#160914,#501426_48%,#100812_100%)]"
+    : snapshot.rafficaType === "bonus"
+      ? "border-amber-200/22 bg-[linear-gradient(135deg,#181104,#5d3a0c_48%,#130e04_100%)]"
+      : "border-white/10 bg-[linear-gradient(135deg,#06142c_0%,#0c2c52_52%,#07162f_100%)]";
 
   return (
-    <div className="border-b border-white/10 bg-[linear-gradient(135deg,#06142c_0%,#0c2c52_52%,#07162f_100%)] px-1.5 py-1 text-white shadow-[inset_0_-1px_0_rgba(255,255,255,0.04)] sm:px-4 sm:py-2">
-      <div className="grid grid-cols-4 items-center gap-x-0.5 gap-y-1 border-b border-white/[0.07] pb-1 sm:grid-cols-[minmax(160px,1fr)_auto_repeat(4,minmax(58px,auto))] sm:gap-1 sm:pb-1.5">
-        <p className="col-span-3 min-w-0 truncate px-1 text-[8px] font-black uppercase tracking-tight text-white sm:col-span-1 sm:pl-0 sm:pr-1 sm:text-xs">
+    <div className={`border-b px-2.5 py-1.5 text-white transition-colors duration-700 sm:px-5 sm:py-2.5 ${hudTone}`}>
+      <div className="min-w-0 border-b border-white/[.08] pb-1.5 pr-[7.6rem] sm:pb-2 sm:pr-36">
+        <p className="truncate text-[11px] font-black uppercase tracking-[-.015em] text-white sm:text-base">
           {team.nome}
         </p>
-        <button
-          type="button"
-          onClick={onPause}
-          disabled={!canPause}
-          className="min-h-6 rounded-full border border-white/10 bg-white/[0.06] px-1.5 text-[6px] font-black uppercase tracking-[0.06em] transition enabled:hover:bg-white/10 disabled:opacity-30 sm:min-h-8 sm:px-3 sm:text-[7px] sm:tracking-[0.08em]"
-        >
-          {paused ? "Riprendi" : "Pausa"}
-        </button>
-        <TopValue label="Gol" value={String(snapshot.goals)} accent />
-        <TopValue label="Punti" value={formatNumber(snapshot.score)} />
-        <TopValue label="Record" value={formatNumber(snapshot.best)} />
-        <TopValue label="Metri" value={`${formatNumber(snapshot.distance)} m`} />
       </div>
 
-      <div className={`mx-auto grid max-w-2xl grid-cols-[52px_minmax(0,1fr)] items-center gap-1 pb-0 pt-1 transition duration-300 sm:grid-cols-[88px_minmax(0,1fr)] sm:gap-4 sm:pb-0.5 sm:pt-1.5 ${danger ? "animate-pulse" : ""}`}>
-        <div className="flex h-12 w-12 items-center justify-center justify-self-start sm:h-20 sm:w-20">
-          <Image
-            src={team.logo}
-            alt={`Stemma ${team.nome}`}
-            width={80}
-            height={80}
-            className="max-h-full max-w-full object-contain drop-shadow-[0_7px_12px_rgba(0,0,0,0.32)]"
-          />
+      <div className="grid grid-cols-[66px_minmax(0,1fr)_82px] items-center gap-1.5 pt-1 sm:grid-cols-[105px_minmax(0,560px)_125px] sm:justify-center sm:gap-4 sm:pt-1.5">
+        <div className="space-y-1 border-r border-white/10 pr-1.5 text-center sm:pr-3">
+          <Metric label="Record" value={formatNumber(snapshot.best)} />
+          <Metric label="Gol" value={String(snapshot.goals)} accent />
         </div>
 
         <div className="min-w-0 text-center">
-          <div className="flex items-end justify-center gap-1.5">
-            {danger && (
-              <span className="mb-1 flex h-4 w-4 items-center justify-center rounded-full border border-rose-300/70 text-[8px] font-black text-rose-200">
-                !
-              </span>
-            )}
-            <div>
-              <p className="text-[7px] font-black uppercase tracking-[0.2em] text-white/42">
-                Voto squadra
-                {snapshot.protectionActive && (
-                  <span className="ml-1.5 text-sky-200/70">
-                    Prot. {snapshot.protectionRemaining.toFixed(1)}s
-                  </span>
-                )}
-              </p>
-              <p className={`text-[1.65rem] font-black leading-[0.86] tracking-[-0.05em] tabular-nums sm:text-[2.35rem] ${danger ? "text-rose-200" : "text-amber-300"}`}>
-                {formatRating(snapshot.teamRating)}
-              </p>
+          <p className={`text-[6px] font-black uppercase tracking-[.2em] sm:text-[7px] ${warning ? "text-rose-100" : "text-white/52"}`}>
+            Voto · vita
+          </p>
+          <div className="flex h-8 items-center justify-center gap-1 sm:h-10 sm:gap-2">
+            {warning && <span aria-hidden="true" className={`life-warning-icon text-[1.25rem] leading-none sm:text-[1.75rem] ${critical ? "text-rose-300" : "text-amber-200"}`}>⚠</span>}
+            <strong className={`min-w-[60px] text-center text-[1.65rem] font-black leading-none tracking-[-.04em] tabular-nums sm:min-w-[88px] sm:text-[2.25rem] ${critical ? "text-rose-200" : warning ? "text-amber-200" : "text-amber-300"}`}>
+              {formatRating(snapshot.teamRating)}
+            </strong>
+            {warning && <span aria-hidden="true" className={`life-warning-icon text-[1.25rem] leading-none sm:text-[1.75rem] ${critical ? "text-rose-300" : "text-amber-200"}`}>⚠</span>}
+            {warning && <span className="sr-only">Zona di pericolo</span>}
+          </div>
+
+          <div className="mx-auto grid w-full grid-cols-[26px_minmax(0,1fr)_40px] items-center gap-1.5 sm:grid-cols-[38px_minmax(0,1fr)_60px] sm:gap-2.5">
+            <strong className="text-right text-sm font-black tabular-nums text-rose-100 sm:text-lg">62</strong>
+            <div className={`relative h-3.5 rounded-full border bg-slate-950/72 shadow-[inset_0_1px_5px_rgba(0,0,0,.58)] sm:h-4 ${critical ? "life-bar-critical border-rose-100/75" : warning ? "border-amber-200/55" : "border-white/20"}`}>
+              <span className={`absolute inset-y-0 left-0 rounded-full transition-[width,background] duration-300 ${critical ? "bg-gradient-to-r from-rose-700 to-rose-400" : warning ? "bg-gradient-to-r from-rose-500 to-amber-300" : "bg-gradient-to-r from-rose-500 via-amber-300 to-emerald-400"}`} style={{ width: `${ratingProgress}%` }} />
+              <span className={`absolute -top-1 h-[calc(100%+8px)] w-1.5 -translate-x-1/2 rounded-full border bg-blue-950 transition-[left] duration-300 ${critical ? "border-rose-50 shadow-[0_0_12px_rgba(251,113,133,.9)]" : "border-white/90"}`} style={{ left: `${ratingProgress}%` }} />
             </div>
+            <span className="text-left text-[5px] font-black uppercase leading-tight tracking-[.03em] text-emerald-100/70 sm:text-[7px]">Gol a <b className="block text-xs leading-none tabular-nums text-emerald-100 sm:text-base">{nextGoal}</b></span>
           </div>
-
-          <div className="relative mx-auto mt-1 h-1.5 max-w-md rounded-full bg-rose-400/25">
-            <span className="absolute inset-y-0 right-0 rounded-r-full bg-emerald-400/18" style={{ left: `${thresholdPosition}%` }} />
-            <span className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-rose-400 via-amber-300 to-emerald-400 transition-[width] duration-300" style={{ width: `${ratingProgress}%` }} />
-            <span className="absolute -top-0.5 h-3 w-px bg-white/80" style={{ left: `${thresholdPosition}%` }} />
-            <span className="absolute -top-1 h-4 w-1 -translate-x-1/2 rounded-full border border-white/80 bg-blue-950 transition-[left] duration-300" style={{ left: `${ratingProgress}%` }} />
-          </div>
-
-          <div className="relative mx-auto mt-0.5 h-2.5 max-w-md text-[6px] font-black uppercase tracking-[0.08em] text-white/32">
-            <span className="absolute left-0">61,5</span>
-            <span className="absolute -translate-x-1/2 text-white/65" style={{ left: `${thresholdPosition}%` }}>62</span>
-            <span className="absolute right-0">{scaleEnd}</span>
-          </div>
+          <p className={`mt-0.5 text-[6px] font-black uppercase tracking-[.12em] sm:text-[7px] ${critical ? "text-rose-200" : "text-white/45"}`}>
+            {critical ? "Pericolo · sotto 62 termina la corsa" : "Sotto 62 termina la corsa"}
+          </p>
         </div>
 
+        <div className="space-y-1 border-l border-white/10 pl-1.5 text-center sm:pl-3">
+          <div>
+            <p className="text-[6px] font-black uppercase tracking-[.13em] text-amber-100/55 sm:text-[7px]">Punti</p>
+            <strong key={Math.floor(snapshot.score / 250)} className="score-value-pop block truncate text-base font-black leading-none tabular-nums text-amber-300 sm:text-2xl">
+              {formatNumber(snapshot.score)}
+            </strong>
+          </div>
+          <Metric label="Metri" value={`${formatNumber(snapshot.distance)} m`} />
+        </div>
       </div>
+
+      <style jsx global>{`
+        @keyframes life-critical-pulse { 0%,100% { transform:scaleY(1); } 50% { transform:scaleY(1.08); } }
+        @keyframes warning-icon-pulse { 0%,100% { opacity:.78; transform:scale(.96); } 50% { opacity:1; transform:scale(1.08); } }
+        @keyframes score-value-pop { 0% { opacity:.72; transform:translateY(2px) scale(.96); } 100% { opacity:1; transform:none; } }
+        .life-bar-critical { animation:life-critical-pulse 1.8s ease-in-out infinite; will-change:transform; }
+        .life-warning-icon { animation:warning-icon-pulse 1.8s ease-in-out infinite; }
+        .score-value-pop { animation:score-value-pop 260ms ease-out both; }
+        @media (prefers-reduced-motion:reduce) { .life-bar-critical,.life-warning-icon,.score-value-pop { animation:none; } }
+      `}</style>
     </div>
   );
 }
 
-function TopValue({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) {
-  return (
-    <div className="min-w-0 border-l border-white/10 px-0.5 text-center sm:px-3">
-      <p className="text-[6px] font-black uppercase tracking-[0.11em] text-white/32">{label}</p>
-      <p className={`truncate text-[8px] font-black tabular-nums sm:text-xs ${accent ? "text-amber-300" : "text-white"}`}>{value}</p>
-    </div>
-  );
+function Metric({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) {
+  return <div className="min-w-0"><p className="text-[6px] font-black uppercase tracking-[.11em] text-white/36 sm:text-[7px]">{label}</p><p className={`truncate text-[9px] font-black leading-none tabular-nums sm:text-sm ${accent ? "text-amber-300" : "text-white"}`}>{value}</p></div>;
 }
 
-function formatNumber(value: number) {
-  return Math.round(value).toLocaleString("it-IT");
-}
-
-function formatRating(value: number) {
-  return value.toLocaleString("it-IT", {
-    minimumFractionDigits: value % 1 ? 1 : 0,
-    maximumFractionDigits: 1,
-  });
-}
+function formatNumber(value: number) { return Math.round(value).toLocaleString("it-IT"); }
+function formatRating(value: number) { return value.toLocaleString("it-IT", { minimumFractionDigits: value % 1 ? 1 : 0, maximumFractionDigits: 1 }); }

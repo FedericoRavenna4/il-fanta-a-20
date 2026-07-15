@@ -1,7 +1,7 @@
 "use client";
 
-import Image from "next/image";
-import { useCallback, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   TEAM_RATING_INITIAL,
   TEAM_RATING_THRESHOLD,
@@ -10,6 +10,7 @@ import type { GameSnapshot, GameStatus, GameTeam } from "@/lib/game/types";
 import FantaRunner from "./FantaRunner";
 import GameHud from "./GameHud";
 import GameOver from "./GameOver";
+import GameOverlayLayer from "./GameOverlayLayer";
 import TeamSelector from "./TeamSelector";
 
 function createEmptySnapshot(best = 0): GameSnapshot {
@@ -31,6 +32,11 @@ function createEmptySnapshot(best = 0): GameSnapshot {
     malusesCollected: 0,
     message: "",
     gameOverReason: "",
+    rafficaType: null,
+    rafficaRemaining: 0,
+    activePowerUps: [],
+    presentation: null,
+    bossRemaining: 0,
   };
 }
 
@@ -41,16 +47,19 @@ export default function GameClient({
   teams: GameTeam[];
   initialTeamSlug?: string;
 }) {
+  const [selectorVersion, setSelectorVersion] = useState(0);
   const [team, setTeam] = useState<GameTeam | null>(null);
-  const [initialSelectionAvailable, setInitialSelectionAvailable] = useState(
-    Boolean(initialTeamSlug)
-  );
+  const [initialSelectionAvailable, setInitialSelectionAvailable] = useState(Boolean(initialTeamSlug));
   const [status, setStatus] = useState<GameStatus>("selecting");
   const [runId, setRunId] = useState(0);
   const [best, setBest] = useState(0);
+  const [assetsReady, setAssetsReady] = useState(false);
   const [isNewRecord, setIsNewRecord] = useState(false);
   const [snapshot, setSnapshot] = useState<GameSnapshot>(() => createEmptySnapshot());
   const [finalResult, setFinalResult] = useState<GameSnapshot | null>(null);
+  const dialogRef = useRef<HTMLElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
+  const modalOpen = Boolean(team) && status !== "selecting";
 
   const selectTeam = useCallback((selectedTeam: GameTeam) => {
     const savedBest = readBest(selectedTeam.id);
@@ -59,172 +68,220 @@ export default function GameClient({
     setIsNewRecord(false);
     setFinalResult(null);
     setSnapshot(createEmptySnapshot(savedBest));
+    setAssetsReady(false);
     setInitialSelectionAvailable(false);
     setStatus("ready");
   }, []);
 
   const startGame = useCallback(() => {
+    if (!assetsReady) return;
     setIsNewRecord(false);
     setFinalResult(null);
     setSnapshot(createEmptySnapshot(best));
     setRunId((current) => current + 1);
     setStatus("running");
-  }, [best]);
+  }, [assetsReady, best]);
 
-  const handleGameOver = useCallback(
-    (result: GameSnapshot) => {
-      if (!team) return;
-      const nextBest = Math.max(best, result.score);
-      const completedResult = { ...result, best: nextBest };
-      setIsNewRecord(result.score > best);
-      setBest(nextBest);
-      setSnapshot(completedResult);
-      setFinalResult(completedResult);
-      writeBest(team.id, nextBest);
-      setStatus("gameOver");
-    },
-    [best, team]
-  );
+  const handleGameOver = useCallback((result: GameSnapshot) => {
+    if (!team) return;
+    const nextBest = Math.max(best, result.score);
+    const completedResult = { ...result, best: nextBest };
+    setIsNewRecord(result.score > best);
+    setBest(nextBest);
+    setSnapshot(completedResult);
+    setFinalResult(completedResult);
+    writeBest(team.id, nextBest);
+    setStatus("gameOver");
+  }, [best, team]);
 
-  const returnToGameHome = useCallback(
-    (requireConfirmation: boolean) => {
-      if (
-        requireConfirmation &&
-        (status === "running" || status === "paused") &&
-        !window.confirm("Vuoi abbandonare la partita in corso?")
-      ) {
-        return;
-      }
+  const returnToGameHome = useCallback((requireConfirmation: boolean) => {
+    if (
+      requireConfirmation &&
+      (status === "running" || status === "paused") &&
+      !window.confirm("Vuoi abbandonare la partita in corso?")
+    ) return;
 
-      setStatus("selecting");
-      setTeam(null);
-      setRunId((current) => current + 1);
-      setBest(0);
-      setIsNewRecord(false);
-      setFinalResult(null);
-      setSnapshot(createEmptySnapshot());
-    },
-    [status]
-  );
+    setStatus("selecting");
+    setTeam(null);
+    setRunId((current) => current + 1);
+    setBest(0);
+    setIsNewRecord(false);
+    setFinalResult(null);
+    setSnapshot(createEmptySnapshot());
+    setAssetsReady(false);
+    setSelectorVersion((current) => current + 1);
+  }, [status]);
+
+  useEffect(() => {
+    if (status !== "ready" || !assetsReady) return;
+    const timer = window.setTimeout(startGame, 520);
+    return () => window.clearTimeout(timer);
+  }, [assetsReady, startGame, status]);
 
   useEffect(() => {
     function onVisibilityChange() {
       if (document.hidden && status === "running") setStatus("paused");
     }
-
     document.addEventListener("visibilitychange", onVisibilityChange);
     return () => document.removeEventListener("visibilitychange", onVisibilityChange);
   }, [status]);
 
   useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      if ((event.code === "Space" || event.code === "ArrowUp") && status === "ready") {
-        event.preventDefault();
-        startGame();
-      }
+    if (!modalOpen) return;
+    const scrollY = window.scrollY;
+    const body = document.body;
+    const root = document.documentElement;
+    const previous = {
+      position: body.style.position,
+      top: body.style.top,
+      width: body.style.width,
+      overflow: body.style.overflow,
+      overscroll: root.style.overscrollBehavior,
+      scrollBehavior: root.style.scrollBehavior,
+    };
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.width = "100%";
+    body.style.overflow = "hidden";
+    root.style.overscrollBehavior = "none";
+
+    return () => {
+      body.style.position = previous.position;
+      body.style.top = previous.top;
+      body.style.width = previous.width;
+      body.style.overflow = previous.overflow;
+      root.style.overscrollBehavior = previous.overscroll;
+      root.style.scrollBehavior = "auto";
+      window.scrollTo(0, scrollY);
+      requestAnimationFrame(() => { root.style.scrollBehavior = previous.scrollBehavior; });
+    };
+  }, [modalOpen]);
+
+  useEffect(() => {
+    if (!modalOpen) return;
+    previousFocusRef.current = document.activeElement as HTMLElement | null;
+    const frame = requestAnimationFrame(() => dialogRef.current?.focus());
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      if (status === "running") setStatus("paused");
+      else returnToGameHome(false);
     }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("keydown", handleKeyDown);
+      previousFocusRef.current?.focus();
+    };
+  }, [modalOpen, returnToGameHome, status]);
 
-    window.addEventListener("keydown", onKeyDown, { passive: false });
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [startGame, status]);
+  const gameModal = typeof document !== "undefined" && modalOpen && team
+    ? createPortal(
+        <div className="game-modal-backdrop fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/90 p-[max(.35rem,env(safe-area-inset-top))_max(.35rem,env(safe-area-inset-right))_max(.35rem,env(safe-area-inset-bottom))_max(.35rem,env(safe-area-inset-left))]">
+          <section
+            ref={dialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Partita con ${team.nome}`}
+            tabIndex={-1}
+            className="game-modal-panel relative max-w-full overflow-hidden rounded-[1rem] border border-white/15 bg-[#020817] shadow-[0_35px_110px_rgba(2,8,23,.68),0_0_48px_rgba(56,189,248,.1)] outline-none sm:rounded-[1.6rem]"
+            style={{ width: "min(97vw, calc((100dvh - 7rem) * 1.8), 1280px)" }}
+          >
+            <div className="absolute right-2 top-2 z-30 flex items-center gap-1.5 sm:right-3 sm:top-3">
+              {(status === "running" || status === "paused") && (
+                <button
+                  type="button"
+                  onClick={() => setStatus((current) => current === "running" ? "paused" : current === "paused" ? "running" : current)}
+                  className="min-h-11 rounded-full border border-white/18 bg-slate-950/90 px-4 text-[9px] font-black uppercase tracking-[.12em] text-white shadow-lg transition hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                >
+                  {status === "paused" ? "Riprendi" : "Pausa"}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => returnToGameHome(true)}
+                aria-label="Chiudi il gioco e torna alla selezione"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-white/18 bg-slate-950/90 text-xl font-light text-white shadow-lg transition hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              >
+                ×
+              </button>
+            </div>
 
-  if (!team || status === "selecting") {
-    return (
+            <GameHud team={team} snapshot={snapshot} />
+
+            <div className="relative overflow-hidden">
+              <FantaRunner
+                team={team}
+                status={status}
+                runId={runId}
+                best={best}
+                onSnapshot={setSnapshot}
+                onGameOver={handleGameOver}
+                onAssetsReady={setAssetsReady}
+              />
+              <GameOverlayLayer presentation={snapshot.presentation} snapshot={snapshot} />
+
+              {status === "ready" && (
+                <div className="game-ready-curtain pointer-events-none absolute inset-0 z-[9] flex items-center justify-center bg-[#020817]/88 backdrop-blur-sm">
+                  <span className="text-[9px] font-black uppercase tracking-[.24em] text-sky-100/75">Preparazione del campo</span>
+                </div>
+              )}
+
+              {status === "paused" && (
+                <div className="absolute inset-0 z-20 flex items-center justify-center bg-[#020817]/84 p-4 backdrop-blur-md">
+                  <div className="text-center text-white">
+                    <p className="text-[9px] font-black uppercase tracking-[.24em] text-amber-300">Sessione sospesa</p>
+                    <h2 className="mt-1 text-3xl font-black uppercase">Pausa</h2>
+                    <div className="mt-5 flex flex-col justify-center gap-2 sm:flex-row">
+                      <button type="button" onClick={() => setStatus("running")} className="min-h-12 rounded-full bg-white px-7 text-[10px] font-black uppercase tracking-[.16em] text-blue-950">Riprendi</button>
+                      <button type="button" onClick={() => returnToGameHome(true)} className="min-h-12 rounded-full border border-white/15 px-6 text-[10px] font-black uppercase tracking-[.14em] text-white/75">Torna alla selezione</button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {status === "gameOver" && finalResult && (
+                <GameOver team={team} result={finalResult} isNewRecord={isNewRecord} onRetry={startGame} onReturn={() => returnToGameHome(false)} />
+              )}
+            </div>
+          </section>
+          <style jsx global>{`
+            @keyframes game-modal-backdrop-in { from { opacity:0; } to { opacity:1; } }
+            @keyframes game-modal-panel-in { from { opacity:0; transform:translate3d(0,12px,0) scale(.975); } to { opacity:1; transform:none; } }
+            @keyframes game-ready-reveal { 0%,55% { opacity:1; } 100% { opacity:0; } }
+            .game-modal-backdrop { animation:game-modal-backdrop-in 260ms ease-out both; }
+            .game-modal-panel { animation:game-modal-panel-in 420ms cubic-bezier(.2,.8,.2,1) both; }
+            .game-ready-curtain { animation:game-ready-reveal 520ms ease-out both; }
+            @media (prefers-reduced-motion:reduce) { .game-modal-backdrop,.game-modal-panel,.game-ready-curtain { animation-duration:1ms; } }
+          `}</style>
+        </div>,
+        document.body
+      )
+    : null;
+
+  return (
+    <>
       <TeamSelector
+        key={selectorVersion}
         teams={teams}
         initialTeamSlug={initialSelectionAvailable ? initialTeamSlug : undefined}
         onSelect={selectTeam}
       />
-    );
-  }
-
-  return (
-    <section className="mx-auto max-w-6xl overflow-hidden rounded-[1.1rem] border border-slate-300/80 bg-[#020817] shadow-[0_34px_95px_rgba(15,23,42,0.24),0_0_45px_rgba(56,189,248,0.06)] ring-1 ring-white/80 sm:rounded-[2rem]">
-      <GameHud
-        team={team}
-        snapshot={snapshot}
-        paused={status === "paused"}
-        canPause={status === "running" || status === "paused"}
-        onPause={() =>
-          setStatus((current) => {
-            if (current === "running") return "paused";
-            if (current === "paused") return "running";
-            return current;
-          })
-        }
-      />
-
-      <div className="relative overflow-hidden">
-        <FantaRunner
-          team={team}
-          status={status}
-          runId={runId}
-          best={best}
-          onSnapshot={setSnapshot}
-          onGameOver={handleGameOver}
-        />
-
-        {status === "ready" && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#020817]/78 p-2 backdrop-blur-sm sm:p-4">
-            <div className="w-full max-w-md text-center text-white">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center sm:h-20 sm:w-20">
-                <Image src={team.logo} alt={`Stemma ${team.nome}`} width={96} height={96} priority className="max-h-full max-w-full object-contain drop-shadow-[0_15px_25px_rgba(0,0,0,0.45)]" />
-              </div>
-              <p className="mt-3 text-[9px] font-black uppercase tracking-[0.24em] text-amber-300">{team.nome}</p>
-              <h2 className="mt-1 text-2xl font-black uppercase tracking-tight sm:text-4xl">Pronto alla corsa</h2>
-              <p className="mx-auto mt-1 max-w-sm text-[9px] font-semibold leading-3 text-white/58 sm:hidden">
-                Scorri verso l&apos;alto per saltare<br />
-                Scorri verso il basso per abbassarti
-              </p>
-              <p className="mx-auto mt-2 hidden max-w-sm text-sm font-semibold leading-5 text-white/55 sm:block">
-                Touch: sinistra per abbassarti, destra per saltare. Mouse: sinistro salta, destro abbassa. Tastiera: ↓, ↑ o Spazio.
-              </p>
-              <div className="mt-2 flex items-center justify-center gap-1.5 sm:mt-5 sm:gap-2">
-                <button type="button" onClick={startGame} className="min-h-9 rounded-full bg-amber-300 px-4 text-[8px] font-black uppercase tracking-[0.12em] text-blue-950 transition hover:bg-amber-200 sm:min-h-12 sm:px-8 sm:text-[10px] sm:tracking-[0.16em]">Inizia la corsa</button>
-                <button type="button" onClick={() => returnToGameHome(false)} className="min-h-9 rounded-full border border-white/15 bg-white/[0.06] px-3 text-[8px] font-black uppercase tracking-[0.1em] text-white transition hover:bg-white/10 sm:min-h-12 sm:px-6 sm:text-[10px] sm:tracking-[0.13em]">Cambia società</button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {status === "paused" && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-[#020817]/82 p-4 backdrop-blur-md">
-            <div className="text-center text-white">
-              <p className="text-[9px] font-black uppercase tracking-[0.24em] text-amber-300">Sessione sospesa</p>
-              <h2 className="mt-1 text-3xl font-black uppercase">Pausa</h2>
-              <div className="mt-5 flex flex-col justify-center gap-2 sm:flex-row">
-                <button type="button" onClick={() => setStatus("running")} className="min-h-12 rounded-full bg-white px-7 text-[10px] font-black uppercase tracking-[0.16em] text-blue-950">Riprendi</button>
-                <button type="button" onClick={() => returnToGameHome(true)} className="min-h-12 rounded-full border border-white/15 px-6 text-[10px] font-black uppercase tracking-[0.14em] text-white/70">Torna alla selezione</button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {status === "gameOver" && finalResult && (
-          <GameOver team={team} result={finalResult} isNewRecord={isNewRecord} onRetry={startGame} onReturn={() => returnToGameHome(false)} />
-        )}
-      </div>
-    </section>
+      {gameModal}
+    </>
   );
 }
 
-function storageKey(teamId: number) {
-  return `fanta-runner-best:${teamId}`;
-}
+function storageKey(teamId: number) { return `fanta-runner-best:${teamId}`; }
 
 function readBest(teamId: number) {
   try {
     const value = Number(window.localStorage.getItem(storageKey(teamId)) ?? 0);
     return Number.isFinite(value) && value > 0 ? Math.round(value) : 0;
-  } catch {
-    return 0;
-  }
+  } catch { return 0; }
 }
 
 function writeBest(teamId: number, score: number) {
-  try {
-    window.localStorage.setItem(storageKey(teamId), String(score));
-  } catch {
-    // Il gioco resta utilizzabile anche se lo storage del browser è bloccato.
-  }
+  try { window.localStorage.setItem(storageKey(teamId), String(score)); }
+  catch { /* Il gioco resta utilizzabile se lo storage è bloccato. */ }
 }

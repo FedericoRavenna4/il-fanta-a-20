@@ -1,32 +1,56 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { memo, useCallback, useEffect, useRef } from "react";
 import {
+  BONUS_HEIGHT_OFFSETS,
   EVENT_DEFINITIONS,
   CROUCH_DURATION_MS,
+  DIFFICULTY_BANDS,
   DIFFICULTY_CONFIG,
-  FLOW_NEW_SCENARIO,
+  ENTITY_DENSITY_CONFIG,
   FLOW_PERFECT_OBSTACLE,
   FLOW_PROGRESS_PER_SECOND,
-  FLOW_RATING_REWARD,
   GAME_HEIGHT,
+  GAME_SCENARIOS,
   GAME_WIDTH,
   GRAVITY,
   GROUND_Y,
   INITIAL_PROTECTION_SECONDS,
   JUMP_FORCE,
+  JUMP_HOLD_ACCELERATION,
+  JUMP_MAX_HOLD_SECONDS,
+  JUMP_RELEASE_FACTOR,
+  RAFFICA_CONFIG,
+  SCENARIO_DISTANCE_METERS,
   GOAL_RATING_STEP,
   GOAL_THRESHOLD_COMBO_BONUS,
   GOAL_THRESHOLD_SCORE_BONUS,
   PLAYER_SIZE,
   PLAYER_X,
-  SCENARIO_DURATION_SECONDS,
   SPEED_CONFIG,
   TEAM_RATING_INITIAL,
   TEAM_RATING_THRESHOLD,
 } from "@/lib/game/config";
 import { createSpawnDecision, getSafeSpawnInterval } from "@/lib/game/generator";
-import { getScenarioState } from "@/lib/game/scenarios";
+import { preloadGameAssets, type GameImageMap } from "@/lib/game/assetLoader";
+import {
+  BACKGROUND_STAGE_CONFIG,
+  BACKGROUND_TRANSITION_CONFIG,
+  EVENT_SPRITES,
+  OBSTACLE_SPRITES,
+  getBackgroundStageForDistance,
+  type GameBackgroundStage,
+} from "@/lib/game/assets";
+import {
+  POWER_UP_CONFIG,
+  POWER_UP_SPAWN_CONFIG,
+  pickPowerUp,
+} from "@/lib/game/powerups";
+import {
+  BOSS_CONFIG,
+  RAFFICA_PRESENTATION_ASSETS,
+} from "@/lib/game/specialEvents";
+import { logRatingChange, type RatingChangeReason } from "@/lib/game/rating";
 import type {
   EventKind,
   GameScenario,
@@ -35,22 +59,38 @@ import type {
   GameTeam,
   GroundPit,
   PhysicalObstacleKind,
+  PowerUpKind,
+  RafficaType,
   RunnerEntity,
 } from "@/lib/game/types";
 
+type ActivePowerUp = { expiresAt: number; charges: number };
+type PresentationState = {
+  asset: string;
+  title: string;
+  subtitle: string;
+  tone: "bonus" | "malus" | "neutral";
+  until: number;
+};
+
 type Runtime = {
   playerX: number;
+  playerVisible: boolean;
   playerY: number;
   velocityY: number;
   horizontalVelocity: number;
   grounded: boolean;
+  jumpHeld: boolean;
+  jumpHoldRemaining: number;
   blockedObstacleId: number | null;
   entities: RunnerEntity[];
+  entityPool: RunnerEntity[];
   pits: GroundPit[];
   nextEntityId: number;
   spawnTimer: number;
   elapsed: number;
   score: number;
+  peakScore: number;
   multiplier: number;
   teamRating: number;
   distance: number;
@@ -60,12 +100,14 @@ type Runtime = {
   protectionAvailable: boolean;
   protectionEndNotified: boolean;
   flowProgress: number;
-  lastScenarioIndex: number;
+  confirmedGoals: number;
   maxGoalsReached: number;
+  hatTricksSpawned: number;
   goalCelebrationUntil: number;
   goalCelebrationGoals: number;
   message: string;
   messageTone: "bonus" | "malus" | null;
+  messageStartedAt: number;
   messageUntil: number;
   effect: "bonus" | "malus" | "jump" | "hit" | "goal" | null;
   effectUntil: number;
@@ -73,24 +115,99 @@ type Runtime = {
   lastFrame: number;
   lastHudUpdate: number;
   finished: boolean;
+  backgroundStage: GameBackgroundStage;
+  stadiumOffset: number;
+  groundOffset: number;
+  backgroundTransition: {
+    from: GameBackgroundStage;
+    to: GameBackgroundStage;
+    progress: number;
+    duration: number;
+  } | null;
+  burst: {
+    type: RafficaType;
+    phase: "warning" | "active";
+    timer: number;
+    durationRemaining: number;
+    index: number;
+    hatTrickSpawned: boolean;
+  } | null;
+  malusBurstCooldown: number;
+  bonusBurstCooldown: number;
+  mutualBurstCooldown: number;
+  burstOverlayType: RafficaType | null;
+  burstOverlayIntensity: number;
+  visualComfort: number;
+  nextBurstEligibleAt: number;
+  nextForcedBurstAt: number;
+  lastSpawnCategory: "bonus" | "malus" | "physical" | "space" | null;
+  repeatedSpawnCategory: number;
+  activePowerUps: Partial<Record<PowerUpKind, ActivePowerUp>>;
+  powerUpCollectionEffect: { kind: PowerUpKind; until: number } | null;
+  powerUpCooldown: number;
+  cinematicSlowUntil: number;
+  presentation: PresentationState | null;
+  boss: {
+    phase: "warning" | "active" | "exiting";
+    timer: number;
+    spawnTimer: number;
+    lastShotAt: number;
+  } | null;
+  nextBossAt: number;
+  reducedPerformance: boolean;
 };
 
 const PLAYER_GROUND_Y = GROUND_Y - PLAYER_SIZE;
+const MALUS_RAFFICA_POOL: Array<{ kind: EventKind; weight: number }> = [
+  { kind: "yellowCard", weight: 18 },
+  { kind: "concededGoal", weight: 18 },
+  { kind: "redCard", weight: 12 },
+  { kind: "ownGoal", weight: 4 },
+  { kind: "missedPenalty", weight: 3 },
+];
+
+const BONUS_RAFFICA_POOL: Array<{ kind: EventKind; weight: number }> = [
+  { kind: "assist", weight: 18 },
+  { kind: "cleanSheet", weight: 18 },
+  { kind: "goal", weight: 4 },
+];
+const RAFFICA_OVERLAY_CACHE = new Map<string, HTMLCanvasElement>();
+const LOGICAL_VIEWPORT = { width: GAME_WIDTH, height: GAME_HEIGHT } as const;
+
+type CanvasRenderState = {
+  context: CanvasRenderingContext2D | null;
+  dirty: boolean;
+  dprLimit: number;
+};
+
+type PerformanceMonitor = {
+  windowStartedAt: number;
+  frames: number;
+  renderTime: number;
+  slowWindows: number;
+  lastLogAt: number;
+  hudUpdates: number;
+};
 
 function createRuntime(): Runtime {
   return {
     playerX: PLAYER_X,
+    playerVisible: true,
     playerY: PLAYER_GROUND_Y,
     velocityY: 0,
     horizontalVelocity: 0,
     grounded: true,
+    jumpHeld: false,
+    jumpHoldRemaining: 0,
     blockedObstacleId: null,
     entities: [],
+    entityPool: [],
     pits: [],
     nextEntityId: 1,
     spawnTimer: 1.05,
     elapsed: 0,
     score: 0,
+    peakScore: 0,
     multiplier: 1,
     teamRating: TEAM_RATING_INITIAL,
     distance: 0,
@@ -100,12 +217,14 @@ function createRuntime(): Runtime {
     protectionAvailable: true,
     protectionEndNotified: false,
     flowProgress: 0,
-    lastScenarioIndex: 0,
+    confirmedGoals: 0,
     maxGoalsReached: 0,
+    hatTricksSpawned: 0,
     goalCelebrationUntil: 0,
     goalCelebrationGoals: 0,
     message: "",
     messageTone: null,
+    messageStartedAt: 0,
     messageUntil: 0,
     effect: null,
     effectUntil: 0,
@@ -113,16 +232,46 @@ function createRuntime(): Runtime {
     lastFrame: 0,
     lastHudUpdate: 0,
     finished: false,
+    backgroundStage: 1,
+    stadiumOffset: 0,
+    groundOffset: 0,
+    backgroundTransition: null,
+    burst: null,
+    malusBurstCooldown: 0,
+    bonusBurstCooldown: 0,
+    mutualBurstCooldown: 0,
+    burstOverlayType: null,
+    burstOverlayIntensity: 0,
+    visualComfort: 0,
+    nextBurstEligibleAt: RAFFICA_CONFIG.initialQuietSeconds,
+    nextForcedBurstAt: randomBetween(
+      RAFFICA_CONFIG.firstForcedWindow.minimum,
+      RAFFICA_CONFIG.firstForcedWindow.maximum
+    ),
+    lastSpawnCategory: null,
+    repeatedSpawnCategory: 0,
+    activePowerUps: {},
+    powerUpCollectionEffect: null,
+    powerUpCooldown: 0,
+    cinematicSlowUntil: 0,
+    presentation: null,
+    boss: null,
+    nextBossAt: randomBetween(
+      BOSS_CONFIG.initialWindowSeconds.minimum,
+      BOSS_CONFIG.initialWindowSeconds.maximum
+    ),
+    reducedPerformance: false,
   };
 }
 
-export default function FantaRunner({
+function FantaRunner({
   team,
   status,
   runId,
   best,
   onSnapshot,
   onGameOver,
+  onAssetsReady,
 }: {
   team: GameTeam;
   status: GameStatus;
@@ -130,6 +279,7 @@ export default function FantaRunner({
   best: number;
   onSnapshot: (snapshot: GameSnapshot) => void;
   onGameOver: (snapshot: GameSnapshot) => void;
+  onAssetsReady: (ready: boolean) => void;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const runtimeRef = useRef<Runtime>(createRuntime());
@@ -137,15 +287,31 @@ export default function FantaRunner({
   const statusRef = useRef(status);
   const bestRef = useRef(best);
   const reducedMotionRef = useRef(false);
+  const assetsRef = useRef<GameImageMap>(new Map());
+  const renderStateRef = useRef<CanvasRenderState>({
+    context: null,
+    dirty: true,
+    dprLimit: 1.5,
+  });
+  const performanceRef = useRef<PerformanceMonitor>({
+    windowStartedAt: 0,
+    frames: 0,
+    renderTime: 0,
+    slowWindows: 0,
+    lastLogAt: 0,
+    hudUpdates: 0,
+  });
   const touchGestureRef = useRef({
     pointerId: -1,
     startX: 0,
     startY: 0,
     triggered: false,
+    jumping: false,
   });
 
   useEffect(() => {
     statusRef.current = status;
+    runtimeRef.current.playerVisible = status !== "ready";
   }, [status]);
 
   useEffect(() => {
@@ -159,8 +325,15 @@ export default function FantaRunner({
     image.onload = () => {
       const canvas = canvasRef.current;
       if (!canvas || statusRef.current === "running") return;
-      const context = prepareCanvas(canvas);
-      drawGame(context, runtimeRef.current, image, performance.now(), reducedMotionRef.current);
+      const context = prepareCanvas(canvas, renderStateRef.current, true);
+      drawGame(
+        context,
+        runtimeRef.current,
+        image,
+        assetsRef.current,
+        performance.now(),
+        reducedMotionRef.current
+      );
     };
     logoRef.current = image;
     return () => {
@@ -168,6 +341,30 @@ export default function FantaRunner({
       logoRef.current = null;
     };
   }, [team.logo]);
+
+  useEffect(() => {
+    let cancelled = false;
+    onAssetsReady(false);
+    preloadGameAssets().then((images) => {
+      if (cancelled) return;
+      assetsRef.current = images;
+      onAssetsReady(true);
+      const canvas = canvasRef.current;
+      if (!canvas || statusRef.current === "running") return;
+      const context = prepareCanvas(canvas, renderStateRef.current, true);
+      drawGame(
+        context,
+        runtimeRef.current,
+        logoRef.current,
+        images,
+        performance.now(),
+        reducedMotionRef.current
+      );
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [onAssetsReady]);
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -180,20 +377,59 @@ export default function FantaRunner({
   }, []);
 
   useEffect(() => {
-    runtimeRef.current = createRuntime();
+    const runtime = createRuntime();
+    runtime.playerVisible = statusRef.current !== "ready";
+    runtimeRef.current = runtime;
+    performanceRef.current = {
+      windowStartedAt: 0,
+      frames: 0,
+      renderTime: 0,
+      slowWindows: 0,
+      lastLogAt: 0,
+      hudUpdates: 0,
+    };
+    renderStateRef.current.dprLimit = 1.5;
+    renderStateRef.current.dirty = true;
     onSnapshot(toSnapshot(runtimeRef.current, bestRef.current, 0));
   }, [onSnapshot, runId]);
 
-  const jump = useCallback(() => {
+  const beginJump = useCallback(() => {
     if (statusRef.current !== "running") return;
     const runtime = runtimeRef.current;
     if (runtime.grounded) {
       runtime.crouchUntil = 0;
       runtime.grounded = false;
       runtime.blockedObstacleId = null;
-      runtime.velocityY = JUMP_FORCE;
+      const lukakuStrength = getPowerUpStrength(runtime, "lukaku");
+      runtime.velocityY = JUMP_FORCE * (1 + lukakuStrength * 0.26);
+      runtime.jumpHeld = true;
+      runtime.jumpHoldRemaining = JUMP_MAX_HOLD_SECONDS * (1 + lukakuStrength * 0.22);
       runtime.effect = "jump";
       runtime.effectUntil = performance.now() + 360;
+    }
+  }, []);
+
+  const releaseJump = useCallback(() => {
+    const runtime = runtimeRef.current;
+    if (!runtime.jumpHeld) return;
+    runtime.jumpHeld = false;
+    runtime.jumpHoldRemaining = 0;
+    if (runtime.velocityY < 0) {
+      runtime.velocityY *= JUMP_RELEASE_FACTOR;
+    }
+  }, []);
+
+  const cancelJumpAndDuck = useCallback(() => {
+    const runtime = runtimeRef.current;
+    runtime.jumpHeld = false;
+    runtime.jumpHoldRemaining = 0;
+    if (!runtime.grounded && runtime.playerY > PLAYER_GROUND_Y - 18) {
+      runtime.playerY = PLAYER_GROUND_Y;
+      runtime.velocityY = 0;
+      runtime.grounded = true;
+    }
+    if (runtime.grounded) {
+      runtime.crouchUntil = performance.now() + CROUCH_DURATION_MS;
     }
   }, []);
 
@@ -210,16 +446,26 @@ export default function FantaRunner({
       if (statusRef.current !== "running") return;
       if (event.code === "Space" || event.code === "ArrowUp") {
         event.preventDefault();
-        jump();
+        if (!event.repeat) beginJump();
       } else if (event.code === "ArrowDown") {
         event.preventDefault();
         duck();
       }
     }
 
+    function onKeyUp(event: KeyboardEvent) {
+      if (event.code === "Space" || event.code === "ArrowUp") {
+        releaseJump();
+      }
+    }
+
     window.addEventListener("keydown", onKeyDown, { passive: false });
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [duck, jump]);
+    window.addEventListener("keyup", onKeyUp);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+    };
+  }, [beginJump, duck, releaseJump]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -231,19 +477,36 @@ export default function FantaRunner({
 
     const frame = (time: number) => {
       if (statusRef.current !== "running") return;
-      const context = prepareCanvas(canvas);
+      const frameStartedAt = performance.now();
+      const context = prepareCanvas(canvas, renderStateRef.current);
       const delta = runtime.lastFrame
         ? Math.min((time - runtime.lastFrame) / 1000, 0.035)
         : 0;
       runtime.lastFrame = time;
 
       updateRuntime(runtime, delta, time);
-      drawGame(context, runtime, logoRef.current, time, reducedMotionRef.current);
+      drawGame(
+        context,
+        runtime,
+        logoRef.current,
+        assetsRef.current,
+        time,
+        reducedMotionRef.current
+      );
 
-      if (!runtime.finished && time - runtime.lastHudUpdate >= 90) {
+      if (!runtime.finished && time - runtime.lastHudUpdate >= 120) {
         runtime.lastHudUpdate = time;
         onSnapshot(toSnapshot(runtime, best, time));
+        performanceRef.current.hudUpdates += 1;
       }
+
+      updatePerformanceMonitor(
+        performanceRef.current,
+        runtime,
+        renderStateRef.current,
+        time,
+        performance.now() - frameStartedAt
+      );
 
       if (runtime.finished) {
         const finalSnapshot = toSnapshot(runtime, best, time);
@@ -263,11 +526,12 @@ export default function FantaRunner({
     if (status === "running") return;
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const context = prepareCanvas(canvas);
+    const context = prepareCanvas(canvas, renderStateRef.current);
     drawGame(
       context,
       runtimeRef.current,
       logoRef.current,
+      assetsRef.current,
       performance.now(),
       reducedMotionRef.current
     );
@@ -277,12 +541,14 @@ export default function FantaRunner({
     const canvas = canvasRef.current;
     if (!canvas) return;
     const observer = new ResizeObserver(() => {
+      renderStateRef.current.dirty = true;
       if (statusRef.current === "running") return;
-      const context = prepareCanvas(canvas);
+      const context = prepareCanvas(canvas, renderStateRef.current);
       drawGame(
         context,
         runtimeRef.current,
         logoRef.current,
+        assetsRef.current,
         performance.now(),
         reducedMotionRef.current
       );
@@ -294,32 +560,32 @@ export default function FantaRunner({
   return (
     <canvas
       ref={canvasRef}
+      data-game-canvas
       width={GAME_WIDTH}
       height={GAME_HEIGHT}
       onPointerDown={(event) => {
         if (event.pointerType === "mouse") {
           event.preventDefault();
-          if (event.button === 0) jump();
+          event.currentTarget.setPointerCapture(event.pointerId);
+          if (event.button === 0) beginJump();
           if (event.button === 2) duck();
           return;
         }
 
-        if (!window.matchMedia("(max-width: 639px)").matches) {
-          event.preventDefault();
-          const bounds = event.currentTarget.getBoundingClientRect();
-          if (event.clientX - bounds.left < bounds.width / 2) duck();
-          else jump();
-          return;
-        }
-
         event.preventDefault();
+        const mobile = window.matchMedia("(max-width: 639px)").matches;
+        const bounds = event.currentTarget.getBoundingClientRect();
+        const useJump = mobile || event.clientX - bounds.left >= bounds.width / 2;
         touchGestureRef.current = {
           pointerId: event.pointerId,
           startX: event.clientX,
           startY: event.clientY,
-          triggered: false,
+          triggered: !mobile && !useJump,
+          jumping: useJump,
         };
         event.currentTarget.setPointerCapture(event.pointerId);
+        if (useJump) beginJump();
+        else duck();
       }}
       onPointerMove={(event) => {
         const gesture = touchGestureRef.current;
@@ -344,30 +610,45 @@ export default function FantaRunner({
         }
 
         gesture.triggered = true;
-        if (deltaY < 0) jump();
-        else duck();
+        if (deltaY > 0) {
+          gesture.jumping = false;
+          cancelJumpAndDuck();
+        }
       }}
       onPointerUp={(event) => {
-        if (touchGestureRef.current.pointerId !== event.pointerId) return;
+        if (event.pointerType === "mouse") {
+          releaseJump();
+        } else if (touchGestureRef.current.pointerId === event.pointerId) {
+          releaseJump();
+          touchGestureRef.current.pointerId = -1;
+          touchGestureRef.current.jumping = false;
+        }
         if (event.currentTarget.hasPointerCapture(event.pointerId)) {
           event.currentTarget.releasePointerCapture(event.pointerId);
         }
-        touchGestureRef.current.pointerId = -1;
       }}
-      onPointerCancel={(event) => {
-        if (touchGestureRef.current.pointerId !== event.pointerId) return;
+      onPointerCancel={() => {
+        releaseJump();
         touchGestureRef.current.pointerId = -1;
+        touchGestureRef.current.jumping = false;
       }}
       onContextMenu={(event) => event.preventDefault()}
-      aria-label={`Campo di gioco. Su touch scorri verso l'alto per saltare e verso il basso per abbassarti. Da desktop usa il click sinistro per saltare e il click destro per abbassarti con ${team.nome}.`}
+      aria-label={`Campo di gioco. Tocca o fai click e mantieni la pressione per modulare il salto; scorri verso il basso o usa il click destro per abbassarti con ${team.nome}.`}
       className="block aspect-[9/5] w-full touch-none bg-[#020817] outline-none"
     />
   );
 }
 
-function prepareCanvas(canvas: HTMLCanvasElement) {
+export default memo(FantaRunner);
+
+function prepareCanvas(
+  canvas: HTMLCanvasElement,
+  state: CanvasRenderState,
+  force = false
+) {
+  if (!force && !state.dirty && state.context) return state.context;
   const rect = canvas.getBoundingClientRect();
-  const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+  const pixelRatio = Math.min(window.devicePixelRatio || 1, state.dprLimit);
   const pixelWidth = Math.max(1, Math.round(rect.width * pixelRatio));
   const pixelHeight = Math.max(1, Math.round(rect.height * pixelRatio));
 
@@ -376,12 +657,61 @@ function prepareCanvas(canvas: HTMLCanvasElement) {
     canvas.height = pixelHeight;
   }
 
-  const context = canvas.getContext("2d", { alpha: false });
+  const context = state.context ?? canvas.getContext("2d", { alpha: false });
   if (!context) throw new Error("Canvas 2D non disponibile");
   context.setTransform(pixelWidth / GAME_WIDTH, 0, 0, pixelHeight / GAME_HEIGHT, 0, 0);
   context.imageSmoothingEnabled = true;
   context.imageSmoothingQuality = "high";
+  state.context = context;
+  state.dirty = false;
   return context;
+}
+
+function updatePerformanceMonitor(
+  monitor: PerformanceMonitor,
+  runtime: Runtime,
+  renderState: CanvasRenderState,
+  time: number,
+  renderTime: number
+) {
+  if (!monitor.windowStartedAt) monitor.windowStartedAt = time;
+  monitor.frames += 1;
+  monitor.renderTime += renderTime;
+  const windowDuration = time - monitor.windowStartedAt;
+  if (windowDuration < 2000) return;
+
+  const averageFps = monitor.frames * 1000 / windowDuration;
+  const averageFrameTime = monitor.renderTime / Math.max(1, monitor.frames);
+  monitor.slowWindows = averageFps < 47
+    ? monitor.slowWindows + 1
+    : Math.max(0, monitor.slowWindows - 1);
+
+  if (monitor.slowWindows >= 2 && !runtime.reducedPerformance) {
+    runtime.reducedPerformance = true;
+    renderState.dprLimit = 1;
+    renderState.dirty = true;
+  }
+
+  if (
+    process.env.NODE_ENV !== "production" &&
+    time - monitor.lastLogAt >= 5000
+  ) {
+    monitor.lastLogAt = time;
+    console.debug("[FantaRunner performance]", {
+      fps: Math.round(averageFps),
+      entities: runtime.entities.length,
+      particles: runtime.reducedPerformance ? 0 : runtime.burst?.type === "bonus" ? 8 : 0,
+      averageFrameMs: Number(averageFrameTime.toFixed(2)),
+      hudRendersPerSecond: Number((monitor.hudUpdates * 1000 / windowDuration).toFixed(1)),
+      reducedMode: runtime.reducedPerformance,
+      dprLimit: renderState.dprLimit,
+    });
+  }
+
+  monitor.windowStartedAt = time;
+  monitor.frames = 0;
+  monitor.renderTime = 0;
+  monitor.hudUpdates = 0;
 }
 
 function updateRuntime(runtime: Runtime, delta: number, time: number) {
@@ -393,6 +723,13 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
     runtime.messageTone = null;
   }
   if (time >= runtime.effectUntil) runtime.effect = null;
+  if (runtime.presentation && time >= runtime.presentation.until) {
+    runtime.presentation = null;
+  }
+  if (runtime.powerUpCollectionEffect && time >= runtime.powerUpCollectionEffect.until) {
+    runtime.powerUpCollectionEffect = null;
+  }
+  updateActivePowerUps(runtime);
 
   if (
     runtime.elapsed >= INITIAL_PROTECTION_SECONDS &&
@@ -402,8 +739,31 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
     runtime.protectionAvailable = false;
   }
 
+  runtime.peakScore = Math.max(runtime.peakScore, runtime.score);
   const difficulty = getDifficultyProgress(runtime);
-  const speed = getRunSpeed(difficulty);
+  const difficultyBand = getDifficultyBand(runtime.teamRating);
+  const speedProgress = getScoreSpeedProgress(runtime);
+  const dybalaStrength = getPowerUpStrength(runtime, "dybala");
+  const cinematicFactor = time < runtime.cinematicSlowUntil ? 0.58 : 1;
+  const bossSpeedFactor = runtime.boss?.phase === "active" ? 0.82 : 1;
+  const rafficaSpeedFactor = runtime.burst?.type === "malus" && runtime.burst.phase === "active" ? 0.91 : 1;
+  const speed = getRunSpeed(speedProgress) *
+    (1 - dybalaStrength * 0.55) * cinematicFactor * bossSpeedFactor * rafficaSpeedFactor;
+  const worldSpeed = Math.min(speed, 590);
+  const groundVisualSpeed = Math.min(
+    speed * BACKGROUND_TRANSITION_CONFIG.groundSpeedFactor,
+    BACKGROUND_TRANSITION_CONFIG.maximumGroundSpeed
+  );
+  runtime.groundOffset += groundVisualSpeed * delta;
+  runtime.stadiumOffset +=
+    Math.min(
+      speed * BACKGROUND_TRANSITION_CONFIG.stadiumSpeedFactor,
+      BACKGROUND_TRANSITION_CONFIG.maximumStadiumSpeed
+    ) * delta;
+  runtime.visualComfort = clamp01(
+    (speed - BACKGROUND_TRANSITION_CONFIG.visualComfortStartSpeed) /
+      Math.max(1, SPEED_CONFIG.maximum - BACKGROUND_TRANSITION_CONFIG.visualComfortStartSpeed)
+  );
 
   const wasBlocked = runtime.blockedObstacleId !== null;
   runtime.playerX += runtime.horizontalVelocity * delta;
@@ -417,56 +777,87 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
 
   const previousPlayerY = runtime.playerY;
   runtime.grounded = false;
+  if (
+    runtime.jumpHeld &&
+    runtime.jumpHoldRemaining > 0 &&
+    runtime.velocityY < 0
+  ) {
+    const holdDelta = Math.min(delta, runtime.jumpHoldRemaining);
+    runtime.velocityY += JUMP_HOLD_ACCELERATION * (1 + getPowerUpStrength(runtime, "lukaku") * 0.2) * holdDelta;
+    runtime.jumpHoldRemaining -= holdDelta;
+    if (runtime.jumpHoldRemaining <= 0) runtime.jumpHeld = false;
+  }
   runtime.velocityY += GRAVITY * delta;
-  runtime.playerY = Math.min(
+  runtime.playerY = Math.max(8, Math.min(
     PLAYER_GROUND_Y,
     runtime.playerY + runtime.velocityY * delta
-  );
+  ));
+  if (runtime.playerY <= 8 && runtime.velocityY < 0) runtime.velocityY = 0;
   if (runtime.playerY >= PLAYER_GROUND_Y) {
     runtime.playerY = PLAYER_GROUND_Y;
     runtime.velocityY = 0;
     runtime.grounded = true;
+    runtime.jumpHeld = false;
+    runtime.jumpHoldRemaining = 0;
   }
 
   runtime.distance += speed * delta * 0.01;
   runtime.flowProgress += FLOW_PROGRESS_PER_SECOND * delta;
 
-  const scenarioIndex = Math.floor(runtime.elapsed / SCENARIO_DURATION_SECONDS);
-  if (scenarioIndex > runtime.lastScenarioIndex) {
-    runtime.lastScenarioIndex = scenarioIndex;
-    runtime.flowProgress += FLOW_NEW_SCENARIO;
-    runtime.score += 220 * Math.max(1, runtime.multiplier);
-  }
-
   if (runtime.flowProgress >= 100) {
     runtime.flowProgress -= 100;
-    addTeamRating(runtime, FLOW_RATING_REWARD, time);
   }
   runtime.score +=
     delta * (36 + speed * 0.04 + getSpeedLevel(difficulty) * 4) * runtime.multiplier;
-  runtime.spawnTimer -= delta;
+  runtime.malusBurstCooldown = Math.max(0, runtime.malusBurstCooldown - delta);
+  runtime.bonusBurstCooldown = Math.max(0, runtime.bonusBurstCooldown - delta);
+  runtime.mutualBurstCooldown = Math.max(0, runtime.mutualBurstCooldown - delta);
+  runtime.powerUpCooldown = Math.max(0, runtime.powerUpCooldown - delta);
+  updateBoss(runtime, delta, difficulty, time);
+  updateRaffica(runtime, delta, speed, difficulty);
+  updateRafficaOverlay(runtime, delta);
+  runtime.spawnTimer -= delta * (1 - dybalaStrength * 0.52);
 
-  if (runtime.spawnTimer <= 0) {
-    const sequenceDelay = spawnNext(runtime, speed, difficulty);
-    runtime.spawnTimer =
-      getSafeSpawnInterval(speed, difficulty) + sequenceDelay;
+  if (runtime.spawnTimer <= 0 && !runtime.burst && !runtime.boss) {
+    if (tryStartRaffica(runtime, time)) {
+      runtime.spawnTimer = 0.5;
+    } else if (trySpawnPowerUp(runtime)) {
+      runtime.spawnTimer = getSafeSpawnInterval(speed, difficulty) * 1.15;
+    } else {
+      const sequenceDelay = spawnNext(runtime, speed, difficulty);
+      runtime.spawnTimer =
+        getSafeSpawnInterval(speed, difficulty) * difficultyBand.intervalMultiplier +
+        sequenceDelay;
+    }
   }
 
   for (const entity of runtime.entities) {
     if (entity.type === "event" && entity.motion === "falling") {
-      entity.y = Math.min(
-        entity.targetY ?? GROUND_Y - entity.height,
-        entity.y + (entity.velocityY ?? 180) * delta
-      );
-      if (entity.y >= (entity.targetY ?? GROUND_Y - entity.height)) {
-        entity.motion = "ground";
+      const targetY = entity.targetY ?? GROUND_Y - entity.height;
+      entity.x -= worldSpeed * (entity.horizontalSpeedFactor ?? 1) * delta;
+      entity.velocityY =
+        (entity.velocityY ?? 90) + (entity.accelerationY ?? 520) * delta;
+      entity.y += entity.velocityY * delta;
+      entity.rotation =
+        (entity.rotation ?? 0) + (entity.angularVelocity ?? 0) * delta;
+      if (entity.y >= targetY) {
+        entity.y = targetY;
+        if ((entity.bouncesRemaining ?? 0) > 0) {
+          entity.bouncesRemaining = (entity.bouncesRemaining ?? 0) - 1;
+          entity.velocityY = -Math.max(72, Math.abs(entity.velocityY) * 0.18);
+          entity.angularVelocity = (entity.angularVelocity ?? 0) * 0.45;
+        } else {
+          entity.motion = "ground";
+          entity.velocityY = 0;
+          entity.angularVelocity = 0;
+          entity.rotation = (entity.rotation ?? 0) * 0.35;
+        }
       }
     } else {
       const motionPhase = runtime.elapsed * (entity.motionSpeed ?? 1.5) + (entity.phase ?? 0);
-      const horizontalVariation = entity.motion === "sine"
-        ? Math.sin(motionPhase) * (entity.amplitude ?? 18) * 1.35
-        : 0;
-      entity.x -= (speed + horizontalVariation) * delta;
+      entity.x -= worldSpeed * (entity.horizontalSpeedFactor ?? 1) * delta;
+      entity.rotation =
+        (entity.rotation ?? 0) + (entity.angularVelocity ?? 0) * delta;
 
       if (entity.type === "event" && entity.motion === "floating") {
         const originY = entity.originY ?? entity.y;
@@ -477,13 +868,17 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
             originY + Math.sin(motionPhase) * (entity.amplitude ?? 16)
           )
         );
-      } else if (entity.type === "event" && entity.motion === "sine") {
+      } else if (
+        entity.type === "event" &&
+        (entity.motion === "sine" || entity.motion === "serpentine")
+      ) {
         const originY = entity.originY ?? entity.y;
+        const serpentineFactor = entity.motion === "serpentine" ? 1.25 : 0.55;
         entity.y = Math.min(
           GROUND_Y - entity.height,
           Math.max(
             GROUND_Y - entity.height - 128,
-            originY + Math.sin(motionPhase * 0.72) * (entity.amplitude ?? 18) * 0.55
+            originY + Math.sin(motionPhase * 0.84) * (entity.amplitude ?? 18) * serpentineFactor
           )
         );
       } else if (entity.type === "event" && entity.motion === "diagonal") {
@@ -501,6 +896,38 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
         }
       }
     }
+
+    entity.fleeing = false;
+    if (
+      entity.type === "event" &&
+      EVENT_DEFINITIONS[entity.kind as EventKind].category === "bonus"
+    ) {
+      const playerCenterY = runtime.playerY + PLAYER_SIZE / 2;
+      const entityCenterY = entity.y + entity.height / 2;
+      const horizontalDistance = entity.x - runtime.playerX;
+      const nicoStrength = getPowerUpStrength(runtime, "nico-paz");
+      const gimenezStrength = getPowerUpStrength(runtime, "gimenez");
+      if (nicoStrength > 0 && horizontalDistance > 0 && horizontalDistance < 280) {
+        entity.y += (playerCenterY - entityCenterY) * Math.min(1, delta * 2.4 * nicoStrength);
+        entity.x -= worldSpeed * delta * 0.12 * nicoStrength;
+      }
+      if (gimenezStrength > 0 && horizontalDistance > -20 && horizontalDistance < 340) {
+        const direction = entityCenterY <= playerCenterY ? -1 : 1;
+        const proximity = 1 - clamp01(Math.max(0, horizontalDistance) / 340);
+        entity.fleeing = true;
+        entity.y = Math.max(
+          GROUND_Y - entity.height - 120,
+          Math.min(
+            GROUND_Y - entity.height,
+            entity.y + direction * (78 + proximity * 54) * delta * gimenezStrength
+          )
+        );
+        entity.x = Math.min(
+          GAME_WIDTH + 110,
+          entity.x + worldSpeed * delta * (0.72 + proximity * 0.42) * gimenezStrength
+        );
+      }
+    }
   }
 
   if (runtime.velocityY >= 0) {
@@ -510,8 +937,6 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
 
     for (const entity of runtime.entities) {
       if (entity.type !== "physical") continue;
-      const profile = getObstacleProfile(entity.kind as PhysicalObstacleKind);
-      if (!profile.walkable) continue;
       const obstacleRect = getObstacleHitbox(entity);
       const horizontalOverlap =
         runtime.playerX + PLAYER_SIZE - 9 > obstacleRect.x &&
@@ -539,20 +964,26 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
   for (const entity of runtime.entities) {
     const entityRect = entity.type === "physical"
       ? getObstacleHitbox(entity)
-      : {
-          x: entity.x + 5,
-          y: entity.y + 5,
-          width: entity.width - 10,
-          height: entity.height - 10,
-        };
-    const hit = intersects(playerRect, entityRect);
+      : entity.type === "powerup"
+        ? getPowerUpHitbox(entity)
+        : getEventHitbox(entity);
+    const collisionPlayerRect =
+      entity.type === "event" &&
+      EVENT_DEFINITIONS[entity.kind as EventKind].category === "bonus"
+        ? expandRect(playerRect, 10 * getPowerUpStrength(runtime, "lukaku"))
+        : playerRect;
+    const hit = intersects(collisionPlayerRect, entityRect);
 
     if (hit) {
       if (entity.type === "event") {
         applyEvent(runtime, entity.kind as EventKind, time);
+        releaseEntity(runtime, entity);
+        continue;
+      } else if (entity.type === "powerup") {
+        activatePowerUp(runtime, entity.kind as PowerUpKind, time);
+        releaseEntity(runtime, entity);
         continue;
       } else {
-        const profile = getObstacleProfile(entity.kind as PhysicalObstacleKind);
         const playerHitboxOffset = playerRect.x - runtime.playerX;
         runtime.playerX = Math.min(
           runtime.playerX,
@@ -561,7 +992,7 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
         runtime.blockedObstacleId = entity.id;
 
         if (!entity.alreadyHit) {
-          applyPhysicalHit(runtime, time, profile.height === "high");
+          applyPhysicalHit(runtime, time, false);
           entity.alreadyHit = true;
         }
         playerRect = getPlayerHitbox(runtime, time);
@@ -579,6 +1010,7 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
     }
 
     if (entity.x + entity.width > -40) remainingEntities.push(entity);
+    else releaseEntity(runtime, entity);
   }
   runtime.entities = remainingEntities;
 
@@ -593,13 +1025,12 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
   const nearGround = runtime.grounded && runtime.playerY > PLAYER_GROUND_Y - 3;
 
   for (const pit of runtime.pits) {
-    pit.x -= speed * delta;
+    pit.x -= worldSpeed * delta;
     if (
       nearGround &&
-      playerCenter > pit.x + 10 &&
-      playerCenter < pit.x + pit.width - 10
+      playerCenter > pit.x + 4 &&
+      playerCenter < pit.x + pit.width - 4
     ) {
-      runtime.teamRating = TEAM_RATING_THRESHOLD - 1;
       runtime.gameOverReason = "Caduta in una buca";
       runtime.effect = "hit";
       runtime.finished = true;
@@ -617,27 +1048,461 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
   }
   runtime.pits = remainingPits;
 
+  updateBackgroundState(runtime, delta);
+
   if (runtime.teamRating < TEAM_RATING_THRESHOLD && !runtime.finished) {
     runtime.gameOverReason = `Voto squadra sotto ${TEAM_RATING_THRESHOLD}`;
     runtime.finished = true;
   }
 }
 
+function updateBackgroundState(runtime: Runtime, delta: number) {
+  const desiredStage = getBackgroundStageForDistance(
+    runtime.distance,
+    SCENARIO_DISTANCE_METERS
+  );
+  const activeTarget = runtime.backgroundTransition?.to ?? runtime.backgroundStage;
+
+  if ((runtime.burst || runtime.boss) && !runtime.backgroundTransition && desiredStage !== activeTarget) {
+    return;
+  }
+
+  if (desiredStage !== activeTarget) {
+    const from = runtime.backgroundTransition && runtime.backgroundTransition.progress >= 0.5
+      ? runtime.backgroundTransition.to
+      : runtime.backgroundStage;
+    if (desiredStage === from) {
+      runtime.backgroundStage = from;
+      runtime.backgroundTransition = null;
+      return;
+    }
+    runtime.backgroundTransition = {
+      from,
+      to: desiredStage,
+      progress: 0,
+      duration: BACKGROUND_TRANSITION_CONFIG.fadeDurationSeconds,
+    };
+  }
+
+  const transition = runtime.backgroundTransition;
+  if (!transition) return;
+  transition.progress = Math.min(1, transition.progress + delta / transition.duration);
+  if (transition.progress >= 1) {
+    runtime.backgroundStage = transition.to;
+    runtime.backgroundTransition = null;
+  }
+}
+
+function tryStartRaffica(
+  runtime: Runtime,
+  time: number
+) {
+  if (
+    runtime.burst ||
+    runtime.boss ||
+    runtime.backgroundTransition ||
+    runtime.entities.some((entity) => entity.type === "powerup") ||
+    runtime.mutualBurstCooldown > 0 ||
+    runtime.elapsed < runtime.nextBurstEligibleAt
+  ) return false;
+
+  const canStartMalus =
+    runtime.elapsed >= RAFFICA_CONFIG.malus.minimumStartSeconds &&
+    runtime.malusBurstCooldown <= 0;
+  const canStartBonus =
+    runtime.elapsed >= RAFFICA_CONFIG.bonus.minimumStartSeconds &&
+    runtime.bonusBurstCooldown <= 0;
+  if (!canStartMalus && !canStartBonus) return false;
+
+  const forced = runtime.elapsed >= runtime.nextForcedBurstAt;
+  const windowLength = Math.max(
+    1,
+    runtime.nextForcedBurstAt - runtime.nextBurstEligibleAt
+  );
+  const windowProgress = Math.max(
+    0,
+    Math.min(1, (runtime.elapsed - runtime.nextBurstEligibleAt) / windowLength)
+  );
+  const progressiveChance =
+    RAFFICA_CONFIG.progressiveChance.minimum +
+    (RAFFICA_CONFIG.progressiveChance.maximum - RAFFICA_CONFIG.progressiveChance.minimum) *
+      Math.pow(windowProgress, RAFFICA_CONFIG.progressiveChance.curvePower);
+  if (!forced && Math.random() >= progressiveChance) return false;
+
+  const preferMalus = Math.random() < getDynamicMalusShare(runtime.teamRating);
+  const type: RafficaType | null = preferMalus
+    ? canStartMalus ? "malus" : canStartBonus ? "bonus" : null
+    : canStartBonus ? "bonus" : canStartMalus ? "malus" : null;
+  if (!type) return false;
+
+  const config = RAFFICA_CONFIG[type];
+  runtime.burst = {
+    type,
+    phase: "warning",
+    timer: config.warningSeconds,
+    durationRemaining:
+      config.minimumDurationSeconds +
+      Math.random() * (config.maximumDurationSeconds - config.minimumDurationSeconds),
+    index: 0,
+    hatTrickSpawned: false,
+  };
+  runtime.burstOverlayType = type;
+  runtime.presentation = {
+    asset: RAFFICA_PRESENTATION_ASSETS[type],
+    title: type === "malus" ? "Raffica di Malus" : "Raffica di Bonus",
+    subtitle: type === "malus" ? "Resisti alla pressione" : "Precisione e tempismo",
+    tone: type,
+    until: time + 5600,
+  };
+  return true;
+}
+
+function updateRaffica(
+  runtime: Runtime,
+  delta: number,
+  speed: number,
+  difficulty: number
+) {
+  const burst = runtime.burst;
+  if (!burst) return;
+
+  burst.timer -= delta;
+  if (burst.phase === "warning") {
+    if (burst.timer > 0) return;
+    burst.phase = "active";
+    burst.timer = 0;
+  }
+
+  burst.durationRemaining = Math.max(0, burst.durationRemaining - delta);
+  if (burst.durationRemaining <= 0) {
+    finishRaffica(runtime, burst.type);
+    return;
+  }
+
+  if (burst.timer > 0) return;
+  let kind: EventKind;
+  let heightLevel: 0 | 1 | 2;
+  let motion: RunnerEntity["motion"];
+
+  if (burst.type === "malus") {
+    kind = weightedRafficaPick(MALUS_RAFFICA_POOL);
+    heightLevel = Math.random() < 0.78 ? 0 : 1;
+    const motionRoll = Math.random();
+    motion = motionRoll < 0.35 ? "ground" : motionRoll < 0.58 ? "diagonal" : motionRoll < 0.8 ? "serpentine" : "falling";
+  } else {
+    const canSpawnHatTrick = !burst.hatTrickSpawned && Math.random() < RAFFICA_CONFIG.bonus.hatTrickChance;
+    kind = canSpawnHatTrick ? "hatTrick" : weightedRafficaPick(BONUS_RAFFICA_POOL);
+    const heightRoll = Math.random();
+    heightLevel = heightRoll < 0.34 ? 0 : heightRoll < 0.7 ? 1 : 2;
+    motion = Math.random() < 0.18 ? "floating" : "ground";
+  }
+
+  const burstStartX = GAME_WIDTH + Math.max(34, speed * (0.035 + Math.random() * 0.065));
+  const pushed = pushEvent(
+    runtime,
+    kind,
+    burstStartX,
+    heightLevel,
+    {
+      burst: true,
+      falling: motion === "falling",
+      fallSpeed: motion === "falling" ? 100 + difficulty * 80 : undefined,
+      accelerationY: motion === "falling" ? 470 + difficulty * 180 : undefined,
+      bouncesRemaining: motion === "falling" ? 1 : undefined,
+      motion,
+      amplitude: motion === "serpentine" || motion === "floating" ? 11 + difficulty * 7 : undefined,
+      motionSpeed: 1.05 + difficulty * 0.55,
+      horizontalSpeedFactor: 1,
+    }
+  );
+
+  if (!pushed) {
+    burst.timer = 0.16;
+    return;
+  }
+
+  if (kind === "hatTrick") burst.hatTrickSpawned = true;
+  if (Math.random() < (burst.type === "malus" ? 0.07 : 0.14)) {
+    const groupedKind = burst.type === "malus"
+      ? weightedRafficaPick(MALUS_RAFFICA_POOL)
+      : weightedRafficaPick(BONUS_RAFFICA_POOL);
+    const groupedHeight = Math.floor(Math.random() * 3) as 0 | 1 | 2;
+    const groupedMotion: RunnerEntity["motion"] = burst.type === "malus"
+      ? Math.random() < 0.5 ? "diagonal" : "serpentine"
+      : Math.random() < 0.45 ? "floating" : "ground";
+    pushEvent(
+      runtime,
+      groupedKind,
+      burstStartX + Math.max(burst.type === "malus" ? 126 : 96, speed * (0.14 + Math.random() * 0.07)),
+      groupedHeight,
+      {
+        burst: true,
+        motion: groupedMotion,
+        amplitude: groupedMotion === "ground" ? undefined : 8 + Math.random() * 12,
+        motionSpeed: 0.9 + Math.random() * 0.9,
+        horizontalSpeedFactor: 1,
+      }
+    );
+  }
+  burst.index += 1;
+  const config = RAFFICA_CONFIG[burst.type];
+  const baseInterval =
+    config.maximumItemInterval -
+    (config.maximumItemInterval - config.minimumItemInterval) *
+      difficulty;
+  const rhythmRoll = Math.random();
+  const rhythmMultiplier = rhythmRoll < 0.24
+    ? 0.48 + Math.random() * 0.24
+    : rhythmRoll < 0.43
+      ? 1.45 + Math.random() * 0.72
+      : 0.82 + Math.random() * 0.52;
+  burst.timer = Math.max(burst.type === "malus" ? 0.28 : 0.19, baseInterval * rhythmMultiplier + (Math.random() - 0.5) * 0.12);
+}
+
+function finishRaffica(runtime: Runtime, type: RafficaType) {
+  runtime.burst = null;
+  runtime.mutualBurstCooldown = RAFFICA_CONFIG.mutualCooldownSeconds;
+  if (type === "malus") {
+    runtime.malusBurstCooldown = RAFFICA_CONFIG.malus.cooldownSeconds * (0.9 + Math.random() * 0.2);
+  } else {
+    runtime.bonusBurstCooldown = RAFFICA_CONFIG.bonus.cooldownSeconds * (0.9 + Math.random() * 0.2);
+  }
+  runtime.nextBurstEligibleAt = runtime.elapsed + RAFFICA_CONFIG.mutualCooldownSeconds;
+  runtime.nextForcedBurstAt = runtime.elapsed + randomBetween(
+    RAFFICA_CONFIG.repeatForcedDelay.minimum,
+    RAFFICA_CONFIG.repeatForcedDelay.maximum
+  );
+}
+
+function trySpawnPowerUp(runtime: Runtime) {
+  if (
+    runtime.elapsed < POWER_UP_SPAWN_CONFIG.minimumStartSeconds ||
+    runtime.powerUpCooldown > 0 ||
+    runtime.presentation ||
+    runtime.burst ||
+    runtime.boss ||
+    Math.random() >= POWER_UP_SPAWN_CONFIG.chancePerSpawnOpportunity ||
+    runtime.entities.some((entity) => entity.type === "powerup")
+  ) return false;
+  const definition = pickPowerUp();
+  const y = GROUND_Y - definition.height - (Math.random() < 0.55 ? 34 : 78);
+  const entity = acquireEntity(runtime, "powerup", definition.kind, GAME_WIDTH + 70, y, definition.width, definition.height);
+  entity.motion = "floating";
+  entity.originY = y;
+  entity.amplitude = 8;
+  entity.motionSpeed = 1.05;
+  entity.horizontalSpeedFactor = 0.92;
+  runtime.entities.push(entity);
+  runtime.powerUpCooldown = POWER_UP_SPAWN_CONFIG.cooldownSeconds;
+  return true;
+}
+
+function activatePowerUp(runtime: Runtime, kind: PowerUpKind, time: number) {
+  const definition = POWER_UP_CONFIG[kind];
+  runtime.activePowerUps[kind] = {
+    expiresAt: runtime.elapsed + definition.durationSeconds,
+    charges: 0,
+  };
+  runtime.cinematicSlowUntil = time + POWER_UP_SPAWN_CONFIG.collectionSlowdownMs;
+  runtime.powerUpCollectionEffect = { kind, until: time + 820 };
+  runtime.presentation = {
+    asset: definition.banner,
+    title: definition.name,
+    subtitle: definition.effect,
+    tone: kind === "gimenez" ? "malus" : "bonus",
+    until: time + 5600,
+  };
+}
+
+function updateActivePowerUps(runtime: Runtime) {
+  for (const kind of Object.keys(runtime.activePowerUps) as PowerUpKind[]) {
+    const active = runtime.activePowerUps[kind];
+    if (!active || runtime.elapsed < active.expiresAt) continue;
+    delete runtime.activePowerUps[kind];
+  }
+}
+
+function getPowerUpStrength(runtime: Runtime, kind: PowerUpKind) {
+  const active = runtime.activePowerUps[kind];
+  if (!active) return 0;
+  const remaining = active.expiresAt - runtime.elapsed;
+  if (remaining <= 0) return 0;
+  return Math.min(1, remaining / 1.25);
+}
+
+function updateBoss(
+  runtime: Runtime,
+  delta: number,
+  difficulty: number,
+  time: number
+) {
+  if (!runtime.boss) {
+    if (
+      runtime.elapsed < runtime.nextBossAt ||
+      runtime.burst ||
+      runtime.entities.some((entity) => entity.type === "powerup") ||
+      runtime.backgroundTransition
+    ) return;
+    runtime.boss = {
+      phase: "warning",
+      timer: BOSS_CONFIG.warningSeconds,
+      spawnTimer: 0,
+      lastShotAt: -10,
+    };
+    runtime.presentation = {
+      asset: BOSS_CONFIG.warningAsset,
+      title: "Boss 20 in arrivo",
+      subtitle: "Non farti trascinare in fondo",
+      tone: "malus",
+      until: time + BOSS_CONFIG.warningSeconds * 1000,
+    };
+    return;
+  }
+
+  const boss = runtime.boss;
+  boss.timer -= delta;
+  if (boss.phase === "exiting") {
+    if (boss.timer <= 0) runtime.boss = null;
+    return;
+  }
+  if (boss.phase === "warning") {
+    if (boss.timer > 0) return;
+    boss.phase = "active";
+    boss.timer = BOSS_CONFIG.durationSeconds;
+    boss.spawnTimer = 0.65;
+    runtime.presentation = {
+      asset: BOSS_CONFIG.bannerAsset,
+      title: "Boss 20",
+      subtitle: "Sopravvivi per conquistare +3",
+      tone: "malus",
+      until: time + 5600,
+    };
+    return;
+  }
+
+  boss.spawnTimer -= delta;
+  if (boss.spawnTimer <= 0) {
+    const kind = weightedRafficaPick(MALUS_RAFFICA_POOL);
+    const motionRoll = Math.random();
+    const projectileMotion: RunnerEntity["motion"] = motionRoll < 0.36
+      ? "diagonal"
+      : motionRoll < 0.72
+        ? "serpentine"
+        : "falling";
+    pushEvent(runtime, kind, GAME_WIDTH - 205 + Math.random() * 24, Math.random() < 0.7 ? 0 : 1, {
+      burst: true,
+      falling: projectileMotion === "falling",
+      fallSpeed: projectileMotion === "falling" ? 80 + difficulty * 45 : undefined,
+      accelerationY: projectileMotion === "falling" ? 300 + difficulty * 140 : undefined,
+      bouncesRemaining: 0,
+      spawnY: 205 + Math.random() * 105,
+      motion: projectileMotion,
+      amplitude: projectileMotion === "serpentine" || projectileMotion === "diagonal" ? 72 + Math.random() * 42 : undefined,
+      motionSpeed: 1.05 + difficulty * 0.42,
+      horizontalSpeedFactor: 1.5 + Math.random() * 0.18,
+    });
+    boss.lastShotAt = runtime.elapsed;
+    boss.spawnTimer = randomBetween(
+      BOSS_CONFIG.itemIntervalSeconds.minimum,
+      BOSS_CONFIG.itemIntervalSeconds.maximum
+    );
+  }
+  if (boss.timer > 0) return;
+
+  boss.phase = "exiting";
+  boss.timer = 0.7;
+  boss.spawnTimer = Number.POSITIVE_INFINITY;
+  runtime.nextBossAt = runtime.elapsed + BOSS_CONFIG.cooldownSeconds;
+  changeTeamRating(runtime, BOSS_CONFIG.rewardRating, time, "boss-reward", "Boss 20 superato");
+  runtime.presentation = null;
+}
+
+function updateRafficaOverlay(runtime: Runtime, delta: number) {
+  const activeType = runtime.burst?.type ?? null;
+  const target = activeType ? RAFFICA_CONFIG[activeType].overlayOpacity : 0;
+  runtime.burstOverlayIntensity +=
+    (target - runtime.burstOverlayIntensity) *
+    Math.min(1, delta * RAFFICA_CONFIG.overlayResponse);
+  if (!activeType && runtime.burstOverlayIntensity < 0.001) {
+    runtime.burstOverlayIntensity = 0;
+    runtime.burstOverlayType = null;
+  }
+}
+
+function weightedRafficaPick(pool: Array<{ kind: EventKind; weight: number }>) {
+  let cursor = Math.random() * pool.reduce((sum, item) => sum + item.weight, 0);
+  for (const item of pool) {
+    cursor -= item.weight;
+    if (cursor <= 0) return item.kind;
+  }
+  return pool[pool.length - 1].kind;
+}
+
+function randomBetween(minimum: number, maximum: number) {
+  return minimum + Math.random() * (maximum - minimum);
+}
+
+function getDynamicMalusShare(teamRating: number) {
+  const balance = RAFFICA_CONFIG.dynamicMalusShare;
+  if (teamRating < 70) {
+    const progress = clamp01((teamRating - TEAM_RATING_THRESHOLD) / (70 - TEAM_RATING_THRESHOLD));
+    return balance.lowRating + (balance.neutralRating - balance.lowRating) * progress;
+  }
+  const progress = clamp01((teamRating - 70) / 20);
+  return balance.neutralRating +
+    (balance.highRatingMaximum - balance.neutralRating) * progress;
+}
+
+function getVisibleBackgroundStage(runtime: Runtime) {
+  const transition = runtime.backgroundTransition;
+  return transition && transition.progress >= 0.5
+    ? transition.to
+    : transition?.from ?? runtime.backgroundStage;
+}
+
 function spawnNext(runtime: Runtime, speed: number, difficulty: number) {
+  if (runtime.entities.length >= ENTITY_DENSITY_CONFIG.maximumActiveEntities) {
+    return 0;
+  }
   const decision = createSpawnDecision({
     elapsed: runtime.elapsed,
     difficulty,
+    teamRating: runtime.teamRating,
   });
   const startX = GAME_WIDTH + Math.max(40, speed * 0.08);
 
+  if (decision.type === "breather") {
+    runtime.lastSpawnCategory = "space";
+    runtime.repeatedSpawnCategory = 0;
+    return 0;
+  }
+
+  const spawnCategory = decision.type === "event"
+    ? decision.event.category
+    : "physical";
+  if (runtime.lastSpawnCategory === spawnCategory) {
+    runtime.repeatedSpawnCategory += 1;
+    if (runtime.repeatedSpawnCategory >= 2) {
+      runtime.lastSpawnCategory = "space";
+      runtime.repeatedSpawnCategory = 0;
+      return 0;
+    }
+  } else {
+    runtime.lastSpawnCategory = spawnCategory;
+    runtime.repeatedSpawnCategory = 0;
+  }
+
   if (decision.type === "pit") {
+    if (runtime.pits.length >= ENTITY_DENSITY_CONFIG.maximumActivePits) return 0;
     runtime.pits.push({
       id: runtime.nextEntityId++,
       x: startX,
       width: decision.width,
+      stage: getVisibleBackgroundStage(runtime),
     });
     if (decision.bonus) {
-      pushEvent(runtime, decision.bonus.kind, startX + decision.width / 2 - 26, 1, {
+      const bonusDimensions = getEventDimensions(decision.bonus.kind);
+      pushEvent(runtime, decision.bonus.kind, startX + decision.width / 2 - bonusDimensions.width / 2, 1, {
         motion: "floating",
         amplitude: 12,
         motionSpeed: 1.35,
@@ -650,21 +1515,24 @@ function spawnNext(runtime: Runtime, speed: number, difficulty: number) {
     const actionWindow = 0.98 - difficulty * 0.24;
     const gap = speed * actionWindow + 135;
     decision.kinds.forEach((kind, index) => {
-      pushPhysicalObstacle(runtime, kind, startX + gap * index);
+      pushPhysicalObstacle(runtime, kind, startX + gap * index, difficulty);
     });
     return (gap * (decision.kinds.length - 1)) / speed;
   }
 
   if (decision.type === "physical") {
-    pushPhysicalObstacle(runtime, decision.kind, startX);
+    pushPhysicalObstacle(runtime, decision.kind, startX, difficulty);
     if (decision.bonus) {
       const dimensions = getPhysicalDimensions(decision.kind);
-      const isOverhead = decision.kind === "overhead" || decision.kind === "sign";
+      const bonusDimensions = getEventDimensions(decision.bonus.kind);
+      const isTall = decision.kind === "cornerFlag" || decision.kind === "var";
       pushEvent(
         runtime,
         decision.bonus.kind,
-        isOverhead ? startX + dimensions.width + 72 : startX + dimensions.width / 2 - 26,
-        isOverhead ? 0 : 1,
+        isTall
+          ? startX + dimensions.width + 68
+          : startX + dimensions.width / 2 - bonusDimensions.width / 2,
+        isTall ? 0 : 1,
         { motion: "floating", amplitude: 10, motionSpeed: 1.2 }
       );
     }
@@ -672,12 +1540,13 @@ function spawnNext(runtime: Runtime, speed: number, difficulty: number) {
   }
 
   const trail = Math.max(1, decision.trail ?? 1);
+  const eventDimensions = getEventDimensions(decision.event.kind);
   for (let index = 0; index < trail; index += 1) {
     const heightOffset = (decision.trailRise ?? 0) * index;
     pushEvent(
       runtime,
       decision.event.kind,
-      startX + (decision.xOffset ?? 0) + index * 78,
+      startX + (decision.xOffset ?? 0) + index * (eventDimensions.width + 24),
       decision.heightLevel,
       {
         falling: decision.falling && index === 0,
@@ -686,6 +1555,10 @@ function spawnNext(runtime: Runtime, speed: number, difficulty: number) {
         amplitude: decision.amplitude,
         motionSpeed: decision.motionSpeed,
         heightOffset,
+        horizontalSpeedFactor: decision.horizontalSpeedFactor,
+        angularVelocity: decision.angularVelocity,
+        accelerationY: decision.accelerationY,
+        bouncesRemaining: decision.bouncesRemaining,
       }
     );
   }
@@ -704,58 +1577,166 @@ function pushEvent(
     amplitude?: number;
     motionSpeed?: number;
     heightOffset?: number;
+    burst?: boolean;
+    horizontalSpeedFactor?: number;
+    angularVelocity?: number;
+    accelerationY?: number;
+    bouncesRemaining?: number;
+    spawnY?: number;
   } = {}
 ) {
-  const size = kind === "hatTrick" ? 60 : 52;
-  const levelOffset = heightLevel === 2 ? 106 : heightLevel === 1 ? 58 : 0;
+  const eventCount = runtime.entities.reduce(
+    (count, entity) => count + (entity.type === "event" ? 1 : 0),
+    0
+  );
+  const maximumEvents = options.burst
+    ? ENTITY_DENSITY_CONFIG.maximumActiveCollectiblesDuringBurst
+    : ENTITY_DENSITY_CONFIG.maximumActiveCollectibles;
+  if (
+    eventCount >= maximumEvents ||
+    runtime.entities.length >= ENTITY_DENSITY_CONFIG.maximumActiveEntities
+  ) {
+    return false;
+  }
+
+  const minimumDistance = options.burst
+    ? ENTITY_DENSITY_CONFIG.burstCollectibleDistance
+    : ENTITY_DENSITY_CONFIG.minimumCollectibleDistance;
+  const dimensions = getEventDimensions(kind);
+  if (
+    runtime.entities.some(
+      (entity) =>
+        entity.type === "event" &&
+        Math.abs(entity.x - x) <
+          minimumDistance + Math.min(entity.width, dimensions.width) * 0.5
+    )
+  ) {
+    return false;
+  }
+
+  const definition = EVENT_DEFINITIONS[kind];
+  const levelOffset = definition.category === "bonus"
+    ? BONUS_HEIGHT_OFFSETS[heightLevel]
+    : heightLevel === 2 ? 106 : heightLevel === 1 ? 58 : 0;
   const targetY = Math.max(
-    GROUND_Y - size - 128,
-    Math.min(GROUND_Y - size, GROUND_Y - size - levelOffset - (options.heightOffset ?? 0))
+    GROUND_Y - dimensions.height - 128,
+    Math.min(
+      GROUND_Y - dimensions.height,
+      GROUND_Y - dimensions.height - levelOffset - (options.heightOffset ?? 0)
+    )
   );
   const falling = Boolean(options.falling);
+  if (
+    runtime.entities.some((entity) => {
+      if (entity.type !== "physical") return false;
+      const margin = 10;
+      return x < entity.x + entity.width + margin &&
+        x + dimensions.width > entity.x - margin &&
+        targetY < entity.y + entity.height + margin &&
+        targetY + dimensions.height > entity.y - margin;
+    })
+  ) {
+    return false;
+  }
+
+  if (kind === "hatTrick") {
+    const maximumHatTricks = runtime.elapsed >= ENTITY_DENSITY_CONFIG.hatTrickThirdAppearanceSeconds
+      ? ENTITY_DENSITY_CONFIG.hatTrickLongRunLimit
+      : ENTITY_DENSITY_CONFIG.hatTrickRegularLimit;
+    if (runtime.hatTricksSpawned >= maximumHatTricks) return false;
+    runtime.hatTricksSpawned += 1;
+  }
+
   const motion = falling ? "falling" : options.motion ?? "ground";
-  runtime.entities.push({
-    id: runtime.nextEntityId++,
-    type: "event",
-    kind,
-    x,
-    y: falling ? -size - 24 : targetY,
-    width: size,
-    height: size,
-    motion,
-    velocityY: falling
+  const entity = acquireEntity(runtime, "event", kind, x, options.spawnY ?? (falling ? -dimensions.height - 24 : targetY), dimensions.width, dimensions.height);
+  entity.motion = motion;
+  entity.velocityY = falling
       ? options.fallSpeed
       : motion === "diagonal"
         ? 48 + (options.motionSpeed ?? 1) * 12
-        : undefined,
-    targetY: falling ? GROUND_Y - size : targetY,
-    originY: targetY,
-    amplitude: options.amplitude,
-    phase: runtime.nextEntityId * 0.71,
-    motionSpeed: options.motionSpeed,
-  });
+        : undefined;
+  entity.targetY = falling ? GROUND_Y - dimensions.height : targetY;
+  entity.originY = options.spawnY ?? targetY;
+  entity.amplitude = options.amplitude;
+  entity.phase = runtime.nextEntityId * 0.71;
+  entity.motionSpeed = options.motionSpeed;
+  entity.horizontalSpeedFactor = options.horizontalSpeedFactor;
+  entity.rotation = 0;
+  entity.angularVelocity = options.angularVelocity;
+  entity.accelerationY = options.accelerationY;
+  entity.bouncesRemaining = options.bouncesRemaining;
+  runtime.entities.push(entity);
+  return true;
 }
 
 function pushPhysicalObstacle(
   runtime: Runtime,
   kind: PhysicalObstacleKind,
-  x: number
+  x: number,
+  difficulty: number
 ) {
+  const physicalCount = runtime.entities.reduce(
+    (count, entity) => count + (entity.type === "physical" ? 1 : 0),
+    0
+  );
+  if (
+    physicalCount >= ENTITY_DENSITY_CONFIG.maximumActivePhysicalObstacles ||
+    runtime.entities.length >= ENTITY_DENSITY_CONFIG.maximumActiveEntities
+  ) {
+    return false;
+  }
   const dimensions = getPhysicalDimensions(kind);
-  runtime.entities.push({
-    id: runtime.nextEntityId++,
-    type: "physical",
-    kind,
-    x,
-    y:
-      kind === "overhead"
-        ? GROUND_Y - 93
-        : GROUND_Y - dimensions.height,
-    width: dimensions.width,
-    height: dimensions.height,
-    alreadyHit: false,
-    rewarded: false,
-  });
+  const entity = acquireEntity(runtime, "physical", kind, x, GROUND_Y - dimensions.height, dimensions.width, dimensions.height);
+  entity.alreadyHit = false;
+  entity.rewarded = false;
+  entity.motion = kind === "slidingTackle" ? "rush" : "ground";
+  entity.horizontalSpeedFactor =
+      kind === "slidingTackle"
+        ? 1.24 + difficulty * 0.56 + Math.random() * 0.16
+        : 1;
+  entity.rotation = kind === "slidingTackle" ? -0.045 : 0;
+  entity.angularVelocity = kind === "slidingTackle" ? 0.035 + Math.random() * 0.035 : 0;
+  runtime.entities.push(entity);
+  return true;
+}
+
+function acquireEntity(
+  runtime: Runtime,
+  type: RunnerEntity["type"],
+  kind: RunnerEntity["kind"],
+  x: number,
+  y: number,
+  width: number,
+  height: number
+) {
+  const entity = runtime.entityPool.pop() ?? ({} as RunnerEntity);
+  entity.id = runtime.nextEntityId++;
+  entity.type = type;
+  entity.kind = kind;
+  entity.x = x;
+  entity.y = y;
+  entity.width = width;
+  entity.height = height;
+  entity.alreadyHit = undefined;
+  entity.rewarded = undefined;
+  entity.fleeing = undefined;
+  entity.motion = undefined;
+  entity.velocityY = undefined;
+  entity.accelerationY = undefined;
+  entity.horizontalSpeedFactor = undefined;
+  entity.rotation = undefined;
+  entity.angularVelocity = undefined;
+  entity.bouncesRemaining = undefined;
+  entity.targetY = undefined;
+  entity.originY = undefined;
+  entity.amplitude = undefined;
+  entity.phase = undefined;
+  entity.motionSpeed = undefined;
+  return entity;
+}
+
+function releaseEntity(runtime: Runtime, entity: RunnerEntity) {
+  if (runtime.entityPool.length < 18) runtime.entityPool.push(entity);
 }
 
 function applyEvent(runtime: Runtime, kind: EventKind, time: number) {
@@ -772,11 +1753,24 @@ function applyEvent(runtime: Runtime, kind: EventKind, time: number) {
     return;
   }
 
-  const goalTriggered = addTeamRating(runtime, definition.ratingDelta, time);
-  runtime.score = Math.max(
-    0,
-    runtime.score + definition.arcadePoints * Math.max(1, runtime.multiplier)
-  );
+  const malusBlocked =
+    definition.category === "malus" &&
+    getPowerUpStrength(runtime, "luperto") > 0;
+  const goalTriggered = malusBlocked
+    ? false
+    : changeTeamRating(
+        runtime,
+        definition.ratingDelta,
+        time,
+        definition.category,
+        definition.label
+      );
+  if (!malusBlocked) {
+    runtime.score = Math.max(
+      0,
+      runtime.score + definition.arcadePoints * Math.max(1, runtime.multiplier)
+    );
+  }
 
   if (definition.category === "bonus") {
     runtime.bonusesCollected += 1;
@@ -784,33 +1778,55 @@ function applyEvent(runtime: Runtime, kind: EventKind, time: number) {
     if (!goalTriggered) runtime.effect = "bonus";
   } else {
     runtime.malusesCollected += 1;
-    runtime.multiplier = 1;
-    if (!goalTriggered) runtime.effect = "malus";
+    if (!malusBlocked) runtime.multiplier = 1;
+    if (!goalTriggered) runtime.effect = malusBlocked ? "bonus" : "malus";
+  }
+
+  if (malusBlocked) {
+    runtime.message = "MALUS ANNULLATO";
+    runtime.messageTone = "bonus";
+    runtime.messageStartedAt = time;
+    runtime.messageUntil = time + 760;
+    runtime.effectUntil = time + 520;
+    return;
   }
 
   const signedValue = definition.ratingDelta > 0
     ? `+${formatRating(definition.ratingDelta)}`
     : formatRating(definition.ratingDelta);
-  runtime.message = `${definition.label.toUpperCase()}  ${signedValue}`;
+  runtime.message = signedValue;
   runtime.messageTone = definition.category;
+  runtime.messageStartedAt = time;
   runtime.messageUntil = time + 920;
   if (!goalTriggered) runtime.effectUntil = time + 460;
 }
 
-function addTeamRating(runtime: Runtime, delta: number, time: number) {
+function changeTeamRating(
+  runtime: Runtime,
+  delta: number,
+  time: number,
+  reason: RatingChangeReason,
+  detail: string
+) {
+  const previousRating = runtime.teamRating;
+  const previousGoals = runtime.confirmedGoals;
   runtime.teamRating = roundRating(runtime.teamRating + delta);
+  logRatingChange(previousRating, runtime.teamRating, reason, detail);
   const goals = calculateGoals(runtime.teamRating);
+  runtime.confirmedGoals = goals;
 
-  if (goals > runtime.maxGoalsReached) {
-    const newGoals = goals - runtime.maxGoalsReached;
-    runtime.maxGoalsReached = goals;
+  if (goals > previousGoals) {
     runtime.goalCelebrationGoals = goals;
     runtime.goalCelebrationUntil = time + 1050;
-    runtime.score += GOAL_THRESHOLD_SCORE_BONUS * newGoals;
-    runtime.multiplier = Math.min(
-      5,
-      runtime.multiplier + GOAL_THRESHOLD_COMBO_BONUS * newGoals
-    );
+    if (goals > runtime.maxGoalsReached) {
+      const rewardedGoals = goals - runtime.maxGoalsReached;
+      runtime.maxGoalsReached = goals;
+      runtime.score += GOAL_THRESHOLD_SCORE_BONUS * rewardedGoals;
+      runtime.multiplier = Math.min(
+        5,
+        runtime.multiplier + GOAL_THRESHOLD_COMBO_BONUS * rewardedGoals
+      );
+    }
     runtime.effect = "goal";
     runtime.effectUntil = time + 1050;
     return true;
@@ -836,15 +1852,15 @@ function applyPhysicalHit(runtime: Runtime, time: number, repel: boolean) {
 
 function toSnapshot(runtime: Runtime, best: number, time: number): GameSnapshot {
   const score = Math.max(0, Math.round(runtime.score));
-  const scenario = getScenarioState(runtime.elapsed).current;
+  const scenario = getStageScenario(runtime);
   return {
     score,
     best: Math.max(best, score),
     multiplier: runtime.multiplier,
     teamRating: runtime.teamRating,
     threshold: TEAM_RATING_THRESHOLD,
-    goals: calculateGoals(runtime.teamRating),
-    nextGoalThreshold: getGoalThreshold(calculateGoals(runtime.teamRating) + 1),
+    goals: runtime.confirmedGoals,
+    nextGoalThreshold: getGoalThreshold(runtime.confirmedGoals + 1),
     protectionActive:
       runtime.protectionAvailable && runtime.elapsed < INITIAL_PROTECTION_SECONDS,
     protectionRemaining:
@@ -852,13 +1868,38 @@ function toSnapshot(runtime: Runtime, best: number, time: number): GameSnapshot 
         ? Math.max(0, INITIAL_PROTECTION_SECONDS - runtime.elapsed)
         : 0,
     flowProgress: Math.round(runtime.flowProgress),
-    speedLevel: getSpeedLevel(getDifficultyProgress(runtime)),
+    speedLevel: getSpeedLevel(getScoreSpeedProgress(runtime)),
     distance: Math.round(runtime.distance),
     scenarioName: scenario.name,
     bonusesCollected: runtime.bonusesCollected,
     malusesCollected: runtime.malusesCollected,
     message: time < runtime.messageUntil ? runtime.message : "",
     gameOverReason: runtime.gameOverReason,
+    rafficaType: runtime.burst?.type ?? null,
+    rafficaRemaining: runtime.burst?.durationRemaining ?? 0,
+    activePowerUps: (Object.keys(runtime.activePowerUps) as PowerUpKind[])
+      .map((kind) => {
+        const active = runtime.activePowerUps[kind];
+        return active && active.expiresAt > runtime.elapsed
+          ? {
+              kind,
+              remaining: Math.max(0, active.expiresAt - runtime.elapsed),
+              charges: active.charges,
+            }
+          : null;
+      })
+      .filter((item): item is NonNullable<typeof item> => item !== null),
+    presentation:
+      runtime.presentation && time < runtime.presentation.until
+        ? {
+            asset: runtime.presentation.asset,
+            title: runtime.presentation.title,
+            subtitle: runtime.presentation.subtitle,
+            tone: runtime.presentation.tone,
+          }
+        : null,
+    bossRemaining:
+      runtime.boss?.phase === "active" ? Math.max(0, runtime.boss.timer) : 0,
   };
 }
 
@@ -866,21 +1907,37 @@ function getDifficultyProgress(runtime: Runtime) {
   const duration = clamp01(runtime.elapsed / DIFFICULTY_CONFIG.rampSeconds);
   const distance = clamp01(runtime.distance / DIFFICULTY_CONFIG.targetDistance);
   const score = clamp01(runtime.score / DIFFICULTY_CONFIG.targetScore);
-  const scenarioStep = Math.floor(runtime.elapsed / SCENARIO_DURATION_SECONDS);
-  const competition = clamp01(
-    scenarioStep / DIFFICULTY_CONFIG.scenarioStepsToMaximum
+  const rating = clamp01(
+    (runtime.teamRating - TEAM_RATING_INITIAL) / DIFFICULTY_CONFIG.ratingRange
   );
   const weighted =
     duration * DIFFICULTY_CONFIG.weights.duration +
     distance * DIFFICULTY_CONFIG.weights.distance +
     score * DIFFICULTY_CONFIG.weights.score +
-    competition * DIFFICULTY_CONFIG.weights.competition;
-  return weighted * weighted * (3 - 2 * weighted);
+    rating * DIFFICULTY_CONFIG.weights.rating;
+  const curved =
+    weighted +
+    Math.pow(clamp01(weighted), DIFFICULTY_CONFIG.curvePower) *
+      DIFFICULTY_CONFIG.nonlinearBoost;
+  return Math.max(getDifficultyBand(runtime.teamRating).floor, clamp01(curved));
 }
 
-function getRunSpeed(difficulty: number) {
-  const curved = Math.pow(clamp01(difficulty), DIFFICULTY_CONFIG.speedCurvePower);
-  return SPEED_CONFIG.initial + (SPEED_CONFIG.maximum - SPEED_CONFIG.initial) * curved;
+function getScoreSpeedProgress(runtime: Runtime) {
+  return clamp01(runtime.peakScore / SPEED_CONFIG.scoreForMaximum);
+}
+
+function getRunSpeed(scoreProgress: number) {
+  const curved = Math.pow(clamp01(scoreProgress), DIFFICULTY_CONFIG.speedCurvePower);
+  return SPEED_CONFIG.initial +
+    (SPEED_CONFIG.maximum - SPEED_CONFIG.initial) * curved;
+}
+
+function getDifficultyBand(rating: number) {
+  return DIFFICULTY_BANDS.find(
+    (band) =>
+      rating >= band.minimumRating &&
+      (band.maximumRating === null || rating <= band.maximumRating)
+  ) ?? DIFFICULTY_BANDS[DIFFICULTY_BANDS.length - 1];
 }
 
 function getSpeedLevel(difficulty: number) {
@@ -892,59 +1949,92 @@ function clamp01(value: number) {
 }
 
 function getPhysicalDimensions(kind: PhysicalObstacleKind) {
-  if (kind === "barrier") return { width: 58, height: 42 };
-  if (kind === "sign") return { width: 42, height: 72 };
-  if (kind === "overhead") return { width: 88, height: 36 };
-  if (kind === "platform") return { width: 94, height: 28 };
-  return { width: 62, height: 54 };
+  const sprite = OBSTACLE_SPRITES[kind];
+  return { width: sprite.width, height: sprite.height };
 }
 
-function getObstacleProfile(kind: PhysicalObstacleKind) {
-  if (kind === "barrier" || kind === "block" || kind === "platform") {
-    return { height: "low" as const, walkable: true };
-  }
-  return { height: "high" as const, walkable: false };
+function getEventDimensions(kind: EventKind) {
+  const sprite = EVENT_SPRITES[kind];
+  return sprite
+    ? { width: sprite.width, height: sprite.height }
+    : { width: kind === "hatTrick" ? 60 : 52, height: kind === "hatTrick" ? 60 : 52 };
 }
 
 function getObstacleHitbox(entity: RunnerEntity) {
   const kind = entity.kind as PhysicalObstacleKind;
-  if (kind === "barrier") {
-    return { x: entity.x + 3, y: entity.y + 7, width: entity.width - 6, height: entity.height - 7 };
+  const hitbox = OBSTACLE_SPRITES[kind].hitbox;
+  return {
+    x: entity.x + hitbox.x,
+    y: entity.y + hitbox.y,
+    width: hitbox.width,
+    height: hitbox.height,
+  };
+}
+
+function getEventHitbox(entity: RunnerEntity) {
+  const sprite = EVENT_SPRITES[entity.kind as EventKind];
+  if (!sprite) {
+    return {
+      x: entity.x + 5,
+      y: entity.y + 5,
+      width: entity.width - 10,
+      height: entity.height - 10,
+    };
   }
-  if (kind === "platform") {
-    return { x: entity.x + 2, y: entity.y + 2, width: entity.width - 4, height: entity.height - 2 };
-  }
-  if (kind === "sign") {
-    return { x: entity.x + 6, y: entity.y + 1, width: entity.width - 12, height: entity.height - 1 };
-  }
-  if (kind === "overhead") {
-    return { x: entity.x + 6, y: entity.y + 3, width: entity.width - 12, height: entity.height - 6 };
-  }
-  return { x: entity.x + 4, y: entity.y + 4, width: entity.width - 8, height: entity.height - 4 };
+  return {
+    x: entity.x + sprite.hitbox.x,
+    y: entity.y + sprite.hitbox.y,
+    width: sprite.hitbox.width,
+    height: sprite.hitbox.height,
+  };
+}
+
+function getPowerUpHitbox(entity: RunnerEntity) {
+  const hitbox = POWER_UP_CONFIG[entity.kind as PowerUpKind].hitbox;
+  return {
+    x: entity.x + hitbox.x,
+    y: entity.y + hitbox.y,
+    width: hitbox.width,
+    height: hitbox.height,
+  };
 }
 
 function getPlayerHitbox(runtime: Runtime, time: number) {
+  let hitbox: { x: number; y: number; width: number; height: number };
   if (isCrouching(runtime, time)) {
-    return {
+    hitbox = {
       x: runtime.playerX + 3,
       y: runtime.playerY + 14,
       width: PLAYER_SIZE - 6,
       height: PLAYER_SIZE - 14,
     };
-  }
-  if (!runtime.grounded) {
-    return {
+  } else if (!runtime.grounded) {
+    hitbox = {
       x: runtime.playerX + 10,
       y: runtime.playerY + 7,
       width: PLAYER_SIZE - 20,
       height: PLAYER_SIZE - 12,
     };
+  } else {
+    hitbox = {
+      x: runtime.playerX + 8,
+      y: runtime.playerY + 5,
+      width: PLAYER_SIZE - 16,
+      height: PLAYER_SIZE - 7,
+    };
   }
+  return expandRect(hitbox, 24 * getPowerUpStrength(runtime, "lukaku"));
+}
+
+function expandRect(
+  rect: { x: number; y: number; width: number; height: number },
+  amount: number
+) {
   return {
-    x: runtime.playerX + 8,
-    y: runtime.playerY + 5,
-    width: PLAYER_SIZE - 16,
-    height: PLAYER_SIZE - 7,
+    x: rect.x - amount,
+    y: rect.y - amount,
+    width: rect.width + amount * 2,
+    height: rect.height + amount * 2,
   };
 }
 
@@ -987,36 +2077,306 @@ function drawGame(
   context: CanvasRenderingContext2D,
   runtime: Runtime,
   logo: HTMLImageElement | null,
+  assets: GameImageMap,
   time: number,
   reducedMotion: boolean
 ) {
   context.clearRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-  const scenarioState = getScenarioState(runtime.elapsed);
+  const scenario = getStageScenario(runtime);
+  const reducedEffects = reducedMotion || runtime.reducedPerformance;
 
-  drawScenario(context, scenarioState.current, runtime, 1, reducedMotion);
-  if (scenarioState.transition < 1) {
-    drawScenario(
-      context,
-      scenarioState.previous,
-      runtime,
-      1 - scenarioState.transition,
-      reducedMotion
-    );
+  const hasAssetBackground = drawAssetBackground(context, runtime, assets);
+  if (hasAssetBackground) {
+    drawAssetHazards(context, runtime, assets);
+  } else {
+    drawScenario(context, scenario, runtime, 1, reducedMotion);
+    drawGround(context, scenario, runtime.pits, 1);
   }
-
-  drawGround(context, scenarioState.current, runtime.pits, 1);
-  if (scenarioState.transition < 1) {
-    drawGround(
-      context,
-      scenarioState.previous,
-      runtime.pits,
-      1 - scenarioState.transition
-    );
+  drawSpeedComfortOverlay(context, runtime);
+  drawRafficaOverlay(context, runtime);
+  drawBoss(context, runtime, assets);
+  runtime.entities.forEach((entity) =>
+    drawEntity(context, entity, assets, runtime.elapsed, reducedEffects)
+  );
+  if (runtime.playerVisible) {
+    drawPlayer(context, runtime, logo, time, scenario, reducedEffects);
   }
-  runtime.entities.forEach((entity) => drawEntity(context, entity));
-  drawPlayer(context, runtime, logo, time, scenarioState.current, reducedMotion);
-  drawGoalCelebration(context, runtime, time, scenarioState.current);
+  drawGoalCelebration(context, runtime, time, scenario);
   drawEventFeedback(context, runtime, time);
+}
+
+function getStageScenario(runtime: Runtime) {
+  return GAME_SCENARIOS[getVisibleBackgroundStage(runtime) - 1] ?? GAME_SCENARIOS[0];
+}
+
+function drawAssetBackground(
+  context: CanvasRenderingContext2D,
+  runtime: Runtime,
+  assets: GameImageMap
+) {
+  const viewport = getLogicalCanvasViewport(context);
+  const transition = runtime.backgroundTransition;
+  const currentStage = transition?.from ?? runtime.backgroundStage;
+  const currentConfig = BACKGROUND_STAGE_CONFIG[currentStage];
+  if (!assets.get(currentConfig.stadium) || !assets.get(currentConfig.ground)) {
+    return false;
+  }
+
+  if (!transition) {
+    drawStageLayers(context, currentStage, runtime, assets, 1, viewport);
+    return true;
+  }
+
+  const targetConfig = BACKGROUND_STAGE_CONFIG[transition.to];
+  if (!assets.get(targetConfig.stadium) || !assets.get(targetConfig.ground)) {
+    drawStageLayers(context, currentStage, runtime, assets, 1, viewport);
+    return true;
+  }
+
+  const progress = smoothProgress(transition.progress);
+  drawStageLayers(context, currentStage, runtime, assets, 1, viewport);
+  drawStageLayers(context, transition.to, runtime, assets, progress, viewport);
+  return true;
+}
+
+function drawStageLayers(
+  context: CanvasRenderingContext2D,
+  stage: GameBackgroundStage,
+  runtime: Runtime,
+  assets: GameImageMap,
+  alpha: number,
+  viewport: { width: number; height: number }
+) {
+  const config = BACKGROUND_STAGE_CONFIG[stage];
+  const stadium = assets.get(config.stadium);
+  const ground = assets.get(config.ground);
+  if (!stadium || !ground) return;
+
+  context.save();
+  context.globalAlpha = alpha;
+  context.fillStyle = config.backdrop;
+  context.fillRect(0, 0, viewport.width, viewport.height);
+  drawBackgroundTiles(context, stadium, runtime.stadiumOffset, viewport);
+  context.save();
+  context.globalAlpha = alpha * (1 - runtime.visualComfort * 0.1);
+  drawGroundTiles(context, ground, runtime.groundOffset, viewport);
+  context.restore();
+  context.restore();
+}
+
+function drawBackgroundTiles(
+  context: CanvasRenderingContext2D,
+  image: HTMLImageElement,
+  offset: number,
+  viewport: { width: number; height: number }
+) {
+  const scale = Math.max(
+    viewport.width / image.naturalWidth,
+    viewport.height / image.naturalHeight
+  );
+  const tileWidth = image.naturalWidth * scale;
+  const tileHeight = image.naturalHeight * scale;
+  const y = (viewport.height - tileHeight) / 2;
+  const step = Math.max(1, tileWidth - BACKGROUND_TRANSITION_CONFIG.loopPixelOverlap);
+  const firstTileIndex = Math.floor(offset / step);
+  const localOffset = offset - firstTileIndex * step;
+  let tileX = -localOffset;
+  let tileIndex = firstTileIndex;
+
+  while (tileX < viewport.width) {
+    const mirrored = Math.abs(tileIndex) % 2 === 1;
+    if (mirrored) {
+      context.save();
+      context.translate(tileX + tileWidth, 0);
+      context.scale(-1, 1);
+      context.drawImage(image, 0, y, tileWidth, tileHeight);
+      context.restore();
+    } else {
+      context.drawImage(image, tileX, y, tileWidth, tileHeight);
+    }
+    tileX += step;
+    tileIndex += 1;
+  }
+}
+
+function drawGroundTiles(
+  context: CanvasRenderingContext2D,
+  image: HTMLImageElement,
+  offset: number,
+  viewport: { width: number; height: number }
+) {
+  const scale = Math.max(
+    viewport.width / image.naturalWidth,
+    viewport.height / image.naturalHeight
+  );
+  const tileWidth = Math.max(1, Math.round(image.naturalWidth * scale));
+  const tileHeight = Math.max(1, Math.round(image.naturalHeight * scale));
+  const y = Math.round((viewport.height - tileHeight) / 2);
+  const overlap = 2;
+  const step = Math.max(1, tileWidth - overlap);
+  const localOffset = ((offset % step) + step) % step;
+  const firstX = -Math.floor(localOffset);
+  for (let tileX = firstX; tileX < viewport.width; tileX += step) {
+    context.drawImage(image, tileX, y, tileWidth, tileHeight);
+  }
+}
+
+function drawRafficaOverlay(
+  context: CanvasRenderingContext2D,
+  runtime: Runtime
+) {
+  if (!runtime.burstOverlayType || runtime.burstOverlayIntensity <= 0) return;
+  const viewport = getLogicalCanvasViewport(context);
+  const isMalus = runtime.burstOverlayType === "malus";
+  const slowPulse = 0.94 + Math.sin(runtime.elapsed * (isMalus ? 2.1 : 1.45)) * 0.06;
+  const staticOverlay = getRafficaStaticOverlay(
+    runtime.burstOverlayType,
+    viewport.width,
+    viewport.height
+  );
+  context.save();
+  context.globalAlpha = runtime.burstOverlayIntensity * slowPulse;
+  context.drawImage(staticOverlay, 0, 0, viewport.width, viewport.height);
+
+  if (!isMalus && !runtime.reducedPerformance) {
+    drawBonusParticles(context, runtime, viewport, runtime.burstOverlayIntensity);
+  }
+  context.restore();
+}
+
+function getRafficaStaticOverlay(
+  type: RafficaType,
+  width: number,
+  height: number
+) {
+  const key = `${type}-${Math.round(width)}x${Math.round(height)}`;
+  const cached = RAFFICA_OVERLAY_CACHE.get(key);
+  if (cached) return cached;
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.ceil(width));
+  canvas.height = Math.max(1, Math.ceil(height));
+  const overlay = canvas.getContext("2d");
+  if (!overlay) return canvas;
+  const isMalus = type === "malus";
+  const gradient = overlay.createLinearGradient(0, 0, width, height);
+  gradient.addColorStop(0, isMalus ? "rgba(127,29,29,0.9)" : "rgba(180,112,16,0.82)");
+  gradient.addColorStop(0.5, isMalus ? "rgba(190,24,93,0.28)" : "rgba(251,191,36,0.24)");
+  gradient.addColorStop(1, isMalus ? "rgba(69,10,10,0.72)" : "rgba(120,53,15,0.68)");
+  overlay.fillStyle = gradient;
+  overlay.fillRect(0, 0, width, height);
+  const vignette = overlay.createRadialGradient(
+    width / 2, height / 2, height * 0.16, width / 2, height / 2, width * 0.68
+  );
+  vignette.addColorStop(0, "rgba(0,0,0,0)");
+  vignette.addColorStop(1, isMalus ? "rgba(55,0,8,0.78)" : "rgba(80,44,4,0.42)");
+  overlay.fillStyle = vignette;
+  overlay.fillRect(0, 0, width, height);
+  if (isMalus) {
+    for (const x of [0, width]) {
+      const glow = overlay.createRadialGradient(x, 0, 0, x, 0, width * 0.34);
+      glow.addColorStop(0, "rgba(255,80,80,0.48)");
+      glow.addColorStop(1, "rgba(120,0,15,0)");
+      overlay.fillStyle = glow;
+      overlay.fillRect(0, 0, width, height * 0.58);
+    }
+  }
+  RAFFICA_OVERLAY_CACHE.set(key, canvas);
+  return canvas;
+}
+
+function drawBonusParticles(
+  context: CanvasRenderingContext2D,
+  runtime: Runtime,
+  viewport: { width: number; height: number },
+  intensity: number
+) {
+  context.fillStyle = "#fde68a";
+  for (let index = 0; index < 8; index += 1) {
+    const x = (index * 83 + runtime.elapsed * (9 + (index % 3) * 3)) % viewport.width;
+    const y = 42 + ((index * 71 + runtime.elapsed * 13) % Math.max(80, viewport.height - 110));
+    const radius = 0.8 + (index % 3) * 0.45;
+    context.globalAlpha = intensity * (0.38 + (index % 4) * 0.1);
+    context.beginPath();
+    context.arc(x, y, radius, 0, Math.PI * 2);
+    context.fill();
+  }
+}
+
+function drawSpeedComfortOverlay(
+  context: CanvasRenderingContext2D,
+  runtime: Runtime
+) {
+  if (runtime.visualComfort <= 0 || runtime.reducedPerformance) return;
+  const viewport = getLogicalCanvasViewport(context);
+  context.save();
+  context.globalAlpha = runtime.visualComfort * 0.12;
+  context.fillStyle = "#0f2743";
+  context.fillRect(0, 0, viewport.width, viewport.height);
+  context.restore();
+  context.save();
+  context.globalAlpha = runtime.visualComfort * 0.12;
+  context.fillStyle = "#020817";
+  context.fillRect(0, 0, 42, viewport.height);
+  context.fillRect(viewport.width - 42, 0, 42, viewport.height);
+  context.restore();
+}
+
+function getLogicalCanvasViewport(context: CanvasRenderingContext2D) {
+  void context;
+  return LOGICAL_VIEWPORT;
+}
+
+function drawAssetHazards(
+  context: CanvasRenderingContext2D,
+  runtime: Runtime,
+  assets: GameImageMap
+) {
+  for (const pit of runtime.pits) {
+    const stage = pit.stage ?? getVisibleBackgroundStage(runtime);
+    const image = assets.get(BACKGROUND_STAGE_CONFIG[stage].hazard);
+    if (!image) {
+      drawFallbackPit(context, pit);
+      continue;
+    }
+    const width = pit.width * 2.1;
+    const height = width * (image.naturalHeight / image.naturalWidth);
+    const x = pit.x - pit.width * 0.59;
+    const y = GROUND_Y - pit.width * 0.27;
+    context.drawImage(image, x, y, width, height);
+  }
+}
+
+function drawFallbackPit(context: CanvasRenderingContext2D, pit: GroundPit) {
+  context.save();
+  const gradient = context.createRadialGradient(
+    pit.x + pit.width / 2,
+    GROUND_Y + 5,
+    4,
+    pit.x + pit.width / 2,
+    GROUND_Y + 8,
+    pit.width * 0.62
+  );
+  gradient.addColorStop(0, "#020617");
+  gradient.addColorStop(0.65, "#160d08");
+  gradient.addColorStop(1, "rgba(101,68,45,0)");
+  context.fillStyle = gradient;
+  context.beginPath();
+  context.ellipse(
+    pit.x + pit.width / 2,
+    GROUND_Y + 10,
+    pit.width * 0.62,
+    pit.width * 0.34,
+    0,
+    0,
+    Math.PI * 2
+  );
+  context.fill();
+  context.restore();
+}
+
+function smoothProgress(value: number) {
+  const clamped = Math.max(0, Math.min(1, value));
+  return clamped * clamped * (3 - 2 * clamped);
 }
 
 function drawScenario(
@@ -1118,6 +2478,7 @@ function drawPlayer(
   const crouching = isCrouching(runtime, time);
   const hitReaction = runtime.effect === "hit" || runtime.effect === "malus";
   const jitter = hitReaction && !reducedMotion ? Math.sin(time / 28) * 4 : 0;
+  const lukakuStrength = getPowerUpStrength(runtime, "lukaku");
 
   context.save();
   context.globalAlpha = airborne ? 0.16 : 0.3;
@@ -1126,7 +2487,7 @@ function drawPlayer(
   context.ellipse(
     runtime.playerX + PLAYER_SIZE / 2,
     runtime.playerY + PLAYER_SIZE + (airborne ? Math.min(38, (PLAYER_GROUND_Y - runtime.playerY) * 0.28) : 2),
-    airborne ? 17 : crouching ? 31 : 25,
+    (airborne ? 17 : crouching ? 31 : 25) * (1 + lukakuStrength * 0.42),
     airborne ? 4 : 6,
     0,
     0,
@@ -1134,6 +2495,22 @@ function drawPlayer(
   );
   context.fill();
   context.restore();
+
+  if (getPowerUpStrength(runtime, "luperto") > 0) {
+    drawPersistentShield(context, runtime, time, reducedMotion);
+  }
+
+  const effectKind = runtime.powerUpCollectionEffect?.kind;
+  if (effectKind && runtime.powerUpCollectionEffect) {
+    drawPowerUpCollectionEffect(
+      context,
+      effectKind,
+      runtime.playerX + PLAYER_SIZE / 2,
+      runtime.playerY + PLAYER_SIZE / 2,
+      1 - Math.max(0, runtime.powerUpCollectionEffect.until - time) / 820,
+      reducedMotion
+    );
+  }
 
   context.save();
   const runCycle = reducedMotion ? 0 : Math.sin(runtime.elapsed * 10.5);
@@ -1144,18 +2521,24 @@ function drawPlayer(
   const centerY = crouching
     ? groundedBottom - PLAYER_SIZE * 0.41
     : runtime.playerY + PLAYER_SIZE / 2 + (airborne ? 0 : runCycle * 1.4);
-  const playerScale = hitReaction
+  const lukakuScale = 1 + lukakuStrength * 0.82;
+  const playerScale = (hitReaction
       ? 0.92
       : airborne
         ? rising ? 0.98 : 1.02
-        : 1 + Math.abs(runCycle) * 0.008;
-  const scaleX = crouching ? 1.08 : playerScale;
-  const scaleY = crouching ? 0.82 : playerScale;
-  const rotation = crouching
+        : 1 + Math.abs(runCycle) * 0.008) * lukakuScale;
+  const scaleX = crouching ? 1.08 * lukakuScale : playerScale;
+  const scaleY = crouching ? 0.82 * lukakuScale : playerScale;
+  const collectionRotation = effectKind === "gimenez" && runtime.powerUpCollectionEffect
+    ? Math.sin(time / 22) * 0.035 * Math.max(0, (runtime.powerUpCollectionEffect.until - time) / 820)
+    : effectKind === "lukaku" && runtime.powerUpCollectionEffect
+      ? -0.025 * Math.max(0, (runtime.powerUpCollectionEffect.until - time) / 820)
+      : 0;
+  const rotation = (crouching
     ? -0.035
     : airborne
       ? rising ? -0.075 : falling ? 0.055 : 0
-      : runCycle * 0.018;
+      : runCycle * 0.018) + collectionRotation;
 
   context.translate(centerX, centerY);
   context.rotate(rotation);
@@ -1170,10 +2553,10 @@ function drawPlayer(
         : runtime.effect === "jump"
           ? `${scenario.accent}aa`
           : "rgba(248,113,113,0.8)";
-    context.shadowBlur = runtime.effect === "jump" ? 9 : 16;
+    context.shadowBlur = runtime.effect === "jump" ? 5 : 10;
   } else if (airborne) {
     context.shadowColor = `${scenario.accent}66`;
-    context.shadowBlur = 7;
+    context.shadowBlur = 4;
   }
 
   if (logo?.complete && logo.naturalWidth > 0) {
@@ -1203,14 +2586,135 @@ function drawPlayer(
   context.restore();
 }
 
-function drawEntity(context: CanvasRenderingContext2D, entity: RunnerEntity) {
+function drawPersistentShield(
+  context: CanvasRenderingContext2D,
+  runtime: Runtime,
+  time: number,
+  reducedMotion: boolean
+) {
+  const strength = getPowerUpStrength(runtime, "luperto");
+  const pulse = reducedMotion ? 0 : Math.sin(time / 220) * 2;
+  const centerX = runtime.playerX + PLAYER_SIZE / 2;
+  const centerY = runtime.playerY + PLAYER_SIZE / 2;
+  context.save();
+  context.globalAlpha = 0.4 * strength;
+  context.strokeStyle = POWER_UP_CONFIG.luperto.hudColor;
+  context.lineWidth = 3;
+  context.shadowColor = POWER_UP_CONFIG.luperto.hudColor;
+  context.shadowBlur = reducedMotion ? 0 : 11;
+  context.beginPath();
+  context.arc(centerX, centerY, 42 + pulse, Math.PI * 0.12, Math.PI * 0.88);
+  context.quadraticCurveTo(centerX, centerY + 62 + pulse, centerX - 42 - pulse, centerY);
+  context.stroke();
+  context.restore();
+}
+
+function drawPowerUpCollectionEffect(
+  context: CanvasRenderingContext2D,
+  kind: PowerUpKind,
+  centerX: number,
+  centerY: number,
+  rawProgress: number,
+  reducedMotion: boolean
+) {
+  const progress = Math.max(0, Math.min(1, rawProgress));
+  const alpha = 1 - progress;
+  const color = POWER_UP_CONFIG[kind].hudColor;
+  context.save();
+  context.globalAlpha = Math.max(0, alpha * 0.9);
+  context.strokeStyle = color;
+  context.fillStyle = color;
+  context.lineWidth = kind === "luperto" ? 4 : 2.5;
+  context.shadowColor = color;
+  context.shadowBlur = reducedMotion ? 0 : 12;
+
+  if (kind === "luperto") {
+    context.beginPath();
+    context.arc(centerX, centerY, 38 + progress * 25, Math.PI * 0.12, Math.PI * 0.88);
+    context.quadraticCurveTo(centerX, centerY + 64 + progress * 12, centerX - (38 + progress * 25), centerY);
+    context.stroke();
+  } else if (kind === "lukaku") {
+    for (let index = 0; index < 2; index += 1) {
+      context.globalAlpha = alpha * (0.72 - index * 0.2);
+      context.beginPath();
+      context.arc(centerX, centerY, 34 + progress * (48 + index * 22), 0, Math.PI * 2);
+      context.stroke();
+    }
+  } else if (kind === "nico-paz") {
+    for (const side of [-1, 1]) {
+      context.beginPath();
+      context.arc(centerX + side * 26, centerY, 24 + progress * 18, -Math.PI / 2, Math.PI / 2, side < 0);
+      context.stroke();
+    }
+  } else if (kind === "dybala") {
+    context.setLineDash([5, 7]);
+    context.beginPath();
+    context.ellipse(centerX, centerY, 38 + progress * 34, 27 + progress * 18, progress * 0.6, 0, Math.PI * 2);
+    context.stroke();
+  } else {
+    for (let index = 0; index < 4; index += 1) {
+      const offset = (index - 1.5) * 13;
+      context.globalAlpha = alpha * (0.28 + index * 0.1);
+      context.fillRect(centerX - 42 + progress * 22, centerY + offset, 84 - progress * 30, 2);
+    }
+  }
+  context.restore();
+}
+
+function drawEntity(
+  context: CanvasRenderingContext2D,
+  entity: RunnerEntity,
+  assets: GameImageMap,
+  elapsed: number,
+  reducedEffects: boolean
+) {
+  if (entity.type === "powerup") {
+    drawPowerUp(context, entity, assets, elapsed, reducedEffects);
+    return;
+  }
   if (entity.type === "physical") {
-    drawPhysicalObstacle(context, entity);
+    drawPhysicalObstacle(context, entity, assets, elapsed, reducedEffects);
     return;
   }
 
   const definition = EVENT_DEFINITIONS[entity.kind as EventKind];
   const isBonus = definition.category === "bonus";
+  if (entity.fleeing) {
+    context.save();
+    context.globalAlpha = 0.72;
+    context.strokeStyle = "#a5f3fc";
+    context.lineWidth = 2.2;
+    context.lineCap = "round";
+    context.shadowColor = "#67e8f9";
+    context.shadowBlur = 7;
+    const centerY = entity.y + entity.height / 2;
+    for (let index = 0; index < 3; index += 1) {
+      context.beginPath();
+      context.moveTo(entity.x - 7 - index * 5, centerY - 9 + index * 9);
+      context.lineTo(entity.x - 28 - index * 9, centerY - 9 + index * 9);
+      context.stroke();
+    }
+    context.restore();
+  }
+  if ((entity.horizontalSpeedFactor ?? 1) > 1.08) {
+    context.save();
+    context.globalAlpha = entity.motion === "falling" ? 0.32 : 0.2;
+    context.strokeStyle = isBonus ? "#7dd3fc" : "#fda4af";
+    context.lineWidth = 1.5;
+    context.lineCap = "round";
+    const centerY = entity.y + entity.height / 2;
+    for (let index = 0; index < 2; index += 1) {
+      context.beginPath();
+      context.moveTo(entity.x + entity.width + 5, centerY - 5 + index * 10);
+      context.lineTo(
+        entity.x + entity.width + 20 + index * 8,
+        centerY - 8 + index * 10 - (entity.motion === "falling" ? 10 : 0)
+      );
+      context.stroke();
+    }
+    context.restore();
+  }
+  drawEventIdentity(context, entity, isBonus, elapsed);
   if (entity.motion === "falling") {
     const targetY = entity.targetY ?? GROUND_Y - entity.height;
     const progress = Math.max(
@@ -1264,9 +2768,22 @@ function drawEntity(context: CanvasRenderingContext2D, entity: RunnerEntity) {
     context.setLineDash([]);
     context.restore();
   }
+  const sprite = EVENT_SPRITES[entity.kind as EventKind];
+  const spriteImage = sprite ? assets.get(sprite.asset) : undefined;
+  if (sprite && spriteImage) {
+    context.save();
+    context.shadowColor = isBonus
+      ? `${definition.color}99`
+      : "rgba(2,6,23,0.4)";
+    context.shadowBlur = reducedEffects ? 0 : isBonus ? 7 : 3;
+    context.shadowOffsetY = 2;
+    drawCroppedSprite(context, spriteImage, sprite.source, entity);
+    context.restore();
+    return;
+  }
   context.save();
   context.shadowColor = isBonus ? `${definition.color}88` : "rgba(0,0,0,0.35)";
-  context.shadowBlur = isBonus ? 15 : 7;
+  context.shadowBlur = reducedEffects ? 0 : isBonus ? 8 : 3;
   context.fillStyle = definition.color;
   context.strokeStyle = definition.border;
   context.lineWidth = 4;
@@ -1299,13 +2816,246 @@ function drawEntity(context: CanvasRenderingContext2D, entity: RunnerEntity) {
   context.restore();
 }
 
-function drawPhysicalObstacle(context: CanvasRenderingContext2D, entity: RunnerEntity) {
+function drawPowerUp(
+  context: CanvasRenderingContext2D,
+  entity: RunnerEntity,
+  assets: GameImageMap,
+  elapsed: number,
+  reducedEffects: boolean
+) {
+  const definition = POWER_UP_CONFIG[entity.kind as PowerUpKind];
+  const image = assets.get(definition.assetKey);
+  const pulse = 1 + Math.sin(elapsed * 3.2 + entity.id) * 0.035;
+  context.save();
+  context.translate(entity.x + entity.width / 2, entity.y + entity.height / 2);
+  context.scale(pulse, pulse);
+  context.shadowColor = definition.hudColor;
+  context.shadowBlur = reducedEffects ? 0 : 9;
+  if (image) {
+    context.drawImage(image, -entity.width / 2, -entity.height / 2, entity.width, entity.height);
+  } else {
+    context.fillStyle = definition.hudColor;
+    context.beginPath();
+    context.arc(0, 0, entity.width * 0.38, 0, Math.PI * 2);
+    context.fill();
+  }
+  context.restore();
+}
+
+function drawBoss(
+  context: CanvasRenderingContext2D,
+  runtime: Runtime,
+  assets: GameImageMap
+) {
+  if (!runtime.boss || runtime.boss.phase === "warning") return;
+  const image = assets.get("event.boss");
+  if (!image) return;
+  const width = 250;
+  const height = 375;
+  const shotProgress = Math.max(0, 1 - (runtime.elapsed - runtime.boss.lastShotAt) / 0.32);
+  const exitProgress = runtime.boss.phase === "exiting"
+    ? 1 - clamp01(runtime.boss.timer / 0.7)
+    : 0;
+  const x = GAME_WIDTH - width - 12 + Math.sin(runtime.elapsed * 0.62) * 9 + shotProgress * 15 + exitProgress * 95;
+  const y = GROUND_Y - height - 2 + Math.sin(runtime.elapsed * 0.82) * 11;
+  context.save();
+  context.globalAlpha = 0.94 * (1 - exitProgress);
+  context.shadowColor = "rgba(244,63,94,0.42)";
+  context.shadowBlur = runtime.reducedPerformance ? 0 : 18;
+  context.translate(x + width / 2, y + height / 2);
+  context.rotate(-shotProgress * 0.018 + Math.sin(runtime.elapsed * 0.55) * 0.008);
+  const charging = Math.max(0, 1 - runtime.boss.spawnTimer / 0.22);
+  if (runtime.boss.spawnTimer > 0 && runtime.boss.spawnTimer < 0.22) {
+    context.save();
+    context.globalAlpha = charging * 0.38;
+    context.fillStyle = "#fda4af";
+    context.beginPath();
+    context.arc(-width * 0.2, height * 0.04, 10 + charging * 12, 0, Math.PI * 2);
+    context.fill();
+    context.restore();
+  }
+  context.drawImage(image, -width / 2, -height / 2, width, height);
+  context.restore();
+}
+
+function drawPhysicalObstacle(
+  context: CanvasRenderingContext2D,
+  entity: RunnerEntity,
+  assets: GameImageMap,
+  elapsed: number,
+  reducedEffects: boolean
+) {
+  const sprite = OBSTACLE_SPRITES[entity.kind as PhysicalObstacleKind];
+  const image = assets.get(sprite.asset);
+  if (!image) {
+    drawLegacyPhysicalObstacle(context, entity);
+    return;
+  }
+  context.save();
+  if (entity.kind === "slidingTackle" && !reducedEffects) {
+    context.fillStyle = "rgba(148,163,184,0.22)";
+    for (let index = 0; index < 3; index += 1) {
+      const wave = Math.sin(elapsed * 6.4 + entity.id * 0.7 + index * 1.8);
+      context.globalAlpha = 0.2 + index * 0.035;
+      context.beginPath();
+      context.ellipse(
+        entity.x + entity.width + 7 + index * 11,
+        GROUND_Y - 5 - Math.abs(wave) * (4 + index),
+        5 + index * 1.5,
+        2.3 + index * 0.6,
+        -0.16,
+        0,
+        Math.PI * 2
+      );
+      context.fill();
+    }
+  }
+  context.globalAlpha = 0.38;
+  context.fillStyle = "#020617";
+  context.beginPath();
+  context.ellipse(
+    entity.x + entity.width / 2,
+    GROUND_Y + 1,
+    Math.max(16, entity.width * 0.43),
+    Math.max(4, entity.height * 0.075),
+    0,
+    0,
+    Math.PI * 2
+  );
+  context.fill();
+  context.globalAlpha = 1;
+  context.shadowColor = "rgba(2,6,23,0.62)";
+  context.shadowBlur = reducedEffects ? 0 : 7;
+  context.shadowOffsetY = 4;
+  drawCroppedSprite(context, image, sprite.source, entity);
+  context.restore();
+}
+
+function drawEventIdentity(
+  context: CanvasRenderingContext2D,
+  entity: RunnerEntity,
+  isBonus: boolean,
+  elapsed: number
+) {
+  const centerX = entity.x + entity.width / 2;
+  const centerY = entity.y + entity.height / 2;
+  const pulse = 0.5 + Math.sin(elapsed * (isBonus ? 3.1 : 5.4) + entity.id) * 0.5;
+  const aura = context.createRadialGradient(
+    centerX,
+    centerY,
+    2,
+    centerX,
+    centerY,
+    Math.max(entity.width, entity.height) * 0.78
+  );
+  aura.addColorStop(0, isBonus ? "rgba(52,211,153,0.28)" : "rgba(248,113,113,0.28)");
+  aura.addColorStop(0.62, isBonus ? "rgba(56,189,248,0.1)" : "rgba(245,158,11,0.09)");
+  aura.addColorStop(1, "rgba(0,0,0,0)");
+
+  context.save();
+  context.fillStyle = aura;
+  context.beginPath();
+  context.arc(
+    centerX,
+    centerY,
+    Math.max(entity.width, entity.height) * (0.66 + pulse * 0.08),
+    0,
+    Math.PI * 2
+  );
+  context.fill();
+
+  context.globalAlpha = 0.5 + pulse * 0.28;
+  context.fillStyle = isBonus ? "#a7f3d0" : "#fecaca";
+  if (isBonus) {
+    for (let index = 0; index < 3; index += 1) {
+      const angle = elapsed * 0.8 + entity.id + index * 2.1;
+      const radius = Math.max(entity.width, entity.height) * (0.55 + index * 0.08);
+      context.beginPath();
+      context.arc(
+        centerX + Math.cos(angle) * radius,
+        centerY + Math.sin(angle) * radius * 0.58,
+        1.3 + index * 0.35,
+        0,
+        Math.PI * 2
+      );
+      context.fill();
+    }
+  } else {
+    context.strokeStyle = "rgba(251,113,133,0.58)";
+    context.lineWidth = 1.5;
+    for (let index = 0; index < 2; index += 1) {
+      const y = centerY - 8 + index * 14 + Math.sin(elapsed * 9 + entity.id) * 2;
+      context.beginPath();
+      context.moveTo(entity.x - 7 - index * 3, y);
+      context.lineTo(entity.x + 2, y - 3);
+      context.stroke();
+    }
+  }
+
+  context.globalAlpha = 0.94;
+  context.fillStyle = isBonus ? "#d1fae5" : "#ffe4e6";
+  context.shadowColor = isBonus ? "rgba(16,185,129,0.9)" : "rgba(244,63,94,0.9)";
+  context.shadowBlur = 7;
+  context.font = "900 15px sans-serif";
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+  context.fillText(isBonus ? "+" : "−", entity.x + entity.width + 5, entity.y + 3);
+  context.restore();
+}
+
+function drawCroppedSprite(
+  context: CanvasRenderingContext2D,
+  image: HTMLImageElement,
+  source: { x: number; y: number; width: number; height: number },
+  entity: Pick<RunnerEntity, "x" | "y" | "width" | "height" | "rotation">
+) {
+  const scale = Math.min(entity.width / source.width, entity.height / source.height);
+  const width = source.width * scale;
+  const height = source.height * scale;
+  const x = entity.x + (entity.width - width) / 2;
+  const y = entity.y + entity.height - height;
+  const rotation = entity.rotation ?? 0;
+  if (Math.abs(rotation) > 0.001) {
+    const centerX = entity.x + entity.width / 2;
+    const centerY = entity.y + entity.height / 2;
+    context.save();
+    context.translate(centerX, centerY);
+    context.rotate(rotation);
+    context.drawImage(
+      image,
+      source.x,
+      source.y,
+      source.width,
+      source.height,
+      x - centerX,
+      y - centerY,
+      width,
+      height
+    );
+    context.restore();
+    return;
+  }
+  context.drawImage(
+    image,
+    source.x,
+    source.y,
+    source.width,
+    source.height,
+    x,
+    y,
+    width,
+    height
+  );
+}
+
+function drawLegacyPhysicalObstacle(context: CanvasRenderingContext2D, entity: RunnerEntity) {
+  const kind = String(entity.kind);
   context.save();
   context.shadowColor = "rgba(2,6,23,0.55)";
   context.shadowBlur = 12;
   context.shadowOffsetY = 7;
 
-  if (entity.kind === "barrier") {
+  if (kind === "barrier") {
     const coneGradient = context.createLinearGradient(0, entity.y, 0, entity.y + entity.height);
     coneGradient.addColorStop(0, "#fdba74");
     coneGradient.addColorStop(1, "#ea580c");
@@ -1325,7 +3075,7 @@ function drawPhysicalObstacle(context: CanvasRenderingContext2D, entity: RunnerE
       roundedRect(context, coneX - 2, entity.y + entity.height - 7, 20, 7, 2);
       context.fill();
     }
-  } else if (entity.kind === "sign") {
+  } else if (kind === "sign") {
     const mannequin = context.createLinearGradient(entity.x, entity.y, entity.x + entity.width, entity.y + entity.height);
     mannequin.addColorStop(0, "#facc15");
     mannequin.addColorStop(0.55, "#eab308");
@@ -1353,7 +3103,7 @@ function drawPhysicalObstacle(context: CanvasRenderingContext2D, entity: RunnerE
     context.fillStyle = "#334155";
     roundedRect(context, entity.x, entity.y + entity.height - 8, entity.width, 8, 3);
     context.fill();
-  } else if (entity.kind === "overhead") {
+  } else if (kind === "overhead") {
     const banner = context.createLinearGradient(entity.x, entity.y, entity.x + entity.width, entity.y);
     banner.addColorStop(0, "#1d4ed8");
     banner.addColorStop(0.5, entity.alreadyHit ? "#64748b" : "#0ea5e9");
@@ -1377,7 +3127,7 @@ function drawPhysicalObstacle(context: CanvasRenderingContext2D, entity: RunnerE
     context.moveTo(entity.x + entity.width - 8, entity.y);
     context.lineTo(entity.x + entity.width - 13, entity.y - 42);
     context.stroke();
-  } else if (entity.kind === "platform") {
+  } else if (kind === "platform") {
     const net = context.createLinearGradient(0, entity.y, 0, entity.y + entity.height);
     net.addColorStop(0, "#f8fafc");
     net.addColorStop(0.4, "#94a3b8");
@@ -1477,23 +3227,25 @@ function drawEventFeedback(
   if (!runtime.message || !runtime.messageTone || time >= runtime.messageUntil) return;
   const positive = runtime.messageTone === "bonus";
   const negative = runtime.messageTone === "malus";
+  const duration = Math.max(1, runtime.messageUntil - runtime.messageStartedAt);
+  const progress = clamp01((time - runtime.messageStartedAt) / duration);
+  const fade = progress < 0.7 ? 1 : 1 - (progress - 0.7) / 0.3;
+  const isShieldMessage = runtime.message === "MALUS ANNULLATO";
+  const x = Math.min(GAME_WIDTH - 74, runtime.playerX + PLAYER_SIZE + 42);
+  const y = Math.max(42, runtime.playerY + 18 - progress * 28);
 
   context.save();
-  context.globalAlpha = 0.92;
-  context.fillStyle = "rgba(2,8,23,0.72)";
-  roundedRect(context, GAME_WIDTH / 2 - 128, 24, 256, 34, 17);
-  context.fill();
-  context.strokeStyle = positive
-    ? "rgba(110,231,183,0.55)"
-    : negative
-      ? "rgba(253,164,175,0.55)"
-      : "rgba(255,255,255,0.18)";
-  context.lineWidth = 1;
-  context.stroke();
+  context.globalAlpha = Math.max(0, fade);
   context.fillStyle = positive ? "#a7f3d0" : negative ? "#fecdd3" : "#e2e8f0";
-  context.font = "900 9px sans-serif";
+  context.shadowColor = positive ? "rgba(52,211,153,.65)" : "rgba(251,113,133,.62)";
+  context.shadowBlur = runtime.reducedPerformance ? 0 : 8;
+  context.font = isShieldMessage ? "900 11px sans-serif" : "900 27px sans-serif";
   context.textAlign = "center";
-  context.fillText(runtime.message, GAME_WIDTH / 2, 45);
+  context.textBaseline = "middle";
+  const shake = negative && !runtime.reducedPerformance
+    ? Math.sin(progress * Math.PI * 8) * (1 - progress) * 2
+    : 0;
+  context.fillText(runtime.message, x + shake, y);
   context.restore();
 }
 

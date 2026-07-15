@@ -1,4 +1,5 @@
 import type { EventDefinition, EventKind, GameScenario } from "./types";
+import { BONUS_WEIGHTS, MALUS_WEIGHTS } from "./assets";
 
 export const GAME_WIDTH = 900;
 export const GAME_HEIGHT = 500;
@@ -6,7 +7,10 @@ export const GROUND_Y = 414;
 export const PLAYER_SIZE = 68;
 export const PLAYER_X = 132;
 export const GRAVITY = 1850;
-export const JUMP_FORCE = -735;
+export const JUMP_FORCE = -510;
+export const JUMP_HOLD_ACCELERATION = -1625;
+export const JUMP_MAX_HOLD_SECONDS = 0.16;
+export const JUMP_RELEASE_FACTOR = 0.75;
 
 export const TEAM_RATING_INITIAL = 62;
 export const TEAM_RATING_THRESHOLD = 62;
@@ -17,47 +21,115 @@ export const GOAL_THRESHOLD_SCORE_BONUS = 400;
 export const GOAL_THRESHOLD_COMBO_BONUS = 0.25;
 export const FLOW_PROGRESS_PER_SECOND = 1.55;
 export const FLOW_PERFECT_OBSTACLE = 17;
-export const FLOW_NEW_SCENARIO = 18;
-export const FLOW_RATING_REWARD = 0.5;
 
 export const SPEED_CONFIG = {
   initial: 292,
-  maximum: 780,
+  maximum: 820,
+  scoreForMaximum: 20000,
 } as const;
+
+export const SCENARIO_DISTANCE_METERS = 150;
 
 export const DIFFICULTY_CONFIG = {
-  rampSeconds: 270,
-  targetDistance: 3300,
-  targetScore: 18000,
-  scenarioStepsToMaximum: 11,
+  rampSeconds: 260,
+  targetDistance: 3400,
+  targetScore: 20000,
+  ratingRange: 24,
   weights: {
-    duration: 0.38,
-    distance: 0.28,
-    score: 0.17,
-    competition: 0.17,
+    duration: 0.28,
+    distance: 0.26,
+    score: 0.14,
+    rating: 0.42,
   },
-  speedCurvePower: 1.12,
-  movingMalusBaseChance: 0.1,
-  movingMalusMaximumChance: 0.42,
-  bonusTrailBaseChance: 0.08,
-  bonusTrailMaximumChance: 0.28,
-  tacticalBonusChance: 0.34,
+  curvePower: 1.4,
+  nonlinearBoost: 0.18,
+  speedCurvePower: 1.1,
+  movingMalusBaseChance: 0.24,
+  movingMalusMaximumChance: 0.72,
+  bonusTrailBaseChance: 0.025,
+  bonusTrailMaximumChance: 0.08,
+  tacticalBonusChance: 0.12,
 } as const;
 
+export const DIFFICULTY_BANDS = [
+  { minimumRating: 62, maximumRating: 69.5, floor: 0.04, speedMultiplier: 0.93, intervalMultiplier: 1.12 },
+  { minimumRating: 70, maximumRating: 79.5, floor: 0.28, speedMultiplier: 0.98, intervalMultiplier: 1.02 },
+  { minimumRating: 80, maximumRating: 85.5, floor: 0.62, speedMultiplier: 1.04, intervalMultiplier: 0.9 },
+  { minimumRating: 86, maximumRating: null, floor: 0.74, speedMultiplier: 1.07, intervalMultiplier: 0.82 },
+] as const;
+
+export const ENTITY_DENSITY_CONFIG = {
+  maximumActiveCollectibles: 4,
+  maximumActiveCollectiblesDuringBurst: 5,
+  maximumActivePhysicalObstacles: 5,
+  maximumActiveEntities: 10,
+  maximumActivePits: 2,
+  minimumCollectibleDistance: 96,
+  burstCollectibleDistance: 78,
+  hatTrickRegularLimit: 2,
+  hatTrickLongRunLimit: 3,
+  hatTrickThirdAppearanceSeconds: 180,
+} as const;
+
+export const RAFFICA_CONFIG = {
+  initialQuietSeconds: 22,
+  firstForcedWindow: { minimum: 54, maximum: 58 },
+  repeatForcedDelay: { minimum: 42, maximum: 52 },
+  progressiveChance: { minimum: 0.005, maximum: 0.08, curvePower: 1.35 },
+  malusShare: 0.7,
+  dynamicMalusShare: {
+    lowRating: 0.55,
+    neutralRating: 0.7,
+    highRatingMaximum: 0.86,
+  },
+  mutualCooldownSeconds: 30,
+  overlayResponse: 2.4,
+  malus: {
+    minimumStartSeconds: 22,
+    warningSeconds: 0.85,
+    minimumDurationSeconds: 10,
+    maximumDurationSeconds: 10,
+    minimumItemInterval: 0.5,
+    maximumItemInterval: 0.78,
+    cooldownSeconds: 34,
+    overlayOpacity: 0.29,
+  },
+  bonus: {
+    minimumStartSeconds: 22,
+    warningSeconds: 0.95,
+    minimumDurationSeconds: 8,
+    maximumDurationSeconds: 10,
+    minimumItemInterval: 0.56,
+    maximumItemInterval: 0.84,
+    cooldownSeconds: 40,
+    overlayOpacity: 0.24,
+    hatTrickChance: 0.018,
+  },
+} as const;
+
+export const BONUS_HEIGHT_OFFSETS = [32, 72, 110] as const;
+
 export const SPAWN_CONFIG = {
-  initialInterval: 1.55,
-  minimumInterval: 0.56,
-  randomInterval: 0.42,
-  minimumClearDistance: 110,
-  speedDistanceFactor: 0.76,
+  initialInterval: 1.76,
+  minimumInterval: 0.5,
+  randomInterval: 0.38,
+  minimumClearDistance: 92,
+  speedDistanceFactor: 0.5,
   pitBaseChance: 0.035,
-  pitMaximumChance: 0.13,
-  physicalBaseChance: 0.31,
-  physicalMaximumChance: 0.45,
-  malusBaseChance: 0.29,
-  malusMaximumChance: 0.34,
+  pitMaximumChance: 0.1,
+  physicalBaseChance: 0.3,
+  physicalMaximumChance: 0.39,
+  malusBaseChance: 0.32,
+  malusMaximumChance: 0.36,
+  bonusBaseChance: 0.18,
+  bonusMaximumChance: 0.13,
+  initialBonusExtraChance: 0.22,
+  initialBonusStrongRatingEnd: 66,
+  initialBonusRatingEnd: 70,
+  initialPreferredBonusChance: 0.9,
+  hazardsEnabled: false,
   sequenceBaseChance: 0.06,
-  sequenceMaximumChance: 0.36,
+  sequenceMaximumChance: 0.32,
 } as const;
 
 export const SCENARIO_DURATION_SECONDS = 22;
@@ -72,7 +144,7 @@ export const EVENT_DEFINITIONS: Record<EventKind, EventDefinition> = {
     symbol: "!",
     ratingDelta: -0.5,
     arcadePoints: -100,
-    weight: 14,
+    weight: MALUS_WEIGHTS.yellowCard ?? 14,
     color: "#facc15",
     border: "#a16207",
   },
@@ -84,7 +156,7 @@ export const EVENT_DEFINITIONS: Record<EventKind, EventDefinition> = {
     symbol: "!",
     ratingDelta: -1,
     arcadePoints: -180,
-    weight: 7,
+    weight: MALUS_WEIGHTS.redCard ?? 7,
     color: "#ef4444",
     border: "#991b1b",
   },
@@ -96,7 +168,7 @@ export const EVENT_DEFINITIONS: Record<EventKind, EventDefinition> = {
     symbol: "×",
     ratingDelta: -3,
     arcadePoints: -320,
-    weight: 3,
+    weight: MALUS_WEIGHTS.missedPenalty ?? 3,
     color: "#f8fafc",
     border: "#ef4444",
   },
@@ -108,7 +180,7 @@ export const EVENT_DEFINITIONS: Record<EventKind, EventDefinition> = {
     symbol: "−1",
     ratingDelta: -1,
     arcadePoints: -140,
-    weight: 14,
+    weight: MALUS_WEIGHTS.concededGoal ?? 14,
     color: "#fb7185",
     border: "#be123c",
   },
@@ -120,7 +192,7 @@ export const EVENT_DEFINITIONS: Record<EventKind, EventDefinition> = {
     symbol: "−2",
     ratingDelta: -2,
     arcadePoints: -240,
-    weight: 5,
+    weight: MALUS_WEIGHTS.ownGoal ?? 7,
     color: "#c084fc",
     border: "#7e22ce",
   },
@@ -132,7 +204,7 @@ export const EVENT_DEFINITIONS: Record<EventKind, EventDefinition> = {
     symbol: "+3",
     ratingDelta: 3,
     arcadePoints: 320,
-    weight: 6,
+    weight: BONUS_WEIGHTS.goal ?? 4,
     color: "#22c55e",
     border: "#15803d",
   },
@@ -144,7 +216,7 @@ export const EVENT_DEFINITIONS: Record<EventKind, EventDefinition> = {
     symbol: "+1",
     ratingDelta: 1,
     arcadePoints: 170,
-    weight: 10,
+    weight: BONUS_WEIGHTS.assist ?? 10,
     color: "#38bdf8",
     border: "#0369a1",
   },
@@ -156,7 +228,7 @@ export const EVENT_DEFINITIONS: Record<EventKind, EventDefinition> = {
     symbol: "+1",
     ratingDelta: 1,
     arcadePoints: 210,
-    weight: 8,
+    weight: BONUS_WEIGHTS.cleanSheet ?? 10,
     color: "#fbbf24",
     border: "#b45309",
   },
@@ -168,7 +240,7 @@ export const EVENT_DEFINITIONS: Record<EventKind, EventDefinition> = {
     symbol: "+3",
     ratingDelta: 3,
     arcadePoints: 460,
-    weight: 3,
+    weight: BONUS_WEIGHTS.savedPenalty ?? 0,
     color: "#818cf8",
     border: "#4338ca",
   },
@@ -180,7 +252,7 @@ export const EVENT_DEFINITIONS: Record<EventKind, EventDefinition> = {
     symbol: "+9",
     ratingDelta: 9,
     arcadePoints: 1100,
-    weight: 1,
+    weight: BONUS_WEIGHTS.hatTrick ?? 1,
     color: "#f59e0b",
     border: "#92400e",
   },
