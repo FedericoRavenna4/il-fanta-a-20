@@ -151,7 +151,10 @@ function loadOverlayImage(path: string) {
   return new Promise<void>((resolve) => {
     const image = new Image();
     image.decoding = "async";
-    image.onload = () => resolve();
+    image.onload = async () => {
+      try { await image.decode?.(); } catch { /* onload garantisce comunque l'asset. */ }
+      resolve();
+    };
     image.onerror = () => resolve();
     image.src = path;
     overlayImages.push(image);

@@ -59,9 +59,9 @@ export const POWER_UP_CONFIG: Record<PowerUpKind, PowerUpDefinition> = {
 
 export const POWER_UP_SPAWN_CONFIG = {
   minimumStartSeconds: 6,
-  chancePerSpawnOpportunity: 0.12,
+  chancePerSpawnOpportunity: 0.14,
+  openingChancePerSpawnOpportunity: 0.27,
   cooldownSeconds: 25,
-  collectionSlowdownMs: 200,
   maximumOnField: 1,
   guaranteedDistanceStart: 35,
   guaranteedDistanceLimit: 40,

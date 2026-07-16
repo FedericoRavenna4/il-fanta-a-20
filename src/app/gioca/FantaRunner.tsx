@@ -34,9 +34,7 @@ import {
 } from "@/lib/game/config";
 import { createSpawnDecision, getSafeSpawnInterval } from "@/lib/game/generator";
 import {
-  preloadEssentialGameAssets,
   preloadGameAssets,
-  preloadSecondaryGameAssets,
   preloadTeamLogo,
   type GameImageMap,
 } from "@/lib/game/assetLoader";
@@ -79,6 +77,11 @@ type PresentationState = {
   tone: "bonus" | "malus" | "neutral";
   until: number;
 };
+type BurstBeat = {
+  category: "primary" | "counter" | "pause";
+  count: number;
+  gap?: number;
+};
 
 type Runtime = {
   playerX: number;
@@ -91,8 +94,10 @@ type Runtime = {
   jumpHoldRemaining: number;
   blockedObstacleId: number | null;
   entities: RunnerEntity[];
+  entityScratch: RunnerEntity[];
   entityPool: RunnerEntity[];
   pits: GroundPit[];
+  pitScratch: GroundPit[];
   nextEntityId: number;
   spawnTimer: number;
   elapsed: number;
@@ -138,6 +143,9 @@ type Runtime = {
     durationRemaining: number;
     index: number;
     hatTrickSpawned: boolean;
+    pattern: readonly BurstBeat[];
+    beatIndex: number;
+    beatItemIndex: number;
   } | null;
   malusBurstCooldown: number;
   bonusBurstCooldown: number;
@@ -153,7 +161,6 @@ type Runtime = {
   powerUpCollectionEffect: { kind: PowerUpKind; until: number } | null;
   powerUpCooldown: number;
   firstPowerUpSpawned: boolean;
-  cinematicSlowUntil: number;
   presentation: PresentationState | null;
   boss: {
     phase: "warning" | "active" | "exiting";
@@ -182,15 +189,52 @@ const BONUS_RAFFICA_POOL: Array<{ kind: EventKind; weight: number }> = [
   { kind: "cleanSheet", weight: 18 },
   { kind: "goal", weight: 4 },
 ];
+const POWER_UP_KINDS: readonly PowerUpKind[] = [
+  "luperto",
+  "lukaku",
+  "dybala",
+  "nico-paz",
+  "gimenez",
+];
+const RAFFICA_PATTERNS: Record<RafficaType, ReadonlyArray<readonly BurstBeat[]>> = {
+  malus: [
+    [
+      { category: "primary", count: 3 }, { category: "pause", count: 0, gap: 0.95 },
+      { category: "primary", count: 2 }, { category: "counter", count: 1 },
+      { category: "primary", count: 4 }, { category: "pause", count: 0, gap: 1.15 },
+      { category: "primary", count: 3 },
+    ],
+    [
+      { category: "primary", count: 2 }, { category: "pause", count: 0, gap: 0.82 },
+      { category: "primary", count: 4 }, { category: "counter", count: 1 },
+      { category: "pause", count: 0, gap: 1.08 }, { category: "primary", count: 3 },
+      { category: "primary", count: 2 },
+    ],
+  ],
+  bonus: [
+    [
+      { category: "primary", count: 3 }, { category: "pause", count: 0, gap: 0.9 },
+      { category: "primary", count: 2 }, { category: "counter", count: 1 },
+      { category: "primary", count: 4 }, { category: "pause", count: 0, gap: 1.05 },
+      { category: "primary", count: 3 },
+    ],
+    [
+      { category: "primary", count: 2 }, { category: "primary", count: 3 },
+      { category: "pause", count: 0, gap: 1.1 }, { category: "counter", count: 1 },
+      { category: "primary", count: 4 }, { category: "pause", count: 0, gap: 0.88 },
+      { category: "primary", count: 2 },
+    ],
+  ],
+};
 const RAFFICA_OVERLAY_CACHE = new Map<string, HTMLCanvasElement>();
 const MOBILE_GAME_WIDTH = 540;
 const MOBILE_GAME_HEIGHT = 820;
 const MOBILE_WORLD_OFFSET_Y = 266;
 const MOBILE_OBSTACLE_SCALE: Record<PhysicalObstacleKind, number> = {
-  cornerFlag: 0.9,
-  stretcher: 0.78,
-  slidingTackle: 0.82,
-  var: 0.84,
+  cornerFlag: 1.06,
+  stretcher: 0.94,
+  slidingTackle: 0.98,
+  var: 1,
 };
 const MOBILE_EVENT_SCALE = 1.12;
 const MOBILE_POWER_UP_SCALE = 1.08;
@@ -225,8 +269,10 @@ function createRuntime(): Runtime {
     jumpHoldRemaining: 0,
     blockedObstacleId: null,
     entities: [],
-    entityPool: [],
+    entityScratch: [],
+    entityPool: createEntityPool(18),
     pits: [],
+    pitScratch: [],
     nextEntityId: 1,
     spawnTimer: 1.05,
     elapsed: 0,
@@ -278,7 +324,6 @@ function createRuntime(): Runtime {
     powerUpCollectionEffect: null,
     powerUpCooldown: 0,
     firstPowerUpSpawned: false,
-    cinematicSlowUntil: 0,
     presentation: null,
     boss: null,
     nextBossAt: randomBetween(
@@ -290,6 +335,10 @@ function createRuntime(): Runtime {
     mobileLayout: false,
     worldWidth: GAME_WIDTH,
   };
+}
+
+function createEntityPool(size: number) {
+  return Array.from({ length: size }, () => ({} as RunnerEntity));
 }
 
 function FantaRunner({
@@ -351,11 +400,9 @@ function FantaRunner({
 
   useEffect(() => {
     let cancelled = false;
-    let backgroundTimer: ReturnType<typeof setTimeout> | null = null;
-    let idleCallback = 0;
     const mobile = window.matchMedia("(max-width: 639px)").matches;
     configureMobileRuntime(runtimeRef.current, renderStateRef.current, mobile);
-    renderStateRef.current.dprLimit = mobile ? 1.25 : 1.5;
+    renderStateRef.current.dprLimit = mobile ? 1.6 : 1.5;
     renderStateRef.current.dirty = true;
     onAssetsReady(false);
     onLoadProgress(0);
@@ -363,13 +410,9 @@ function FantaRunner({
       if (!cancelled) onLoadProgress(0.14);
       return logo;
     });
-    const assetPromise = mobile
-      ? preloadEssentialGameAssets((progress) => {
-          if (!cancelled) onLoadProgress(0.14 + progress * 0.86);
-        })
-      : preloadGameAssets((progress) => {
-          if (!cancelled) onLoadProgress(0.14 + progress * 0.86);
-        });
+    const assetPromise = preloadGameAssets((progress) => {
+      if (!cancelled) onLoadProgress(0.14 + progress * 0.86);
+    });
 
     Promise.all([logoPromise, assetPromise]).then(([logo, images]) => {
       if (cancelled) return;
@@ -391,25 +434,9 @@ function FantaRunner({
       requestAnimationFrame(() => {
         if (!cancelled) onAssetsReady(true);
       });
-
-      if (mobile) {
-        const loadSecondary = () => { if (!cancelled) void preloadSecondaryGameAssets(); };
-        const requestIdle = (window as Window & {
-          requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number;
-        }).requestIdleCallback;
-        if (requestIdle) {
-          idleCallback = requestIdle(loadSecondary, { timeout: 2600 });
-        } else {
-          backgroundTimer = globalThis.setTimeout(loadSecondary, 1100);
-        }
-      }
     });
     return () => {
       cancelled = true;
-      if (backgroundTimer !== null) clearTimeout(backgroundTimer);
-      if (idleCallback) {
-        window.cancelIdleCallback(idleCallback);
-      }
     };
   }, [onAssetsReady, onLoadProgress, team.logo]);
 
@@ -449,9 +476,12 @@ function FantaRunner({
       runtime.grounded = false;
       runtime.blockedObstacleId = null;
       const lukakuStrength = getPowerUpStrength(runtime, "lukaku");
-      runtime.velocityY = JUMP_FORCE * (1 + lukakuStrength * 0.26);
+      const mobileJumpBoost = runtime.mobileLayout ? 1.2 : 1;
+      runtime.velocityY = JUMP_FORCE * mobileJumpBoost * (1 + lukakuStrength * 0.26);
       runtime.jumpHeld = true;
-      runtime.jumpHoldRemaining = JUMP_MAX_HOLD_SECONDS * (1 + lukakuStrength * 0.22);
+      runtime.jumpHoldRemaining = JUMP_MAX_HOLD_SECONDS *
+        (runtime.mobileLayout ? 1.18 : 1) *
+        (1 + lukakuStrength * 0.22);
       runtime.effect = "jump";
       runtime.effectUntil = performance.now() + 360;
     }
@@ -542,7 +572,7 @@ function FantaRunner({
         reducedMotionRef.current
       );
 
-      if (!runtime.finished && time - runtime.lastHudUpdate >= 120) {
+      if (!runtime.finished && time - runtime.lastHudUpdate >= 160) {
         runtime.lastHudUpdate = time;
         onSnapshot(toSnapshot(runtime, best, time));
         performanceRef.current.hudUpdates += 1;
@@ -732,7 +762,7 @@ function configureMobileRuntime(
   runtime.worldWidth = mobile ? MOBILE_GAME_WIDTH : GAME_WIDTH;
   renderState.logicalWidth = mobile ? MOBILE_GAME_WIDTH : GAME_WIDTH;
   renderState.logicalHeight = mobile ? MOBILE_GAME_HEIGHT : GAME_HEIGHT;
-  renderState.dprLimit = mobile ? 1.25 : 1.5;
+  renderState.dprLimit = mobile ? 1.6 : 1.5;
   renderState.dirty = true;
 }
 
@@ -757,7 +787,7 @@ function updatePerformanceMonitor(
 
   if (monitor.slowWindows >= 2 && !runtime.reducedPerformance) {
     runtime.reducedPerformance = true;
-    renderState.dprLimit = 1;
+    renderState.dprLimit = runtime.mobileLayout ? 1.25 : 1;
     renderState.dirty = true;
   }
 
@@ -813,11 +843,10 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
   const difficultyBand = getDifficultyBand(runtime.teamRating);
   const speedProgress = getScoreSpeedProgress(runtime);
   const dybalaStrength = getPowerUpStrength(runtime, "dybala");
-  const cinematicFactor = time < runtime.cinematicSlowUntil ? 0.58 : 1;
   const bossSpeedFactor = runtime.boss?.phase === "active" ? 0.82 : 1;
   const rafficaSpeedFactor = runtime.burst?.type === "malus" && runtime.burst.phase === "active" ? 0.91 : 1;
   const speed = getRunSpeed(speedProgress) *
-    (1 - dybalaStrength * 0.64) * cinematicFactor * bossSpeedFactor * rafficaSpeedFactor;
+    (1 - dybalaStrength * 0.64) * bossSpeedFactor * rafficaSpeedFactor;
   const worldSpeed = Math.min(speed, 590);
   const groundVisualSpeed = Math.min(
     speed * BACKGROUND_TRANSITION_CONFIG.groundSpeedFactor,
@@ -852,7 +881,10 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
     runtime.velocityY < 0
   ) {
     const holdDelta = Math.min(delta, runtime.jumpHoldRemaining);
-    runtime.velocityY += JUMP_HOLD_ACCELERATION * (1 + getPowerUpStrength(runtime, "lukaku") * 0.2) * holdDelta;
+    runtime.velocityY += JUMP_HOLD_ACCELERATION *
+      (runtime.mobileLayout ? 1.12 : 1) *
+      (1 + getPowerUpStrength(runtime, "lukaku") * 0.2) *
+      holdDelta;
     runtime.jumpHoldRemaining -= holdDelta;
     if (runtime.jumpHoldRemaining <= 0) runtime.jumpHeld = false;
   }
@@ -986,24 +1018,24 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
           entity.x -= worldSpeed * delta * (0.28 + (1 - clamp01(horizontalDistance / 400)) * 0.16) * nicoStrength;
         }
       }
-      if (gimenezStrength > 0 && horizontalDistance > -20 && horizontalDistance < 340) {
+      const alreadyVanishing = (entity.opacity ?? 1) < 1;
+      if (
+        (gimenezStrength > 0 || alreadyVanishing) &&
+        (alreadyVanishing || (horizontalDistance > -20 && horizontalDistance < 150))
+      ) {
+        const dissolveStrength = gimenezStrength > 0 ? gimenezStrength : 1;
         const direction = entityCenterY <= playerCenterY ? -1 : 1;
-        const proximity = 1 - clamp01(Math.max(0, horizontalDistance) / 340);
+        const proximity = 1 - clamp01(Math.max(0, horizontalDistance) / 150);
         entity.fleeing = true;
-        entity.fleeVelocityX = Math.min(
-          worldSpeed * 1.85,
-          (entity.fleeVelocityX ?? 0) + worldSpeed * delta * 2.4
-        );
+        entity.opacity = Math.max(0, (entity.opacity ?? 1) - delta * (1.8 + proximity * 0.8) * dissolveStrength);
         entity.y = Math.max(
           GROUND_Y - entity.height - 120,
           Math.min(
             GROUND_Y - entity.height,
-            entity.y + direction * (78 + proximity * 54) * delta * gimenezStrength
+            entity.y + direction * (42 + proximity * 38) * delta * dissolveStrength
           )
         );
-        entity.x -= (
-          worldSpeed * (0.72 + proximity * 0.48) + (entity.fleeVelocityX ?? 0)
-        ) * delta * gimenezStrength;
+        entity.x += worldSpeed * (0.95 + proximity * 0.25) * delta * dissolveStrength;
       }
     }
   }
@@ -1014,7 +1046,7 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
     let landingTop: number | null = null;
 
     for (const entity of runtime.entities) {
-      if (entity.type !== "physical") continue;
+      if (entity.type !== "physical" || entity.motion === "launched") continue;
       const obstacleRect = getObstacleHitbox(entity);
       const horizontalOverlap =
         runtime.playerX + PLAYER_SIZE - 9 > obstacleRect.x &&
@@ -1038,7 +1070,8 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
 
   let playerRect = getPlayerHitbox(runtime, time);
 
-  const remainingEntities: RunnerEntity[] = [];
+  const remainingEntities = runtime.entityScratch;
+  remainingEntities.length = 0;
   for (const entity of runtime.entities) {
     const entityRect = entity.type === "physical"
       ? getObstacleHitbox(entity)
@@ -1053,7 +1086,7 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
     const protectedByGimenez =
       entity.type === "event" &&
       EVENT_DEFINITIONS[entity.kind as EventKind].category === "bonus" &&
-      getPowerUpStrength(runtime, "gimenez") > 0;
+      (getPowerUpStrength(runtime, "gimenez") > 0 || entity.fleeing);
     const launchedObstacle = entity.type === "physical" && entity.motion === "launched";
     const hit = !protectedByGimenez && !launchedObstacle && intersects(collisionPlayerRect, entityRect);
 
@@ -1097,7 +1130,7 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
       awardPerfectPass(runtime);
     }
 
-    if (entity.fleeing && entity.x + entity.width < -40) {
+    if (entity.fleeing && (entity.opacity ?? 1) <= 0.02) {
       releaseEntity(runtime, entity);
     } else if (
       entity.motion === "launched" &&
@@ -1107,6 +1140,7 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
     } else if (entity.x + entity.width > -40) remainingEntities.push(entity);
     else releaseEntity(runtime, entity);
   }
+  runtime.entityScratch = runtime.entities;
   runtime.entities = remainingEntities;
 
   if (runtime.playerX + PLAYER_SIZE < 0 && !runtime.finished) {
@@ -1115,7 +1149,8 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
     runtime.finished = true;
   }
 
-  const remainingPits: GroundPit[] = [];
+  const remainingPits = runtime.pitScratch;
+  remainingPits.length = 0;
   const playerCenter = runtime.playerX + PLAYER_SIZE / 2;
   const nearGround = runtime.grounded && runtime.playerY > PLAYER_GROUND_Y - 3;
 
@@ -1141,6 +1176,7 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
     }
     if (pit.x + pit.width > -40) remainingPits.push(pit);
   }
+  runtime.pitScratch = runtime.pits;
   runtime.pits = remainingPits;
 
   updateBackgroundState(runtime, delta);
@@ -1241,6 +1277,9 @@ function tryStartRaffica(
       Math.random() * (config.maximumDurationSeconds - config.minimumDurationSeconds),
     index: 0,
     hatTrickSpawned: false,
+    pattern: pickRafficaPattern(type),
+    beatIndex: 0,
+    beatItemIndex: 0,
   };
   runtime.burstOverlayType = type;
   runtime.presentation = {
@@ -1276,17 +1315,37 @@ function updateRaffica(
   }
 
   if (burst.timer > 0) return;
+  let beat = burst.pattern[burst.beatIndex];
+  if (!beat) {
+    burst.beatIndex = 0;
+    burst.beatItemIndex = 0;
+    burst.timer = 0.95;
+    return;
+  }
+  if (beat.category === "pause") {
+    burst.beatIndex += 1;
+    burst.beatItemIndex = 0;
+    burst.timer = beat.gap ?? 0.9;
+    return;
+  }
+
+  const spawnType: RafficaType = beat.category === "primary"
+    ? burst.type
+    : burst.type === "malus" ? "bonus" : "malus";
   let kind: EventKind;
   let heightLevel: 0 | 1 | 2;
   let motion: RunnerEntity["motion"];
 
-  if (burst.type === "malus") {
+  if (spawnType === "malus") {
     kind = weightedRafficaPick(MALUS_RAFFICA_POOL);
     heightLevel = Math.random() < 0.78 ? 0 : 1;
     const motionRoll = Math.random();
     motion = motionRoll < 0.42 ? "ground" : motionRoll < 0.7 ? "diagonal" : "serpentine";
   } else {
-    const canSpawnHatTrick = !burst.hatTrickSpawned && Math.random() < RAFFICA_CONFIG.bonus.hatTrickChance;
+    const canSpawnHatTrick =
+      beat.category === "primary" &&
+      !burst.hatTrickSpawned &&
+      Math.random() < RAFFICA_CONFIG.bonus.hatTrickChance;
     kind = canSpawnHatTrick ? "hatTrick" : weightedRafficaPick(BONUS_RAFFICA_POOL);
     const heightRoll = Math.random();
     heightLevel = heightRoll < 0.34 ? 0 : heightRoll < 0.7 ? 1 : 2;
@@ -1314,41 +1373,33 @@ function updateRaffica(
   }
 
   if (kind === "hatTrick") burst.hatTrickSpawned = true;
-  if (Math.random() < (burst.type === "malus" ? 0.07 : 0.14)) {
-    const groupedKind = burst.type === "malus"
-      ? weightedRafficaPick(MALUS_RAFFICA_POOL)
-      : weightedRafficaPick(BONUS_RAFFICA_POOL);
-    const groupedHeight = Math.floor(Math.random() * 3) as 0 | 1 | 2;
-    const groupedMotion: RunnerEntity["motion"] = burst.type === "malus"
-      ? Math.random() < 0.5 ? "diagonal" : "serpentine"
-      : Math.random() < 0.45 ? "floating" : "ground";
-    pushEvent(
-      runtime,
-      groupedKind,
-      burstStartX + Math.max(burst.type === "malus" ? 126 : 96, speed * (0.14 + Math.random() * 0.07)),
-      groupedHeight,
-      {
-        burst: true,
-        motion: groupedMotion,
-        amplitude: groupedMotion === "ground" ? undefined : 8 + Math.random() * 12,
-        motionSpeed: 0.9 + Math.random() * 0.9,
-        horizontalSpeedFactor: 1,
-      }
-    );
-  }
   burst.index += 1;
-  const config = RAFFICA_CONFIG[burst.type];
+  burst.beatItemIndex += 1;
+  if (burst.beatItemIndex >= beat.count) {
+    burst.beatIndex += 1;
+    burst.beatItemIndex = 0;
+    beat = burst.pattern[burst.beatIndex];
+    if (beat?.category === "pause") {
+      burst.beatIndex += 1;
+      burst.timer = beat.gap ?? 0.9;
+      return;
+    }
+  }
+  const config = RAFFICA_CONFIG[spawnType];
   const baseInterval =
     config.maximumItemInterval -
     (config.maximumItemInterval - config.minimumItemInterval) *
       difficulty;
-  const rhythmRoll = Math.random();
-  const rhythmMultiplier = rhythmRoll < 0.24
-    ? 0.48 + Math.random() * 0.24
-    : rhythmRoll < 0.43
-      ? 1.45 + Math.random() * 0.72
-      : 0.82 + Math.random() * 0.52;
-  burst.timer = Math.max(burst.type === "malus" ? 0.28 : 0.19, baseInterval * rhythmMultiplier + (Math.random() - 0.5) * 0.12);
+  const groupPulse = 0.76 + Math.random() * 0.34;
+  burst.timer = Math.max(
+    spawnType === "malus" ? 0.28 : 0.2,
+    baseInterval * groupPulse
+  );
+}
+
+function pickRafficaPattern(type: RafficaType) {
+  const patterns = RAFFICA_PATTERNS[type];
+  return patterns[Math.floor(Math.random() * patterns.length)];
 }
 
 function finishRaffica(runtime: Runtime, type: RafficaType) {
@@ -1367,13 +1418,16 @@ function finishRaffica(runtime: Runtime, type: RafficaType) {
 }
 
 function trySpawnPowerUp(runtime: Runtime, guaranteed: boolean) {
+  const spawnChance = runtime.distance < SPAWN_CONFIG.openingBonus.distanceEndMeters
+    ? POWER_UP_SPAWN_CONFIG.openingChancePerSpawnOpportunity
+    : POWER_UP_SPAWN_CONFIG.chancePerSpawnOpportunity;
   if (
     (!guaranteed && runtime.elapsed < POWER_UP_SPAWN_CONFIG.minimumStartSeconds) ||
     runtime.powerUpCooldown > 0 ||
     runtime.presentation ||
     runtime.burst ||
     runtime.boss ||
-    (!guaranteed && Math.random() >= POWER_UP_SPAWN_CONFIG.chancePerSpawnOpportunity) ||
+    (!guaranteed && Math.random() >= spawnChance) ||
     runtime.entities.some((entity) => entity.type === "powerup")
   ) return false;
   const definition = pickPowerUp();
@@ -1406,7 +1460,6 @@ function activatePowerUp(runtime: Runtime, kind: PowerUpKind, time: number) {
     expiresAt: runtime.elapsed + definition.durationSeconds,
     charges: 0,
   };
-  runtime.cinematicSlowUntil = time + POWER_UP_SPAWN_CONFIG.collectionSlowdownMs;
   runtime.powerUpCollectionEffect = { kind, until: time + 820 };
   runtime.presentation = {
     asset: definition.banner,
@@ -1418,7 +1471,7 @@ function activatePowerUp(runtime: Runtime, kind: PowerUpKind, time: number) {
 }
 
 function updateActivePowerUps(runtime: Runtime) {
-  for (const kind of Object.keys(runtime.activePowerUps) as PowerUpKind[]) {
+  for (const kind of POWER_UP_KINDS) {
     const active = runtime.activePowerUps[kind];
     if (!active || runtime.elapsed < active.expiresAt) continue;
     delete runtime.activePowerUps[kind];
@@ -1486,9 +1539,12 @@ function updateBoss(
 
   boss.spawnTimer -= delta;
   if (boss.spawnTimer <= 0) {
-    const activeProjectiles = runtime.entities.filter(
-      (entity) => entity.type === "event" && entity.motion === "bossProjectile"
-    ).length;
+    let activeProjectiles = 0;
+    for (const entity of runtime.entities) {
+      if (entity.type === "event" && entity.motion === "bossProjectile") {
+        activeProjectiles += 1;
+      }
+    }
     if (runtime.mobileLayout && activeProjectiles >= 3) {
       boss.spawnTimer = 0.24;
       return;
@@ -1814,7 +1870,7 @@ function pushPhysicalObstacle(
     width: baseDimensions.width * obstacleScale,
     height: baseDimensions.height * obstacleScale,
   };
-  const clearance = runtime.mobileLayout ? 105 : 72;
+  const clearance = runtime.mobileLayout ? 125 : 72;
   if (runtime.entities.some((entity) =>
     entity.type === "physical" &&
     Math.abs(entity.x - x) < (entity.width + dimensions.width) / 2 + clearance
@@ -1856,7 +1912,7 @@ function acquireEntity(
   entity.alreadyHit = undefined;
   entity.rewarded = undefined;
   entity.fleeing = undefined;
-  entity.fleeVelocityX = undefined;
+  entity.opacity = 1;
   entity.velocityX = undefined;
   entity.motion = undefined;
   entity.velocityY = undefined;
@@ -2197,11 +2253,23 @@ function getPlayerHitbox(runtime: Runtime, time: number) {
       height: PLAYER_SIZE - 7,
     };
   }
-  return expandRect(
-    hitbox,
-    34 * getPowerUpStrength(runtime, "lukaku") +
-      ((runtime.mobileLayout ? MOBILE_PLAYER_SCALE : 1) - 1) * PLAYER_SIZE * 0.34
-  );
+  const expansion = 34 * getPowerUpStrength(runtime, "lukaku") +
+    ((runtime.mobileLayout ? MOBILE_PLAYER_SCALE : 1) - 1) * PLAYER_SIZE * 0.34;
+  return runtime.mobileLayout
+    ? expandRectUpward(hitbox, expansion)
+    : expandRect(hitbox, expansion);
+}
+
+function expandRectUpward(
+  rect: { x: number; y: number; width: number; height: number },
+  amount: number
+) {
+  return {
+    x: rect.x - amount,
+    y: rect.y - amount,
+    width: rect.width + amount * 2,
+    height: rect.height + amount,
+  };
 }
 
 function expandRect(
@@ -2276,9 +2344,12 @@ function drawGame(
   if (runtime.mobileLayout) context.translate(0, MOBILE_WORLD_OFFSET_Y);
   if (hasAssetBackground) drawAssetHazards(context, runtime, assets);
   drawBoss(context, runtime, assets);
-  runtime.entities.forEach((entity) =>
-    drawEntity(context, entity, assets, runtime.elapsed, reducedEffects)
-  );
+  for (const entity of runtime.entities) {
+    context.save();
+    context.globalAlpha *= entity.opacity ?? 1;
+    drawEntity(context, entity, assets, runtime.elapsed, reducedEffects);
+    context.restore();
+  }
   if (runtime.playerVisible) {
     drawPlayer(context, runtime, logo, time, scenario, reducedEffects);
   }
@@ -2506,14 +2577,6 @@ function drawSpeedComfortOverlay(
   context.globalAlpha = runtime.visualComfort * 0.12;
   context.fillStyle = "#0f2743";
   context.fillRect(0, 0, viewport.width, viewport.height);
-  context.restore();
-  context.save();
-  context.globalAlpha = runtime.visualComfort * 0.12;
-  context.fillStyle = "#020817";
-  if (!runtime.mobileLayout) {
-    context.fillRect(0, 0, 42, viewport.height);
-    context.fillRect(viewport.width - 42, 0, 42, viewport.height);
-  }
   context.restore();
 }
 
@@ -2881,23 +2944,6 @@ function drawEntity(
 
   const definition = EVENT_DEFINITIONS[entity.kind as EventKind];
   const isBonus = definition.category === "bonus";
-  if (entity.fleeing) {
-    context.save();
-    context.globalAlpha = 0.72;
-    context.strokeStyle = "#a5f3fc";
-    context.lineWidth = 2.2;
-    context.lineCap = "round";
-    context.shadowColor = "#67e8f9";
-    context.shadowBlur = 7;
-    const centerY = entity.y + entity.height / 2;
-    for (let index = 0; index < 3; index += 1) {
-      context.beginPath();
-      context.moveTo(entity.x - 7 - index * 5, centerY - 9 + index * 9);
-      context.lineTo(entity.x - 28 - index * 9, centerY - 9 + index * 9);
-      context.stroke();
-    }
-    context.restore();
-  }
   if ((entity.horizontalSpeedFactor ?? 1) > 1.08) {
     context.save();
     context.globalAlpha = 0.2;

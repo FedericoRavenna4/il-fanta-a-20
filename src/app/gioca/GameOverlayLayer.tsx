@@ -1,8 +1,21 @@
 "use client";
 
 import Image from "next/image";
+import { GAME_ASSETS } from "@/lib/game/assets";
 import { POWER_UP_CONFIG } from "@/lib/game/powerups";
 import type { GameSnapshot, SpecialPresentation } from "@/lib/game/types";
+
+const PRESENTATION_ASSETS = [
+  GAME_ASSETS.powerups.lupertoBanner,
+  GAME_ASSETS.powerups.lukakuBanner,
+  GAME_ASSETS.powerups.dybalaBanner,
+  GAME_ASSETS.powerups.nicoPazBanner,
+  GAME_ASSETS.powerups.gimenezBanner,
+  GAME_ASSETS.events.bossBanner,
+  GAME_ASSETS.events.bossWarning,
+  GAME_ASSETS.events.bonusBurst,
+  GAME_ASSETS.events.malusBurst,
+] as const;
 
 export default function GameOverlayLayer({
   presentation,
@@ -13,28 +26,29 @@ export default function GameOverlayLayer({
 }) {
   return (
     <div className="pointer-events-none absolute inset-0 z-[8] overflow-hidden" aria-live="polite">
-      {presentation && (
-        <div
-          key={`${presentation.asset}-${presentation.title}`}
-          className="absolute inset-0 flex items-start justify-center pt-[6%] sm:pt-[5%]"
-        >
-          <div className="special-presentation flex w-[min(56%,205px)] flex-col items-center sm:w-[min(62%,480px)]">
+      <div
+        className={`absolute inset-0 flex items-start justify-center pt-[6%] sm:pt-[5%] ${presentation ? "" : "invisible"}`}
+        aria-hidden={!presentation}
+      >
+          <div className={`${presentation ? "special-presentation" : "opacity-0"} flex w-[min(56%,205px)] flex-col items-center sm:w-[min(62%,480px)]`}>
             <div className="relative aspect-[3/2] w-full">
-              <Image
-                src={presentation.asset}
-                alt={presentation.title}
-                fill
-                unoptimized
-                sizes="(max-width: 639px) 205px, 460px"
-                className="object-contain"
-              />
+              {PRESENTATION_ASSETS.map((asset) => (
+                <Image
+                  key={asset}
+                  src={asset}
+                  alt=""
+                  fill
+                  unoptimized
+                  sizes="(max-width: 639px) 205px, 460px"
+                  className={`object-contain transition-opacity duration-75 ${presentation?.asset === asset ? "opacity-100" : "opacity-0"}`}
+                />
+              ))}
             </div>
-            <p className="-mt-2 max-w-[92vw] text-balance text-center text-[10px] font-black leading-tight tracking-[-.01em] text-white [text-shadow:0_2px_8px_rgba(2,8,23,.95),0_0_3px_rgba(2,8,23,1)] max-sm:max-w-[270px] sm:-mt-3 sm:whitespace-nowrap sm:text-sm">
-              {presentation.subtitle}
+            <p className="-mt-4 max-w-[92vw] text-balance text-center text-[11px] font-black leading-tight tracking-[-.01em] text-white [text-shadow:0_2px_9px_rgba(2,8,23,1),0_0_4px_rgba(2,8,23,1)] max-sm:max-w-[280px] sm:-mt-6 sm:whitespace-nowrap sm:text-[15px]">
+              {presentation?.subtitle}
             </p>
           </div>
         </div>
-      )}
 
       {!presentation && (
         <div className="absolute left-2 top-2 flex max-w-[72%] flex-col items-start gap-1.5 sm:left-3 sm:top-3">
