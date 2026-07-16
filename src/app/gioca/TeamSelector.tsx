@@ -390,26 +390,26 @@ export default function TeamSelector({
   }
 
   return (
-    <section className="relative flex min-h-[430px] flex-col overflow-hidden rounded-[1.5rem] border border-white/10 bg-[linear-gradient(145deg,#010611_0%,#08213f_42%,#0b3158_67%,#020918_100%)] text-white shadow-[0_36px_100px_rgba(2,8,23,0.32),inset_0_1px_0_rgba(255,255,255,0.1)] sm:min-h-[540px] sm:rounded-[2rem] lg:min-h-[660px]">
+    <section className="relative flex min-h-[390px] flex-col overflow-hidden rounded-[1.5rem] border border-white/10 bg-[linear-gradient(145deg,#010611_0%,#08213f_42%,#0b3158_67%,#020918_100%)] text-white shadow-[0_36px_100px_rgba(2,8,23,0.32),inset_0_1px_0_rgba(255,255,255,0.1)] sm:min-h-[540px] sm:rounded-[2rem] lg:min-h-[660px]">
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(108deg,transparent_9%,rgba(125,211,252,0.075)_43%,transparent_68%),linear-gradient(180deg,rgba(255,255,255,0.025),transparent_48%)]" />
       <div className="pointer-events-none absolute inset-x-16 top-0 h-px bg-gradient-to-r from-transparent via-sky-300/55 to-transparent" />
 
-      <div className={`relative border-b border-white/[0.07] px-4 py-3 transition duration-300 sm:px-7 sm:py-5 ${confirmationTeam ? "scale-[0.99] opacity-30" : "opacity-100"}`}>
+      <div className={`relative border-b border-white/[0.07] px-3 py-2 transition duration-300 sm:px-7 sm:py-5 ${confirmationTeam ? "scale-[0.99] opacity-30" : "opacity-100"}`}>
         <div className="min-w-0">
           <p className="text-[9px] font-black uppercase tracking-[0.22em] text-amber-300">
             La tua corsa
           </p>
-          <h2 className="mt-1 text-xl font-black uppercase tracking-[-0.03em] text-white sm:text-2xl">
+          <h2 className="mt-0.5 text-lg font-black uppercase tracking-[-0.03em] text-white sm:mt-1 sm:text-2xl">
             Scegli la società
           </h2>
-          <p className="mt-1 max-w-xl text-xs font-semibold leading-4 text-white/45 sm:text-sm">
+          <p className="mt-0.5 max-w-xl text-[11px] font-semibold leading-4 text-white/45 sm:mt-1 sm:text-sm">
             Scorri, scegli lo stemma e conferma la tua corsa.
           </p>
         </div>
       </div>
 
-      <div className={`relative flex flex-1 flex-col justify-center px-3 py-4 transition duration-300 sm:px-5 sm:py-5 ${confirmationTeam ? "scale-[0.985] opacity-20" : "opacity-100"}`}>
-        <div className="mx-auto mb-3 w-full max-w-2xl px-2 text-center sm:mb-5">
+      <div className={`relative flex flex-1 flex-col justify-center px-3 py-2.5 transition duration-300 sm:px-5 sm:py-5 ${confirmationTeam ? "scale-[0.985] opacity-20" : "opacity-100"}`}>
+        <div className="mx-auto mb-2 w-full max-w-2xl px-2 text-center sm:mb-5">
           <label className="block min-w-0">
             <span className="sr-only">Cerca una società</span>
             <input
@@ -417,10 +417,10 @@ export default function TeamSelector({
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Cerca una società o una lega..."
-              className="min-h-12 w-full rounded-2xl border border-sky-200/20 bg-slate-950/55 px-5 text-center text-sm font-bold text-white shadow-[0_12px_35px_rgba(2,8,23,0.25),inset_0_1px_0_rgba(255,255,255,0.08)] outline-none transition placeholder:text-white/35 focus:border-sky-200/50 focus:bg-slate-900/75 focus:ring-4 focus:ring-sky-400/10 sm:min-h-14 sm:text-base"
+              className="min-h-10 w-full rounded-2xl border border-sky-200/20 bg-slate-950/55 px-5 text-center text-xs font-bold text-white shadow-[0_12px_35px_rgba(2,8,23,0.25),inset_0_1px_0_rgba(255,255,255,0.08)] outline-none transition placeholder:text-white/35 focus:border-sky-200/50 focus:bg-slate-900/75 focus:ring-4 focus:ring-sky-400/10 sm:min-h-14 sm:text-base"
             />
           </label>
-          <button type="button" onClick={chooseRandomTeam} disabled={isRandomizing || !teams.length} className="group mt-3 min-h-12 rounded-full border border-amber-100/35 bg-[linear-gradient(135deg,rgba(251,191,36,0.2),rgba(245,158,11,0.09))] px-8 text-[9px] font-black uppercase tracking-[0.17em] text-amber-100 shadow-[0_12px_32px_rgba(180,83,9,0.14),inset_0_1px_0_rgba(255,255,255,0.12)] transition duration-300 hover:-translate-y-0.5 hover:border-amber-100/55 hover:bg-amber-300/[0.22] disabled:cursor-wait disabled:opacity-50 sm:min-h-13 sm:px-10">
+          <button type="button" onClick={chooseRandomTeam} disabled={isRandomizing || !teams.length} className="group mt-2 min-h-10 rounded-full border border-amber-100/35 bg-[linear-gradient(135deg,rgba(251,191,36,0.2),rgba(245,158,11,0.09))] px-7 text-[8px] font-black uppercase tracking-[0.17em] text-amber-100 shadow-[0_12px_32px_rgba(180,83,9,0.14),inset_0_1px_0_rgba(255,255,255,0.12)] transition duration-300 hover:-translate-y-0.5 hover:border-amber-100/55 hover:bg-amber-300/[0.22] disabled:cursor-wait disabled:opacity-50 sm:mt-3 sm:min-h-13 sm:px-10 sm:text-[9px]">
             <span className="mr-2 inline-block text-amber-300 transition-transform duration-300 group-hover:rotate-12 group-hover:scale-125">✦</span>
             {isRandomizing ? "Estrazione…" : "Sorprendimi"}
           </button>
@@ -444,7 +444,7 @@ export default function TeamSelector({
             onPointerUp={endDrag}
             onPointerCancel={cancelDrag}
             onScroll={preserveInfiniteLoop}
-            className={`flex items-center gap-2 overflow-x-auto px-12 py-9 overscroll-x-contain touch-pan-y select-none [perspective:900px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:gap-4 sm:px-14 sm:py-12 ${isInfinite ? "cursor-grab active:cursor-grabbing" : filteredTeams.length === 1 ? "justify-center" : "cursor-grab active:cursor-grabbing"}`}
+            className={`flex items-center gap-2 overflow-x-auto px-12 py-5 overscroll-x-contain touch-pan-y select-none [perspective:900px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:gap-4 sm:px-14 sm:py-12 ${isInfinite ? "cursor-grab active:cursor-grabbing" : filteredTeams.length === 1 ? "justify-center" : "cursor-grab active:cursor-grabbing"}`}
           >
             {carouselTeams.map(({ team, replica }) => {
               const selected = activeTeam?.id === team.id;
@@ -471,8 +471,8 @@ export default function TeamSelector({
                   aria-label={`Seleziona ${team.nome}`}
                   className={`group relative flex shrink-0 items-center justify-center rounded-full border border-transparent bg-transparent opacity-100 outline-none transition-[transform,width,height,filter] duration-500 [transform-style:preserve-3d] ${
                     selected
-                      ? "z-[2] h-[156px] w-[156px] -translate-y-3 sm:h-[200px] sm:w-[200px]"
-                      : "h-[108px] w-[108px] translate-y-3 hover:-translate-y-0 sm:h-[136px] sm:w-[136px]"
+                      ? "z-[2] h-[136px] w-[136px] -translate-y-2 sm:h-[200px] sm:w-[200px] sm:-translate-y-3"
+                      : "h-[94px] w-[94px] translate-y-2 hover:-translate-y-0 sm:h-[136px] sm:w-[136px] sm:translate-y-3"
                   } focus-visible:ring-2 focus-visible:ring-blue-500`}
                 >
                   {selected && (

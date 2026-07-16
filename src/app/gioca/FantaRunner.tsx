@@ -78,9 +78,11 @@ type PresentationState = {
   until: number;
 };
 type BurstBeat = {
-  category: "primary" | "counter" | "pause";
+  kind: EventKind;
   count: number;
-  gap?: number;
+  intervalAfter: number;
+  spacing: number;
+  heights: readonly (0 | 1 | 2)[];
 };
 
 type Runtime = {
@@ -142,10 +144,8 @@ type Runtime = {
     timer: number;
     durationRemaining: number;
     index: number;
-    hatTrickSpawned: boolean;
     pattern: readonly BurstBeat[];
     beatIndex: number;
-    beatItemIndex: number;
   } | null;
   malusBurstCooldown: number;
   bonusBurstCooldown: number;
@@ -167,6 +167,7 @@ type Runtime = {
     timer: number;
     spawnTimer: number;
     lastShotAt: number;
+    attackIndex: number;
   } | null;
   nextBossAt: number;
   reducedPerformance: boolean;
@@ -176,19 +177,6 @@ type Runtime = {
 };
 
 const PLAYER_GROUND_Y = GROUND_Y - PLAYER_SIZE;
-const MALUS_RAFFICA_POOL: Array<{ kind: EventKind; weight: number }> = [
-  { kind: "yellowCard", weight: 18 },
-  { kind: "concededGoal", weight: 18 },
-  { kind: "redCard", weight: 12 },
-  { kind: "ownGoal", weight: 4 },
-  { kind: "missedPenalty", weight: 3 },
-];
-
-const BONUS_RAFFICA_POOL: Array<{ kind: EventKind; weight: number }> = [
-  { kind: "assist", weight: 18 },
-  { kind: "cleanSheet", weight: 18 },
-  { kind: "goal", weight: 4 },
-];
 const POWER_UP_KINDS: readonly PowerUpKind[] = [
   "luperto",
   "lukaku",
@@ -196,49 +184,39 @@ const POWER_UP_KINDS: readonly PowerUpKind[] = [
   "nico-paz",
   "gimenez",
 ];
-const RAFFICA_PATTERNS: Record<RafficaType, ReadonlyArray<readonly BurstBeat[]>> = {
+const RAFFICA_PATTERNS: Record<RafficaType, readonly BurstBeat[]> = {
   malus: [
-    [
-      { category: "primary", count: 3 }, { category: "pause", count: 0, gap: 0.95 },
-      { category: "primary", count: 2 }, { category: "counter", count: 1 },
-      { category: "primary", count: 4 }, { category: "pause", count: 0, gap: 1.15 },
-      { category: "primary", count: 3 },
-    ],
-    [
-      { category: "primary", count: 2 }, { category: "pause", count: 0, gap: 0.82 },
-      { category: "primary", count: 4 }, { category: "counter", count: 1 },
-      { category: "pause", count: 0, gap: 1.08 }, { category: "primary", count: 3 },
-      { category: "primary", count: 2 },
-    ],
+    { kind: "yellowCard", count: 3, intervalAfter: 0.38, spacing: 5, heights: [0, 1, 0] },
+    { kind: "concededGoal", count: 1, intervalAfter: 0.34, spacing: 0, heights: [1] },
+    { kind: "yellowCard", count: 3, intervalAfter: 0.38, spacing: 5, heights: [1, 0, 1] },
+    { kind: "ownGoal", count: 1, intervalAfter: 0.34, spacing: 0, heights: [0] },
+    { kind: "yellowCard", count: 3, intervalAfter: 0.38, spacing: 5, heights: [0, 1, 0] },
+    { kind: "missedPenalty", count: 1, intervalAfter: 0.38, spacing: 0, heights: [1] },
+    { kind: "concededGoal", count: 3, intervalAfter: 0.4, spacing: 5, heights: [1, 0, 1] },
+    { kind: "redCard", count: 1, intervalAfter: 0.42, spacing: 0, heights: [0] },
   ],
   bonus: [
-    [
-      { category: "primary", count: 3 }, { category: "pause", count: 0, gap: 0.9 },
-      { category: "primary", count: 2 }, { category: "counter", count: 1 },
-      { category: "primary", count: 4 }, { category: "pause", count: 0, gap: 1.05 },
-      { category: "primary", count: 3 },
-    ],
-    [
-      { category: "primary", count: 2 }, { category: "primary", count: 3 },
-      { category: "pause", count: 0, gap: 1.1 }, { category: "counter", count: 1 },
-      { category: "primary", count: 4 }, { category: "pause", count: 0, gap: 0.88 },
-      { category: "primary", count: 2 },
-    ],
+    { kind: "assist", count: 3, intervalAfter: 0.42, spacing: 5, heights: [0, 1, 0] },
+    { kind: "goal", count: 1, intervalAfter: 0.36, spacing: 0, heights: [1] },
+    { kind: "cleanSheet", count: 3, intervalAfter: 0.18, spacing: 5, heights: [1, 0, 1] },
+    { kind: "hatTrick", count: 1, intervalAfter: 0.48, spacing: 0, heights: [2] },
   ],
 };
 const RAFFICA_OVERLAY_CACHE = new Map<string, HTMLCanvasElement>();
-const MOBILE_GAME_WIDTH = 540;
+const WARMED_TEXTURES = new WeakSet<HTMLImageElement>();
+let textureWarmupCanvas: HTMLCanvasElement | null = null;
+const MOBILE_GAME_WIDTH = 600;
 const MOBILE_GAME_HEIGHT = 820;
 const MOBILE_WORLD_OFFSET_Y = 266;
 const MOBILE_OBSTACLE_SCALE: Record<PhysicalObstacleKind, number> = {
-  cornerFlag: 1.06,
-  stretcher: 0.94,
-  slidingTackle: 0.98,
-  var: 1,
+  cornerFlag: 1.2,
+  stretcher: 1.08,
+  slidingTackle: 1.12,
+  var: 1.14,
 };
-const MOBILE_EVENT_SCALE = 1.12;
-const MOBILE_POWER_UP_SCALE = 1.08;
-const MOBILE_PLAYER_SCALE = 1.24;
+const MOBILE_EVENT_SCALE = 1.25;
+const MOBILE_POWER_UP_SCALE = 1.2;
+const MOBILE_PLAYER_SCALE = 1.38;
 
 type CanvasRenderState = {
   context: CanvasRenderingContext2D | null;
@@ -402,7 +380,7 @@ function FantaRunner({
     let cancelled = false;
     const mobile = window.matchMedia("(max-width: 639px)").matches;
     configureMobileRuntime(runtimeRef.current, renderStateRef.current, mobile);
-    renderStateRef.current.dprLimit = mobile ? 1.6 : 1.5;
+    renderStateRef.current.dprLimit = mobile ? 1.5 : 1.35;
     renderStateRef.current.dirty = true;
     onAssetsReady(false);
     onLoadProgress(0);
@@ -422,6 +400,8 @@ function FantaRunner({
       if (!canvas) return;
       runtimeRef.current.playerVisible = true;
       const context = prepareCanvas(canvas, renderStateRef.current, true);
+      prewarmRenderCaches(context);
+      prewarmImageTextures(images, logo);
       drawGame(
         context,
         runtimeRef.current,
@@ -645,8 +625,8 @@ function FantaRunner({
         if (event.pointerType === "mouse") {
           event.preventDefault();
           event.currentTarget.setPointerCapture(event.pointerId);
-          if (event.button === 0) beginJump();
-          if (event.button === 2) duck();
+          if (event.button === 2) beginJump();
+          if (event.button === 0) duck();
           return;
         }
 
@@ -711,7 +691,7 @@ function FantaRunner({
         touchGestureRef.current.jumping = false;
       }}
       onContextMenu={(event) => event.preventDefault()}
-      aria-label={`Campo di gioco. Tocca o fai click e mantieni la pressione per modulare il salto; scorri verso il basso o usa il click destro per abbassarti con ${team.nome}.`}
+      aria-label={`Campo di gioco. Tocca o usa il tasto destro del mouse per saltare; scorri verso il basso o usa il tasto sinistro per abbassarti con ${team.nome}.`}
       className="block aspect-[9/5] w-full touch-none bg-[#020817] outline-none max-sm:aspect-auto max-sm:h-full"
     />
   );
@@ -762,7 +742,7 @@ function configureMobileRuntime(
   runtime.worldWidth = mobile ? MOBILE_GAME_WIDTH : GAME_WIDTH;
   renderState.logicalWidth = mobile ? MOBILE_GAME_WIDTH : GAME_WIDTH;
   renderState.logicalHeight = mobile ? MOBILE_GAME_HEIGHT : GAME_HEIGHT;
-  renderState.dprLimit = mobile ? 1.6 : 1.5;
+  renderState.dprLimit = mobile ? 1.5 : 1.35;
   renderState.dirty = true;
 }
 
@@ -787,7 +767,7 @@ function updatePerformanceMonitor(
 
   if (monitor.slowWindows >= 2 && !runtime.reducedPerformance) {
     runtime.reducedPerformance = true;
-    renderState.dprLimit = runtime.mobileLayout ? 1.25 : 1;
+    renderState.dprLimit = runtime.mobileLayout ? 1.2 : 1;
     renderState.dirty = true;
   }
 
@@ -843,11 +823,13 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
   const difficultyBand = getDifficultyBand(runtime.teamRating);
   const speedProgress = getScoreSpeedProgress(runtime);
   const dybalaStrength = getPowerUpStrength(runtime, "dybala");
-  const bossSpeedFactor = runtime.boss?.phase === "active" ? 0.82 : 1;
+  const bossSpeedFactor = runtime.boss
+    ? runtime.boss.phase === "warning" ? 0.94 : runtime.boss.phase === "active" ? 0.9 : 1
+    : 1;
   const rafficaSpeedFactor = runtime.burst?.type === "malus" && runtime.burst.phase === "active" ? 0.91 : 1;
   const speed = getRunSpeed(speedProgress) *
     (1 - dybalaStrength * 0.64) * bossSpeedFactor * rafficaSpeedFactor;
-  const worldSpeed = Math.min(speed, 590);
+  const worldSpeed = Math.min(speed, 780);
   const groundVisualSpeed = Math.min(
     speed * BACKGROUND_TRANSITION_CONFIG.groundSpeedFactor,
     BACKGROUND_TRANSITION_CONFIG.maximumGroundSpeed
@@ -922,7 +904,7 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
   runtime.mutualBurstCooldown = Math.max(0, runtime.mutualBurstCooldown - delta);
   runtime.powerUpCooldown = Math.max(0, runtime.powerUpCooldown - delta);
   updateBoss(runtime, delta, difficulty, time);
-  updateRaffica(runtime, delta, speed, difficulty);
+  updateRaffica(runtime, delta, speed);
   updateRafficaOverlay(runtime, delta);
   runtime.spawnTimer -= delta * (1 - dybalaStrength * 0.52);
 
@@ -1276,10 +1258,8 @@ function tryStartRaffica(
       config.minimumDurationSeconds +
       Math.random() * (config.maximumDurationSeconds - config.minimumDurationSeconds),
     index: 0,
-    hatTrickSpawned: false,
-    pattern: pickRafficaPattern(type),
+    pattern: RAFFICA_PATTERNS[type],
     beatIndex: 0,
-    beatItemIndex: 0,
   };
   runtime.burstOverlayType = type;
   runtime.presentation = {
@@ -1295,8 +1275,7 @@ function tryStartRaffica(
 function updateRaffica(
   runtime: Runtime,
   delta: number,
-  speed: number,
-  difficulty: number
+  speed: number
 ) {
   const burst = runtime.burst;
   if (!burst) return;
@@ -1315,91 +1294,35 @@ function updateRaffica(
   }
 
   if (burst.timer > 0) return;
-  let beat = burst.pattern[burst.beatIndex];
+  const beat = burst.pattern[burst.beatIndex];
   if (!beat) {
     burst.beatIndex = 0;
-    burst.beatItemIndex = 0;
-    burst.timer = 0.95;
-    return;
-  }
-  if (beat.category === "pause") {
-    burst.beatIndex += 1;
-    burst.beatItemIndex = 0;
-    burst.timer = beat.gap ?? 0.9;
+    burst.timer = 0.18;
     return;
   }
 
-  const spawnType: RafficaType = beat.category === "primary"
-    ? burst.type
-    : burst.type === "malus" ? "bonus" : "malus";
-  let kind: EventKind;
-  let heightLevel: 0 | 1 | 2;
-  let motion: RunnerEntity["motion"];
-
-  if (spawnType === "malus") {
-    kind = weightedRafficaPick(MALUS_RAFFICA_POOL);
-    heightLevel = Math.random() < 0.78 ? 0 : 1;
-    const motionRoll = Math.random();
-    motion = motionRoll < 0.42 ? "ground" : motionRoll < 0.7 ? "diagonal" : "serpentine";
-  } else {
-    const canSpawnHatTrick =
-      beat.category === "primary" &&
-      !burst.hatTrickSpawned &&
-      Math.random() < RAFFICA_CONFIG.bonus.hatTrickChance;
-    kind = canSpawnHatTrick ? "hatTrick" : weightedRafficaPick(BONUS_RAFFICA_POOL);
-    const heightRoll = Math.random();
-    heightLevel = heightRoll < 0.34 ? 0 : heightRoll < 0.7 ? 1 : 2;
-    motion = Math.random() < 0.18 ? "floating" : "ground";
-  }
-
-  const burstStartX = runtime.worldWidth + Math.max(34, speed * (0.035 + Math.random() * 0.065));
-  const pushed = pushEvent(
-    runtime,
-    kind,
-    burstStartX,
-    heightLevel,
-    {
+  const dimensions = getEventDimensions(beat.kind);
+  const scale = runtime.mobileLayout ? MOBILE_EVENT_SCALE : 1;
+  const burstStartX = runtime.worldWidth + Math.max(38, speed * 0.045);
+  let spawned = 0;
+  for (let itemIndex = 0; itemIndex < beat.count; itemIndex += 1) {
+    const heightLevel = beat.heights[itemIndex % beat.heights.length];
+    const x = burstStartX + itemIndex * (dimensions.width * scale + beat.spacing);
+    if (pushEvent(runtime, beat.kind, x, heightLevel, {
       burst: true,
-      motion,
-      amplitude: motion === "serpentine" || motion === "floating" ? 11 + difficulty * 7 : undefined,
-      motionSpeed: 1.05 + difficulty * 0.55,
-      horizontalSpeedFactor: 1,
-    }
-  );
+      tight: true,
+      motion: "ground",
+      horizontalSpeedFactor: 1.48,
+    })) spawned += 1;
+  }
 
-  if (!pushed) {
+  if (!spawned) {
     burst.timer = 0.16;
     return;
   }
-
-  if (kind === "hatTrick") burst.hatTrickSpawned = true;
-  burst.index += 1;
-  burst.beatItemIndex += 1;
-  if (burst.beatItemIndex >= beat.count) {
-    burst.beatIndex += 1;
-    burst.beatItemIndex = 0;
-    beat = burst.pattern[burst.beatIndex];
-    if (beat?.category === "pause") {
-      burst.beatIndex += 1;
-      burst.timer = beat.gap ?? 0.9;
-      return;
-    }
-  }
-  const config = RAFFICA_CONFIG[spawnType];
-  const baseInterval =
-    config.maximumItemInterval -
-    (config.maximumItemInterval - config.minimumItemInterval) *
-      difficulty;
-  const groupPulse = 0.76 + Math.random() * 0.34;
-  burst.timer = Math.max(
-    spawnType === "malus" ? 0.28 : 0.2,
-    baseInterval * groupPulse
-  );
-}
-
-function pickRafficaPattern(type: RafficaType) {
-  const patterns = RAFFICA_PATTERNS[type];
-  return patterns[Math.floor(Math.random() * patterns.length)];
+  burst.index += spawned;
+  burst.beatIndex = (burst.beatIndex + 1) % burst.pattern.length;
+  burst.timer = beat.intervalAfter;
 }
 
 function finishRaffica(runtime: Runtime, type: RafficaType) {
@@ -1505,6 +1428,7 @@ function updateBoss(
       timer: BOSS_CONFIG.warningSeconds,
       spawnTimer: 0,
       lastShotAt: -10,
+      attackIndex: 0,
     };
     runtime.presentation = {
       asset: BOSS_CONFIG.warningAsset,
@@ -1526,7 +1450,7 @@ function updateBoss(
     if (boss.timer > 0) return;
     boss.phase = "active";
     boss.timer = BOSS_CONFIG.durationSeconds;
-    boss.spawnTimer = 0.65;
+    boss.spawnTimer = 0.72;
     runtime.presentation = {
       asset: BOSS_CONFIG.bannerAsset,
       title: "Boss 20",
@@ -1545,48 +1469,40 @@ function updateBoss(
         activeProjectiles += 1;
       }
     }
-    if (runtime.mobileLayout && activeProjectiles >= 3) {
+    if (activeProjectiles >= (runtime.mobileLayout ? 6 : 9)) {
       boss.spawnTimer = 0.24;
       return;
     }
-    const kind = weightedRafficaPick(MALUS_RAFFICA_POOL);
-    if (runtime.mobileLayout) {
-      const bossRect = getBossRect(runtime);
-      const eventDimensions = getEventDimensions(kind);
-      const spawnX = bossRect.x + bossRect.width * 0.18;
-      const spawnY = bossRect.y + bossRect.height * 0.52 - eventDimensions.height * MOBILE_EVENT_SCALE / 2;
+    const volleyKinds: readonly EventKind[] = [
+      "yellowCard", "redCard", "concededGoal", "missedPenalty",
+    ];
+    const kind = volleyKinds[boss.attackIndex % volleyKinds.length];
+    const bossRect = getBossRect(runtime);
+    const dimensions = getEventDimensions(kind);
+    const scale = runtime.mobileLayout ? MOBILE_EVENT_SCALE : 1;
+    const spread = kind === "missedPenalty" ? 23 : 7;
+    const projectileSpeed = (runtime.mobileLayout ? 292 : 350) + difficulty * 64;
+    for (let itemIndex = 0; itemIndex < 3; itemIndex += 1) {
+      const spawnX = bossRect.x + bossRect.width * 0.18 + itemIndex * spread;
+      const spawnY = bossRect.y + bossRect.height * 0.5 - dimensions.height * scale / 2;
       const targetX = runtime.playerX + PLAYER_SIZE * 0.55;
-      const targetY = runtime.playerY + PLAYER_SIZE * 0.52;
+      const targetY = runtime.playerY + PLAYER_SIZE * 0.5 + (itemIndex - 1) * 42;
       const deltaX = targetX - spawnX;
       const deltaY = targetY - spawnY;
       const vectorLength = Math.max(1, Math.hypot(deltaX, deltaY));
-      const projectileSpeed = 265 + difficulty * 55;
       pushEvent(runtime, kind, spawnX, 0, {
         burst: true,
+        tight: true,
         spawnY,
         motion: "bossProjectile",
         velocityX: deltaX / vectorLength * projectileSpeed,
         velocityY: deltaY / vectorLength * projectileSpeed,
-        angularVelocity: (Math.random() - 0.5) * 2.2,
-      });
-    } else {
-      const projectileMotion: RunnerEntity["motion"] = Math.random() < 0.5
-        ? "diagonal"
-        : "serpentine";
-      pushEvent(runtime, kind, runtime.worldWidth - 205 + Math.random() * 24, Math.random() < 0.7 ? 0 : 1, {
-        burst: true,
-        spawnY: 205 + Math.random() * 105,
-        motion: projectileMotion,
-        amplitude: 72 + Math.random() * 42,
-        motionSpeed: 1.05 + difficulty * 0.42,
-        horizontalSpeedFactor: 1.5 + Math.random() * 0.18,
+        angularVelocity: (itemIndex - 1) * 0.9,
       });
     }
     boss.lastShotAt = runtime.elapsed;
-    boss.spawnTimer = randomBetween(
-      BOSS_CONFIG.itemIntervalSeconds.minimum,
-      BOSS_CONFIG.itemIntervalSeconds.maximum
-    );
+    boss.attackIndex = (boss.attackIndex + 1) % volleyKinds.length;
+    boss.spawnTimer = kind === "missedPenalty" ? 1.28 : 0.92;
   }
   if (boss.timer > 0) return;
 
@@ -1608,15 +1524,6 @@ function updateRafficaOverlay(runtime: Runtime, delta: number) {
     runtime.burstOverlayIntensity = 0;
     runtime.burstOverlayType = null;
   }
-}
-
-function weightedRafficaPick(pool: Array<{ kind: EventKind; weight: number }>) {
-  let cursor = Math.random() * pool.reduce((sum, item) => sum + item.weight, 0);
-  for (const item of pool) {
-    cursor -= item.weight;
-    if (cursor <= 0) return item.kind;
-  }
-  return pool[pool.length - 1].kind;
 }
 
 function randomBetween(minimum: number, maximum: number) {
@@ -1756,6 +1663,7 @@ function pushEvent(
     motionSpeed?: number;
     heightOffset?: number;
     burst?: boolean;
+    tight?: boolean;
     horizontalSpeedFactor?: number;
     angularVelocity?: number;
     spawnY?: number;
@@ -1777,7 +1685,9 @@ function pushEvent(
     return false;
   }
 
-  const minimumDistance = options.burst
+  const minimumDistance = options.tight
+    ? 1
+    : options.burst
     ? ENTITY_DENSITY_CONFIG.burstCollectibleDistance
     : ENTITY_DENSITY_CONFIG.minimumCollectibleDistance;
   const baseDimensions = getEventDimensions(kind);
@@ -1820,7 +1730,7 @@ function pushEvent(
     return false;
   }
 
-  if (kind === "hatTrick") {
+  if (kind === "hatTrick" && !options.burst) {
     const maximumHatTricks = runtime.elapsed >= ENTITY_DENSITY_CONFIG.hatTrickThirdAppearanceSeconds
       ? ENTITY_DENSITY_CONFIG.hatTrickLongRunLimit
       : ENTITY_DENSITY_CONFIG.hatTrickRegularLimit;
@@ -2330,7 +2240,10 @@ function drawGame(
   const viewport = getLogicalCanvasViewport(context);
   context.clearRect(0, 0, viewport.width, viewport.height);
   const scenario = getStageScenario(runtime);
-  const reducedEffects = reducedMotion || runtime.reducedPerformance;
+  const reducedEffects =
+    reducedMotion ||
+    runtime.reducedPerformance ||
+    getScoreSpeedProgress(runtime) > 0.72;
 
   const hasAssetBackground = drawAssetBackground(context, runtime, assets);
   if (!hasAssetBackground) {
@@ -2549,6 +2462,32 @@ function getRafficaStaticOverlay(
   return canvas;
 }
 
+function prewarmRenderCaches(context: CanvasRenderingContext2D) {
+  const viewport = getLogicalCanvasViewport(context);
+  getRafficaStaticOverlay("bonus", viewport.width, viewport.height);
+  getRafficaStaticOverlay("malus", viewport.width, viewport.height);
+}
+
+function prewarmImageTextures(images: GameImageMap, logo: HTMLImageElement) {
+  textureWarmupCanvas ??= document.createElement("canvas");
+  textureWarmupCanvas.width = 64;
+  textureWarmupCanvas.height = 64;
+  const context = textureWarmupCanvas.getContext("2d");
+  if (!context) return;
+  context.clearRect(0, 0, 64, 64);
+  let cursor = 0;
+  const warm = (image: HTMLImageElement) => {
+    if (WARMED_TEXTURES.has(image) || !image.complete || !image.naturalWidth) return;
+    const x = (cursor % 8) * 8;
+    const y = Math.floor(cursor / 8) * 8;
+    context.drawImage(image, x, y, 8, 8);
+    WARMED_TEXTURES.add(image);
+    cursor = (cursor + 1) % 64;
+  };
+  warm(logo);
+  for (const image of images.values()) warm(image);
+}
+
 function drawBonusParticles(
   context: CanvasRenderingContext2D,
   runtime: Runtime,
@@ -2759,9 +2698,7 @@ function drawPlayer(
   context.fill();
   context.restore();
 
-  if (getPowerUpStrength(runtime, "luperto") > 0) {
-    drawPersistentShield(context, runtime, time, reducedMotion);
-  }
+  drawPersistentPowerUpEffects(context, runtime, time, reducedMotion);
 
   const effectKind = runtime.powerUpCollectionEffect?.kind;
   if (effectKind && runtime.powerUpCollectionEffect) {
@@ -2851,26 +2788,89 @@ function drawPlayer(
   context.restore();
 }
 
-function drawPersistentShield(
+function drawPersistentPowerUpEffects(
   context: CanvasRenderingContext2D,
   runtime: Runtime,
   time: number,
   reducedMotion: boolean
 ) {
-  const strength = getPowerUpStrength(runtime, "luperto");
-  const pulse = reducedMotion ? 0 : Math.sin(time / 220) * 2;
+  const luperto = getPowerUpStrength(runtime, "luperto");
+  const lukaku = getPowerUpStrength(runtime, "lukaku");
+  const dybala = getPowerUpStrength(runtime, "dybala");
+  const nicoPaz = getPowerUpStrength(runtime, "nico-paz");
+  const gimenez = getPowerUpStrength(runtime, "gimenez");
+  if (!luperto && !lukaku && !dybala && !nicoPaz && !gimenez) return;
+
   const centerX = runtime.playerX + PLAYER_SIZE / 2;
   const centerY = runtime.playerY + PLAYER_SIZE / 2;
+  const visualScale = runtime.mobileLayout ? MOBILE_PLAYER_SCALE : 1;
+  const pulse = reducedMotion ? 0 : Math.sin(time / 190);
   context.save();
-  context.globalAlpha = 0.4 * strength;
-  context.strokeStyle = POWER_UP_CONFIG.luperto.hudColor;
-  context.lineWidth = 3;
-  context.shadowColor = POWER_UP_CONFIG.luperto.hudColor;
-  context.shadowBlur = reducedMotion ? 0 : 11;
-  context.beginPath();
-  context.arc(centerX, centerY, 42 + pulse, Math.PI * 0.12, Math.PI * 0.88);
-  context.quadraticCurveTo(centerX, centerY + 62 + pulse, centerX - 42 - pulse, centerY);
-  context.stroke();
+
+  if (luperto) {
+    context.globalAlpha = 0.4 * luperto;
+    context.strokeStyle = POWER_UP_CONFIG.luperto.hudColor;
+    context.lineWidth = 3;
+    context.shadowColor = POWER_UP_CONFIG.luperto.hudColor;
+    context.shadowBlur = reducedMotion ? 0 : 5;
+    context.beginPath();
+    context.arc(centerX, centerY, 42 * visualScale + pulse * 2, Math.PI * 0.12, Math.PI * 0.88);
+    context.quadraticCurveTo(centerX, centerY + 58 * visualScale, centerX - 42 * visualScale, centerY);
+    context.stroke();
+  }
+
+  if (lukaku) {
+    context.strokeStyle = "#d6a548";
+    context.lineWidth = 5;
+    for (let ring = 0; ring < 2; ring += 1) {
+      context.globalAlpha = lukaku * (0.22 - ring * 0.07);
+      context.beginPath();
+      context.arc(centerX, centerY, (42 + ring * 9 + pulse * 2) * visualScale, 0, Math.PI * 2);
+      context.stroke();
+    }
+  }
+
+  if (dybala) {
+    context.globalAlpha = dybala * (0.2 + (reducedMotion ? 0 : Math.abs(pulse) * 0.22));
+    context.strokeStyle = "#fb3b4d";
+    context.lineWidth = 4;
+    context.beginPath();
+    context.ellipse(centerX, centerY, 46 * visualScale, 40 * visualScale, 0, 0, Math.PI * 2);
+    context.stroke();
+  }
+
+  if (nicoPaz) {
+    const travel = reducedMotion ? 0 : Math.sin(time / 150) * 5;
+    context.globalAlpha = nicoPaz * (0.42 + Math.abs(pulse) * 0.18);
+    context.strokeStyle = POWER_UP_CONFIG["nico-paz"].hudColor;
+    context.lineWidth = 3;
+    for (let ring = 0; ring < 2; ring += 1) {
+      const radius = (31 + ring * 9) * visualScale;
+      context.beginPath();
+      context.arc(centerX - (35 + travel) * visualScale, centerY, radius, -Math.PI / 2, Math.PI / 2);
+      context.stroke();
+      context.beginPath();
+      context.arc(centerX + (35 + travel) * visualScale, centerY, radius, Math.PI / 2, Math.PI * 1.5);
+      context.stroke();
+    }
+  }
+
+  if (gimenez) {
+    context.globalAlpha = gimenez * (0.18 + Math.abs(pulse) * 0.08);
+    context.fillStyle = "#a855f7";
+    for (let mote = 0; mote < 4; mote += 1) {
+      const angle = time / 420 + mote * Math.PI / 2;
+      context.beginPath();
+      context.arc(
+        centerX + Math.cos(angle) * 43 * visualScale,
+        centerY + Math.sin(angle * 1.3) * 34 * visualScale,
+        9 + mote,
+        0,
+        Math.PI * 2
+      );
+      context.fill();
+    }
+  }
   context.restore();
 }
 
@@ -3062,7 +3062,7 @@ function drawBoss(
   runtime: Runtime,
   assets: GameImageMap
 ) {
-  if (!runtime.boss || runtime.boss.phase === "warning") return;
+  if (!runtime.boss) return;
   const image = assets.get("event.boss");
   if (!image) return;
   const bossRect = getBossRect(runtime);
@@ -3071,8 +3071,11 @@ function drawBoss(
   const exitProgress = runtime.boss.phase === "exiting"
     ? 1 - clamp01(runtime.boss.timer / 0.7)
     : 0;
+  const entranceProgress = runtime.boss.phase === "warning"
+    ? 1 - clamp01(runtime.boss.timer / BOSS_CONFIG.warningSeconds)
+    : 1;
   context.save();
-  context.globalAlpha = 0.94 * (1 - exitProgress);
+  context.globalAlpha = 0.94 * entranceProgress * (1 - exitProgress);
   context.shadowColor = "rgba(244,63,94,0.42)";
   context.shadowBlur = runtime.reducedPerformance ? 0 : 18;
   context.translate(x + width / 2, y + height / 2);
@@ -3092,7 +3095,7 @@ function drawBoss(
 }
 
 function getBossRect(runtime: Runtime) {
-  const bossScale = runtime.mobileLayout ? 0.68 : runtime.mobileVisualScale;
+  const bossScale = runtime.mobileLayout ? 0.8 : runtime.mobileVisualScale;
   const width = 250 * bossScale;
   const height = 375 * bossScale;
   const shotProgress = runtime.boss
@@ -3101,13 +3104,17 @@ function getBossRect(runtime: Runtime) {
   const exitProgress = runtime.boss?.phase === "exiting"
     ? 1 - clamp01(runtime.boss.timer / 0.7)
     : 0;
+  const entranceProgress = runtime.boss?.phase === "warning"
+    ? 1 - clamp01(runtime.boss.timer / BOSS_CONFIG.warningSeconds)
+    : 1;
   return {
     width,
     height,
     x: runtime.worldWidth - width - 12 +
       Math.sin(runtime.elapsed * 0.62) * 9 +
       shotProgress * 15 +
-      exitProgress * 95,
+      exitProgress * 95 +
+      (1 - entranceProgress) * (width + 36),
     y: GROUND_Y - height - 2 + Math.sin(runtime.elapsed * 0.82) * 11,
   };
 }

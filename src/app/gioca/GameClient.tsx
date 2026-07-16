@@ -7,6 +7,7 @@ import {
   TEAM_RATING_INITIAL,
   TEAM_RATING_THRESHOLD,
 } from "@/lib/game/config";
+import { GAME_ASSETS } from "@/lib/game/assets";
 import type { GameSnapshot, GameStatus, GameTeam } from "@/lib/game/types";
 import FantaRunner from "./FantaRunner";
 import GameHud from "./GameHud";
@@ -15,18 +16,15 @@ import GameOverlayLayer from "./GameOverlayLayer";
 import TeamSelector from "./TeamSelector";
 
 const LOADING_TIPS = [
-  "Luperto: i malus non hanno effetto",
-  "Lukaku respinge le barriere",
-  "Nico Paz attira i bonus verso di te",
-  "Dybala rallenta la corsa",
-  "Gimenez fa fuggire i bonus",
-  "Raffica Bonus: sfrutta ogni occasione",
-  "Raffica Malus: preparati a schivare",
-  "Gol: +3 al voto",
-  "Assist: +1 al voto",
-  "Ammonizione: -0,5",
-  "Espulsione: -1",
-  "Boss 20: sopravvivi ai suoi lanci",
+  { image: GAME_ASSETS.powerups.luperto, title: "Luperto", text: "I malus non hanno effetto" },
+  { image: GAME_ASSETS.powerups.lukaku, title: "Lukaku", text: "La potenza respinge le barriere" },
+  { image: GAME_ASSETS.powerups.nicoPaz, title: "Nico Paz", text: "Attira i bonus verso di te" },
+  { image: GAME_ASSETS.powerups.dybala, title: "Dybala", text: "Rallenta la corsa e ritrova il ritmo" },
+  { image: GAME_ASSETS.events.bonusBurst, title: "Raffica Bonus", text: "Sfrutta ogni occasione" },
+  { image: GAME_ASSETS.events.malusBurst, title: "Raffica Malus", text: "Preparati a schivare" },
+  { image: GAME_ASSETS.bonus.goal, title: "Gol", text: "+3 al voto squadra" },
+  { image: GAME_ASSETS.malus.redCard, title: "Espulsione", text: "Proteggi la tua soglia vitale" },
+  { image: GAME_ASSETS.events.boss, title: "Boss 20", text: "Preparati alle raffiche di malus" },
 ] as const;
 
 function createEmptySnapshot(best = 0): GameSnapshot {
@@ -136,7 +134,7 @@ export default function GameClient({
 
   useEffect(() => {
     if (status !== "ready" || !assetsReady) return;
-    const timer = window.setTimeout(startGame, 520);
+    const timer = window.setTimeout(startGame, 2800);
     return () => window.clearTimeout(timer);
   }, [assetsReady, startGame, status]);
 
@@ -282,29 +280,45 @@ export default function GameClient({
             </div>
 
             {status === "ready" && (
-              <div className="game-loading-screen absolute inset-0 z-40 flex flex-col items-center justify-center bg-[radial-gradient(circle_at_50%_38%,#123d69_0%,#071a34_34%,#020817_76%)] px-6 text-center text-white">
-                <div className="absolute inset-x-5 top-[max(1rem,env(safe-area-inset-top))]">
-                  <p className="text-[8px] font-black uppercase tracking-[.2em] text-sky-200/55">Consiglio di gioco</p>
-                  <p className="mt-1 text-xs font-bold text-white/85 sm:text-sm">{loadingTip}</p>
-                </div>
-                <div className="flex h-24 w-24 items-center justify-center sm:h-28 sm:w-28">
-                  <Image src={team.logo} alt="" width={160} height={160} unoptimized priority className="max-h-full max-w-full object-contain drop-shadow-[0_14px_22px_rgba(0,0,0,.42)]" />
-                </div>
-                <p className="mt-5 text-[9px] font-black uppercase tracking-[.26em] text-sky-200/75">Sala Giochi ufficiale</p>
-                <h2 className="mt-1 text-lg font-black uppercase tracking-[-.025em] sm:text-xl">Preparazione del campo</h2>
-                <div className="mt-5 h-1.5 w-full max-w-[240px] overflow-hidden rounded-full bg-white/10" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(loadProgress * 100)}>
-                  <span className="block h-full rounded-full bg-gradient-to-r from-sky-400 to-amber-300 transition-[width] duration-200" style={{ width: `${Math.max(4, loadProgress * 100)}%` }} />
-                </div>
-                <p className="mt-2 text-[9px] font-bold tabular-nums text-white/45">{Math.round(loadProgress * 100)}%</p>
-                <div className="absolute inset-x-5 bottom-[max(1rem,env(safe-area-inset-bottom))] text-white/72">
-                  <div className="hidden items-center justify-center gap-5 text-[9px] font-black uppercase tracking-[.12em] sm:flex">
-                    <span>Freccia su: salta</span>
-                    <span>Freccia giù: abbassati</span>
+              <div className="game-loading-screen absolute inset-0 z-40 grid grid-rows-[auto_1fr_auto] bg-[radial-gradient(circle_at_50%_36%,#174d7b_0%,#082341_34%,#020817_78%)] px-4 py-[max(.8rem,env(safe-area-inset-top))] text-center text-white sm:px-8 sm:py-6">
+                <header className="mx-auto flex w-full max-w-md items-center gap-3 text-left">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center sm:h-14 sm:w-14">
+                    <Image src={team.logo} alt="" width={112} height={112} unoptimized priority className="max-h-full max-w-full object-contain drop-shadow-[0_10px_18px_rgba(0,0,0,.45)]" />
                   </div>
-                  <p className="text-[9px] font-black uppercase leading-relaxed tracking-[.1em] sm:hidden">
-                    Tocca e tieni premuto: salta<br />Scorri verso il basso: abbassati
-                  </p>
-                </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-end justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-[8px] font-black uppercase tracking-[.18em] text-sky-200/65">{team.nome}</p>
+                        <h2 className="text-sm font-black uppercase tracking-[-.02em] sm:text-base">Preparazione del campo</h2>
+                      </div>
+                      <span className="text-[10px] font-black tabular-nums text-white/65">{Math.round(loadProgress * 100)}%</span>
+                    </div>
+                    <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(loadProgress * 100)}>
+                  <span className="block h-full rounded-full bg-gradient-to-r from-sky-400 to-amber-300 transition-[width] duration-200" style={{ width: `${Math.max(4, loadProgress * 100)}%` }} />
+                    </div>
+                  </div>
+                </header>
+                <article className="relative mx-auto flex w-full max-w-[290px] self-center flex-col items-center rounded-[1.25rem] border border-white/10 bg-[linear-gradient(145deg,rgba(15,50,84,.72),rgba(2,8,23,.5))] px-4 py-3 shadow-[0_22px_55px_rgba(0,0,0,.3),inset_0_1px_0_rgba(255,255,255,.08)] sm:max-w-sm sm:px-6 sm:py-5">
+                  <p className="text-[7px] font-black uppercase tracking-[.23em] text-amber-300/75">Consiglio di gioco</p>
+                  <div className="mt-2 flex h-24 w-32 items-center justify-center sm:h-36 sm:w-48">
+                    <Image src={loadingTip.image} alt="" width={320} height={240} unoptimized priority className="max-h-full max-w-full object-contain drop-shadow-[0_16px_22px_rgba(0,0,0,.48)]" />
+                  </div>
+                  <h3 className="mt-1 text-base font-black uppercase tracking-[-.025em] sm:text-xl">{loadingTip.title}</h3>
+                  <p className="mt-1 text-[10px] font-semibold leading-4 text-white/68 sm:text-xs">“{loadingTip.text}”</p>
+                </article>
+                <section className="mx-auto w-full max-w-xl rounded-xl border border-white/10 bg-slate-950/42 px-3 py-2 text-left shadow-[inset_0_1px_0_rgba(255,255,255,.06)] sm:px-4 sm:py-3">
+                  <p className="mb-2 text-center text-[7px] font-black uppercase tracking-[.24em] text-sky-200/65">Controlli</p>
+                  <div className="hidden grid-cols-4 gap-2 sm:grid">
+                    <ControlHint icon="R" label="Mouse destro" action="Salta" />
+                    <ControlHint icon="L" label="Mouse sinistro" action="Abbassati" />
+                    <ControlHint icon="↑" label="Freccia su" action="Salta" />
+                    <ControlHint icon="↓" label="Freccia giù" action="Abbassati" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 sm:hidden">
+                    <ControlHint icon="↑" label="Tap" action="Salta" />
+                    <ControlHint icon="↓" label="Swipe in basso" action="Abbassati" />
+                  </div>
+                </section>
               </div>
             )}
           </section>
@@ -341,6 +355,18 @@ export default function GameClient({
       </div>
       {gameModal}
     </>
+  );
+}
+
+function ControlHint({ icon, label, action }: { icon: string; label: string; action: string }) {
+  return (
+    <div className="flex min-w-0 items-center gap-2 rounded-lg border border-white/[.07] bg-white/[.035] px-2 py-1.5">
+      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-sky-200/20 bg-sky-950/70 text-xs font-black text-sky-100 shadow-[inset_0_1px_0_rgba(255,255,255,.09)]">{icon}</span>
+      <span className="min-w-0">
+        <span className="block truncate text-[7px] font-bold text-white/45">{label}</span>
+        <span className="block text-[8px] font-black uppercase tracking-[.08em] text-white/85">{action}</span>
+      </span>
+    </div>
   );
 }
 

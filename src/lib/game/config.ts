@@ -24,8 +24,8 @@ export const FLOW_PERFECT_OBSTACLE = 17;
 
 export const SPEED_CONFIG = {
   initial: 292,
-  maximum: 820,
-  scoreForMaximum: 20000,
+  maximum: 900,
+  scoreForMaximum: 14000,
 } as const;
 
 export const SCENARIO_DISTANCE_METERS = 150;
@@ -43,7 +43,7 @@ export const DIFFICULTY_CONFIG = {
   },
   curvePower: 1.4,
   nonlinearBoost: 0.18,
-  speedCurvePower: 1.1,
+  speedCurvePower: 0.82,
   movingMalusBaseChance: 0.24,
   movingMalusMaximumChance: 0.72,
   bonusTrailBaseChance: 0.025,
@@ -60,9 +60,9 @@ export const DIFFICULTY_BANDS = [
 
 export const ENTITY_DENSITY_CONFIG = {
   maximumActiveCollectibles: 4,
-  maximumActiveCollectiblesDuringBurst: 5,
+  maximumActiveCollectiblesDuringBurst: 10,
   maximumActivePhysicalObstacles: 5,
-  maximumActiveEntities: 10,
+  maximumActiveEntities: 14,
   maximumActivePits: 2,
   minimumCollectibleDistance: 96,
   burstCollectibleDistance: 78,
@@ -97,7 +97,7 @@ export const RAFFICA_CONFIG = {
   bonus: {
     minimumStartSeconds: 22,
     warningSeconds: 0.95,
-    minimumDurationSeconds: 8,
+    minimumDurationSeconds: 10,
     maximumDurationSeconds: 10,
     minimumItemInterval: 0.56,
     maximumItemInterval: 0.84,
