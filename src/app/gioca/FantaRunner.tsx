@@ -37,6 +37,7 @@ import {
   pickGameplayPattern,
   pickRafficaPattern,
   type GameplayPattern,
+  type PatternCategory,
   type RafficaBeat,
 } from "@/lib/game/patterns";
 import {
@@ -157,6 +158,8 @@ type Runtime = {
   lastSpawnCategory: "bonus" | "malus" | "physical" | "space" | null;
   repeatedSpawnCategory: number;
   lastPatternId: string | null;
+  lastPatternCategory: PatternCategory | null;
+  malusPatternsSinceBonus: number;
   activePowerUps: Partial<Record<PowerUpKind, ActivePowerUp>>;
   powerUpCollectionEffect: { kind: PowerUpKind; until: number } | null;
   powerUpCooldown: number;
@@ -191,6 +194,7 @@ let textureWarmupCanvas: HTMLCanvasElement | null = null;
 const MOBILE_GAME_WIDTH = 600;
 const MOBILE_GAME_HEIGHT = 820;
 const MOBILE_WORLD_OFFSET_Y = 266;
+const MOBILE_CAMERA_SCALE = 0.92;
 const MOBILE_OBSTACLE_SCALE: Record<PhysicalObstacleKind, number> = {
   cornerFlag: 1.2,
   stretcher: 1.08,
@@ -282,6 +286,8 @@ function createRuntime(): Runtime {
     lastSpawnCategory: null,
     repeatedSpawnCategory: 0,
     lastPatternId: null,
+    lastPatternCategory: null,
+    malusPatternsSinceBonus: 0,
     activePowerUps: {},
     powerUpCollectionEffect: null,
     powerUpCooldown: 0,
@@ -289,8 +295,8 @@ function createRuntime(): Runtime {
     presentation: null,
     boss: null,
     nextBossAt: randomBetween(
-      BOSS_CONFIG.initialWindowSeconds.minimum,
-      BOSS_CONFIG.initialWindowSeconds.maximum
+      BOSS_CONFIG.distanceWindowMeters.minimum,
+      BOSS_CONFIG.distanceWindowMeters.maximum
     ),
     reducedPerformance: false,
     mobileVisualScale: 1,
@@ -724,7 +730,7 @@ function configureMobileRuntime(
 ) {
   runtime.mobileLayout = mobile;
   runtime.mobileVisualScale = mobile ? MOBILE_EVENT_SCALE : 1;
-  runtime.worldWidth = mobile ? MOBILE_GAME_WIDTH : GAME_WIDTH;
+  runtime.worldWidth = mobile ? MOBILE_GAME_WIDTH / MOBILE_CAMERA_SCALE : GAME_WIDTH;
   renderState.logicalWidth = mobile ? MOBILE_GAME_WIDTH : GAME_WIDTH;
   renderState.logicalHeight = mobile ? MOBILE_GAME_HEIGHT : GAME_HEIGHT;
   renderState.dprLimit = mobile ? 1.5 : 1.35;
@@ -1402,7 +1408,7 @@ function updateBoss(
 ) {
   if (!runtime.boss) {
     if (
-      runtime.elapsed < runtime.nextBossAt ||
+      runtime.distance < runtime.nextBossAt ||
       runtime.burst ||
       runtime.entities.some((entity) => entity.type === "powerup") ||
       runtime.backgroundTransition
@@ -1455,7 +1461,7 @@ function updateBoss(
         activeProjectiles += 1;
       }
     }
-    if (activeProjectiles >= (runtime.mobileLayout ? 6 : 9)) {
+    if (activeProjectiles >= (runtime.mobileLayout ? 10 : 12)) {
       boss.spawnTimer = 0.24;
       return;
     }
@@ -1466,7 +1472,8 @@ function updateBoss(
     const scale = runtime.mobileLayout ? MOBILE_EVENT_SCALE : 1;
     const spread = Math.max(beat.spacing, kind === "missedPenalty" ? 16 : 2);
     const projectileSpeed = (runtime.mobileLayout ? 292 : 350) + difficulty * 64;
-    for (let itemIndex = 0; itemIndex < beat.count; itemIndex += 1) {
+    const volleyCount = beat.count + 2;
+    for (let itemIndex = 0; itemIndex < volleyCount; itemIndex += 1) {
       const spawnX = bossRect.x + bossRect.width * 0.18 + itemIndex * spread;
       const spawnY = bossRect.y + bossRect.height * 0.5 - dimensions.height * scale / 2;
       const targetX = runtime.playerX + PLAYER_SIZE * 0.55;
@@ -1482,19 +1489,22 @@ function updateBoss(
         motion: "bossProjectile",
         velocityX: deltaX / vectorLength * projectileSpeed,
         velocityY: deltaY / vectorLength * projectileSpeed,
-        angularVelocity: (itemIndex - 1) * 0.9,
+        angularVelocity: (itemIndex - (volleyCount - 1) / 2) * 0.55,
       });
     }
     boss.lastShotAt = runtime.elapsed;
     boss.attackIndex = (boss.attackIndex + 1) % boss.pattern.length;
-    boss.spawnTimer = Math.max(0.8, beat.intervalAfter + 0.48);
+    boss.spawnTimer = Math.max(0.72, beat.intervalAfter + 0.24);
   }
   if (boss.timer > 0) return;
 
   boss.phase = "exiting";
   boss.timer = 0.7;
   boss.spawnTimer = Number.POSITIVE_INFINITY;
-  runtime.nextBossAt = runtime.elapsed + BOSS_CONFIG.cooldownSeconds;
+  runtime.nextBossAt = runtime.distance + randomBetween(
+    BOSS_CONFIG.distanceWindowMeters.minimum,
+    BOSS_CONFIG.distanceWindowMeters.maximum
+  );
   changeTeamRating(runtime, BOSS_CONFIG.rewardRating, time, "boss-reward", "Boss 20 superato");
   runtime.presentation = null;
 }
@@ -1542,18 +1552,32 @@ function spawnNext(runtime: Runtime, speed: number, difficulty: number) {
   const dybala = getPowerUpStrength(runtime, "dybala");
   const nicoPaz = getPowerUpStrength(runtime, "nico-paz");
   const gimenez = getPowerUpStrength(runtime, "gimenez");
+  const openingPhase = runtime.distance < 40;
+  const lastWasBonus = runtime.lastPatternCategory === "bonus";
+  const malusRun = runtime.malusPatternsSinceBonus;
+  const bonusWeight = openingPhase
+    ? lastWasBonus ? 0 : 48
+    : lastWasBonus || malusRun === 0
+      ? 0
+      : malusRun === 1 ? 18 : malusRun === 2 ? 68 : 82;
+  const malusWeight = openingPhase
+    ? 0
+    : malusRun >= 2 ? 12 : 58;
   const pattern = pickGameplayPattern(
     runtime.distance,
     {
-      bonus: 32 + nicoPaz * 18 + gimenez * 14,
-      malus: 27 + luperto * 15,
-      obstacle: 25 + lukaku * 18 + dybala * 22,
-      mixed: 16,
+      bonus: bonusWeight + (bonusWeight > 0 ? nicoPaz * 12 + gimenez * 10 : 0),
+      malus: malusWeight + (malusWeight > 0 ? luperto * 10 : 0),
+      obstacle: (openingPhase ? 52 : 24) + lukaku * 15 + dybala * 20,
+      mixed: openingPhase ? 0 : 10,
     },
     runtime.lastPatternId,
     dybala > 0
   );
   runtime.lastPatternId = pattern.id;
+  runtime.lastPatternCategory = pattern.category;
+  if (pattern.category === "bonus") runtime.malusPatternsSinceBonus = 0;
+  else if (pattern.category === "malus") runtime.malusPatternsSinceBonus += 1;
   const startX = runtime.worldWidth + Math.max(runtime.mobileLayout ? 70 : 40, speed * (runtime.mobileLayout ? 0.14 : 0.08));
   return spawnGameplayPattern(runtime, pattern, startX, speed, difficulty);
 }
@@ -2185,7 +2209,10 @@ function drawGame(
   drawRafficaOverlay(context, runtime);
 
   context.save();
-  if (runtime.mobileLayout) context.translate(0, MOBILE_WORLD_OFFSET_Y);
+  if (runtime.mobileLayout) {
+    context.translate(0, MOBILE_WORLD_OFFSET_Y + GROUND_Y * (1 - MOBILE_CAMERA_SCALE));
+    context.scale(MOBILE_CAMERA_SCALE, MOBILE_CAMERA_SCALE);
+  }
   if (hasAssetBackground) drawAssetHazards(context, runtime, assets);
   drawBoss(context, runtime, assets);
   for (const entity of runtime.entities) {

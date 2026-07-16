@@ -105,30 +105,30 @@ export const GAMEPLAY_PATTERNS = [
 export const RAFFICA_PATTERN_LIBRARY: Record<RafficaType, readonly (readonly RafficaBeat[])[]> = {
   bonus: [
     [
-      { kind:"assist",count:3,line:1,spacing:2,intervalAfter:.42 },
-      { kind:"goal",count:1,line:2,spacing:0,intervalAfter:.36 },
-      { kind:"cleanSheet",count:3,line:0,spacing:2,intervalAfter:.2 },
-      { kind:"hatTrick",count:1,line:2,spacing:0,intervalAfter:.52 },
+      { kind:"assist",count:3,line:1,spacing:2,intervalAfter:.9 },
+      { kind:"goal",count:1,line:2,spacing:0,intervalAfter:.85 },
+      { kind:"cleanSheet",count:2,line:0,spacing:2,intervalAfter:.42 },
+      { kind:"hatTrick",count:1,line:2,spacing:0,intervalAfter:1.25 },
     ],
     [
-      { kind:"cleanSheet",count:3,line:0,spacing:2,intervalAfter:.4 },
-      { kind:"assist",count:3,line:1,spacing:2,intervalAfter:.32 },
-      { kind:"goal",count:1,line:2,spacing:0,intervalAfter:.22 },
-      { kind:"hatTrick",count:1,line:0,spacing:0,intervalAfter:.5 },
+      { kind:"cleanSheet",count:2,line:0,spacing:2,intervalAfter:.9 },
+      { kind:"assist",count:3,line:1,spacing:2,intervalAfter:.82 },
+      { kind:"goal",count:1,line:2,spacing:0,intervalAfter:.44 },
+      { kind:"hatTrick",count:1,line:0,spacing:0,intervalAfter:1.3 },
     ],
   ],
   malus: [
     [
-      { kind:"yellowCard",count:3,line:0,spacing:2,intervalAfter:.4 },
-      { kind:"concededGoal",count:3,line:1,spacing:2,intervalAfter:.4 },
-      { kind:"redCard",count:3,line:2,spacing:2,intervalAfter:.42 },
-      { kind:"missedPenalty",count:2,line:0,spacing:16,intervalAfter:.48 },
+      { kind:"yellowCard",count:3,line:0,spacing:2,intervalAfter:.82 },
+      { kind:"concededGoal",count:3,line:1,spacing:2,intervalAfter:.86 },
+      { kind:"redCard",count:2,line:2,spacing:2,intervalAfter:.88 },
+      { kind:"missedPenalty",count:2,line:0,spacing:16,intervalAfter:1.05 },
     ],
     [
-      { kind:"concededGoal",count:3,line:1,spacing:2,intervalAfter:.4 },
-      { kind:"yellowCard",count:3,line:0,spacing:2,intervalAfter:.38 },
-      { kind:"redCard",count:3,line:2,spacing:2,intervalAfter:.42 },
-      { kind:"missedPenalty",count:2,line:1,spacing:16,intervalAfter:.48 },
+      { kind:"concededGoal",count:3,line:1,spacing:2,intervalAfter:.84 },
+      { kind:"yellowCard",count:3,line:0,spacing:2,intervalAfter:.82 },
+      { kind:"redCard",count:2,line:2,spacing:2,intervalAfter:.9 },
+      { kind:"missedPenalty",count:2,line:1,spacing:16,intervalAfter:1.08 },
     ],
   ],
 };
