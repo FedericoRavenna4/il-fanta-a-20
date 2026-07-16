@@ -32,7 +32,13 @@ import {
   TEAM_RATING_INITIAL,
   TEAM_RATING_THRESHOLD,
 } from "@/lib/game/config";
-import { createSpawnDecision, getSafeSpawnInterval } from "@/lib/game/generator";
+import { getSafeSpawnInterval } from "@/lib/game/generator";
+import {
+  pickGameplayPattern,
+  pickRafficaPattern,
+  type GameplayPattern,
+  type RafficaBeat,
+} from "@/lib/game/patterns";
 import {
   preloadGameAssets,
   preloadTeamLogo,
@@ -76,13 +82,6 @@ type PresentationState = {
   subtitle: string;
   tone: "bonus" | "malus" | "neutral";
   until: number;
-};
-type BurstBeat = {
-  kind: EventKind;
-  count: number;
-  intervalAfter: number;
-  spacing: number;
-  heights: readonly (0 | 1 | 2)[];
 };
 
 type Runtime = {
@@ -144,7 +143,7 @@ type Runtime = {
     timer: number;
     durationRemaining: number;
     index: number;
-    pattern: readonly BurstBeat[];
+    pattern: readonly RafficaBeat[];
     beatIndex: number;
   } | null;
   malusBurstCooldown: number;
@@ -157,6 +156,7 @@ type Runtime = {
   nextForcedBurstAt: number;
   lastSpawnCategory: "bonus" | "malus" | "physical" | "space" | null;
   repeatedSpawnCategory: number;
+  lastPatternId: string | null;
   activePowerUps: Partial<Record<PowerUpKind, ActivePowerUp>>;
   powerUpCollectionEffect: { kind: PowerUpKind; until: number } | null;
   powerUpCooldown: number;
@@ -168,6 +168,7 @@ type Runtime = {
     spawnTimer: number;
     lastShotAt: number;
     attackIndex: number;
+    pattern: readonly RafficaBeat[];
   } | null;
   nextBossAt: number;
   reducedPerformance: boolean;
@@ -184,24 +185,6 @@ const POWER_UP_KINDS: readonly PowerUpKind[] = [
   "nico-paz",
   "gimenez",
 ];
-const RAFFICA_PATTERNS: Record<RafficaType, readonly BurstBeat[]> = {
-  malus: [
-    { kind: "yellowCard", count: 3, intervalAfter: 0.38, spacing: 5, heights: [0, 1, 0] },
-    { kind: "concededGoal", count: 1, intervalAfter: 0.34, spacing: 0, heights: [1] },
-    { kind: "yellowCard", count: 3, intervalAfter: 0.38, spacing: 5, heights: [1, 0, 1] },
-    { kind: "ownGoal", count: 1, intervalAfter: 0.34, spacing: 0, heights: [0] },
-    { kind: "yellowCard", count: 3, intervalAfter: 0.38, spacing: 5, heights: [0, 1, 0] },
-    { kind: "missedPenalty", count: 1, intervalAfter: 0.38, spacing: 0, heights: [1] },
-    { kind: "concededGoal", count: 3, intervalAfter: 0.4, spacing: 5, heights: [1, 0, 1] },
-    { kind: "redCard", count: 1, intervalAfter: 0.42, spacing: 0, heights: [0] },
-  ],
-  bonus: [
-    { kind: "assist", count: 3, intervalAfter: 0.42, spacing: 5, heights: [0, 1, 0] },
-    { kind: "goal", count: 1, intervalAfter: 0.36, spacing: 0, heights: [1] },
-    { kind: "cleanSheet", count: 3, intervalAfter: 0.18, spacing: 5, heights: [1, 0, 1] },
-    { kind: "hatTrick", count: 1, intervalAfter: 0.48, spacing: 0, heights: [2] },
-  ],
-};
 const RAFFICA_OVERLAY_CACHE = new Map<string, HTMLCanvasElement>();
 const WARMED_TEXTURES = new WeakSet<HTMLImageElement>();
 let textureWarmupCanvas: HTMLCanvasElement | null = null;
@@ -298,6 +281,7 @@ function createRuntime(): Runtime {
     ),
     lastSpawnCategory: null,
     repeatedSpawnCategory: 0,
+    lastPatternId: null,
     activePowerUps: {},
     powerUpCollectionEffect: null,
     powerUpCooldown: 0,
@@ -625,8 +609,8 @@ function FantaRunner({
         if (event.pointerType === "mouse") {
           event.preventDefault();
           event.currentTarget.setPointerCapture(event.pointerId);
-          if (event.button === 2) beginJump();
-          if (event.button === 0) duck();
+          if (event.button === 0) beginJump();
+          if (event.button === 2) duck();
           return;
         }
 
@@ -646,6 +630,7 @@ function FantaRunner({
         else duck();
       }}
       onPointerMove={(event) => {
+        if (window.matchMedia("(max-width: 639px)").matches) return;
         const gesture = touchGestureRef.current;
         if (
           event.pointerType === "mouse" ||
@@ -691,7 +676,7 @@ function FantaRunner({
         touchGestureRef.current.jumping = false;
       }}
       onContextMenu={(event) => event.preventDefault()}
-      aria-label={`Campo di gioco. Tocca o usa il tasto destro del mouse per saltare; scorri verso il basso o usa il tasto sinistro per abbassarti con ${team.nome}.`}
+      aria-label={`Campo di gioco. Tocca o usa il tasto sinistro del mouse per saltare; usa il tasto destro per abbassarti con ${team.nome}.`}
       className="block aspect-[9/5] w-full touch-none bg-[#020817] outline-none max-sm:aspect-auto max-sm:h-full"
     />
   );
@@ -1258,7 +1243,7 @@ function tryStartRaffica(
       config.minimumDurationSeconds +
       Math.random() * (config.maximumDurationSeconds - config.minimumDurationSeconds),
     index: 0,
-    pattern: RAFFICA_PATTERNS[type],
+    pattern: pickRafficaPattern(type),
     beatIndex: 0,
   };
   runtime.burstOverlayType = type;
@@ -1306,7 +1291,7 @@ function updateRaffica(
   const burstStartX = runtime.worldWidth + Math.max(38, speed * 0.045);
   let spawned = 0;
   for (let itemIndex = 0; itemIndex < beat.count; itemIndex += 1) {
-    const heightLevel = beat.heights[itemIndex % beat.heights.length];
+    const heightLevel = beat.line;
     const x = burstStartX + itemIndex * (dimensions.width * scale + beat.spacing);
     if (pushEvent(runtime, beat.kind, x, heightLevel, {
       burst: true,
@@ -1429,6 +1414,7 @@ function updateBoss(
       spawnTimer: 0,
       lastShotAt: -10,
       attackIndex: 0,
+      pattern: pickRafficaPattern("malus"),
     };
     runtime.presentation = {
       asset: BOSS_CONFIG.warningAsset,
@@ -1473,20 +1459,19 @@ function updateBoss(
       boss.spawnTimer = 0.24;
       return;
     }
-    const volleyKinds: readonly EventKind[] = [
-      "yellowCard", "redCard", "concededGoal", "missedPenalty",
-    ];
-    const kind = volleyKinds[boss.attackIndex % volleyKinds.length];
+    const beat = boss.pattern[boss.attackIndex % boss.pattern.length];
+    const kind = beat.kind;
     const bossRect = getBossRect(runtime);
     const dimensions = getEventDimensions(kind);
     const scale = runtime.mobileLayout ? MOBILE_EVENT_SCALE : 1;
-    const spread = kind === "missedPenalty" ? 23 : 7;
+    const spread = Math.max(beat.spacing, kind === "missedPenalty" ? 16 : 2);
     const projectileSpeed = (runtime.mobileLayout ? 292 : 350) + difficulty * 64;
-    for (let itemIndex = 0; itemIndex < 3; itemIndex += 1) {
+    for (let itemIndex = 0; itemIndex < beat.count; itemIndex += 1) {
       const spawnX = bossRect.x + bossRect.width * 0.18 + itemIndex * spread;
       const spawnY = bossRect.y + bossRect.height * 0.5 - dimensions.height * scale / 2;
       const targetX = runtime.playerX + PLAYER_SIZE * 0.55;
-      const targetY = runtime.playerY + PLAYER_SIZE * 0.5 + (itemIndex - 1) * 42;
+      const lineOffset = beat.line === 2 ? 112 : beat.line === 1 ? 60 : 8;
+      const targetY = GROUND_Y - dimensions.height * scale * 0.5 - lineOffset;
       const deltaX = targetX - spawnX;
       const deltaY = targetY - spawnY;
       const vectorLength = Math.max(1, Math.hypot(deltaX, deltaY));
@@ -1501,8 +1486,8 @@ function updateBoss(
       });
     }
     boss.lastShotAt = runtime.elapsed;
-    boss.attackIndex = (boss.attackIndex + 1) % volleyKinds.length;
-    boss.spawnTimer = kind === "missedPenalty" ? 1.28 : 0.92;
+    boss.attackIndex = (boss.attackIndex + 1) % boss.pattern.length;
+    boss.spawnTimer = Math.max(0.8, beat.intervalAfter + 0.48);
   }
   if (boss.timer > 0) return;
 
@@ -1552,104 +1537,49 @@ function spawnNext(runtime: Runtime, speed: number, difficulty: number) {
   if (runtime.entities.length >= ENTITY_DENSITY_CONFIG.maximumActiveEntities) {
     return 0;
   }
-  const decision = createSpawnDecision({
-    elapsed: runtime.elapsed,
-    distance: runtime.distance,
-    difficulty,
-    teamRating: runtime.teamRating,
-  });
+  const luperto = getPowerUpStrength(runtime, "luperto");
+  const lukaku = getPowerUpStrength(runtime, "lukaku");
+  const dybala = getPowerUpStrength(runtime, "dybala");
+  const nicoPaz = getPowerUpStrength(runtime, "nico-paz");
+  const gimenez = getPowerUpStrength(runtime, "gimenez");
+  const pattern = pickGameplayPattern(
+    runtime.distance,
+    {
+      bonus: 32 + nicoPaz * 18 + gimenez * 14,
+      malus: 27 + luperto * 15,
+      obstacle: 25 + lukaku * 18 + dybala * 22,
+      mixed: 16,
+    },
+    runtime.lastPatternId,
+    dybala > 0
+  );
+  runtime.lastPatternId = pattern.id;
   const startX = runtime.worldWidth + Math.max(runtime.mobileLayout ? 70 : 40, speed * (runtime.mobileLayout ? 0.14 : 0.08));
+  return spawnGameplayPattern(runtime, pattern, startX, speed, difficulty);
+}
 
-  if (decision.type === "breather") {
-    runtime.lastSpawnCategory = "space";
-    runtime.repeatedSpawnCategory = 0;
-    return 0;
-  }
-
-  const spawnCategory = decision.type === "event"
-    ? decision.event.category
-    : "physical";
-  if (runtime.lastSpawnCategory === spawnCategory) {
-    runtime.repeatedSpawnCategory += 1;
-    if (runtime.repeatedSpawnCategory >= 2) {
-      runtime.lastSpawnCategory = "space";
-      runtime.repeatedSpawnCategory = 0;
-      return 0;
-    }
-  } else {
-    runtime.lastSpawnCategory = spawnCategory;
-    runtime.repeatedSpawnCategory = 0;
-  }
-
-  if (decision.type === "pit") {
-    if (runtime.pits.length >= ENTITY_DENSITY_CONFIG.maximumActivePits) return 0;
-    runtime.pits.push({
-      id: runtime.nextEntityId++,
-      x: startX,
-      width: decision.width,
-      stage: getVisibleBackgroundStage(runtime),
-    });
-    if (decision.bonus) {
-      const bonusDimensions = getEventDimensions(decision.bonus.kind);
-      pushEvent(runtime, decision.bonus.kind, startX + decision.width / 2 - bonusDimensions.width / 2, 1, {
-        motion: "floating",
-        amplitude: 12,
-        motionSpeed: 1.35,
+function spawnGameplayPattern(
+  runtime: Runtime,
+  pattern: GameplayPattern,
+  startX: number,
+  speed: number,
+  difficulty: number
+) {
+  let furthestOffset = 0;
+  for (const item of pattern.items) {
+    furthestOffset = Math.max(furthestOffset, item.x);
+    if (item.type === "physical") {
+      pushPhysicalObstacle(runtime, item.kind, startX + item.x, difficulty);
+    } else {
+      pushEvent(runtime, item.kind, startX + item.x, item.line, {
+        pattern: true,
+        tight: true,
+        motion: "ground",
+        horizontalSpeedFactor: 1,
       });
     }
-    return 0;
   }
-
-  if (decision.type === "sequence") {
-    const actionWindow = runtime.mobileLayout
-      ? 1.16 - difficulty * 0.18
-      : 0.98 - difficulty * 0.24;
-    const gap = speed * actionWindow + (runtime.mobileLayout ? 150 : 135);
-    decision.kinds.forEach((kind, index) => {
-      pushPhysicalObstacle(runtime, kind, startX + gap * index, difficulty);
-    });
-    return (gap * (decision.kinds.length - 1)) / speed;
-  }
-
-  if (decision.type === "physical") {
-    pushPhysicalObstacle(runtime, decision.kind, startX, difficulty);
-    if (decision.bonus) {
-      const dimensions = getPhysicalDimensions(decision.kind);
-      const bonusDimensions = getEventDimensions(decision.bonus.kind);
-      const isTall = decision.kind === "cornerFlag" || decision.kind === "var";
-      pushEvent(
-        runtime,
-        decision.bonus.kind,
-        isTall
-          ? startX + dimensions.width + 68
-          : startX + dimensions.width / 2 - bonusDimensions.width / 2,
-        isTall ? 0 : 1,
-        { motion: "floating", amplitude: 10, motionSpeed: 1.2 }
-      );
-    }
-    return 0;
-  }
-
-  const trail = Math.max(1, decision.trail ?? 1);
-  const eventDimensions = getEventDimensions(decision.event.kind);
-  for (let index = 0; index < trail; index += 1) {
-    const heightOffset = (decision.trailRise ?? 0) * index;
-    pushEvent(
-      runtime,
-      decision.event.kind,
-      startX + (decision.xOffset ?? 0) + index * (eventDimensions.width + 24),
-      decision.heightLevel,
-      {
-        motion: decision.motion,
-        amplitude: decision.amplitude,
-        motionSpeed: decision.motionSpeed,
-        heightOffset,
-        horizontalSpeedFactor: decision.horizontalSpeedFactor,
-        angularVelocity: decision.angularVelocity,
-      }
-    );
-  }
-  return 0;
+  return furthestOffset / Math.max(1, speed) + pattern.recovery;
 }
 
 function pushEvent(
@@ -1663,6 +1593,7 @@ function pushEvent(
     motionSpeed?: number;
     heightOffset?: number;
     burst?: boolean;
+    pattern?: boolean;
     tight?: boolean;
     horizontalSpeedFactor?: number;
     angularVelocity?: number;
@@ -1675,7 +1606,7 @@ function pushEvent(
     (count, entity) => count + (entity.type === "event" ? 1 : 0),
     0
   );
-  const maximumEvents = options.burst
+  const maximumEvents = options.burst || options.pattern
     ? ENTITY_DENSITY_CONFIG.maximumActiveCollectiblesDuringBurst
     : ENTITY_DENSITY_CONFIG.maximumActiveCollectibles;
   if (
@@ -1730,7 +1661,7 @@ function pushEvent(
     return false;
   }
 
-  if (kind === "hatTrick" && !options.burst) {
+  if (kind === "hatTrick" && !options.burst && !options.pattern) {
     const maximumHatTricks = runtime.elapsed >= ENTITY_DENSITY_CONFIG.hatTrickThirdAppearanceSeconds
       ? ENTITY_DENSITY_CONFIG.hatTrickLongRunLimit
       : ENTITY_DENSITY_CONFIG.hatTrickRegularLimit;
@@ -2195,7 +2126,7 @@ function expandRect(
 }
 
 function isCrouching(runtime: Runtime, time: number) {
-  return runtime.grounded && time < runtime.crouchUntil;
+  return !runtime.mobileLayout && runtime.grounded && time < runtime.crouchUntil;
 }
 
 function calculateGoals(teamRating: number) {
@@ -2808,14 +2739,19 @@ function drawPersistentPowerUpEffects(
   context.save();
 
   if (luperto) {
-    context.globalAlpha = 0.4 * luperto;
-    context.strokeStyle = POWER_UP_CONFIG.luperto.hudColor;
-    context.lineWidth = 3;
-    context.shadowColor = POWER_UP_CONFIG.luperto.hudColor;
-    context.shadowBlur = reducedMotion ? 0 : 5;
+    const shieldRadius = (47 + pulse * 1.8) * visualScale;
+    context.globalAlpha = 0.58 * luperto;
+    context.strokeStyle = "#7dd3fc";
+    context.lineWidth = 2.4;
+    context.shadowColor = "#38bdf8";
+    context.shadowBlur = reducedMotion ? 0 : 6;
     context.beginPath();
-    context.arc(centerX, centerY, 42 * visualScale + pulse * 2, Math.PI * 0.12, Math.PI * 0.88);
-    context.quadraticCurveTo(centerX, centerY + 58 * visualScale, centerX - 42 * visualScale, centerY);
+    context.arc(centerX, centerY, shieldRadius, 0, Math.PI * 2);
+    context.stroke();
+    context.globalAlpha = 0.14 * luperto;
+    context.lineWidth = 6;
+    context.beginPath();
+    context.arc(centerX, centerY, shieldRadius + 3, 0, Math.PI * 2);
     context.stroke();
   }
 
@@ -2840,18 +2776,25 @@ function drawPersistentPowerUpEffects(
   }
 
   if (nicoPaz) {
-    const travel = reducedMotion ? 0 : Math.sin(time / 150) * 5;
-    context.globalAlpha = nicoPaz * (0.42 + Math.abs(pulse) * 0.18);
-    context.strokeStyle = POWER_UP_CONFIG["nico-paz"].hudColor;
-    context.lineWidth = 3;
-    for (let ring = 0; ring < 2; ring += 1) {
-      const radius = (31 + ring * 9) * visualScale;
+    context.strokeStyle = "#67e8f9";
+    context.fillStyle = "#cffafe";
+    context.lineWidth = 1.6;
+    context.globalAlpha = 0.2 * nicoPaz;
+    context.setLineDash([5, 8]);
+    context.beginPath();
+    context.arc(centerX, centerY, 53 * visualScale, 0, Math.PI * 2);
+    context.stroke();
+    context.setLineDash([]);
+    for (let mote = 0; mote < 6; mote += 1) {
+      const travel = reducedMotion ? 0.55 : ((time / 520 + mote / 6) % 1);
+      const radius = (62 - travel * 43) * visualScale;
+      const angle = mote * Math.PI / 3 + (reducedMotion ? 0 : time / 1700);
+      const x = centerX + Math.cos(angle) * radius;
+      const y = centerY + Math.sin(angle) * radius * 0.72;
+      context.globalAlpha = nicoPaz * (0.28 + travel * 0.38);
       context.beginPath();
-      context.arc(centerX - (35 + travel) * visualScale, centerY, radius, -Math.PI / 2, Math.PI / 2);
-      context.stroke();
-      context.beginPath();
-      context.arc(centerX + (35 + travel) * visualScale, centerY, radius, Math.PI / 2, Math.PI * 1.5);
-      context.stroke();
+      context.arc(x, y, 1.8 + travel * 1.4, 0, Math.PI * 2);
+      context.fill();
     }
   }
 

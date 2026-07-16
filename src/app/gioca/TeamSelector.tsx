@@ -485,7 +485,7 @@ export default function TeamSelector({
                     alt=""
                     width={320}
                     height={320}
-                    sizes="(max-width: 639px) 156px, 200px"
+                    sizes="(max-width: 639px) 136px, 200px"
                     unoptimized
                     className={`h-[86%] w-[86%] object-contain [image-rendering:auto] transition-[filter] duration-500 ${selected ? "drop-shadow-[0_24px_30px_rgba(0,0,0,0.5)]" : "drop-shadow-[0_10px_16px_rgba(0,0,0,0.38)]"}`}
                   />

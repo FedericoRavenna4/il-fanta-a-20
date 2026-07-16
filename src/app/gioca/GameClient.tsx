@@ -134,7 +134,7 @@ export default function GameClient({
 
   useEffect(() => {
     if (status !== "ready" || !assetsReady) return;
-    const timer = window.setTimeout(startGame, 2800);
+    const timer = window.setTimeout(startGame, 4200);
     return () => window.clearTimeout(timer);
   }, [assetsReady, startGame, status]);
 
@@ -307,16 +307,15 @@ export default function GameClient({
                   <p className="mt-1 text-[10px] font-semibold leading-4 text-white/68 sm:text-xs">“{loadingTip.text}”</p>
                 </article>
                 <section className="mx-auto w-full max-w-xl rounded-xl border border-white/10 bg-slate-950/42 px-3 py-2 text-left shadow-[inset_0_1px_0_rgba(255,255,255,.06)] sm:px-4 sm:py-3">
-                  <p className="mb-2 text-center text-[7px] font-black uppercase tracking-[.24em] text-sky-200/65">Controlli</p>
+                  <p className="mb-3 text-center text-[10px] font-black uppercase tracking-[.22em] text-sky-100">Controlli</p>
                   <div className="hidden grid-cols-4 gap-2 sm:grid">
-                    <ControlHint icon="R" label="Mouse destro" action="Salta" />
-                    <ControlHint icon="L" label="Mouse sinistro" action="Abbassati" />
+                    <ControlHint icon="L" label="Mouse sinistro" action="Salta" />
+                    <ControlHint icon="R" label="Mouse destro" action="Abbassati" />
                     <ControlHint icon="↑" label="Freccia su" action="Salta" />
                     <ControlHint icon="↓" label="Freccia giù" action="Abbassati" />
                   </div>
-                  <div className="grid grid-cols-2 gap-2 sm:hidden">
-                    <ControlHint icon="↑" label="Tap" action="Salta" />
-                    <ControlHint icon="↓" label="Swipe in basso" action="Abbassati" />
+                  <div className="mx-auto grid max-w-[220px] grid-cols-1 sm:hidden">
+                    <ControlHint icon="↑" label="Tap breve o pressione" action="Salto modulabile" />
                   </div>
                 </section>
               </div>
@@ -360,11 +359,11 @@ export default function GameClient({
 
 function ControlHint({ icon, label, action }: { icon: string; label: string; action: string }) {
   return (
-    <div className="flex min-w-0 items-center gap-2 rounded-lg border border-white/[.07] bg-white/[.035] px-2 py-1.5">
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-sky-200/20 bg-sky-950/70 text-xs font-black text-sky-100 shadow-[inset_0_1px_0_rgba(255,255,255,.09)]">{icon}</span>
+    <div className="flex min-w-0 items-center gap-3 rounded-lg border border-white/[.12] bg-white/[.055] px-3 py-2.5">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-sky-100/35 bg-sky-950/80 text-base font-black text-white shadow-[inset_0_1px_0_rgba(255,255,255,.12)]">{icon}</span>
       <span className="min-w-0">
-        <span className="block truncate text-[7px] font-bold text-white/45">{label}</span>
-        <span className="block text-[8px] font-black uppercase tracking-[.08em] text-white/85">{action}</span>
+        <span className="block truncate text-[9px] font-bold text-white/65">{label}</span>
+        <span className="block text-[10px] font-black uppercase tracking-[.07em] text-white">{action}</span>
       </span>
     </div>
   );
