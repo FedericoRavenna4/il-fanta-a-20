@@ -7,7 +7,6 @@ type ObstacleSequence = [
   ...PhysicalObstacleKind[],
 ];
 
-const FALLING_MALUS_POOL = MALUS_POOL;
 const INITIAL_BONUS_POOL = BONUS_POOL.filter(
   (event) => event.kind === "assist" || event.kind === "cleanSheet"
 );
@@ -25,16 +24,12 @@ export type SpawnDecision =
       type: "event";
       event: EventDefinition;
       heightLevel: 0 | 1 | 2;
-      falling?: boolean;
       motion?: RunnerEntity["motion"];
       xOffset?: number;
-      fallSpeed?: number;
       amplitude?: number;
       motionSpeed?: number;
       horizontalSpeedFactor?: number;
       angularVelocity?: number;
-      accelerationY?: number;
-      bouncesRemaining?: number;
       trail?: number;
       trailRise?: number;
     }
@@ -45,37 +40,43 @@ export type SpawnDecision =
 
 export function createSpawnDecision({
   elapsed,
+  distance = 0,
   difficulty: suppliedDifficulty,
   random = Math.random,
 }: {
   elapsed: number;
+  distance?: number;
   teamRating?: number;
   difficulty?: number;
   random?: () => number;
 }): SpawnDecision {
   if (elapsed < 5) {
     const protectedRoll = random();
-    if (protectedRoll < 0.3) {
+    if (protectedRoll < 0.38) {
       return {
         type: "event",
         event: weightedPick(INITIAL_BONUS_POOL, random),
         heightLevel: random() > 0.52 ? 1 : 0,
       };
     }
-    if (protectedRoll < 0.62) {
+    if (protectedRoll < 0.6) {
       return {
         type: "event",
         event: weightedPick(MALUS_POOL, random),
         heightLevel: 0,
       };
     }
-    if (protectedRoll < 0.65) {
+    if (protectedRoll < 0.64) {
       return { type: "physical", kind: pickPhysicalKind(random) };
     }
     return { type: "breather" };
   }
 
   const difficulty = suppliedDifficulty ?? getFallbackDifficulty(elapsed);
+  const openingProgress = Math.max(
+    0,
+    Math.min(1, distance / SPAWN_CONFIG.openingBonus.distanceEndMeters)
+  );
   const pitChance = SPAWN_CONFIG.hazardsEnabled
     ? interpolate(
         SPAWN_CONFIG.pitBaseChance,
@@ -87,12 +88,12 @@ export function createSpawnDecision({
     SPAWN_CONFIG.physicalBaseChance,
     SPAWN_CONFIG.physicalMaximumChance,
     difficulty
-  );
+  ) * interpolate(SPAWN_CONFIG.openingBonus.physicalChanceMultiplier, 1, openingProgress);
   const malusChance = interpolate(
     SPAWN_CONFIG.malusBaseChance,
     SPAWN_CONFIG.malusMaximumChance,
     difficulty
-  );
+  ) * interpolate(SPAWN_CONFIG.openingBonus.malusChanceMultiplier, 1, openingProgress);
   const opening = SPAWN_CONFIG.openingBonus;
   const openingExtraChance = elapsed <= opening.strongUntilSeconds
     ? opening.strongExtraChance
@@ -125,7 +126,11 @@ export function createSpawnDecision({
       SPAWN_CONFIG.sequenceMaximumChance,
       difficulty
     );
-    if (elapsed > 24 && random() < sequenceChance) {
+    if (
+      elapsed > 24 &&
+      distance > SPAWN_CONFIG.openingBonus.distanceEndMeters &&
+      random() < sequenceChance
+    ) {
       return { type: "sequence", kinds: createObstacleSequence(difficulty, random) };
     }
     return {
@@ -139,39 +144,29 @@ export function createSpawnDecision({
   }
 
   if (roll < pitChance + physicalChance + malusChance) {
-    const fallingChance = interpolate(0.18, 0.36, difficulty);
-    const falling = elapsed > 12 && random() < fallingChance;
     const movingChance = interpolate(
       DIFFICULTY_CONFIG.movingMalusBaseChance,
       DIFFICULTY_CONFIG.movingMalusMaximumChance,
       difficulty
     );
-    const moving = !falling && elapsed > 16 && random() < movingChance;
+    const moving = elapsed > 16 && random() < movingChance;
     const movingRoll = random();
-    const motion: RunnerEntity["motion"] = falling
-      ? "falling"
-      : movingRoll < 0.42
-        ? "serpentine"
-        : movingRoll < 0.78
-          ? "sine"
-          : "diagonal";
-    const event = falling
-      ? weightedPick(FALLING_MALUS_POOL, random)
-      : weightedPick(MALUS_POOL, random);
+    const motion: RunnerEntity["motion"] = movingRoll < 0.42
+      ? "serpentine"
+      : movingRoll < 0.78
+        ? "sine"
+        : "diagonal";
+    const event = weightedPick(MALUS_POOL, random);
     return {
       type: "event",
       event,
-      heightLevel: !falling && random() > 0.78 && difficulty > 0.22 ? 1 : 0,
-      falling,
-      motion: moving ? motion : falling ? "falling" : "ground",
-      xOffset: falling ? -80 + random() * 150 : 0,
-      fallSpeed: falling ? 75 + difficulty * 85 + random() * 55 : 0,
+      heightLevel: random() > 0.78 && difficulty > 0.22 ? 1 : 0,
+      motion: moving ? motion : "ground",
+      xOffset: 0,
       amplitude: moving ? 12 + random() * (12 + difficulty * 10) : 0,
       motionSpeed: moving ? 1.05 + random() * 0.75 + difficulty * 0.45 : 0,
       horizontalSpeedFactor: 1,
-      angularVelocity: falling ? (random() - 0.5) * (2.8 + difficulty * 1.2) : 0,
-      accelerationY: falling ? 430 + difficulty * 310 : 0,
-      bouncesRemaining: falling ? 1 : 0,
+      angularVelocity: 0,
     };
   }
 

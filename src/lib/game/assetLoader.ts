@@ -31,6 +31,11 @@ const ESSENTIAL_KEYS: GameAssetKey[] = [
   "malus.redCard",
   "malus.ownGoal",
   "malus.missedPenalty",
+  "powerup.luperto",
+  "powerup.lukaku",
+  "powerup.dybala",
+  "powerup.nicoPaz",
+  "powerup.gimenez",
 ];
 
 const SECONDARY_KEYS = GAME_ASSET_ENTRIES
@@ -49,7 +54,13 @@ export function preloadEssentialGameAssets(
     onProgress?.(1);
     return essentialPromise;
   }
-  essentialPromise = loadKeys(ESSENTIAL_KEYS, onProgress).then(() => images);
+  essentialPromise = Promise.all([
+    loadKeys(ESSENTIAL_KEYS, (progress) => onProgress?.(progress * 0.94)),
+    preloadOverlayAssets(),
+  ]).then(() => {
+    onProgress?.(1);
+    return images;
+  });
   return essentialPromise;
 }
 
@@ -61,7 +72,11 @@ export function preloadGameAssets(
     return fullPromise;
   }
   fullPromise = (async () => {
-    await loadKeys(ESSENTIAL_KEYS, (progress) => onProgress?.(progress * 0.58));
+    await Promise.all([
+      loadKeys(ESSENTIAL_KEYS, (progress) => onProgress?.(progress * 0.56)),
+      preloadOverlayAssets(),
+    ]);
+    onProgress?.(0.58);
     await loadKeys(SECONDARY_KEYS, (progress) => onProgress?.(0.58 + progress * 0.42));
     void preloadOverlayAssets();
     return images;

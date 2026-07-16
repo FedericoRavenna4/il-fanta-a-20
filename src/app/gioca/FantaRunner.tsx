@@ -28,6 +28,7 @@ import {
   PLAYER_SIZE,
   PLAYER_X,
   SPEED_CONFIG,
+  SPAWN_CONFIG,
   TEAM_RATING_INITIAL,
   TEAM_RATING_THRESHOLD,
 } from "@/lib/game/config";
@@ -151,6 +152,7 @@ type Runtime = {
   activePowerUps: Partial<Record<PowerUpKind, ActivePowerUp>>;
   powerUpCollectionEffect: { kind: PowerUpKind; until: number } | null;
   powerUpCooldown: number;
+  firstPowerUpSpawned: boolean;
   cinematicSlowUntil: number;
   presentation: PresentationState | null;
   boss: {
@@ -185,11 +187,14 @@ const MOBILE_GAME_WIDTH = 540;
 const MOBILE_GAME_HEIGHT = 820;
 const MOBILE_WORLD_OFFSET_Y = 266;
 const MOBILE_OBSTACLE_SCALE: Record<PhysicalObstacleKind, number> = {
-  cornerFlag: 0.78,
-  stretcher: 0.64,
-  slidingTackle: 0.68,
-  var: 0.7,
+  cornerFlag: 0.9,
+  stretcher: 0.78,
+  slidingTackle: 0.82,
+  var: 0.84,
 };
+const MOBILE_EVENT_SCALE = 1.12;
+const MOBILE_POWER_UP_SCALE = 1.08;
+const MOBILE_PLAYER_SCALE = 1.24;
 
 type CanvasRenderState = {
   context: CanvasRenderingContext2D | null;
@@ -272,6 +277,7 @@ function createRuntime(): Runtime {
     activePowerUps: {},
     powerUpCollectionEffect: null,
     powerUpCooldown: 0,
+    firstPowerUpSpawned: false,
     cinematicSlowUntil: 0,
     presentation: null,
     boss: null,
@@ -722,7 +728,7 @@ function configureMobileRuntime(
   mobile: boolean
 ) {
   runtime.mobileLayout = mobile;
-  runtime.mobileVisualScale = mobile ? 0.92 : 1;
+  runtime.mobileVisualScale = mobile ? MOBILE_EVENT_SCALE : 1;
   runtime.worldWidth = mobile ? MOBILE_GAME_WIDTH : GAME_WIDTH;
   renderState.logicalWidth = mobile ? MOBILE_GAME_WIDTH : GAME_WIDTH;
   renderState.logicalHeight = mobile ? MOBILE_GAME_HEIGHT : GAME_HEIGHT;
@@ -811,7 +817,7 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
   const bossSpeedFactor = runtime.boss?.phase === "active" ? 0.82 : 1;
   const rafficaSpeedFactor = runtime.burst?.type === "malus" && runtime.burst.phase === "active" ? 0.91 : 1;
   const speed = getRunSpeed(speedProgress) *
-    (1 - dybalaStrength * 0.55) * cinematicFactor * bossSpeedFactor * rafficaSpeedFactor;
+    (1 - dybalaStrength * 0.64) * cinematicFactor * bossSpeedFactor * rafficaSpeedFactor;
   const worldSpeed = Math.min(speed, 590);
   const groundVisualSpeed = Math.min(
     speed * BACKGROUND_TRANSITION_CONFIG.groundSpeedFactor,
@@ -867,6 +873,13 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
   runtime.distance += speed * delta * 0.01;
   runtime.flowProgress += FLOW_PROGRESS_PER_SECOND * delta;
 
+  if (
+    !runtime.firstPowerUpSpawned &&
+    runtime.distance >= POWER_UP_SPAWN_CONFIG.guaranteedDistanceStart
+  ) {
+    trySpawnPowerUp(runtime, true);
+  }
+
   if (runtime.flowProgress >= 100) {
     runtime.flowProgress -= 100;
   }
@@ -884,38 +897,31 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
   if (runtime.spawnTimer <= 0 && !runtime.burst && !runtime.boss) {
     if (tryStartRaffica(runtime, time)) {
       runtime.spawnTimer = 0.5;
-    } else if (trySpawnPowerUp(runtime)) {
+    } else if (trySpawnPowerUp(runtime, false)) {
       runtime.spawnTimer = getSafeSpawnInterval(speed, difficulty) * 1.15;
     } else {
       const sequenceDelay = spawnNext(runtime, speed, difficulty);
+      const openingIntervalMultiplier = runtime.distance < SPAWN_CONFIG.openingBonus.distanceEndMeters
+        ? SPAWN_CONFIG.openingBonus.intervalMultiplier
+        : 1;
       runtime.spawnTimer =
-        getSafeSpawnInterval(speed, difficulty) * difficultyBand.intervalMultiplier +
+        getSafeSpawnInterval(speed, difficulty) *
+          difficultyBand.intervalMultiplier *
+          openingIntervalMultiplier +
         sequenceDelay;
     }
   }
 
   for (const entity of runtime.entities) {
-    if (entity.type === "event" && entity.motion === "falling") {
-      const targetY = entity.targetY ?? GROUND_Y - entity.height;
-      entity.x -= worldSpeed * (entity.horizontalSpeedFactor ?? 1) * delta;
-      entity.velocityY =
-        (entity.velocityY ?? 90) + (entity.accelerationY ?? 520) * delta;
+    if (entity.type === "physical" && entity.motion === "launched") {
+      entity.x += ((entity.velocityX ?? 440) - worldSpeed * 0.22) * delta;
+      entity.velocityY = (entity.velocityY ?? -210) + GRAVITY * 0.72 * delta;
       entity.y += entity.velocityY * delta;
-      entity.rotation =
-        (entity.rotation ?? 0) + (entity.angularVelocity ?? 0) * delta;
-      if (entity.y >= targetY) {
-        entity.y = targetY;
-        if ((entity.bouncesRemaining ?? 0) > 0) {
-          entity.bouncesRemaining = (entity.bouncesRemaining ?? 0) - 1;
-          entity.velocityY = -Math.max(72, Math.abs(entity.velocityY) * 0.18);
-          entity.angularVelocity = (entity.angularVelocity ?? 0) * 0.45;
-        } else {
-          entity.motion = "ground";
-          entity.velocityY = 0;
-          entity.angularVelocity = 0;
-          entity.rotation = (entity.rotation ?? 0) * 0.35;
-        }
-      }
+      entity.rotation = (entity.rotation ?? 0) + (entity.angularVelocity ?? 4.5) * delta;
+    } else if (entity.type === "event" && entity.motion === "bossProjectile") {
+      entity.x += (entity.velocityX ?? -360) * delta;
+      entity.y += (entity.velocityY ?? 0) * delta;
+      entity.rotation = (entity.rotation ?? 0) + (entity.angularVelocity ?? 0) * delta;
     } else {
       const motionPhase = runtime.elapsed * (entity.motionSpeed ?? 1.5) + (entity.phase ?? 0);
       entity.x -= worldSpeed * (entity.horizontalSpeedFactor ?? 1) * delta;
@@ -970,9 +976,15 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
       const horizontalDistance = entity.x - runtime.playerX;
       const nicoStrength = getPowerUpStrength(runtime, "nico-paz");
       const gimenezStrength = getPowerUpStrength(runtime, "gimenez");
-      if (nicoStrength > 0 && horizontalDistance > 0 && horizontalDistance < 280) {
-        entity.y += (playerCenterY - entityCenterY) * Math.min(1, delta * 2.4 * nicoStrength);
-        entity.x -= worldSpeed * delta * 0.12 * nicoStrength;
+      if (nicoStrength > 0 && horizontalDistance > 0 && horizontalDistance < 400) {
+        const blockingObstacle = findBlockingObstacle(runtime, entity);
+        const targetY = blockingObstacle
+          ? Math.max(GROUND_Y - entity.height - 128, blockingObstacle.y - entity.height - 14)
+          : playerCenterY - entity.height / 2;
+        entity.y += (targetY - entity.y) * Math.min(1, delta * 5.4 * nicoStrength);
+        if (!blockingObstacle) {
+          entity.x -= worldSpeed * delta * (0.28 + (1 - clamp01(horizontalDistance / 400)) * 0.16) * nicoStrength;
+        }
       }
       if (gimenezStrength > 0 && horizontalDistance > -20 && horizontalDistance < 340) {
         const direction = entityCenterY <= playerCenterY ? -1 : 1;
@@ -989,12 +1001,9 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
             entity.y + direction * (78 + proximity * 54) * delta * gimenezStrength
           )
         );
-        entity.x = Math.min(
-          runtime.worldWidth + 190,
-          entity.x + (
-            worldSpeed * (1.08 + proximity * 0.36) + (entity.fleeVelocityX ?? 0)
-          ) * delta * gimenezStrength
-        );
+        entity.x -= (
+          worldSpeed * (0.72 + proximity * 0.48) + (entity.fleeVelocityX ?? 0)
+        ) * delta * gimenezStrength;
       }
     }
   }
@@ -1045,7 +1054,8 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
       entity.type === "event" &&
       EVENT_DEFINITIONS[entity.kind as EventKind].category === "bonus" &&
       getPowerUpStrength(runtime, "gimenez") > 0;
-    const hit = !protectedByGimenez && intersects(collisionPlayerRect, entityRect);
+    const launchedObstacle = entity.type === "physical" && entity.motion === "launched";
+    const hit = !protectedByGimenez && !launchedObstacle && intersects(collisionPlayerRect, entityRect);
 
     if (hit) {
       if (entity.type === "event") {
@@ -1057,6 +1067,11 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
         releaseEntity(runtime, entity);
         continue;
       } else {
+        if (getPowerUpStrength(runtime, "lukaku") > 0) {
+          launchObstacle(runtime, entity, time);
+          remainingEntities.push(entity);
+          continue;
+        }
         const playerHitboxOffset = playerRect.x - runtime.playerX;
         runtime.playerX = Math.min(
           runtime.playerX,
@@ -1082,7 +1097,12 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
       awardPerfectPass(runtime);
     }
 
-    if (entity.fleeing && entity.x > runtime.worldWidth + 150) {
+    if (entity.fleeing && entity.x + entity.width < -40) {
+      releaseEntity(runtime, entity);
+    } else if (
+      entity.motion === "launched" &&
+      (entity.x > runtime.worldWidth + 180 || entity.y > GROUND_Y + 180)
+    ) {
       releaseEntity(runtime, entity);
     } else if (entity.x + entity.width > -40) remainingEntities.push(entity);
     else releaseEntity(runtime, entity);
@@ -1177,6 +1197,7 @@ function tryStartRaffica(
     runtime.boss ||
     runtime.backgroundTransition ||
     runtime.entities.some((entity) => entity.type === "powerup") ||
+    runtime.distance < SPAWN_CONFIG.openingBonus.distanceEndMeters ||
     runtime.mutualBurstCooldown > 0 ||
     runtime.elapsed < runtime.nextBurstEligibleAt
   ) return false;
@@ -1263,7 +1284,7 @@ function updateRaffica(
     kind = weightedRafficaPick(MALUS_RAFFICA_POOL);
     heightLevel = Math.random() < 0.78 ? 0 : 1;
     const motionRoll = Math.random();
-    motion = motionRoll < 0.35 ? "ground" : motionRoll < 0.58 ? "diagonal" : motionRoll < 0.8 ? "serpentine" : "falling";
+    motion = motionRoll < 0.42 ? "ground" : motionRoll < 0.7 ? "diagonal" : "serpentine";
   } else {
     const canSpawnHatTrick = !burst.hatTrickSpawned && Math.random() < RAFFICA_CONFIG.bonus.hatTrickChance;
     kind = canSpawnHatTrick ? "hatTrick" : weightedRafficaPick(BONUS_RAFFICA_POOL);
@@ -1280,10 +1301,6 @@ function updateRaffica(
     heightLevel,
     {
       burst: true,
-      falling: motion === "falling",
-      fallSpeed: motion === "falling" ? 100 + difficulty * 80 : undefined,
-      accelerationY: motion === "falling" ? 470 + difficulty * 180 : undefined,
-      bouncesRemaining: motion === "falling" ? 1 : undefined,
       motion,
       amplitude: motion === "serpentine" || motion === "floating" ? 11 + difficulty * 7 : undefined,
       motionSpeed: 1.05 + difficulty * 0.55,
@@ -1349,21 +1366,29 @@ function finishRaffica(runtime: Runtime, type: RafficaType) {
   );
 }
 
-function trySpawnPowerUp(runtime: Runtime) {
+function trySpawnPowerUp(runtime: Runtime, guaranteed: boolean) {
   if (
-    runtime.elapsed < POWER_UP_SPAWN_CONFIG.minimumStartSeconds ||
+    (!guaranteed && runtime.elapsed < POWER_UP_SPAWN_CONFIG.minimumStartSeconds) ||
     runtime.powerUpCooldown > 0 ||
     runtime.presentation ||
     runtime.burst ||
     runtime.boss ||
-    Math.random() >= POWER_UP_SPAWN_CONFIG.chancePerSpawnOpportunity ||
+    (!guaranteed && Math.random() >= POWER_UP_SPAWN_CONFIG.chancePerSpawnOpportunity) ||
     runtime.entities.some((entity) => entity.type === "powerup")
   ) return false;
   const definition = pickPowerUp();
-  const width = definition.width * runtime.mobileVisualScale;
-  const height = definition.height * runtime.mobileVisualScale;
-  const y = GROUND_Y - height - (Math.random() < 0.55 ? 34 : 78);
-  const entity = acquireEntity(runtime, "powerup", definition.kind, runtime.worldWidth + 70, y, width, height);
+  const scale = runtime.mobileLayout ? MOBILE_POWER_UP_SCALE : 1;
+  const width = definition.width * scale;
+  const height = definition.height * scale;
+  const y = GROUND_Y - height - (guaranteed ? 30 : Math.random() < 0.55 ? 34 : 78);
+  const x = runtime.worldWidth + (guaranteed ? 54 : 70);
+  const safetyMargin = guaranteed ? 86 : 52;
+  if (runtime.entities.some((entity) =>
+    entity.type === "physical" &&
+    x < entity.x + entity.width + safetyMargin &&
+    x + width > entity.x - safetyMargin
+  )) return false;
+  const entity = acquireEntity(runtime, "powerup", definition.kind, x, y, width, height);
   entity.motion = "floating";
   entity.originY = y;
   entity.amplitude = 8;
@@ -1371,6 +1396,7 @@ function trySpawnPowerUp(runtime: Runtime) {
   entity.horizontalSpeedFactor = 0.92;
   runtime.entities.push(entity);
   runtime.powerUpCooldown = POWER_UP_SPAWN_CONFIG.cooldownSeconds;
+  runtime.firstPowerUpSpawned = true;
   return true;
 }
 
@@ -1419,6 +1445,7 @@ function updateBoss(
       runtime.burst ||
       runtime.entities.some((entity) => entity.type === "powerup") ||
       runtime.backgroundTransition
+      || runtime.distance < SPAWN_CONFIG.openingBonus.distanceEndMeters
     ) return;
     runtime.boss = {
       phase: "warning",
@@ -1459,25 +1486,46 @@ function updateBoss(
 
   boss.spawnTimer -= delta;
   if (boss.spawnTimer <= 0) {
+    const activeProjectiles = runtime.entities.filter(
+      (entity) => entity.type === "event" && entity.motion === "bossProjectile"
+    ).length;
+    if (runtime.mobileLayout && activeProjectiles >= 3) {
+      boss.spawnTimer = 0.24;
+      return;
+    }
     const kind = weightedRafficaPick(MALUS_RAFFICA_POOL);
-    const motionRoll = Math.random();
-    const projectileMotion: RunnerEntity["motion"] = motionRoll < 0.36
-      ? "diagonal"
-      : motionRoll < 0.72
-        ? "serpentine"
-        : "falling";
-    pushEvent(runtime, kind, runtime.worldWidth - 205 + Math.random() * 24, Math.random() < 0.7 ? 0 : 1, {
-      burst: true,
-      falling: projectileMotion === "falling",
-      fallSpeed: projectileMotion === "falling" ? 80 + difficulty * 45 : undefined,
-      accelerationY: projectileMotion === "falling" ? 300 + difficulty * 140 : undefined,
-      bouncesRemaining: 0,
-      spawnY: 205 + Math.random() * 105,
-      motion: projectileMotion,
-      amplitude: projectileMotion === "serpentine" || projectileMotion === "diagonal" ? 72 + Math.random() * 42 : undefined,
-      motionSpeed: 1.05 + difficulty * 0.42,
-      horizontalSpeedFactor: 1.5 + Math.random() * 0.18,
-    });
+    if (runtime.mobileLayout) {
+      const bossRect = getBossRect(runtime);
+      const eventDimensions = getEventDimensions(kind);
+      const spawnX = bossRect.x + bossRect.width * 0.18;
+      const spawnY = bossRect.y + bossRect.height * 0.52 - eventDimensions.height * MOBILE_EVENT_SCALE / 2;
+      const targetX = runtime.playerX + PLAYER_SIZE * 0.55;
+      const targetY = runtime.playerY + PLAYER_SIZE * 0.52;
+      const deltaX = targetX - spawnX;
+      const deltaY = targetY - spawnY;
+      const vectorLength = Math.max(1, Math.hypot(deltaX, deltaY));
+      const projectileSpeed = 265 + difficulty * 55;
+      pushEvent(runtime, kind, spawnX, 0, {
+        burst: true,
+        spawnY,
+        motion: "bossProjectile",
+        velocityX: deltaX / vectorLength * projectileSpeed,
+        velocityY: deltaY / vectorLength * projectileSpeed,
+        angularVelocity: (Math.random() - 0.5) * 2.2,
+      });
+    } else {
+      const projectileMotion: RunnerEntity["motion"] = Math.random() < 0.5
+        ? "diagonal"
+        : "serpentine";
+      pushEvent(runtime, kind, runtime.worldWidth - 205 + Math.random() * 24, Math.random() < 0.7 ? 0 : 1, {
+        burst: true,
+        spawnY: 205 + Math.random() * 105,
+        motion: projectileMotion,
+        amplitude: 72 + Math.random() * 42,
+        motionSpeed: 1.05 + difficulty * 0.42,
+        horizontalSpeedFactor: 1.5 + Math.random() * 0.18,
+      });
+    }
     boss.lastShotAt = runtime.elapsed;
     boss.spawnTimer = randomBetween(
       BOSS_CONFIG.itemIntervalSeconds.minimum,
@@ -1543,6 +1591,7 @@ function spawnNext(runtime: Runtime, speed: number, difficulty: number) {
   }
   const decision = createSpawnDecision({
     elapsed: runtime.elapsed,
+    distance: runtime.distance,
     difficulty,
     teamRating: runtime.teamRating,
   });
@@ -1628,16 +1677,12 @@ function spawnNext(runtime: Runtime, speed: number, difficulty: number) {
       startX + (decision.xOffset ?? 0) + index * (eventDimensions.width + 24),
       decision.heightLevel,
       {
-        falling: decision.falling && index === 0,
-        fallSpeed: decision.fallSpeed,
         motion: decision.motion,
         amplitude: decision.amplitude,
         motionSpeed: decision.motionSpeed,
         heightOffset,
         horizontalSpeedFactor: decision.horizontalSpeedFactor,
         angularVelocity: decision.angularVelocity,
-        accelerationY: decision.accelerationY,
-        bouncesRemaining: decision.bouncesRemaining,
       }
     );
   }
@@ -1650,8 +1695,6 @@ function pushEvent(
   x: number,
   heightLevel: 0 | 1 | 2,
   options: {
-    falling?: boolean;
-    fallSpeed?: number;
     motion?: RunnerEntity["motion"];
     amplitude?: number;
     motionSpeed?: number;
@@ -1659,9 +1702,9 @@ function pushEvent(
     burst?: boolean;
     horizontalSpeedFactor?: number;
     angularVelocity?: number;
-    accelerationY?: number;
-    bouncesRemaining?: number;
     spawnY?: number;
+    velocityX?: number;
+    velocityY?: number;
   } = {}
 ) {
   const eventCount = runtime.entities.reduce(
@@ -1708,7 +1751,6 @@ function pushEvent(
       GROUND_Y - dimensions.height - levelOffset - (options.heightOffset ?? 0)
     )
   );
-  const falling = Boolean(options.falling);
   if (
     runtime.entities.some((entity) => {
       if (entity.type !== "physical") return false;
@@ -1730,15 +1772,15 @@ function pushEvent(
     runtime.hatTricksSpawned += 1;
   }
 
-  const motion = falling ? "falling" : options.motion ?? "ground";
-  const entity = acquireEntity(runtime, "event", kind, x, options.spawnY ?? (falling ? -dimensions.height - 24 : targetY), dimensions.width, dimensions.height);
+  const motion = options.motion ?? "ground";
+  const entity = acquireEntity(runtime, "event", kind, x, options.spawnY ?? targetY, dimensions.width, dimensions.height);
   entity.motion = motion;
-  entity.velocityY = falling
-      ? options.fallSpeed
-      : motion === "diagonal"
+  entity.velocityX = options.velocityX;
+  entity.velocityY = motion === "bossProjectile"
+    ? options.velocityY
+    : motion === "diagonal"
         ? 48 + (options.motionSpeed ?? 1) * 12
         : undefined;
-  entity.targetY = falling ? GROUND_Y - dimensions.height : targetY;
   entity.originY = options.spawnY ?? targetY;
   entity.amplitude = options.amplitude;
   entity.phase = runtime.nextEntityId * 0.71;
@@ -1746,8 +1788,6 @@ function pushEvent(
   entity.horizontalSpeedFactor = options.horizontalSpeedFactor;
   entity.rotation = 0;
   entity.angularVelocity = options.angularVelocity;
-  entity.accelerationY = options.accelerationY;
-  entity.bouncesRemaining = options.bouncesRemaining;
   runtime.entities.push(entity);
   return true;
 }
@@ -1817,14 +1857,12 @@ function acquireEntity(
   entity.rewarded = undefined;
   entity.fleeing = undefined;
   entity.fleeVelocityX = undefined;
+  entity.velocityX = undefined;
   entity.motion = undefined;
   entity.velocityY = undefined;
-  entity.accelerationY = undefined;
   entity.horizontalSpeedFactor = undefined;
   entity.rotation = undefined;
   entity.angularVelocity = undefined;
-  entity.bouncesRemaining = undefined;
-  entity.targetY = undefined;
   entity.originY = undefined;
   entity.amplitude = undefined;
   entity.phase = undefined;
@@ -1937,6 +1975,37 @@ function awardPerfectPass(runtime: Runtime) {
     runtime.flowProgress + FLOW_PERFECT_OBSTACLE
   );
   runtime.score += 90 * Math.max(1, runtime.multiplier);
+}
+
+function launchObstacle(runtime: Runtime, entity: RunnerEntity, time: number) {
+  if (entity.alreadyHit || entity.motion === "launched") return;
+  entity.alreadyHit = true;
+  entity.rewarded = true;
+  entity.motion = "launched";
+  entity.velocityX = entity.kind === "slidingTackle" ? 360 : 500;
+  entity.velocityY = entity.kind === "slidingTackle" ? -150 : -245;
+  entity.angularVelocity = entity.kind === "slidingTackle" ? 3.2 : 5.4;
+  runtime.effect = "bonus";
+  runtime.effectUntil = time + 420;
+  runtime.message = "BARRIERA RESPINTA";
+  runtime.messageTone = "bonus";
+  runtime.messageStartedAt = time;
+  runtime.messageUntil = time + 720;
+  runtime.score += 75;
+}
+
+function findBlockingObstacle(runtime: Runtime, bonus: RunnerEntity) {
+  const bonusCenterY = bonus.y + bonus.height / 2;
+  return runtime.entities.find((entity) => {
+    if (entity.type !== "physical" || entity.motion === "launched") return false;
+    const betweenPlayerAndBonus =
+      entity.x > runtime.playerX + PLAYER_SIZE * 0.55 &&
+      entity.x < bonus.x + bonus.width;
+    const blocksPath =
+      bonusCenterY > entity.y - 12 &&
+      runtime.playerY + PLAYER_SIZE / 2 > entity.y - 12;
+    return betweenPlayerAndBonus && blocksPath;
+  });
 }
 
 function applyPhysicalHit(runtime: Runtime, time: number, repel: boolean) {
@@ -2130,8 +2199,8 @@ function getPlayerHitbox(runtime: Runtime, time: number) {
   }
   return expandRect(
     hitbox,
-    24 * getPowerUpStrength(runtime, "lukaku") +
-      (runtime.mobileVisualScale - 1) * PLAYER_SIZE * 0.34
+    34 * getPowerUpStrength(runtime, "lukaku") +
+      ((runtime.mobileLayout ? MOBILE_PLAYER_SCALE : 1) - 1) * PLAYER_SIZE * 0.34
   );
 }
 
@@ -2272,7 +2341,7 @@ function drawStageLayers(
   drawBackgroundTiles(context, stadium, runtime.stadiumOffset, viewport);
   context.save();
   context.globalAlpha = alpha * (1 - runtime.visualComfort * 0.1);
-  drawGroundTiles(context, ground, runtime.groundOffset, viewport);
+  drawGroundTiles(context, ground, runtime.groundOffset, viewport, stage);
   context.restore();
   context.restore();
 }
@@ -2316,7 +2385,8 @@ function drawGroundTiles(
   context: CanvasRenderingContext2D,
   image: HTMLImageElement,
   offset: number,
-  viewport: { width: number; height: number }
+  viewport: { width: number; height: number },
+  stage: GameBackgroundStage
 ) {
   const scale = Math.max(
     viewport.width / image.naturalWidth,
@@ -2329,18 +2399,19 @@ function drawGroundTiles(
   const step = Math.max(1, tileWidth - overlap);
   const localOffset = ((offset % step) + step) % step;
   const firstX = -Math.floor(localOffset);
+  let tileIndex = Math.floor(offset / step);
   for (let tileX = firstX; tileX < viewport.width; tileX += step) {
-    context.drawImage(
-      image,
-      1,
-      0,
-      Math.max(1, image.naturalWidth - 2),
-      image.naturalHeight,
-      tileX,
-      y,
-      tileWidth,
-      tileHeight
-    );
+    const mirrorForSeam = stage !== 1 && Math.abs(tileIndex) % 2 === 1;
+    context.save();
+    if (mirrorForSeam) {
+      context.translate(tileX + tileWidth, 0);
+      context.scale(-1, 1);
+      context.drawImage(image, 1, 0, Math.max(1, image.naturalWidth - 2), image.naturalHeight, 0, y, tileWidth, tileHeight);
+    } else {
+      context.drawImage(image, 1, 0, Math.max(1, image.naturalWidth - 2), image.naturalHeight, tileX, y, tileWidth, tileHeight);
+    }
+    context.restore();
+    tileIndex += 1;
   }
 }
 
@@ -2439,8 +2510,10 @@ function drawSpeedComfortOverlay(
   context.save();
   context.globalAlpha = runtime.visualComfort * 0.12;
   context.fillStyle = "#020817";
-  context.fillRect(0, 0, 42, viewport.height);
-  context.fillRect(viewport.width - 42, 0, 42, viewport.height);
+  if (!runtime.mobileLayout) {
+    context.fillRect(0, 0, 42, viewport.height);
+    context.fillRect(viewport.width - 42, 0, 42, viewport.height);
+  }
   context.restore();
 }
 
@@ -2648,8 +2721,9 @@ function drawPlayer(
   const centerY = (crouching
     ? groundedBottom - PLAYER_SIZE * 0.41
     : runtime.playerY + PLAYER_SIZE / 2 + (airborne ? 0 : runCycle * 1.4)) -
-      (runtime.mobileVisualScale - 1) * PLAYER_SIZE * 0.5;
-  const lukakuScale = (1 + lukakuStrength * 0.82) * runtime.mobileVisualScale;
+      ((runtime.mobileLayout ? MOBILE_PLAYER_SCALE : 1) - 1) * PLAYER_SIZE * 0.5;
+  const basePlayerScale = runtime.mobileLayout ? MOBILE_PLAYER_SCALE : 1;
+  const lukakuScale = (1 + lukakuStrength * 1.12) * basePlayerScale;
   const playerScale = (hitReaction
       ? 0.92
       : airborne
@@ -2826,7 +2900,7 @@ function drawEntity(
   }
   if ((entity.horizontalSpeedFactor ?? 1) > 1.08) {
     context.save();
-    context.globalAlpha = entity.motion === "falling" ? 0.32 : 0.2;
+    context.globalAlpha = 0.2;
     context.strokeStyle = isBonus ? "#7dd3fc" : "#fda4af";
     context.lineWidth = 1.5;
     context.lineCap = "round";
@@ -2836,47 +2910,14 @@ function drawEntity(
       context.moveTo(entity.x + entity.width + 5, centerY - 5 + index * 10);
       context.lineTo(
         entity.x + entity.width + 20 + index * 8,
-        centerY - 8 + index * 10 - (entity.motion === "falling" ? 10 : 0)
+        centerY - 8 + index * 10
       );
       context.stroke();
     }
     context.restore();
   }
   drawEventIdentity(context, entity, isBonus, elapsed);
-  if (entity.motion === "falling") {
-    const targetY = entity.targetY ?? GROUND_Y - entity.height;
-    const progress = Math.max(
-      0,
-      Math.min(1, (entity.y + entity.height + 24) / (targetY + entity.height + 24))
-    );
-    context.save();
-    context.globalAlpha = 0.2 + progress * 0.42;
-    context.fillStyle = definition.color;
-    context.beginPath();
-    context.ellipse(
-      entity.x + entity.width / 2,
-      GROUND_Y + 3,
-      13 + progress * 12,
-      4 + progress * 2,
-      0,
-      0,
-      Math.PI * 2
-    );
-    context.fill();
-    context.strokeStyle = `${definition.border}bb`;
-    context.lineWidth = 2;
-    context.beginPath();
-    context.arc(
-      entity.x + entity.width / 2,
-      GROUND_Y + 2,
-      19 + Math.sin(progress * Math.PI) * 7,
-      0,
-      Math.PI * 2
-    );
-    context.stroke();
-    context.restore();
-  }
-  if (!isBonus && entity.motion && entity.motion !== "ground" && entity.motion !== "falling") {
+  if (!isBonus && entity.motion && entity.motion !== "ground") {
     context.save();
     context.globalAlpha = 0.28;
     context.strokeStyle = definition.border;
@@ -2978,15 +3019,12 @@ function drawBoss(
   if (!runtime.boss || runtime.boss.phase === "warning") return;
   const image = assets.get("event.boss");
   if (!image) return;
-  const bossScale = runtime.mobileLayout ? 0.76 : runtime.mobileVisualScale;
-  const width = 250 * bossScale;
-  const height = 375 * bossScale;
+  const bossRect = getBossRect(runtime);
+  const { x, y, width, height } = bossRect;
   const shotProgress = Math.max(0, 1 - (runtime.elapsed - runtime.boss.lastShotAt) / 0.32);
   const exitProgress = runtime.boss.phase === "exiting"
     ? 1 - clamp01(runtime.boss.timer / 0.7)
     : 0;
-  const x = runtime.worldWidth - width - 12 + Math.sin(runtime.elapsed * 0.62) * 9 + shotProgress * 15 + exitProgress * 95;
-  const y = GROUND_Y - height - 2 + Math.sin(runtime.elapsed * 0.82) * 11;
   context.save();
   context.globalAlpha = 0.94 * (1 - exitProgress);
   context.shadowColor = "rgba(244,63,94,0.42)";
@@ -3007,6 +3045,27 @@ function drawBoss(
   context.restore();
 }
 
+function getBossRect(runtime: Runtime) {
+  const bossScale = runtime.mobileLayout ? 0.68 : runtime.mobileVisualScale;
+  const width = 250 * bossScale;
+  const height = 375 * bossScale;
+  const shotProgress = runtime.boss
+    ? Math.max(0, 1 - (runtime.elapsed - runtime.boss.lastShotAt) / 0.32)
+    : 0;
+  const exitProgress = runtime.boss?.phase === "exiting"
+    ? 1 - clamp01(runtime.boss.timer / 0.7)
+    : 0;
+  return {
+    width,
+    height,
+    x: runtime.worldWidth - width - 12 +
+      Math.sin(runtime.elapsed * 0.62) * 9 +
+      shotProgress * 15 +
+      exitProgress * 95,
+    y: GROUND_Y - height - 2 + Math.sin(runtime.elapsed * 0.82) * 11,
+  };
+}
+
 function drawPhysicalObstacle(
   context: CanvasRenderingContext2D,
   entity: RunnerEntity,
@@ -3021,7 +3080,7 @@ function drawPhysicalObstacle(
     return;
   }
   context.save();
-  if (entity.kind === "slidingTackle" && !reducedEffects) {
+  if (entity.kind === "slidingTackle" && entity.motion !== "launched" && !reducedEffects) {
     context.fillStyle = "rgba(148,163,184,0.22)";
     for (let index = 0; index < 3; index += 1) {
       const wave = Math.sin(elapsed * 6.4 + entity.id * 0.7 + index * 1.8);
@@ -3056,6 +3115,13 @@ function drawPhysicalObstacle(
   context.shadowColor = "rgba(2,6,23,0.62)";
   context.shadowBlur = reducedEffects ? 0 : 7;
   context.shadowOffsetY = 4;
+  if (entity.motion === "launched") {
+    const centerX = entity.x + entity.width / 2;
+    const centerY = entity.y + entity.height / 2;
+    context.translate(centerX, centerY);
+    context.rotate(entity.rotation ?? 0);
+    context.translate(-centerX, -centerY);
+  }
   drawCroppedSprite(context, image, sprite.source, entity);
   context.restore();
 }
@@ -3359,7 +3425,7 @@ function drawEventFeedback(
   const duration = Math.max(1, runtime.messageUntil - runtime.messageStartedAt);
   const progress = clamp01((time - runtime.messageStartedAt) / duration);
   const fade = progress < 0.7 ? 1 : 1 - (progress - 0.7) / 0.3;
-  const isShieldMessage = runtime.message === "MALUS ANNULLATO";
+  const isTextMessage = runtime.message === "MALUS ANNULLATO" || runtime.message === "BARRIERA RESPINTA";
   const x = Math.min(runtime.worldWidth - 74, runtime.playerX + PLAYER_SIZE + 42);
   const y = Math.max(42, runtime.playerY + 18 - progress * 28);
 
@@ -3368,7 +3434,9 @@ function drawEventFeedback(
   context.fillStyle = positive ? "#a7f3d0" : negative ? "#fecdd3" : "#e2e8f0";
   context.shadowColor = positive ? "rgba(52,211,153,.65)" : "rgba(251,113,133,.62)";
   context.shadowBlur = runtime.reducedPerformance ? 0 : 8;
-  context.font = isShieldMessage ? "900 11px sans-serif" : "900 27px sans-serif";
+  context.font = isTextMessage
+    ? runtime.mobileLayout ? "900 13px sans-serif" : "900 11px sans-serif"
+    : runtime.mobileLayout ? "900 31px sans-serif" : "900 27px sans-serif";
   context.textAlign = "center";
   context.textBaseline = "middle";
   const shake = negative && !runtime.reducedPerformance

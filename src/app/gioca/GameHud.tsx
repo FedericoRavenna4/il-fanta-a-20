@@ -2,9 +2,11 @@
 
 import type { GameSnapshot, GameTeam } from "@/lib/game/types";
 
-export default function GameHud({ team, snapshot }: {
+export default function GameHud({ team, snapshot, paused, onTogglePause }: {
   team: GameTeam;
   snapshot: GameSnapshot;
+  paused: boolean;
+  onTogglePause: () => void;
 }) {
   const warning = snapshot.teamRating <= 64;
   const critical = snapshot.teamRating <= 62.5;
@@ -20,10 +22,18 @@ export default function GameHud({ team, snapshot }: {
 
   return (
     <div className={`border-b px-2.5 py-1.5 text-white transition-colors duration-700 sm:px-5 sm:py-2.5 ${hudTone}`}>
-      <div className="min-w-0 border-b border-white/[.08] pb-1.5 pr-[7.6rem] sm:pb-2 sm:pr-36">
-        <p className="truncate text-[13px] font-black uppercase tracking-[-.015em] text-white sm:text-base">
+      <div className="flex min-w-0 items-center gap-2 border-b border-white/[.08] pb-1.5 pr-11 sm:block sm:pb-2 sm:pr-36">
+        <p className="min-w-0 flex-1 truncate text-[15px] font-black uppercase tracking-[-.015em] text-white sm:text-base">
           {team.nome}
         </p>
+        <button
+          type="button"
+          onClick={onTogglePause}
+          aria-label={paused ? "Riprendi la partita" : "Metti in pausa"}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/18 bg-slate-950/72 text-sm font-black text-white shadow-md transition active:scale-95 sm:hidden"
+        >
+          <span aria-hidden="true">{paused ? "▶" : "Ⅱ"}</span>
+        </button>
       </div>
 
       <div className="grid grid-cols-[66px_minmax(0,1fr)_82px] items-center gap-1.5 pt-1 sm:grid-cols-[105px_minmax(0,560px)_125px] sm:justify-center sm:gap-4 sm:pt-1.5">
@@ -33,12 +43,12 @@ export default function GameHud({ team, snapshot }: {
         </div>
 
         <div className="min-w-0 text-center">
-          <p className={`text-[7px] font-black uppercase tracking-[.2em] sm:text-[7px] ${warning ? "text-rose-100" : "text-white/52"}`}>
+          <p className={`text-[8px] font-black uppercase tracking-[.18em] sm:text-[7px] ${warning ? "text-rose-100" : "text-white/52"}`}>
             Voto · vita
           </p>
           <div className="flex h-8 items-center justify-center gap-1 sm:h-10 sm:gap-2">
             {warning && <span aria-hidden="true" className={`life-warning-icon text-[1.25rem] leading-none sm:text-[1.75rem] ${critical ? "text-rose-300" : "text-amber-200"}`}>⚠</span>}
-            <strong className={`min-w-[66px] text-center text-[1.9rem] font-black leading-none tracking-[-.04em] tabular-nums sm:min-w-[88px] sm:text-[2.25rem] ${critical ? "text-rose-200" : warning ? "text-amber-200" : "text-amber-300"}`}>
+            <strong className={`min-w-[70px] text-center text-[2.1rem] font-black leading-none tracking-[-.04em] tabular-nums sm:min-w-[88px] sm:text-[2.25rem] ${critical ? "text-rose-200" : warning ? "text-amber-200" : "text-amber-300"}`}>
               {formatRating(snapshot.teamRating)}
             </strong>
             {warning && <span aria-hidden="true" className={`life-warning-icon text-[1.25rem] leading-none sm:text-[1.75rem] ${critical ? "text-rose-300" : "text-amber-200"}`}>⚠</span>}
@@ -47,7 +57,7 @@ export default function GameHud({ team, snapshot }: {
 
           <div className="mx-auto grid w-full grid-cols-[26px_minmax(0,1fr)_40px] items-center gap-1.5 sm:grid-cols-[38px_minmax(0,1fr)_60px] sm:gap-2.5">
             <strong className="text-right text-sm font-black tabular-nums text-rose-100 sm:text-lg">62</strong>
-            <div className={`relative h-3.5 rounded-full border bg-slate-950/72 shadow-[inset_0_1px_5px_rgba(0,0,0,.58)] sm:h-4 ${critical ? "life-bar-critical border-rose-100/75" : warning ? "border-amber-200/55" : "border-white/20"}`}>
+            <div className={`relative h-[18px] rounded-full border bg-slate-950/72 shadow-[inset_0_1px_5px_rgba(0,0,0,.58)] sm:h-4 ${critical ? "life-bar-critical border-rose-100/75" : warning ? "border-amber-200/55" : "border-white/20"}`}>
               <span className={`absolute inset-y-0 left-0 rounded-full transition-[width,background] duration-300 ${critical ? "bg-gradient-to-r from-rose-700 to-rose-400" : warning ? "bg-gradient-to-r from-rose-500 to-amber-300" : "bg-gradient-to-r from-rose-500 via-amber-300 to-emerald-400"}`} style={{ width: `${ratingProgress}%` }} />
               <span className={`absolute -top-1 h-[calc(100%+8px)] w-1.5 -translate-x-1/2 rounded-full border bg-blue-950 transition-[left] duration-300 ${critical ? "border-rose-50 shadow-[0_0_12px_rgba(251,113,133,.9)]" : "border-white/90"}`} style={{ left: `${ratingProgress}%` }} />
             </div>
@@ -61,7 +71,7 @@ export default function GameHud({ team, snapshot }: {
         <div className="space-y-1 border-l border-white/10 pl-1.5 text-center sm:pl-3">
           <div>
             <p className="text-[6px] font-black uppercase tracking-[.13em] text-amber-100/55 sm:text-[7px]">Punti</p>
-            <strong key={Math.floor(snapshot.score / 250)} className="score-value-pop block truncate text-xl font-black leading-none tabular-nums text-amber-300 sm:text-2xl">
+            <strong key={Math.floor(snapshot.score / 250)} className="score-value-pop block truncate text-[1.35rem] font-black leading-none tabular-nums text-amber-300 sm:text-2xl">
               {formatNumber(snapshot.score)}
             </strong>
           </div>
@@ -83,7 +93,7 @@ export default function GameHud({ team, snapshot }: {
 }
 
 function Metric({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) {
-  return <div className="min-w-0"><p className="text-[7px] font-black uppercase tracking-[.11em] text-white/36 sm:text-[7px]">{label}</p><p className={`truncate text-[11px] font-black leading-none tabular-nums sm:text-sm ${accent ? "text-amber-300" : "text-white"}`}>{value}</p></div>;
+  return <div className="min-w-0"><p className="text-[8px] font-black uppercase tracking-[.1em] text-white/42 sm:text-[7px]">{label}</p><p className={`truncate text-[13px] font-black leading-none tabular-nums sm:text-sm ${accent ? "text-amber-300" : "text-white"}`}>{value}</p></div>;
 }
 
 function formatNumber(value: number) { return Math.round(value).toLocaleString("it-IT"); }

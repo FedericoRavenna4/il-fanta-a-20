@@ -14,6 +14,21 @@ import GameOver from "./GameOver";
 import GameOverlayLayer from "./GameOverlayLayer";
 import TeamSelector from "./TeamSelector";
 
+const LOADING_TIPS = [
+  "Luperto: i malus non hanno effetto",
+  "Lukaku respinge le barriere",
+  "Nico Paz attira i bonus verso di te",
+  "Dybala rallenta la corsa",
+  "Gimenez fa fuggire i bonus",
+  "Raffica Bonus: sfrutta ogni occasione",
+  "Raffica Malus: preparati a schivare",
+  "Gol: +3 al voto",
+  "Assist: +1 al voto",
+  "Ammonizione: -0,5",
+  "Espulsione: -1",
+  "Boss 20: sopravvivi ai suoi lanci",
+] as const;
+
 function createEmptySnapshot(best = 0): GameSnapshot {
   return {
     score: 0,
@@ -56,6 +71,7 @@ export default function GameClient({
   const [best, setBest] = useState(0);
   const [assetsReady, setAssetsReady] = useState(false);
   const [loadProgress, setLoadProgress] = useState(0);
+  const [loadingTip, setLoadingTip] = useState(() => pickLoadingTip());
   const [isNewRecord, setIsNewRecord] = useState(false);
   const [snapshot, setSnapshot] = useState<GameSnapshot>(() => createEmptySnapshot());
   const [finalResult, setFinalResult] = useState<GameSnapshot | null>(null);
@@ -73,6 +89,7 @@ export default function GameClient({
     setSnapshot(createEmptySnapshot(savedBest));
     setAssetsReady(false);
     setLoadProgress(0);
+    setLoadingTip(pickLoadingTip());
     setInitialSelectionAvailable(false);
     setStatus("ready");
   }, []);
@@ -207,7 +224,7 @@ export default function GameClient({
                 <button
                   type="button"
                   onClick={() => setStatus((current) => current === "running" ? "paused" : current === "paused" ? "running" : current)}
-                  className="min-h-11 rounded-full border border-white/18 bg-slate-950/90 px-4 text-[9px] font-black uppercase tracking-[.12em] text-white shadow-lg transition hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                  className="min-h-11 rounded-full border border-white/18 bg-slate-950/90 px-4 text-[9px] font-black uppercase tracking-[.12em] text-white shadow-lg transition hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white max-sm:hidden"
                 >
                   {status === "paused" ? "Riprendi" : "Pausa"}
                 </button>
@@ -222,7 +239,14 @@ export default function GameClient({
               </button>
             </div>
 
-            <GameHud team={team} snapshot={snapshot} />
+            <GameHud
+              team={team}
+              snapshot={snapshot}
+              paused={status === "paused"}
+              onTogglePause={() => setStatus((current) =>
+                current === "running" ? "paused" : current === "paused" ? "running" : current
+              )}
+            />
 
             <div className="relative overflow-hidden max-sm:flex max-sm:flex-1 max-sm:items-center max-sm:bg-[radial-gradient(ellipse_at_center,rgba(14,55,92,.38),transparent_70%)]">
               <div className="relative w-full overflow-hidden max-sm:h-full">
@@ -259,6 +283,10 @@ export default function GameClient({
 
             {status === "ready" && (
               <div className="game-loading-screen absolute inset-0 z-40 flex flex-col items-center justify-center bg-[radial-gradient(circle_at_50%_38%,#123d69_0%,#071a34_34%,#020817_76%)] px-6 text-center text-white">
+                <div className="absolute inset-x-5 top-[max(1rem,env(safe-area-inset-top))]">
+                  <p className="text-[8px] font-black uppercase tracking-[.2em] text-sky-200/55">Consiglio di gioco</p>
+                  <p className="mt-1 text-xs font-bold text-white/85 sm:text-sm">{loadingTip}</p>
+                </div>
                 <div className="flex h-24 w-24 items-center justify-center sm:h-28 sm:w-28">
                   <Image src={team.logo} alt="" width={160} height={160} unoptimized priority className="max-h-full max-w-full object-contain drop-shadow-[0_14px_22px_rgba(0,0,0,.42)]" />
                 </div>
@@ -268,6 +296,15 @@ export default function GameClient({
                   <span className="block h-full rounded-full bg-gradient-to-r from-sky-400 to-amber-300 transition-[width] duration-200" style={{ width: `${Math.max(4, loadProgress * 100)}%` }} />
                 </div>
                 <p className="mt-2 text-[9px] font-bold tabular-nums text-white/45">{Math.round(loadProgress * 100)}%</p>
+                <div className="absolute inset-x-5 bottom-[max(1rem,env(safe-area-inset-bottom))] text-white/72">
+                  <div className="hidden items-center justify-center gap-5 text-[9px] font-black uppercase tracking-[.12em] sm:flex">
+                    <span>Freccia su: salta</span>
+                    <span>Freccia giù: abbassati</span>
+                  </div>
+                  <p className="text-[9px] font-black uppercase leading-relaxed tracking-[.1em] sm:hidden">
+                    Tocca e tieni premuto: salta<br />Scorri verso il basso: abbassati
+                  </p>
+                </div>
               </div>
             )}
           </section>
@@ -319,4 +356,8 @@ function readBest(teamId: number) {
 function writeBest(teamId: number, score: number) {
   try { window.localStorage.setItem(storageKey(teamId), String(score)); }
   catch { /* Il gioco resta utilizzabile se lo storage è bloccato. */ }
+}
+
+function pickLoadingTip() {
+  return LOADING_TIPS[Math.floor(Math.random() * LOADING_TIPS.length)];
 }

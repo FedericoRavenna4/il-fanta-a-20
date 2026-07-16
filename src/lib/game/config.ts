@@ -124,6 +124,10 @@ export const SPAWN_CONFIG = {
   bonusBaseChance: 0.18,
   bonusMaximumChance: 0.13,
   openingBonus: {
+    distanceEndMeters: 40,
+    physicalChanceMultiplier: 0.58,
+    malusChanceMultiplier: 0.55,
+    intervalMultiplier: 1.22,
     strongUntilSeconds: 25,
     moderateUntilSeconds: 45,
     strongExtraChance: 0.1,
