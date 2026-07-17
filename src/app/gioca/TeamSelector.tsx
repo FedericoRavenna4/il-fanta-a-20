@@ -14,11 +14,12 @@ export default function TeamSelector({
   onSelect: (team: GameTeam) => void;
 }) {
   const initialTeam = teams.find((team) => team.slug === initialTeamSlug) ?? null;
+  const [isMobileFlow, setIsMobileFlow] = useState(false);
   const [search, setSearch] = useState("");
   const [selectedTeam, setSelectedTeam] = useState<GameTeam | null>(
     initialTeam ?? teams[0] ?? null
   );
-  const [confirmationTeam, setConfirmationTeam] = useState<GameTeam | null>(initialTeam);
+  const [confirmationTeam, setConfirmationTeam] = useState<GameTeam | null>(null);
   const [isRandomizing, setIsRandomizing] = useState(false);
   const [isLaunching, setIsLaunching] = useState(false);
   const buttonRefs = useRef(new Map<string, HTMLButtonElement>());
@@ -54,7 +55,7 @@ export default function TeamSelector({
 
   const activeTeam =
     filteredTeams.find((team) => team.id === selectedTeam?.id) ??
-    filteredTeams[0] ??
+    (isMobileFlow ? null : filteredTeams[0]) ??
     null;
 
   const isInfinite = search.trim().length === 0 && filteredTeams.length > 1;
@@ -63,6 +64,24 @@ export default function TeamSelector({
     window.clearTimeout(randomTimerRef.current);
     window.clearTimeout(launchTimerRef.current);
   }, []);
+
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 639px)");
+    const syncFlow = () => {
+      const mobile = media.matches;
+      setIsMobileFlow(mobile);
+      if (mobile) {
+        setConfirmationTeam(null);
+        setSelectedTeam(initialTeam);
+      } else {
+        setSelectedTeam((current) => current ?? initialTeam ?? teams[0] ?? null);
+        if (initialTeam) setConfirmationTeam(initialTeam);
+      }
+    };
+    syncFlow();
+    media.addEventListener?.("change", syncFlow);
+    return () => media.removeEventListener?.("change", syncFlow);
+  }, [initialTeam, teams]);
 
   const carouselTeams = useMemo(
     () => (isInfinite ? [0, 1, 2] : [1]).flatMap((replica) =>
@@ -169,7 +188,7 @@ export default function TeamSelector({
 
   function chooseTeam(team: GameTeam, replica = 1) {
     selectAndCenter(team, replica);
-    setConfirmationTeam(team);
+    if (!isMobileFlow) setConfirmationTeam(team);
   }
 
   function chooseRandomTeam() {
@@ -194,17 +213,20 @@ export default function TeamSelector({
     });
     randomTimerRef.current = window.setTimeout(() => {
       setIsRandomizing(false);
-      setConfirmationTeam(randomTeam);
+      if (!isMobileFlow) setConfirmationTeam(randomTeam);
     }, 620);
+  }
+
+  function launchTeam(team: GameTeam) {
+    if (isLaunching) return;
+    setIsLaunching(true);
+    window.clearTimeout(launchTimerRef.current);
+    launchTimerRef.current = window.setTimeout(() => onSelect(team), 260);
   }
 
   function launchSelectedTeam() {
     if (!confirmationTeam || isLaunching) return;
-    setIsLaunching(true);
-    window.clearTimeout(launchTimerRef.current);
-    launchTimerRef.current = window.setTimeout(() => {
-      onSelect(confirmationTeam);
-    }, 260);
+    launchTeam(confirmationTeam);
   }
 
   function beginDrag(event: React.PointerEvent<HTMLDivElement>) {
@@ -423,6 +445,14 @@ export default function TeamSelector({
           <button type="button" onClick={chooseRandomTeam} disabled={isRandomizing || !teams.length} className="group mt-2 min-h-10 rounded-full border border-amber-100/35 bg-[linear-gradient(135deg,rgba(251,191,36,0.2),rgba(245,158,11,0.09))] px-7 text-[8px] font-black uppercase tracking-[0.17em] text-amber-100 shadow-[0_12px_32px_rgba(180,83,9,0.14),inset_0_1px_0_rgba(255,255,255,0.12)] transition duration-300 hover:-translate-y-0.5 hover:border-amber-100/55 hover:bg-amber-300/[0.22] disabled:cursor-wait disabled:opacity-50 sm:mt-3 sm:min-h-13 sm:px-10 sm:text-[9px]">
             <span className="mr-2 inline-block text-amber-300 transition-transform duration-300 group-hover:rotate-12 group-hover:scale-125">✦</span>
             {isRandomizing ? "Estrazione…" : "Sorprendimi"}
+          </button>
+          <button
+            type="button"
+            onClick={() => activeTeam && launchTeam(activeTeam)}
+            disabled={!activeTeam || isLaunching || isRandomizing}
+            className="mx-auto mt-2 hidden min-h-11 w-full max-w-xs items-center justify-center rounded-full bg-amber-300 px-5 text-[9px] font-black uppercase tracking-[0.14em] text-blue-950 shadow-[0_12px_30px_rgba(251,191,36,0.2)] transition active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/35 disabled:shadow-none max-sm:flex"
+          >
+            {isLaunching ? "Preparazione…" : activeTeam ? `Gioca con ${activeTeam.nome}` : "Seleziona una società"}
           </button>
         </div>
 

@@ -35,6 +35,7 @@ import {
 import { getSafeSpawnInterval } from "@/lib/game/generator";
 import {
   pickGameplayPattern,
+  pickBossPattern,
   pickRafficaPattern,
   type GameplayPattern,
   type PatternCategory,
@@ -93,6 +94,8 @@ type Runtime = {
   horizontalVelocity: number;
   grounded: boolean;
   jumpHeld: boolean;
+  autoJumpHeld: boolean;
+  duckHeld: boolean;
   jumpHoldRemaining: number;
   mobileInputHeld: boolean;
   blockedObstacleId: number | null;
@@ -153,6 +156,7 @@ type Runtime = {
   mutualBurstCooldown: number;
   burstOverlayType: RafficaType | null;
   burstOverlayIntensity: number;
+  lastRafficaPatterns: Partial<Record<RafficaType, readonly RafficaBeat[]>>;
   visualComfort: number;
   nextBurstEligibleAt: number;
   nextForcedBurstAt: number;
@@ -175,11 +179,13 @@ type Runtime = {
     attackIndex: number;
     pattern: readonly RafficaBeat[];
   } | null;
+  lastBossPattern: readonly RafficaBeat[] | null;
   nextBossAt: number;
   reducedPerformance: boolean;
   mobileVisualScale: number;
   mobileLayout: boolean;
   worldWidth: number;
+  lastCollisionTime: number;
 };
 
 const PLAYER_GROUND_Y = GROUND_Y - PLAYER_SIZE;
@@ -193,6 +199,8 @@ const POWER_UP_KINDS: readonly PowerUpKind[] = [
 const RAFFICA_OVERLAY_CACHE = new Map<string, HTMLCanvasElement>();
 const BACKGROUND_TILE_CACHE = new Map<string, HTMLCanvasElement>();
 const GROUND_TILE_CACHE = new Map<string, HTMLCanvasElement>();
+const TRANSITION_VEIL_CACHE = new Map<string, HTMLCanvasElement>();
+const POWER_UP_AURA_CACHE = new Map<PowerUpKind, HTMLCanvasElement>();
 const WARMED_TEXTURES = new WeakSet<HTMLImageElement>();
 let textureWarmupCanvas: HTMLCanvasElement | null = null;
 let activeGameLoopCount = 0;
@@ -224,6 +232,8 @@ type PerformanceMonitor = {
   windowStartedAt: number;
   frames: number;
   renderTime: number;
+  updateTime: number;
+  collisionTime: number;
   slowWindows: number;
   lastLogAt: number;
   hudUpdates: number;
@@ -238,6 +248,8 @@ function createRuntime(): Runtime {
     horizontalVelocity: 0,
     grounded: true,
     jumpHeld: false,
+    autoJumpHeld: false,
+    duckHeld: false,
     jumpHoldRemaining: 0,
     mobileInputHeld: false,
     blockedObstacleId: null,
@@ -285,6 +297,7 @@ function createRuntime(): Runtime {
     mutualBurstCooldown: 0,
     burstOverlayType: null,
     burstOverlayIntensity: 0,
+    lastRafficaPatterns: {},
     visualComfort: 0,
     nextBurstEligibleAt: RAFFICA_CONFIG.initialQuietSeconds,
     nextForcedBurstAt: randomBetween(
@@ -303,6 +316,7 @@ function createRuntime(): Runtime {
     firstPowerUpSpawned: false,
     presentation: null,
     boss: null,
+    lastBossPattern: null,
     nextBossAt: randomBetween(
       BOSS_CONFIG.distanceWindowMeters.minimum,
       BOSS_CONFIG.distanceWindowMeters.maximum
@@ -311,6 +325,7 @@ function createRuntime(): Runtime {
     mobileVisualScale: 1,
     mobileLayout: false,
     worldWidth: GAME_WIDTH,
+    lastCollisionTime: 0,
   };
 }
 
@@ -372,6 +387,8 @@ function FantaRunner({
     windowStartedAt: 0,
     frames: 0,
     renderTime: 0,
+    updateTime: 0,
+    collisionTime: 0,
     slowWindows: 0,
     lastLogAt: 0,
     hudUpdates: 0,
@@ -390,7 +407,11 @@ function FantaRunner({
 
   useEffect(() => {
     statusRef.current = status;
-    if (status !== "running") runtimeRef.current.mobileInputHeld = false;
+    if (status !== "running") {
+      runtimeRef.current.mobileInputHeld = false;
+      runtimeRef.current.autoJumpHeld = false;
+      runtimeRef.current.duckHeld = false;
+    }
   }, [status]);
 
   useEffect(() => {
@@ -406,11 +427,11 @@ function FantaRunner({
     onAssetsReady(false);
     onLoadProgress(0);
     const logoPromise = preloadTeamLogo(team.logo).then((logo) => {
-      if (!cancelled) onLoadProgress(0.14);
+      if (!cancelled) onLoadProgress(0.08);
       return logo;
     });
     const assetPromise = preloadGameAssets((progress) => {
-      if (!cancelled) onLoadProgress(0.14 + progress * 0.86);
+      if (!cancelled) onLoadProgress(0.08 + progress * 0.82);
     });
 
     Promise.all([logoPromise, assetPromise]).then(([logo, images]) => {
@@ -422,6 +443,7 @@ function FantaRunner({
       runtimeRef.current.playerVisible = true;
       const context = prepareCanvas(canvas, renderStateRef.current, true);
       prewarmRenderCaches(context, images);
+      onLoadProgress(0.96);
       prewarmImageTextures(images, logo);
       drawGame(
         context,
@@ -461,6 +483,8 @@ function FantaRunner({
       windowStartedAt: 0,
       frames: 0,
       renderTime: 0,
+      updateTime: 0,
+      collisionTime: 0,
       slowWindows: 0,
       lastLogAt: 0,
       hudUpdates: 0,
@@ -476,6 +500,7 @@ function FantaRunner({
 
   const releaseJump = useCallback(() => {
     const runtime = runtimeRef.current;
+    runtime.autoJumpHeld = false;
     if (!runtime.jumpHeld) return;
     runtime.jumpHeld = false;
     runtime.jumpHoldRemaining = 0;
@@ -483,6 +508,12 @@ function FantaRunner({
       runtime.velocityY *= JUMP_RELEASE_FACTOR;
     }
   }, []);
+
+  const beginDesktopJumpHold = useCallback(() => {
+    const runtime = runtimeRef.current;
+    runtime.autoJumpHeld = true;
+    beginJump();
+  }, [beginJump]);
 
   const cancelJumpAndDuck = useCallback(() => {
     const runtime = runtimeRef.current;
@@ -506,31 +537,52 @@ function FantaRunner({
     }
   }, []);
 
+  const beginDesktopDuckHold = useCallback(() => {
+    const runtime = runtimeRef.current;
+    runtime.duckHeld = true;
+    duck();
+  }, [duck]);
+
+  const releaseDuck = useCallback(() => {
+    const runtime = runtimeRef.current;
+    runtime.duckHeld = false;
+    runtime.crouchUntil = 0;
+  }, []);
+
+  const releaseDesktopControls = useCallback(() => {
+    releaseJump();
+    releaseDuck();
+  }, [releaseDuck, releaseJump]);
+
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       if (statusRef.current !== "running") return;
       if (event.code === "Space" || event.code === "ArrowUp") {
         event.preventDefault();
-        if (!event.repeat) beginJump();
+        if (!event.repeat) beginDesktopJumpHold();
       } else if (event.code === "ArrowDown") {
         event.preventDefault();
-        duck();
+        beginDesktopDuckHold();
       }
     }
 
     function onKeyUp(event: KeyboardEvent) {
       if (event.code === "Space" || event.code === "ArrowUp") {
         releaseJump();
+      } else if (event.code === "ArrowDown") {
+        releaseDuck();
       }
     }
 
     window.addEventListener("keydown", onKeyDown, { passive: false });
     window.addEventListener("keyup", onKeyUp);
+    window.addEventListener("blur", releaseDesktopControls);
     return () => {
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
+      window.removeEventListener("blur", releaseDesktopControls);
     };
-  }, [beginJump, duck, releaseJump]);
+  }, [beginDesktopDuckHold, beginDesktopJumpHold, releaseDesktopControls, releaseDuck, releaseJump]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -543,14 +595,15 @@ function FantaRunner({
 
     const frame = (time: number) => {
       if (statusRef.current !== "running") return;
-      const frameStartedAt = performance.now();
       const context = prepareCanvas(canvas, renderStateRef.current);
       const delta = runtime.lastFrame
         ? Math.min((time - runtime.lastFrame) / 1000, 0.035)
         : 0;
       runtime.lastFrame = time;
 
+      const updateStartedAt = performance.now();
       updateRuntime(runtime, delta, time);
+      const updateFinishedAt = performance.now();
       drawGame(
         context,
         runtime,
@@ -559,6 +612,7 @@ function FantaRunner({
         time,
         reducedMotionRef.current
       );
+      const frameFinishedAt = performance.now();
 
       if (!runtime.finished && time - runtime.lastHudUpdate >= 250) {
         runtime.lastHudUpdate = time;
@@ -571,7 +625,9 @@ function FantaRunner({
         runtime,
         renderStateRef.current,
         time,
-        performance.now() - frameStartedAt
+        frameFinishedAt - updateFinishedAt,
+        updateFinishedAt - updateStartedAt,
+        runtime.lastCollisionTime
       );
 
       if (runtime.finished) {
@@ -638,8 +694,8 @@ function FantaRunner({
         if (event.pointerType === "mouse") {
           event.preventDefault();
           event.currentTarget.setPointerCapture(event.pointerId);
-          if (event.button === 0) beginJump();
-          if (event.button === 2) duck();
+          if (event.button === 0) beginDesktopJumpHold();
+          if (event.button === 2) beginDesktopDuckHold();
           return;
         }
 
@@ -690,7 +746,8 @@ function FantaRunner({
       }}
       onPointerUp={(event) => {
         if (event.pointerType === "mouse") {
-          releaseJump();
+          if (event.button === 0) releaseJump();
+          if (event.button === 2) releaseDuck();
         } else if (touchGestureRef.current.pointerId === event.pointerId) {
           runtimeRef.current.mobileInputHeld = false;
           releaseJump();
@@ -703,9 +760,15 @@ function FantaRunner({
       }}
       onPointerCancel={() => {
         runtimeRef.current.mobileInputHeld = false;
-        releaseJump();
+        releaseDesktopControls();
         touchGestureRef.current.pointerId = -1;
         touchGestureRef.current.jumping = false;
+      }}
+      onPointerLeave={(event) => {
+        if (event.pointerType === "mouse") releaseDesktopControls();
+      }}
+      onLostPointerCapture={(event) => {
+        if (event.pointerType === "mouse") releaseDesktopControls();
       }}
       onContextMenu={(event) => event.preventDefault()}
       aria-label={`Campo di gioco. Tocca o usa il tasto sinistro del mouse per saltare; usa il tasto destro per abbassarti con ${team.nome}.`}
@@ -769,16 +832,23 @@ function updatePerformanceMonitor(
   runtime: Runtime,
   renderState: CanvasRenderState,
   time: number,
-  renderTime: number
+  renderTime: number,
+  updateTime: number,
+  collisionTime: number
 ) {
   if (!monitor.windowStartedAt) monitor.windowStartedAt = time;
   monitor.frames += 1;
   monitor.renderTime += renderTime;
+  monitor.updateTime += updateTime;
+  monitor.collisionTime += collisionTime;
   const windowDuration = time - monitor.windowStartedAt;
   if (windowDuration < 2000) return;
 
   const averageFps = monitor.frames * 1000 / windowDuration;
-  const averageFrameTime = monitor.renderTime / Math.max(1, monitor.frames);
+  const averageRenderTime = monitor.renderTime / Math.max(1, monitor.frames);
+  const averageUpdateTime = monitor.updateTime / Math.max(1, monitor.frames);
+  const averageCollisionTime = monitor.collisionTime / Math.max(1, monitor.frames);
+  const averageFrameTime = averageRenderTime + averageUpdateTime;
   monitor.slowWindows = averageFps < 54
     ? monitor.slowWindows + 1
     : Math.max(0, monitor.slowWindows - 1);
@@ -799,6 +869,9 @@ function updatePerformanceMonitor(
       entities: runtime.entities.length,
       particles: 0,
       averageFrameMs: Number(averageFrameTime.toFixed(2)),
+      averageRenderMs: Number(averageRenderTime.toFixed(2)),
+      averageUpdateMs: Number(averageUpdateTime.toFixed(2)),
+      averageCollisionMs: Number(averageCollisionTime.toFixed(3)),
       hudRendersPerSecond: Number((monitor.hudUpdates * 1000 / windowDuration).toFixed(1)),
       reducedMode: runtime.reducedPerformance,
       dprLimit: renderState.dprLimit,
@@ -810,6 +883,8 @@ function updatePerformanceMonitor(
   monitor.windowStartedAt = time;
   monitor.frames = 0;
   monitor.renderTime = 0;
+  monitor.updateTime = 0;
+  monitor.collisionTime = 0;
   monitor.hudUpdates = 0;
 }
 
@@ -1043,6 +1118,9 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
     }
   }
 
+  const collisionStartedAt = process.env.NODE_ENV !== "production"
+    ? performance.now()
+    : 0;
   if (runtime.velocityY >= 0) {
     const previousBottom = previousPlayerY + PLAYER_SIZE;
     const proposedBottom = runtime.playerY + PLAYER_SIZE;
@@ -1072,8 +1150,8 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
   }
 
   if (
-    runtime.mobileLayout &&
-    runtime.mobileInputHeld &&
+    ((runtime.mobileLayout && runtime.mobileInputHeld) ||
+      (!runtime.mobileLayout && runtime.autoJumpHeld)) &&
     runtime.grounded &&
     !runtime.finished
   ) {
@@ -1158,6 +1236,9 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
   }
   runtime.entityScratch = runtime.entities;
   runtime.entities = remainingEntities;
+  runtime.lastCollisionTime = process.env.NODE_ENV !== "production"
+    ? performance.now() - collisionStartedAt
+    : 0;
 
   if (runtime.playerX + PLAYER_SIZE < 0 && !runtime.finished) {
     runtime.gameOverReason = "Sei rimasto indietro";
@@ -1289,6 +1370,8 @@ function tryStartRaffica(
   if (!type) return false;
 
   const config = RAFFICA_CONFIG[type];
+  const pattern = pickRafficaPattern(type, runtime.lastRafficaPatterns[type] ?? null);
+  runtime.lastRafficaPatterns[type] = pattern;
   runtime.burst = {
     type,
     phase: "warning",
@@ -1297,7 +1380,7 @@ function tryStartRaffica(
       config.minimumDurationSeconds +
       Math.random() * (config.maximumDurationSeconds - config.minimumDurationSeconds),
     index: 0,
-    pattern: pickRafficaPattern(type),
+    pattern,
     beatIndex: 0,
   };
   runtime.burstOverlayType = type;
@@ -1366,6 +1449,12 @@ function updateRaffica(
   if (burst.type === "bonus" && nextBeatIndex >= burst.pattern.length) {
     burst.beatIndex = burst.pattern.length;
     burst.timer = burst.durationRemaining + 1;
+  } else if (burst.type === "malus" && nextBeatIndex >= burst.pattern.length) {
+    const nextPattern = pickRafficaPattern("malus", burst.pattern);
+    burst.pattern = nextPattern;
+    runtime.lastRafficaPatterns.malus = nextPattern;
+    burst.beatIndex = 0;
+    burst.timer = beat.intervalAfter;
   } else {
     burst.beatIndex = nextBeatIndex % burst.pattern.length;
     burst.timer = beat.intervalAfter;
@@ -1471,13 +1560,15 @@ function updateBoss(
       runtime.backgroundTransition
       || runtime.distance < SPAWN_CONFIG.openingBonus.distanceEndMeters
     ) return;
+    const pattern = pickBossPattern(runtime.lastBossPattern);
+    runtime.lastBossPattern = pattern;
     runtime.boss = {
       phase: "warning",
       timer: BOSS_CONFIG.warningSeconds,
       spawnTimer: 0,
       lastShotAt: -10,
       attackIndex: 0,
-      pattern: pickRafficaPattern("malus"),
+      pattern,
     };
     runtime.presentation = {
       asset: BOSS_CONFIG.warningAsset,
@@ -1499,7 +1590,7 @@ function updateBoss(
     if (boss.timer > 0) return;
     boss.phase = "active";
     boss.timer = BOSS_CONFIG.durationSeconds;
-    boss.spawnTimer = 0.72;
+    boss.spawnTimer = 0.48;
     runtime.presentation = {
       asset: BOSS_CONFIG.bannerAsset,
       title: "Boss 20",
@@ -1518,8 +1609,8 @@ function updateBoss(
         activeProjectiles += 1;
       }
     }
-    if (activeProjectiles >= (runtime.mobileLayout ? 10 : 12)) {
-      boss.spawnTimer = 0.24;
+    if (activeProjectiles >= (runtime.mobileLayout ? 10 : 11)) {
+      boss.spawnTimer = 0.18;
       return;
     }
     const beat = boss.pattern[boss.attackIndex % boss.pattern.length];
@@ -1528,10 +1619,11 @@ function updateBoss(
     const dimensions = getEventDimensions(kind);
     const scale = runtime.mobileLayout ? MOBILE_EVENT_SCALE : 1;
     const spread = Math.max(beat.spacing, kind === "missedPenalty" ? 16 : 2);
-    const projectileSpeed = (runtime.mobileLayout ? 350 : 430) + difficulty * 85;
-    const volleyCount = beat.count + 2;
+    const projectileSpeed = (runtime.mobileLayout ? 390 : 480) + difficulty * 110;
+    const volleyCount = beat.count;
     for (let itemIndex = 0; itemIndex < volleyCount; itemIndex += 1) {
-      const spawnX = bossRect.x + bossRect.width * 0.18 + itemIndex * spread;
+      const spawnX = bossRect.x + bossRect.width * 0.18 +
+        itemIndex * (dimensions.width * scale + spread);
       const spawnY = bossRect.y + bossRect.height * 0.5 - dimensions.height * scale / 2;
       const targetX = runtime.playerX + PLAYER_SIZE * 0.55;
       const attackLine = runtime.mobileLayout ? beat.mobileLine ?? beat.line : beat.line;
@@ -1551,8 +1643,22 @@ function updateBoss(
       });
     }
     boss.lastShotAt = runtime.elapsed;
-    boss.attackIndex = (boss.attackIndex + 1) % boss.pattern.length;
-    boss.spawnTimer = Math.max(0.58, beat.intervalAfter + 0.08);
+    const nextAttackIndex = boss.attackIndex + 1;
+    if (nextAttackIndex >= boss.pattern.length) {
+      const nextPattern = pickBossPattern(boss.pattern);
+      boss.pattern = nextPattern;
+      runtime.lastBossPattern = nextPattern;
+      boss.attackIndex = 0;
+    } else {
+      boss.attackIndex = nextAttackIndex;
+    }
+    boss.spawnTimer = Math.min(
+      BOSS_CONFIG.itemIntervalSeconds.maximum,
+      Math.max(
+        BOSS_CONFIG.itemIntervalSeconds.minimum,
+        beat.intervalAfter * (0.94 - difficulty * 0.18)
+      )
+    );
   }
   if (boss.timer > 0) return;
 
@@ -2219,7 +2325,8 @@ function expandRect(
 }
 
 function isCrouching(runtime: Runtime, time: number) {
-  return !runtime.mobileLayout && runtime.grounded && time < runtime.crouchUntil;
+  return !runtime.mobileLayout && runtime.grounded &&
+    (runtime.duckHeld || time < runtime.crouchUntil);
 }
 
 function calculateGoals(teamRating: number) {
@@ -2328,9 +2435,54 @@ function drawAssetBackground(
   }
 
   const progress = smoothProgress(transition.progress);
-  drawStageLayers(context, currentStage, runtime, assets, 1, viewport);
+  drawStageLayers(context, currentStage, runtime, assets, 1 - progress * 0.16, viewport);
   drawStageLayers(context, transition.to, runtime, assets, progress, viewport);
+  drawScenarioTransitionVeil(context, progress, viewport);
   return true;
+}
+
+function drawScenarioTransitionVeil(
+  context: CanvasRenderingContext2D,
+  progress: number,
+  viewport: { width: number; height: number }
+) {
+  const intensity = Math.sin(Math.PI * progress);
+  if (intensity <= 0.001) return;
+  context.save();
+  context.globalAlpha = intensity * 0.52;
+  context.drawImage(getTransitionVeil(viewport), 0, 0, viewport.width, viewport.height);
+  context.restore();
+}
+
+function getTransitionVeil(viewport: { width: number; height: number }) {
+  const key = `${Math.round(viewport.width)}x${Math.round(viewport.height)}`;
+  const cached = TRANSITION_VEIL_CACHE.get(key);
+  if (cached) return cached;
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.ceil(viewport.width));
+  canvas.height = Math.max(1, Math.ceil(viewport.height));
+  const layer = canvas.getContext("2d");
+  if (!layer) return canvas;
+  const tunnel = layer.createRadialGradient(
+    canvas.width * 0.5,
+    canvas.height * 0.48,
+    canvas.height * 0.08,
+    canvas.width * 0.5,
+    canvas.height * 0.48,
+    canvas.width * 0.72
+  );
+  tunnel.addColorStop(0, "rgba(148,203,235,0.13)");
+  tunnel.addColorStop(0.38, "rgba(11,31,52,0.18)");
+  tunnel.addColorStop(1, "rgba(1,6,17,0.72)");
+  layer.fillStyle = tunnel;
+  layer.fillRect(0, 0, canvas.width, canvas.height);
+  const groundBlend = layer.createLinearGradient(0, canvas.height * 0.64, 0, canvas.height);
+  groundBlend.addColorStop(0, "rgba(5,20,35,0)");
+  groundBlend.addColorStop(1, "rgba(4,17,28,0.3)");
+  layer.fillStyle = groundBlend;
+  layer.fillRect(0, canvas.height * 0.58, canvas.width, canvas.height * 0.42);
+  TRANSITION_VEIL_CACHE.set(key, canvas);
+  return canvas;
 }
 
 function drawStageLayers(
@@ -2524,16 +2676,25 @@ function getRafficaStaticOverlay(
 }
 
 function prewarmRenderCaches(context: CanvasRenderingContext2D, images: GameImageMap) {
-  const viewport = getLogicalCanvasViewport(context);
-  getRafficaStaticOverlay("bonus", viewport.width, viewport.height);
-  getRafficaStaticOverlay("malus", viewport.width, viewport.height);
-  for (const stage of [1, 2, 3] as const) {
-    const config = BACKGROUND_STAGE_CONFIG[stage];
-    const stadium = images.get(config.stadium);
-    const ground = images.get(config.ground);
-    if (stadium) getCachedBackgroundTile(stadium, viewport);
-    if (ground) getCachedGroundTile(ground, viewport);
+  const currentViewport = getLogicalCanvasViewport(context);
+  const viewports = [
+    currentViewport,
+    { width: GAME_WIDTH, height: GAME_HEIGHT },
+    { width: MOBILE_GAME_WIDTH, height: MOBILE_GAME_HEIGHT },
+  ];
+  for (const viewport of viewports) {
+    getRafficaStaticOverlay("bonus", viewport.width, viewport.height);
+    getRafficaStaticOverlay("malus", viewport.width, viewport.height);
+    getTransitionVeil(viewport);
+    for (const stage of [1, 2, 3] as const) {
+      const config = BACKGROUND_STAGE_CONFIG[stage];
+      const stadium = images.get(config.stadium);
+      const ground = images.get(config.ground);
+      if (stadium) getCachedBackgroundTile(stadium, viewport);
+      if (ground) getCachedGroundTile(ground, viewport);
+    }
   }
+  for (const kind of POWER_UP_KINDS) getPowerUpAura(kind);
 }
 
 function prewarmImageTextures(images: GameImageMap, logo: HTMLImageElement) {
@@ -2844,96 +3005,32 @@ function drawPersistentPowerUpEffects(
   time: number,
   reducedMotion: boolean
 ) {
-  const luperto = getPowerUpStrength(runtime, "luperto");
-  const lukaku = getPowerUpStrength(runtime, "lukaku");
-  const dybala = getPowerUpStrength(runtime, "dybala");
-  const nicoPaz = getPowerUpStrength(runtime, "nico-paz");
-  const gimenez = getPowerUpStrength(runtime, "gimenez");
-  if (!luperto && !lukaku && !dybala && !nicoPaz && !gimenez) return;
-
   const centerX = runtime.playerX + PLAYER_SIZE / 2;
   const centerY = runtime.playerY + PLAYER_SIZE / 2;
   const visualScale = runtime.mobileLayout ? MOBILE_PLAYER_SCALE : 1;
-  const pulse = reducedMotion ? 0 : Math.sin(time / 190);
-  context.save();
-
-  if (luperto) {
-    const shieldRadius = (47 + pulse * 1.8) * visualScale;
-    context.globalAlpha = 0.58 * luperto;
-    context.strokeStyle = "#7dd3fc";
-    context.lineWidth = 2.4;
-    context.shadowColor = "#38bdf8";
-    context.shadowBlur = reducedMotion ? 0 : 6;
-    context.beginPath();
-    context.arc(centerX, centerY, shieldRadius, 0, Math.PI * 2);
-    context.stroke();
-    context.globalAlpha = 0.14 * luperto;
-    context.lineWidth = 6;
-    context.beginPath();
-    context.arc(centerX, centerY, shieldRadius + 3, 0, Math.PI * 2);
-    context.stroke();
+  const sizeByKind: Record<PowerUpKind, number> = {
+    luperto: 118,
+    lukaku: 128,
+    dybala: 122,
+    "nico-paz": 136,
+    gimenez: 130,
+  };
+  for (let index = 0; index < POWER_UP_KINDS.length; index += 1) {
+    const kind = POWER_UP_KINDS[index];
+    const strength = getPowerUpStrength(runtime, kind);
+    if (!strength) continue;
+    const breath = reducedMotion
+      ? 1
+      : 1 + Math.sin(time / (260 + index * 35) + index * 1.7) * 0.035;
+    drawPowerUpAura(
+      context,
+      kind,
+      centerX,
+      centerY,
+      sizeByKind[kind] * visualScale * breath,
+      strength * (kind === "luperto" ? 0.72 : 0.56)
+    );
   }
-
-  if (lukaku) {
-    context.strokeStyle = "#d6a548";
-    context.lineWidth = 5;
-    for (let ring = 0; ring < 2; ring += 1) {
-      context.globalAlpha = lukaku * (0.22 - ring * 0.07);
-      context.beginPath();
-      context.arc(centerX, centerY, (42 + ring * 9 + pulse * 2) * visualScale, 0, Math.PI * 2);
-      context.stroke();
-    }
-  }
-
-  if (dybala) {
-    context.globalAlpha = dybala * (0.2 + (reducedMotion ? 0 : Math.abs(pulse) * 0.22));
-    context.strokeStyle = "#fb3b4d";
-    context.lineWidth = 4;
-    context.beginPath();
-    context.ellipse(centerX, centerY, 46 * visualScale, 40 * visualScale, 0, 0, Math.PI * 2);
-    context.stroke();
-  }
-
-  if (nicoPaz) {
-    context.strokeStyle = "#67e8f9";
-    context.fillStyle = "#cffafe";
-    context.lineWidth = 1.6;
-    context.globalAlpha = 0.2 * nicoPaz;
-    context.setLineDash([5, 8]);
-    context.beginPath();
-    context.arc(centerX, centerY, 53 * visualScale, 0, Math.PI * 2);
-    context.stroke();
-    context.setLineDash([]);
-    for (let mote = 0; mote < 6; mote += 1) {
-      const travel = reducedMotion ? 0.55 : ((time / 520 + mote / 6) % 1);
-      const radius = (62 - travel * 43) * visualScale;
-      const angle = mote * Math.PI / 3 + (reducedMotion ? 0 : time / 1700);
-      const x = centerX + Math.cos(angle) * radius;
-      const y = centerY + Math.sin(angle) * radius * 0.72;
-      context.globalAlpha = nicoPaz * (0.28 + travel * 0.38);
-      context.beginPath();
-      context.arc(x, y, 1.8 + travel * 1.4, 0, Math.PI * 2);
-      context.fill();
-    }
-  }
-
-  if (gimenez) {
-    context.globalAlpha = gimenez * (0.18 + Math.abs(pulse) * 0.08);
-    context.fillStyle = "#a855f7";
-    for (let mote = 0; mote < 4; mote += 1) {
-      const angle = time / 420 + mote * Math.PI / 2;
-      context.beginPath();
-      context.arc(
-        centerX + Math.cos(angle) * 43 * visualScale,
-        centerY + Math.sin(angle * 1.3) * 34 * visualScale,
-        9 + mote,
-        0,
-        Math.PI * 2
-      );
-      context.fill();
-    }
-  }
-  context.restore();
 }
 
 function drawPowerUpCollectionEffect(
@@ -2945,47 +3042,61 @@ function drawPowerUpCollectionEffect(
   reducedMotion: boolean
 ) {
   const progress = Math.max(0, Math.min(1, rawProgress));
-  const alpha = 1 - progress;
-  const color = POWER_UP_CONFIG[kind].hudColor;
-  context.save();
-  context.globalAlpha = Math.max(0, alpha * 0.9);
-  context.strokeStyle = color;
-  context.fillStyle = color;
-  context.lineWidth = kind === "luperto" ? 4 : 2.5;
-  context.shadowColor = color;
-  context.shadowBlur = reducedMotion ? 0 : 12;
+  const easedProgress = smoothProgress(progress);
+  const breath = reducedMotion ? 1 : 1 + Math.sin(progress * Math.PI * 3) * 0.025;
+  drawPowerUpAura(
+    context,
+    kind,
+    centerX,
+    centerY,
+    (92 + easedProgress * 68) * breath,
+    Math.max(0, (1 - easedProgress) * 0.92)
+  );
+}
 
-  if (kind === "luperto") {
-    context.beginPath();
-    context.arc(centerX, centerY, 38 + progress * 25, Math.PI * 0.12, Math.PI * 0.88);
-    context.quadraticCurveTo(centerX, centerY + 64 + progress * 12, centerX - (38 + progress * 25), centerY);
-    context.stroke();
-  } else if (kind === "lukaku") {
-    for (let index = 0; index < 2; index += 1) {
-      context.globalAlpha = alpha * (0.72 - index * 0.2);
-      context.beginPath();
-      context.arc(centerX, centerY, 34 + progress * (48 + index * 22), 0, Math.PI * 2);
-      context.stroke();
-    }
-  } else if (kind === "nico-paz") {
-    for (const side of [-1, 1]) {
-      context.beginPath();
-      context.arc(centerX + side * 26, centerY, 24 + progress * 18, -Math.PI / 2, Math.PI / 2, side < 0);
-      context.stroke();
-    }
-  } else if (kind === "dybala") {
-    context.setLineDash([5, 7]);
-    context.beginPath();
-    context.ellipse(centerX, centerY, 38 + progress * 34, 27 + progress * 18, progress * 0.6, 0, Math.PI * 2);
-    context.stroke();
-  } else {
-    for (let index = 0; index < 4; index += 1) {
-      const offset = (index - 1.5) * 13;
-      context.globalAlpha = alpha * (0.28 + index * 0.1);
-      context.fillRect(centerX - 42 + progress * 22, centerY + offset, 84 - progress * 30, 2);
-    }
-  }
+function drawPowerUpAura(
+  context: CanvasRenderingContext2D,
+  kind: PowerUpKind,
+  centerX: number,
+  centerY: number,
+  size: number,
+  alpha: number
+) {
+  context.save();
+  context.globalAlpha = alpha;
+  context.drawImage(getPowerUpAura(kind), centerX - size / 2, centerY - size / 2, size, size);
   context.restore();
+}
+
+function getPowerUpAura(kind: PowerUpKind) {
+  const cached = POWER_UP_AURA_CACHE.get(kind);
+  if (cached) return cached;
+  const canvas = document.createElement("canvas");
+  canvas.width = 192;
+  canvas.height = 192;
+  const layer = canvas.getContext("2d");
+  if (!layer) return canvas;
+  const rgb: Record<PowerUpKind, string> = {
+    luperto: "56,189,248",
+    lukaku: "202,148,63",
+    dybala: "244,63,94",
+    "nico-paz": "103,232,249",
+    gimenez: "168,85,247",
+  };
+  layer.globalCompositeOperation = "screen";
+  const lobes = kind === "luperto"
+    ? [[96,94,76,.42],[83,84,55,.22],[110,105,48,.2]]
+    : [[96,96,78,.34],[78,86,58,.24],[115,104,52,.2]];
+  for (const [x, y, radius, opacity] of lobes) {
+    const gradient = layer.createRadialGradient(x, y, 2, x, y, radius);
+    gradient.addColorStop(0, `rgba(${rgb[kind]},${opacity})`);
+    gradient.addColorStop(0.48, `rgba(${rgb[kind]},${opacity * 0.56})`);
+    gradient.addColorStop(1, `rgba(${rgb[kind]},0)`);
+    layer.fillStyle = gradient;
+    layer.fillRect(0, 0, canvas.width, canvas.height);
+  }
+  POWER_UP_AURA_CACHE.set(kind, canvas);
+  return canvas;
 }
 
 function drawEntity(

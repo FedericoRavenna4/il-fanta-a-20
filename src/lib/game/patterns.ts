@@ -93,7 +93,7 @@ export const MIXED_PATTERNS: readonly GameplayPattern[] = [
   p("misto-barriera-percorso-alternativo", "mixed", 1, 1, [o("stretcher",0),e("assist",320,2),e("yellowCard",405,0),e("ownGoal",500,1)]),
 
   mix("misto-subito-gol-rosso",2,["concededGoal","goal","redCard"],"rise",{kind:"cornerFlag",x:340}),
-  mix("misto-giallo-gol-rigore",2,["yellowCard","goal","missedPenalty"],"fall",{kind:"stretcher",x:360}),
+  mix("misto-giallo-gol-rigore",2,["yellowCard","goal","missedPenalty"],"fall",{kind:"slidingTackle",x:380}),
   mix("misto-autogol-clean-giallo-2",2,["ownGoal","cleanSheet","yellowCard"],"arc",{kind:"var",x:350}),
   mix("misto-rosso-assist-subito",2,["redCard","assist","concededGoal"],"zigzag",{kind:"slidingTackle",x:370}),
   mix("misto-rigore-assist-giallo",2,["missedPenalty","assist","yellowCard"],"choice"),
@@ -101,21 +101,21 @@ export const MIXED_PATTERNS: readonly GameplayPattern[] = [
   mix("misto-subito-clean-rigore",2,["concededGoal","cleanSheet","missedPenalty"],"low"),
   mix("misto-rosso-gol-giallo",2,["redCard","goal","yellowCard"],"high"),
 
-  mix("misto-autogol-gol-rosso",3,["ownGoal","goal","redCard"],"rise",{kind:"cornerFlag",x:330}),
-  mix("misto-rigore-clean-subito",3,["missedPenalty","cleanSheet","concededGoal"],"fall"),
+  mix("misto-autogol-gol-rosso",3,["ownGoal","goal","redCard"],"rise",{kind:"slidingTackle",x:390}),
+  mix("misto-rigore-clean-subito",3,["missedPenalty","cleanSheet","concededGoal"],"fall",{kind:"slidingTackle",x:410}),
   mix("misto-rosso-tripletta-giallo",3,["redCard","hatTrick","yellowCard"],"choice"),
   mix("misto-subito-assist-autogol",3,["concededGoal","assist","ownGoal"],"arc",{kind:"stretcher",x:350}),
   mix("misto-giallo-gol-rosso-3",3,["yellowCard","goal","redCard"],"zigzag"),
   mix("misto-autogol-clean-rigore",3,["ownGoal","cleanSheet","missedPenalty"],"middle"),
   mix("misto-rosso-assist-autogol",3,["redCard","assist","ownGoal"],"high",{kind:"var",x:360}),
-  mix("misto-rigore-gol-giallo",3,["missedPenalty","goal","yellowCard"],"low"),
+  mix("misto-rigore-gol-giallo",3,["missedPenalty","goal","yellowCard"],"low",{kind:"slidingTackle",x:400}),
 
   mix("misto-subito-tripletta-rosso",4,["concededGoal","hatTrick","redCard"],"choice",{kind:"slidingTackle",x:380}),
-  mix("misto-rigore-gol-autogol",4,["missedPenalty","goal","ownGoal"],"rise"),
+  mix("misto-rigore-gol-autogol",4,["missedPenalty","goal","ownGoal"],"rise",{kind:"slidingTackle",x:410}),
   mix("misto-rosso-clean-rigore",4,["redCard","cleanSheet","missedPenalty"],"fall",{kind:"stretcher",x:390}),
-  mix("misto-autogol-tripletta-giallo",4,["ownGoal","hatTrick","yellowCard"],"arc"),
+  mix("misto-autogol-tripletta-giallo",4,["ownGoal","hatTrick","yellowCard"],"arc",{kind:"slidingTackle",x:430}),
   mix("misto-subito-gol-rigore",4,["concededGoal","goal","missedPenalty"],"zigzag",{kind:"var",x:400}),
-  mix("misto-rosso-assist-subito-4",4,["redCard","assist","concededGoal"],"middle"),
+  mix("misto-rosso-assist-subito-4",4,["redCard","assist","concededGoal"],"middle",{kind:"slidingTackle",x:420}),
   mix("misto-rigore-clean-rosso",4,["missedPenalty","cleanSheet","redCard"],"high",{kind:"cornerFlag",x:370}),
   mix("misto-autogol-gol-subito",4,["ownGoal","goal","concededGoal"],"low"),
 ] as const;
@@ -150,8 +150,59 @@ export const RAFFICA_PATTERN_LIBRARY: Record<RafficaType, readonly (readonly Raf
       { kind:"redCard",count:3,line:2,mobileLine:2,spacing:2,intervalAfter:.8 },
       { kind:"missedPenalty",count:2,line:1,mobileLine:0,spacing:16,intervalAfter:.98 },
     ],
+    [
+      { kind:"yellowCard",count:5,line:0,mobileLine:0,spacing:2,intervalAfter:.48 },
+      { kind:"redCard",count:3,line:2,mobileLine:2,spacing:4,intervalAfter:1.04 },
+      { kind:"concededGoal",count:4,line:1,mobileLine:2,spacing:2,intervalAfter:.58 },
+      { kind:"missedPenalty",count:2,line:0,mobileLine:0,spacing:20,intervalAfter:.88 },
+    ],
+    [
+      { kind:"concededGoal",count:4,line:0,mobileLine:0,spacing:2,intervalAfter:.62 },
+      { kind:"yellowCard",count:4,line:2,mobileLine:2,spacing:2,intervalAfter:.44 },
+      { kind:"redCard",count:3,line:1,mobileLine:2,spacing:5,intervalAfter:1.08 },
+      { kind:"missedPenalty",count:3,line:2,mobileLine:0,spacing:18,intervalAfter:.72 },
+    ],
+    [
+      { kind:"redCard",count:3,line:1,mobileLine:2,spacing:4,intervalAfter:.86 },
+      { kind:"yellowCard",count:5,line:0,mobileLine:0,spacing:2,intervalAfter:.5 },
+      { kind:"missedPenalty",count:2,line:2,mobileLine:2,spacing:24,intervalAfter:1.12 },
+      { kind:"concededGoal",count:4,line:1,mobileLine:0,spacing:2,intervalAfter:.56 },
+    ],
+    [
+      { kind:"missedPenalty",count:2,line:0,mobileLine:0,spacing:22,intervalAfter:.92 },
+      { kind:"concededGoal",count:3,line:2,mobileLine:2,spacing:3,intervalAfter:.46 },
+      { kind:"yellowCard",count:4,line:1,mobileLine:0,spacing:2,intervalAfter:.74 },
+      { kind:"redCard",count:3,line:2,mobileLine:2,spacing:5,intervalAfter:1.02 },
+    ],
   ],
 };
+
+export const BOSS_PATTERN_LIBRARY: readonly (readonly RafficaBeat[])[] = [
+  [
+    { kind:"yellowCard",count:5,line:0,mobileLine:0,spacing:3,intervalAfter:.5 },
+    { kind:"redCard",count:4,line:2,mobileLine:2,spacing:4,intervalAfter:.58 },
+    { kind:"concededGoal",count:5,line:1,mobileLine:2,spacing:3,intervalAfter:.52 },
+    { kind:"missedPenalty",count:2,line:0,mobileLine:0,spacing:22,intervalAfter:.74 },
+  ],
+  [
+    { kind:"concededGoal",count:4,line:0,mobileLine:0,spacing:3,intervalAfter:.48 },
+    { kind:"yellowCard",count:4,line:2,mobileLine:2,spacing:3,intervalAfter:.54 },
+    { kind:"redCard",count:3,line:1,mobileLine:2,spacing:5,intervalAfter:.6 },
+    { kind:"missedPenalty",count:3,line:2,mobileLine:0,spacing:20,intervalAfter:.76 },
+  ],
+  [
+    { kind:"redCard",count:4,line:1,mobileLine:2,spacing:5,intervalAfter:.56 },
+    { kind:"concededGoal",count:5,line:0,mobileLine:0,spacing:3,intervalAfter:.5 },
+    { kind:"missedPenalty",count:2,line:2,mobileLine:2,spacing:24,intervalAfter:.7 },
+    { kind:"yellowCard",count:5,line:1,mobileLine:0,spacing:2,intervalAfter:.46 },
+  ],
+  [
+    { kind:"missedPenalty",count:3,line:0,mobileLine:0,spacing:20,intervalAfter:.68 },
+    { kind:"yellowCard",count:5,line:2,mobileLine:2,spacing:2,intervalAfter:.48 },
+    { kind:"concededGoal",count:4,line:1,mobileLine:2,spacing:3,intervalAfter:.52 },
+    { kind:"redCard",count:4,line:0,mobileLine:0,spacing:5,intervalAfter:.64 },
+  ],
+];
 
 export function getPatternTier(distance: number): PatternTier {
   if (distance < 50) return 1;
@@ -180,7 +231,20 @@ export function pickGameplayPattern(
   return candidates[Math.floor(random() * candidates.length)] ?? GAMEPLAY_PATTERNS[0];
 }
 
-export function pickRafficaPattern(type: RafficaType, random = Math.random) {
+export function pickRafficaPattern(
+  type: RafficaType,
+  previousPattern: readonly RafficaBeat[] | null = null,
+  random = Math.random
+) {
   const patterns = RAFFICA_PATTERN_LIBRARY[type];
-  return patterns[Math.floor(random() * patterns.length)];
+  const candidates = patterns.filter((pattern) => pattern !== previousPattern);
+  return candidates[Math.floor(random() * candidates.length)] ?? patterns[0];
+}
+
+export function pickBossPattern(
+  previousPattern: readonly RafficaBeat[] | null = null,
+  random = Math.random
+) {
+  const candidates = BOSS_PATTERN_LIBRARY.filter((pattern) => pattern !== previousPattern);
+  return candidates[Math.floor(random() * candidates.length)] ?? BOSS_PATTERN_LIBRARY[0];
 }

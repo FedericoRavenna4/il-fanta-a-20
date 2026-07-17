@@ -97,8 +97,8 @@ export const RAFFICA_CONFIG = {
   bonus: {
     minimumStartSeconds: 45,
     warningSeconds: 0.95,
-    minimumDurationSeconds: 6,
-    maximumDurationSeconds: 6.5,
+    minimumDurationSeconds: 5.4,
+    maximumDurationSeconds: 5.9,
     minimumItemInterval: 0.56,
     maximumItemInterval: 0.84,
     cooldownSeconds: 65,

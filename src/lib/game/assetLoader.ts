@@ -13,6 +13,7 @@ const requests = new Map<GameAssetKey, Promise<void>>();
 const teamLogos = new Map<string, HTMLImageElement>();
 const teamLogoRequests = new Map<string, Promise<HTMLImageElement>>();
 const overlayImages: HTMLImageElement[] = [];
+let overlayWarmupCanvas: HTMLCanvasElement | null = null;
 
 const ESSENTIAL_KEYS: GameAssetKey[] = [
   "background.stage1Stadium",
@@ -153,12 +154,23 @@ function loadOverlayImage(path: string) {
     image.decoding = "async";
     image.onload = async () => {
       try { await image.decode?.(); } catch { /* onload garantisce comunque l'asset. */ }
+      warmOverlayTexture(image);
       resolve();
     };
     image.onerror = () => resolve();
     image.src = path;
     overlayImages.push(image);
   });
+}
+
+function warmOverlayTexture(image: HTMLImageElement) {
+  overlayWarmupCanvas ??= document.createElement("canvas");
+  overlayWarmupCanvas.width = 8;
+  overlayWarmupCanvas.height = 8;
+  const context = overlayWarmupCanvas.getContext("2d");
+  if (!context) return;
+  context.clearRect(0, 0, 8, 8);
+  context.drawImage(image, 0, 0, 8, 8);
 }
 
 function loadAsset(key: GameAssetKey) {

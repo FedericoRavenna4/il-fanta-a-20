@@ -1,8 +1,8 @@
 export const BOSS_CONFIG = {
-  warningSeconds: 2,
-  durationSeconds: 18,
+  warningSeconds: 1.7,
+  durationSeconds: 20,
   distanceWindowMeters: { minimum: 450, maximum: 550 },
-  itemIntervalSeconds: { minimum: 0.72, maximum: 1.25 },
+  itemIntervalSeconds: { minimum: 0.42, maximum: 0.76 },
   rewardRating: 3,
   warningAsset: "/game/eventi/boss-20-warning.png",
   bannerAsset: "/game/eventi/boss-20-banner.png",
