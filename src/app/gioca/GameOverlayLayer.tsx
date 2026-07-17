@@ -40,11 +40,11 @@ export default function GameOverlayLayer({
                   fill
                   unoptimized
                   sizes="(max-width: 639px) 205px, 460px"
-                  className={`object-contain transition-opacity duration-75 ${presentation?.asset === asset ? "opacity-100" : "opacity-0"}`}
+                  className={`object-contain transition-opacity duration-75 ${presentation?.asset === asset ? "opacity-100" : "max-sm:hidden sm:opacity-0"}`}
                 />
               ))}
             </div>
-            <p className="-mt-4 max-w-[92vw] text-balance text-center text-[11px] font-black leading-tight tracking-[-.01em] text-white [text-shadow:0_2px_9px_rgba(2,8,23,1),0_0_4px_rgba(2,8,23,1)] max-sm:max-w-[280px] sm:-mt-6 sm:whitespace-nowrap sm:text-[15px]">
+            <p className="-mt-4 max-w-[92vw] text-balance text-center text-[11px] font-black leading-tight tracking-[-.01em] text-white [text-shadow:0_2px_9px_rgba(2,8,23,1),0_0_4px_rgba(2,8,23,1)] max-sm:max-w-[280px] max-sm:[text-shadow:0_2px_6px_rgba(2,8,23,.92)] sm:-mt-6 sm:whitespace-nowrap sm:text-[15px]">
               {presentation?.subtitle}
             </p>
           </div>
@@ -87,7 +87,7 @@ function EffectTimer({ tone, text, seconds, asset, color }: { tone: "bonus" | "m
       ? "border-amber-200/25 text-amber-50"
       : "border-sky-200/25 text-sky-50";
   return (
-    <span className={`grid min-w-[134px] grid-cols-[auto_1fr] items-center gap-x-2 rounded-xl border bg-slate-950/88 px-3 py-2 text-white shadow-[0_8px_20px_rgba(2,8,23,.34),inset_0_1px_0_rgba(255,255,255,.06)] sm:min-w-[136px] sm:px-3 sm:py-2 ${colors}`}>
+    <span className={`grid min-w-[134px] grid-cols-[auto_1fr] items-center gap-x-2 rounded-xl border bg-slate-950/88 px-3 py-2 text-white shadow-none sm:min-w-[136px] sm:px-3 sm:py-2 sm:shadow-[0_8px_20px_rgba(2,8,23,.34),inset_0_1px_0_rgba(255,255,255,.06)] ${colors}`}>
       {asset ? <Image src={asset} alt="" width={28} height={38} unoptimized className="row-span-2 h-9 w-6 object-contain sm:h-10 sm:w-7" /> : <span className="row-span-2 h-7 w-1 rounded-full bg-current opacity-75" />}
       <span className="truncate text-[8px] font-black uppercase leading-none tracking-[0.1em] sm:text-[9px]">{text}</span>
       <strong className="text-[2.1rem] font-black leading-none tabular-nums sm:text-3xl" style={color ? { color } : undefined}>{Math.ceil(seconds)}&quot;</strong>

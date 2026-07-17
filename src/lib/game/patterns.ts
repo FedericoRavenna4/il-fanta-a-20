@@ -28,10 +28,27 @@ export type RafficaBeat = {
 };
 
 export type BossPatternDifficulty = "medium" | "hard" | "extreme";
+export type BossBlockType =
+  | "shortBurst"
+  | "mediumBurst"
+  | "longBurst"
+  | "fakePause"
+  | "recoveryWindow"
+  | "verticalSwitch"
+  | "doubleWave"
+  | "finalPressure";
+export type BossBlock = {
+  id: string;
+  type: BossBlockType;
+  difficulty: BossPatternDifficulty;
+  beats: readonly RafficaBeat[];
+  pauseOptions: readonly number[];
+};
 export type BossPattern = {
   id: string;
   difficulty: BossPatternDifficulty;
   beats: readonly RafficaBeat[];
+  blockTypes: readonly BossBlockType[];
 };
 
 type MixedShape = "low" | "middle" | "high" | "rise" | "fall" | "arc" | "zigzag" | "choice";
@@ -253,47 +270,24 @@ export const MOBILE_MALUS_RAFFICA_PATTERNS: readonly (readonly RafficaBeat[])[] 
   ],
 ];
 
-export const BOSS_PATTERN_LIBRARY: readonly BossPattern[] = [
-  {
-    id: "boss-pressione-bassa",
-    difficulty: "medium",
-    beats: [
-      { kind:"yellowCard",count:4,line:0,mobileLine:0,spacing:5,intervalAfter:.62 },
-      { kind:"redCard",count:3,line:2,mobileLine:2,spacing:6,intervalAfter:.72 },
-      { kind:"concededGoal",count:4,line:1,mobileLine:2,spacing:5,intervalAfter:.68 },
-      { kind:"missedPenalty",count:2,line:0,mobileLine:0,spacing:24,intervalAfter:.86 },
-    ],
-  },
-  {
-    id: "boss-doppio-fronte",
-    difficulty: "medium",
-    beats: [
-      { kind:"concededGoal",count:3,line:0,mobileLine:0,spacing:6,intervalAfter:.7 },
-      { kind:"yellowCard",count:4,line:2,mobileLine:2,spacing:5,intervalAfter:.66 },
-      { kind:"redCard",count:3,line:1,mobileLine:2,spacing:7,intervalAfter:.76 },
-      { kind:"missedPenalty",count:2,line:0,mobileLine:0,spacing:26,intervalAfter:.88 },
-    ],
-  },
-  {
-    id: "boss-cambio-ritmo",
-    difficulty: "hard",
-    beats: [
-      { kind:"redCard",count:3,line:1,mobileLine:2,spacing:7,intervalAfter:.66 },
-      { kind:"concededGoal",count:4,line:0,mobileLine:0,spacing:5,intervalAfter:.6 },
-      { kind:"missedPenalty",count:2,line:2,mobileLine:2,spacing:26,intervalAfter:.82 },
-      { kind:"yellowCard",count:4,line:1,mobileLine:0,spacing:5,intervalAfter:.64 },
-    ],
-  },
-  {
-    id: "boss-assedio",
-    difficulty: "extreme",
-    beats: [
-      { kind:"missedPenalty",count:2,line:0,mobileLine:0,spacing:24,intervalAfter:.72 },
-      { kind:"yellowCard",count:4,line:2,mobileLine:2,spacing:5,intervalAfter:.6 },
-      { kind:"concededGoal",count:4,line:1,mobileLine:2,spacing:5,intervalAfter:.64 },
-      { kind:"redCard",count:3,line:0,mobileLine:0,spacing:7,intervalAfter:.78 },
-    ],
-  },
+export const BOSS_BLOCK_LIBRARY: readonly BossBlock[] = [
+  { id:"short-yellow",type:"shortBurst",difficulty:"medium",beats:[{kind:"yellowCard",count:3,line:0,spacing:7,intervalAfter:.54}],pauseOptions:[.08,.14,.2] },
+  { id:"medium-conceded",type:"mediumBurst",difficulty:"medium",beats:[{kind:"concededGoal",count:4,line:1,spacing:6,intervalAfter:.58}],pauseOptions:[.1,.18,.26] },
+  { id:"long-red",type:"longBurst",difficulty:"hard",beats:[{kind:"redCard",count:4,line:2,spacing:7,intervalAfter:.62}],pauseOptions:[.12,.2,.3] },
+  { id:"fake-penalty",type:"fakePause",difficulty:"hard",beats:[{kind:"missedPenalty",count:1,line:0,spacing:26,intervalAfter:.42},{kind:"yellowCard",count:2,line:2,spacing:9,intervalAfter:.58}],pauseOptions:[.06,.12,.18] },
+  { id:"recovery-cards",type:"recoveryWindow",difficulty:"medium",beats:[{kind:"yellowCard",count:2,line:1,spacing:10,intervalAfter:.62}],pauseOptions:[.34,.42,.5] },
+  { id:"vertical-switch",type:"verticalSwitch",difficulty:"hard",beats:[{kind:"concededGoal",count:3,line:0,spacing:8,intervalAfter:.78},{kind:"redCard",count:3,line:2,spacing:9,intervalAfter:.66}],pauseOptions:[.12,.2,.28] },
+  { id:"double-wave",type:"doubleWave",difficulty:"hard",beats:[{kind:"yellowCard",count:3,line:2,spacing:7,intervalAfter:.48},{kind:"concededGoal",count:3,line:1,spacing:8,intervalAfter:.64}],pauseOptions:[.16,.24,.32] },
+  { id:"final-pressure",type:"finalPressure",difficulty:"extreme",beats:[{kind:"redCard",count:3,line:0,spacing:9,intervalAfter:.58},{kind:"missedPenalty",count:2,line:2,spacing:28,intervalAfter:.72}],pauseOptions:[.2,.3,.4] },
+];
+
+export const MOBILE_BOSS_BLOCK_LIBRARY: readonly BossBlock[] = [
+  { id:"mobile-short-low",type:"shortBurst",difficulty:"medium",beats:[{kind:"yellowCard",count:3,line:0,mobileLine:0,spacing:9,intervalAfter:.72}],pauseOptions:[.16,.24,.32] },
+  { id:"mobile-medium-high",type:"mediumBurst",difficulty:"medium",beats:[{kind:"concededGoal",count:3,line:2,mobileLine:2,spacing:10,intervalAfter:.76}],pauseOptions:[.18,.26,.34] },
+  { id:"mobile-recovery",type:"recoveryWindow",difficulty:"medium",beats:[{kind:"yellowCard",count:2,line:0,mobileLine:0,spacing:12,intervalAfter:.76}],pauseOptions:[.4,.5,.58] },
+  { id:"mobile-fake-pause",type:"fakePause",difficulty:"hard",beats:[{kind:"missedPenalty",count:1,line:2,mobileLine:2,spacing:30,intervalAfter:.88},{kind:"yellowCard",count:2,line:0,mobileLine:0,spacing:11,intervalAfter:.78}],pauseOptions:[.18,.28,.38] },
+  { id:"mobile-vertical-switch",type:"verticalSwitch",difficulty:"hard",beats:[{kind:"concededGoal",count:3,line:0,mobileLine:0,spacing:10,intervalAfter:.9},{kind:"redCard",count:3,line:2,mobileLine:2,spacing:11,intervalAfter:.8}],pauseOptions:[.2,.3,.4] },
+  { id:"mobile-double-wave",type:"doubleWave",difficulty:"extreme",beats:[{kind:"redCard",count:3,line:2,mobileLine:2,spacing:11,intervalAfter:.92},{kind:"concededGoal",count:3,line:0,mobileLine:0,spacing:12,intervalAfter:.84}],pauseOptions:[.28,.38,.48] },
 ];
 
 export function getPatternTier(distance: number): PatternTier {
@@ -375,11 +369,127 @@ export function validateMobileRafficaPattern(
 
 export function pickBossPattern(
   previousPattern: BossPattern | null = null,
-  random = Math.random
+  mobile = false,
+  speed = 0,
+  random = Math.random,
+  validationAttempt = 0
 ) {
-  const candidates = BOSS_PATTERN_LIBRARY.filter((pattern) =>
-    pattern !== previousPattern &&
-    (previousPattern?.difficulty !== "extreme" || pattern.difficulty === "medium")
-  );
-  return candidates[Math.floor(random() * candidates.length)] ?? BOSS_PATTERN_LIBRARY[0];
+  const library = mobile ? MOBILE_BOSS_BLOCK_LIBRARY : BOSS_BLOCK_LIBRARY;
+  const blockCount = 4 + (random() > 0.58 ? 1 : 0);
+  const selected: BossBlock[] = [];
+  let lastKind: EventKind | null = null;
+  let lastLine: 0 | 1 | 2 | null = null;
+  let repeatedLine = 0;
+  let hasExtreme = false;
+
+  for (let slot = 0; slot < blockCount; slot += 1) {
+    let candidates = library.filter((block) => {
+      if (selected.at(-1)?.id === block.id) return false;
+      if (block.difficulty === "extreme" && hasExtreme) return false;
+      if (slot === 0 && previousPattern?.difficulty === "extreme" && block.difficulty !== "medium") return false;
+      const firstBeat = block.beats[0];
+      const firstLine = mobile ? firstBeat.mobileLine ?? firstBeat.line : firstBeat.line;
+      if (lastKind === firstBeat.kind && selected.length > 0) return false;
+      if (lastLine === firstLine && repeatedLine >= 2) return false;
+      return !mobile || validateMobileBossBlock(block, speed);
+    });
+    if (!candidates.length) candidates = library.filter((block) => selected.at(-1)?.id !== block.id);
+    const block = candidates[Math.floor(random() * candidates.length)] ?? library[0];
+    selected.push(block);
+    hasExtreme ||= block.difficulty === "extreme";
+    for (const beat of block.beats) {
+      const line = mobile ? beat.mobileLine ?? beat.line : beat.line;
+      repeatedLine = line === lastLine ? repeatedLine + 1 : 1;
+      lastLine = line;
+      lastKind = beat.kind;
+    }
+  }
+
+  const beats = selected.flatMap((block) => block.beats.map((beat, index) => ({
+    ...beat,
+    intervalAfter: beat.intervalAfter + (index === block.beats.length - 1
+      ? block.pauseOptions[Math.floor(random() * block.pauseOptions.length)]
+      : 0),
+  })));
+  const blockTypes = selected.map((block) => block.type);
+  const difficulty: BossPatternDifficulty = hasExtreme
+    ? "extreme"
+    : selected.some((block) => block.difficulty === "hard") ? "hard" : "medium";
+  let id = selected.map((block) => block.id).join("|");
+  if (id === previousPattern?.id) {
+    beats.reverse();
+    blockTypes.reverse();
+    id = `${id}|reverse`;
+  }
+  const pattern: BossPattern = { id, difficulty, beats, blockTypes };
+  if (!mobile || validateMobileBossPattern(pattern, speed)) return pattern;
+  if (validationAttempt < 7) {
+    return pickBossPattern(previousPattern, mobile, speed, random, validationAttempt + 1);
+  }
+  return buildMobileBossFallback();
+}
+
+function validateMobileBossBlock(block: BossBlock, speed: number) {
+  return validateMobileBossBeats(block.beats, speed);
+}
+
+export function validateMobileBossPattern(pattern: BossPattern, speed: number) {
+  return pattern.blockTypes.length >= 4 && validateMobileBossBeats(pattern.beats, speed);
+}
+
+function validateMobileBossBeats(beats: readonly RafficaBeat[], speed: number) {
+  // Deterministic approximation of the mobile runner physics: the player can
+  // remain grounded or commit to a jump, but cannot crouch or reverse a jump.
+  const speedProgress = Math.max(0, Math.min(1, (speed - 292) / (900 - 292)));
+  const projectileSpeed = 340 + speedProgress * 75;
+  const estimatedReactionTime = 360 / projectileSpeed;
+  const minimumReactionTime = 0.64;
+  const minimumLandingWindow = 0.84;
+  const maximumContinuousAirWindow = 1.08;
+  if (estimatedReactionTime < minimumReactionTime) return false;
+  let continuousLowPressure = 0;
+  for (let index = 0; index < beats.length; index += 1) {
+    const beat = beats[index];
+    const line = beat.mobileLine ?? beat.line;
+    if (line === 1 || beat.count > 4 || beat.spacing < 8) return false;
+    const groupSpan = ((beat.count - 1) * (58 + beat.spacing)) / projectileSpeed;
+    if (line === 0) {
+      continuousLowPressure += groupSpan;
+      if (continuousLowPressure > maximumContinuousAirWindow) return false;
+    } else {
+      continuousLowPressure = 0;
+    }
+    const next = beats[index + 1];
+    if (!next) continue;
+    const nextLine = next.mobileLine ?? next.line;
+    if (line !== nextLine && beat.intervalAfter < minimumLandingWindow) return false;
+    if (line === 0 && nextLine === 0) {
+      continuousLowPressure += beat.intervalAfter;
+      if (continuousLowPressure > maximumContinuousAirWindow) {
+        // A long enough interval is a valid landing-and-jump reset.
+        if (beat.intervalAfter < minimumLandingWindow + minimumReactionTime) return false;
+        continuousLowPressure = 0;
+      }
+    }
+  }
+  return true;
+}
+
+function buildMobileBossFallback(): BossPattern {
+  const blocks = [
+    MOBILE_BOSS_BLOCK_LIBRARY[0],
+    MOBILE_BOSS_BLOCK_LIBRARY[1],
+    MOBILE_BOSS_BLOCK_LIBRARY[2],
+    MOBILE_BOSS_BLOCK_LIBRARY[3],
+  ];
+  return {
+    id: "mobile-safe-fallback",
+    difficulty: "hard",
+    blockTypes: blocks.map((block) => block.type),
+    beats: blocks.flatMap((block) => block.beats.map((beat, index) => ({
+      ...beat,
+      intervalAfter: beat.intervalAfter +
+        (index === block.beats.length - 1 ? block.pauseOptions[1] : 0),
+    }))),
+  };
 }

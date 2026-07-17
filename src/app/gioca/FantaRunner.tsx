@@ -187,10 +187,12 @@ type Runtime = {
   lastBossPattern: BossPattern | null;
   nextBossAt: number;
   reducedPerformance: boolean;
+  renderQuality: "high" | "balanced" | "low";
   mobileVisualScale: number;
   mobileLayout: boolean;
   worldWidth: number;
   lastCollisionTime: number;
+  lastCollisionChecks: number;
 };
 
 const PLAYER_GROUND_Y = GROUND_Y - PLAYER_SIZE;
@@ -206,6 +208,10 @@ const BACKGROUND_TILE_CACHE = new Map<string, HTMLCanvasElement>();
 const GROUND_TILE_CACHE = new Map<string, HTMLCanvasElement>();
 const TRANSITION_VEIL_CACHE = new Map<string, HTMLCanvasElement>();
 const POWER_UP_AURA_CACHE = new Map<PowerUpKind, HTMLCanvasElement>();
+const MOBILE_EVENT_RENDER_CACHE = new Map<EventKind, HTMLCanvasElement>();
+const MOBILE_OBSTACLE_RENDER_CACHE = new Map<PhysicalObstacleKind, HTMLCanvasElement>();
+const MOBILE_POWER_UP_RENDER_CACHE = new Map<PowerUpKind, HTMLCanvasElement>();
+let mobileBossRenderCache: HTMLCanvasElement | null = null;
 const WARMED_TEXTURES = new WeakSet<HTMLImageElement>();
 let textureWarmupCanvas: HTMLCanvasElement | null = null;
 let activeGameLoopCount = 0;
@@ -239,6 +245,7 @@ type PerformanceMonitor = {
   renderTime: number;
   updateTime: number;
   collisionTime: number;
+  collisionChecks: number;
   slowWindows: number;
   lastLogAt: number;
   hudUpdates: number;
@@ -327,10 +334,12 @@ function createRuntime(): Runtime {
       BOSS_CONFIG.distanceWindowMeters.maximum
     ),
     reducedPerformance: false,
+    renderQuality: "high",
     mobileVisualScale: 1,
     mobileLayout: false,
     worldWidth: GAME_WIDTH,
     lastCollisionTime: 0,
+    lastCollisionChecks: 0,
   };
 }
 
@@ -384,7 +393,7 @@ function FantaRunner({
   const renderStateRef = useRef<CanvasRenderState>({
     context: null,
     dirty: true,
-    dprLimit: 1.35,
+    dprLimit: 1.15,
     logicalWidth: GAME_WIDTH,
     logicalHeight: GAME_HEIGHT,
   });
@@ -394,6 +403,7 @@ function FantaRunner({
     renderTime: 0,
     updateTime: 0,
     collisionTime: 0,
+    collisionChecks: 0,
     slowWindows: 0,
     lastLogAt: 0,
     hudUpdates: 0,
@@ -427,7 +437,7 @@ function FantaRunner({
     let cancelled = false;
     const mobile = window.matchMedia("(max-width: 639px)").matches;
     configureMobileRuntime(runtimeRef.current, renderStateRef.current, mobile);
-    renderStateRef.current.dprLimit = mobile ? 1.35 : 1.25;
+    renderStateRef.current.dprLimit = mobile ? 1.15 : 1.25;
     renderStateRef.current.dirty = true;
     onAssetsReady(false);
     onLoadProgress(0);
@@ -447,7 +457,7 @@ function FantaRunner({
       if (!canvas) return;
       runtimeRef.current.playerVisible = true;
       const context = prepareCanvas(canvas, renderStateRef.current, true);
-      prewarmRenderCaches(context, images);
+      prewarmRenderCaches(context, images, mobile);
       onLoadProgress(0.96);
       prewarmImageTextures(images, logo);
       drawGame(
@@ -490,6 +500,7 @@ function FantaRunner({
       renderTime: 0,
       updateTime: 0,
       collisionTime: 0,
+      collisionChecks: 0,
       slowWindows: 0,
       lastLogAt: 0,
       hudUpdates: 0,
@@ -632,7 +643,8 @@ function FantaRunner({
         time,
         frameFinishedAt - updateFinishedAt,
         updateFinishedAt - updateStartedAt,
-        runtime.lastCollisionTime
+        runtime.lastCollisionTime,
+        runtime.lastCollisionChecks
       );
 
       if (runtime.finished) {
@@ -828,7 +840,7 @@ function configureMobileRuntime(
   runtime.worldWidth = mobile ? MOBILE_GAME_WIDTH / MOBILE_CAMERA_SCALE : GAME_WIDTH;
   renderState.logicalWidth = mobile ? MOBILE_GAME_WIDTH : GAME_WIDTH;
   renderState.logicalHeight = mobile ? MOBILE_GAME_HEIGHT : GAME_HEIGHT;
-  renderState.dprLimit = mobile ? 1.35 : 1.25;
+  renderState.dprLimit = mobile ? 1.15 : 1.25;
   renderState.dirty = true;
 }
 
@@ -839,13 +851,15 @@ function updatePerformanceMonitor(
   time: number,
   renderTime: number,
   updateTime: number,
-  collisionTime: number
+  collisionTime: number,
+  collisionChecks: number
 ) {
   if (!monitor.windowStartedAt) monitor.windowStartedAt = time;
   monitor.frames += 1;
   monitor.renderTime += renderTime;
   monitor.updateTime += updateTime;
   monitor.collisionTime += collisionTime;
+  monitor.collisionChecks += collisionChecks;
   const windowDuration = time - monitor.windowStartedAt;
   if (windowDuration < 2000) return;
 
@@ -854,13 +868,22 @@ function updatePerformanceMonitor(
   const averageUpdateTime = monitor.updateTime / Math.max(1, monitor.frames);
   const averageCollisionTime = monitor.collisionTime / Math.max(1, monitor.frames);
   const averageFrameTime = averageRenderTime + averageUpdateTime;
-  monitor.slowWindows = averageFps < 54
+  monitor.slowWindows = averageFps < (runtime.mobileLayout ? 52 : 54)
     ? monitor.slowWindows + 1
     : Math.max(0, monitor.slowWindows - 1);
 
-  if (monitor.slowWindows >= 1 && !runtime.reducedPerformance) {
+  if (runtime.mobileLayout && monitor.slowWindows >= 2 && runtime.renderQuality === "high") {
+    runtime.renderQuality = "balanced";
     runtime.reducedPerformance = true;
-    renderState.dprLimit = runtime.mobileLayout ? 1.15 : 1;
+    renderState.dprLimit = 1;
+    renderState.dirty = true;
+  } else if (runtime.mobileLayout && monitor.slowWindows >= 4 && runtime.renderQuality === "balanced") {
+    runtime.renderQuality = "low";
+    renderState.dprLimit = 1;
+    renderState.dirty = true;
+  } else if (!runtime.mobileLayout && monitor.slowWindows >= 1 && !runtime.reducedPerformance) {
+    runtime.reducedPerformance = true;
+    renderState.dprLimit = 1;
     renderState.dirty = true;
   }
 
@@ -877,8 +900,10 @@ function updatePerformanceMonitor(
       averageRenderMs: Number(averageRenderTime.toFixed(2)),
       averageUpdateMs: Number(averageUpdateTime.toFixed(2)),
       averageCollisionMs: Number(averageCollisionTime.toFixed(3)),
+      collisionChecksPerFrame: Number((monitor.collisionChecks / Math.max(1, monitor.frames)).toFixed(1)),
       hudRendersPerSecond: Number((monitor.hudUpdates * 1000 / windowDuration).toFixed(1)),
       reducedMode: runtime.reducedPerformance,
+      quality: runtime.renderQuality,
       dprLimit: renderState.dprLimit,
       activeGameLoops: activeGameLoopCount,
       runnerReactRenders: runnerReactRenderCount,
@@ -890,6 +915,7 @@ function updatePerformanceMonitor(
   monitor.renderTime = 0;
   monitor.updateTime = 0;
   monitor.collisionTime = 0;
+  monitor.collisionChecks = 0;
   monitor.hudUpdates = 0;
 }
 
@@ -1004,7 +1030,7 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
   runtime.bonusBurstCooldown = Math.max(0, runtime.bonusBurstCooldown - delta);
   runtime.mutualBurstCooldown = Math.max(0, runtime.mutualBurstCooldown - delta);
   runtime.powerUpCooldown = Math.max(0, runtime.powerUpCooldown - delta);
-  updateBoss(runtime, delta, difficulty, time);
+  updateBoss(runtime, delta, difficulty, time, speed);
   updateRaffica(runtime, delta, speed);
   updateRafficaOverlay(runtime, delta);
   runtime.spawnTimer -= delta * (1 - dybalaStrength * 0.52);
@@ -1098,15 +1124,27 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
         const deltaX = magnetTargetX - entityCenterX;
         const deltaY = magnetTargetY - entityCenterY;
         const distanceToTarget = Math.max(0.001, Math.hypot(deltaX, deltaY));
-        const attractionSpeed = (420 + (1 - clamp01(distanceToTarget / 720)) * 520) *
-          (0.72 + nicoStrength * 0.28);
-        const step = Math.min(distanceToTarget, attractionSpeed * delta);
-        entity.x += deltaX / distanceToTarget * step;
-        entity.y += deltaY / distanceToTarget * step;
-        if (distanceToTarget <= Math.max(22, attractionSpeed * delta * 1.35)) {
-          entity.x = magnetTargetX - entity.width / 2;
-          entity.y = magnetTargetY - entity.height / 2;
-          entity.magnetCaptured = true;
+        const attractionRadius = 360;
+        if (distanceToTarget <= attractionRadius) {
+          const proximity = 1 - clamp01(distanceToTarget / attractionRadius);
+          const attractionSpeed = (135 + proximity * 205) *
+            (0.78 + nicoStrength * 0.22);
+          const step = Math.min(distanceToTarget, attractionSpeed * delta);
+          const nextCenterX = entityCenterX + deltaX / distanceToTarget * step;
+          const nextCenterY = entityCenterY + deltaY / distanceToTarget * step;
+          entity.x += nextCenterX - entityCenterX;
+          entity.y += nextCenterY - entityCenterY;
+          const sweptDistance = distanceFromPointToSegment(
+            magnetTargetX,
+            magnetTargetY,
+            entityCenterX,
+            entityCenterY,
+            nextCenterX,
+            nextCenterY
+          );
+          if (distanceToTarget <= 10 || sweptDistance <= 9) {
+            entity.magnetCaptured = true;
+          }
         }
       }
       const alreadyVanishing = (entity.opacity ?? 1) < 1;
@@ -1177,11 +1215,17 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
 
   const remainingEntities = runtime.entityScratch;
   remainingEntities.length = 0;
+  let collisionChecks = 0;
   for (const entity of runtime.entities) {
     if (entity.x + entity.width <= -5) {
       releaseEntity(runtime, entity);
       continue;
     }
+    if (entity.x > runtime.playerX + PLAYER_SIZE + 160) {
+      remainingEntities.push(entity);
+      continue;
+    }
+    collisionChecks += 1;
     const entityRect = entity.type === "physical"
       ? getObstacleHitbox(entity)
       : entity.type === "powerup"
@@ -1256,6 +1300,7 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
   runtime.lastCollisionTime = process.env.NODE_ENV !== "production"
     ? performance.now() - collisionStartedAt
     : 0;
+  runtime.lastCollisionChecks = collisionChecks;
 
   if (runtime.playerX + PLAYER_SIZE < 0 && !runtime.finished) {
     runtime.gameOverReason = "Sei rimasto indietro";
@@ -1579,7 +1624,8 @@ function updateBoss(
   runtime: Runtime,
   delta: number,
   difficulty: number,
-  time: number
+  time: number,
+  speed: number
 ) {
   if (!runtime.boss) {
     if (
@@ -1589,24 +1635,28 @@ function updateBoss(
       runtime.backgroundTransition
       || runtime.distance < SPAWN_CONFIG.openingBonus.distanceEndMeters
     ) return;
-    const pattern = pickBossPattern(runtime.lastBossPattern);
+    const pattern = pickBossPattern(
+      runtime.lastBossPattern,
+      runtime.mobileLayout,
+      speed
+    );
     runtime.lastBossPattern = pattern;
     runtime.boss = {
       phase: "warning",
-      timer: BOSS_CONFIG.warningSeconds,
+      timer: BOSS_CONFIG.warningSeconds + (runtime.mobileLayout ? 0.35 : 0),
       spawnTimer: 0,
       lastShotAt: -10,
       attackIndex: 0,
       pattern,
       volleysSinceRecovery: 0,
-      recoveryEvery: Math.random() < 0.5 ? 2 : 3,
+      recoveryEvery: 2 + Math.floor(Math.random() * 3),
     };
     runtime.presentation = {
       asset: BOSS_CONFIG.warningAsset,
       title: "Boss 20 in arrivo",
       subtitle: "Non farti trascinare in fondo",
       tone: "malus",
-      until: time + BOSS_CONFIG.warningSeconds * 1000,
+      until: time + (BOSS_CONFIG.warningSeconds + (runtime.mobileLayout ? 0.35 : 0)) * 1000,
     };
     return;
   }
@@ -1640,7 +1690,7 @@ function updateBoss(
         activeProjectiles += 1;
       }
     }
-    if (activeProjectiles >= (runtime.mobileLayout ? 10 : 11)) {
+    if (activeProjectiles >= (runtime.mobileLayout ? 9 : 11)) {
       boss.spawnTimer = 0.18;
       return;
     }
@@ -1650,7 +1700,9 @@ function updateBoss(
     const dimensions = getEventDimensions(kind);
     const scale = runtime.mobileLayout ? MOBILE_EVENT_SCALE : 1;
     const spread = Math.max(beat.spacing, kind === "missedPenalty" ? 16 : 2);
-    const projectileSpeed = (runtime.mobileLayout ? 370 : 455) + difficulty * 95;
+    const projectileSpeed = runtime.mobileLayout
+      ? 340 + difficulty * 75
+      : 455 + difficulty * 95;
     const volleyCount = beat.count;
     for (let itemIndex = 0; itemIndex < volleyCount; itemIndex += 1) {
       const spawnX = bossRect.x + bossRect.width * 0.18 +
@@ -1676,7 +1728,11 @@ function updateBoss(
     boss.lastShotAt = runtime.elapsed;
     const nextAttackIndex = boss.attackIndex + 1;
     if (nextAttackIndex >= boss.pattern.beats.length) {
-      const nextPattern = pickBossPattern(boss.pattern);
+      const nextPattern = pickBossPattern(
+        boss.pattern,
+        runtime.mobileLayout,
+        speed
+      );
       boss.pattern = nextPattern;
       runtime.lastBossPattern = nextPattern;
       boss.attackIndex = 0;
@@ -1693,8 +1749,9 @@ function updateBoss(
     );
     if (boss.volleysSinceRecovery >= boss.recoveryEvery) {
       boss.spawnTimer += boss.pattern.difficulty === "extreme" ? 0.42 : 0.3;
+      if (runtime.mobileLayout) boss.spawnTimer += 0.14;
       boss.volleysSinceRecovery = 0;
-      boss.recoveryEvery = Math.random() < 0.5 ? 2 : 3;
+      boss.recoveryEvery = 2 + Math.floor(Math.random() * 3);
     }
   }
   if (boss.timer > 0) return;
@@ -1744,8 +1801,12 @@ function getVisibleBackgroundStage(runtime: Runtime) {
     : transition?.from ?? runtime.backgroundStage;
 }
 
+function getMaximumActiveEntities(runtime: Runtime) {
+  return runtime.mobileLayout ? 10 : ENTITY_DENSITY_CONFIG.maximumActiveEntities;
+}
+
 function spawnNext(runtime: Runtime, speed: number, difficulty: number) {
-  if (runtime.entities.length >= ENTITY_DENSITY_CONFIG.maximumActiveEntities) {
+  if (runtime.entities.length >= getMaximumActiveEntities(runtime)) {
     return 0;
   }
   const startX = runtime.worldWidth + Math.max(runtime.mobileLayout ? 70 : 40, speed * (runtime.mobileLayout ? 0.14 : 0.08));
@@ -1848,7 +1909,7 @@ function pushEvent(
     : ENTITY_DENSITY_CONFIG.maximumActiveCollectibles;
   if (
     eventCount >= maximumEvents ||
-    runtime.entities.length >= ENTITY_DENSITY_CONFIG.maximumActiveEntities
+    runtime.entities.length >= getMaximumActiveEntities(runtime)
   ) {
     return false;
   }
@@ -1938,7 +1999,7 @@ function pushPhysicalObstacle(
   );
   if (
     physicalCount >= ENTITY_DENSITY_CONFIG.maximumActivePhysicalObstacles ||
-    runtime.entities.length >= ENTITY_DENSITY_CONFIG.maximumActiveEntities
+    runtime.entities.length >= getMaximumActiveEntities(runtime)
   ) {
     return false;
   }
@@ -2238,6 +2299,27 @@ function clamp01(value: number) {
   return Math.max(0, Math.min(1, value));
 }
 
+function distanceFromPointToSegment(
+  pointX: number,
+  pointY: number,
+  startX: number,
+  startY: number,
+  endX: number,
+  endY: number
+) {
+  const segmentX = endX - startX;
+  const segmentY = endY - startY;
+  const lengthSquared = segmentX * segmentX + segmentY * segmentY;
+  if (lengthSquared <= 0.0001) return Math.hypot(pointX - startX, pointY - startY);
+  const progress = clamp01(
+    ((pointX - startX) * segmentX + (pointY - startY) * segmentY) / lengthSquared
+  );
+  return Math.hypot(
+    pointX - (startX + segmentX * progress),
+    pointY - (startY + segmentY * progress)
+  );
+}
+
 function getPhysicalDimensions(kind: PhysicalObstacleKind) {
   const sprite = OBSTACLE_SPRITES[kind];
   return { width: sprite.width, height: sprite.height };
@@ -2423,7 +2505,7 @@ function drawGame(
     if (entity.x + entity.width <= 0 || entity.x >= runtime.worldWidth + 80) continue;
     context.save();
     context.globalAlpha *= entity.opacity ?? 1;
-    drawEntity(context, entity, assets, runtime.elapsed);
+    drawEntity(context, entity, assets, runtime.elapsed, runtime.mobileLayout);
     context.restore();
   }
   if (runtime.playerVisible) {
@@ -2465,7 +2547,9 @@ function drawAssetBackground(
   const progress = smoothProgress(transition.progress);
   drawStageLayers(context, currentStage, runtime, assets, 1 - progress * 0.16, viewport);
   drawStageLayers(context, transition.to, runtime, assets, progress, viewport);
-  drawScenarioTransitionVeil(context, progress, viewport);
+  if (!runtime.mobileLayout || runtime.renderQuality !== "low") {
+    drawScenarioTransitionVeil(context, progress, viewport);
+  }
   return true;
 }
 
@@ -2657,7 +2741,8 @@ function drawRafficaOverlay(
     viewport.height
   );
   context.save();
-  context.globalAlpha = runtime.burstOverlayIntensity * slowPulse;
+  context.globalAlpha = runtime.burstOverlayIntensity * slowPulse *
+    (runtime.mobileLayout && runtime.renderQuality === "low" ? 0.72 : 1);
   context.drawImage(staticOverlay, 0, 0, viewport.width, viewport.height);
 
   context.restore();
@@ -2703,7 +2788,11 @@ function getRafficaStaticOverlay(
   return canvas;
 }
 
-function prewarmRenderCaches(context: CanvasRenderingContext2D, images: GameImageMap) {
+function prewarmRenderCaches(
+  context: CanvasRenderingContext2D,
+  images: GameImageMap,
+  mobile: boolean
+) {
   const currentViewport = getLogicalCanvasViewport(context);
   const viewports = [
     currentViewport,
@@ -2723,6 +2812,81 @@ function prewarmRenderCaches(context: CanvasRenderingContext2D, images: GameImag
     }
   }
   for (const kind of POWER_UP_KINDS) getPowerUpAura(kind);
+  if (mobile) prewarmMobileRenderVariants(images);
+}
+
+function prewarmMobileRenderVariants(images: GameImageMap) {
+  for (const kind of Object.keys(EVENT_SPRITES) as EventKind[]) {
+    const sprite = EVENT_SPRITES[kind];
+    if (!sprite) continue;
+    const image = images.get(sprite.asset);
+    if (!image || MOBILE_EVENT_RENDER_CACHE.has(kind)) continue;
+    MOBILE_EVENT_RENDER_CACHE.set(kind, createCroppedRenderVariant(
+      image,
+      sprite.source,
+      sprite.width * MOBILE_EVENT_SCALE,
+      sprite.height * MOBILE_EVENT_SCALE
+    ));
+  }
+  for (const kind of Object.keys(OBSTACLE_SPRITES) as PhysicalObstacleKind[]) {
+    const sprite = OBSTACLE_SPRITES[kind];
+    const image = images.get(sprite.asset);
+    if (!image || MOBILE_OBSTACLE_RENDER_CACHE.has(kind)) continue;
+    MOBILE_OBSTACLE_RENDER_CACHE.set(kind, createCroppedRenderVariant(
+      image,
+      sprite.source,
+      sprite.width * MOBILE_OBSTACLE_SCALE[kind],
+      sprite.height * MOBILE_OBSTACLE_SCALE[kind]
+    ));
+  }
+  for (const kind of POWER_UP_KINDS) {
+    const definition = POWER_UP_CONFIG[kind];
+    const image = images.get(definition.assetKey);
+    if (!image || MOBILE_POWER_UP_RENDER_CACHE.has(kind)) continue;
+    MOBILE_POWER_UP_RENDER_CACHE.set(kind, createCroppedRenderVariant(
+      image,
+      { x: 0, y: 0, width: image.naturalWidth, height: image.naturalHeight },
+      definition.width * MOBILE_POWER_UP_SCALE,
+      definition.height * MOBILE_POWER_UP_SCALE
+    ));
+  }
+  const boss = images.get("event.boss");
+  if (boss && !mobileBossRenderCache) {
+    mobileBossRenderCache = createCroppedRenderVariant(
+      boss,
+      { x: 0, y: 0, width: boss.naturalWidth, height: boss.naturalHeight },
+      200,
+      300
+    );
+  }
+}
+
+function createCroppedRenderVariant(
+  image: HTMLImageElement,
+  source: { x: number; y: number; width: number; height: number },
+  width: number,
+  height: number
+) {
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(width));
+  canvas.height = Math.max(1, Math.round(height));
+  const context = canvas.getContext("2d");
+  if (!context) return canvas;
+  const scale = Math.min(canvas.width / source.width, canvas.height / source.height);
+  const targetWidth = source.width * scale;
+  const targetHeight = source.height * scale;
+  context.drawImage(
+    image,
+    source.x,
+    source.y,
+    source.width,
+    source.height,
+    (canvas.width - targetWidth) / 2,
+    canvas.height - targetHeight,
+    targetWidth,
+    targetHeight
+  );
+  return canvas;
 }
 
 function prewarmImageTextures(images: GameImageMap, logo: HTMLImageElement) {
@@ -3043,10 +3207,12 @@ function drawPersistentPowerUpEffects(
     "nico-paz": 136,
     gimenez: 130,
   };
+  let renderedAuras = 0;
   for (let index = 0; index < POWER_UP_KINDS.length; index += 1) {
     const kind = POWER_UP_KINDS[index];
     const strength = getPowerUpStrength(runtime, kind);
     if (!strength) continue;
+    if (runtime.mobileLayout && runtime.renderQuality === "low" && renderedAuras >= 1) continue;
     const breath = reducedMotion
       ? 1
       : 1 + Math.sin(time / (260 + index * 35) + index * 1.7) * 0.035;
@@ -3056,8 +3222,10 @@ function drawPersistentPowerUpEffects(
       centerX,
       centerY,
       sizeByKind[kind] * visualScale * breath,
-      strength * (kind === "luperto" ? 0.72 : 0.56)
+      strength * (kind === "luperto" ? 0.72 : 0.56) *
+        (runtime.mobileLayout && runtime.renderQuality !== "high" ? 0.72 : 1)
     );
+    renderedAuras += 1;
   }
 }
 
@@ -3131,14 +3299,15 @@ function drawEntity(
   context: CanvasRenderingContext2D,
   entity: RunnerEntity,
   assets: GameImageMap,
-  elapsed: number
+  elapsed: number,
+  mobileLayout: boolean
 ) {
   if (entity.type === "powerup") {
-    drawPowerUp(context, entity, assets, elapsed);
+    drawPowerUp(context, entity, assets, elapsed, mobileLayout);
     return;
   }
   if (entity.type === "physical") {
-    drawPhysicalObstacle(context, entity, assets);
+    drawPhysicalObstacle(context, entity, assets, mobileLayout);
     return;
   }
 
@@ -3192,7 +3361,14 @@ function drawEntity(
       : "rgba(2,6,23,0.4)";
     context.shadowBlur = 0;
     context.shadowOffsetY = 2;
-    drawCroppedSprite(context, spriteImage, sprite.source, entity);
+    const mobileSprite = mobileLayout
+      ? MOBILE_EVENT_RENDER_CACHE.get(entity.kind as EventKind)
+      : undefined;
+    if (mobileSprite) {
+      context.drawImage(mobileSprite, entity.x, entity.y, entity.width, entity.height);
+    } else {
+      drawCroppedSprite(context, spriteImage, sprite.source, entity);
+    }
     context.restore();
     return;
   }
@@ -3235,7 +3411,8 @@ function drawPowerUp(
   context: CanvasRenderingContext2D,
   entity: RunnerEntity,
   assets: GameImageMap,
-  elapsed: number
+  elapsed: number,
+  mobileLayout: boolean
 ) {
   const definition = POWER_UP_CONFIG[entity.kind as PowerUpKind];
   const image = assets.get(definition.assetKey);
@@ -3245,8 +3422,11 @@ function drawPowerUp(
   context.scale(pulse, pulse);
   context.shadowColor = definition.hudColor;
   context.shadowBlur = 0;
-  if (image) {
-    context.drawImage(image, -entity.width / 2, -entity.height / 2, entity.width, entity.height);
+  const renderImage = mobileLayout
+    ? MOBILE_POWER_UP_RENDER_CACHE.get(entity.kind as PowerUpKind) ?? image
+    : image;
+  if (renderImage) {
+    context.drawImage(renderImage, -entity.width / 2, -entity.height / 2, entity.width, entity.height);
   } else {
     context.fillStyle = definition.hudColor;
     context.beginPath();
@@ -3262,7 +3442,9 @@ function drawBoss(
   assets: GameImageMap
 ) {
   if (!runtime.boss) return;
-  const image = assets.get("event.boss");
+  const image = runtime.mobileLayout
+    ? mobileBossRenderCache ?? assets.get("event.boss")
+    : assets.get("event.boss");
   if (!image) return;
   const bossRect = getBossRect(runtime);
   const { x, y, width, height } = bossRect;
@@ -3321,7 +3503,8 @@ function getBossRect(runtime: Runtime) {
 function drawPhysicalObstacle(
   context: CanvasRenderingContext2D,
   entity: RunnerEntity,
-  assets: GameImageMap
+  assets: GameImageMap,
+  mobileLayout: boolean
 ) {
   const sprite = OBSTACLE_SPRITES[entity.kind as PhysicalObstacleKind];
   const image = assets.get(sprite.asset);
@@ -3354,7 +3537,14 @@ function drawPhysicalObstacle(
     context.rotate(entity.rotation ?? 0);
     context.translate(-centerX, -centerY);
   }
-  drawCroppedSprite(context, image, sprite.source, entity);
+  const mobileSprite = mobileLayout
+    ? MOBILE_OBSTACLE_RENDER_CACHE.get(entity.kind as PhysicalObstacleKind)
+    : undefined;
+  if (mobileSprite) {
+    context.drawImage(mobileSprite, entity.x, entity.y, entity.width, entity.height);
+  } else {
+    drawCroppedSprite(context, image, sprite.source, entity);
+  }
   context.restore();
 }
 
