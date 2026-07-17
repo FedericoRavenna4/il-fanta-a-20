@@ -2,11 +2,9 @@
 
 import type { GameSnapshot, GameTeam } from "@/lib/game/types";
 
-export default function GameHud({ team, snapshot, paused, onTogglePause }: {
+export default function GameHud({ team, snapshot }: {
   team: GameTeam;
   snapshot: GameSnapshot;
-  paused: boolean;
-  onTogglePause: () => void;
 }) {
   const warning = snapshot.teamRating <= 64;
   const critical = snapshot.teamRating <= 62.5;
@@ -22,18 +20,10 @@ export default function GameHud({ team, snapshot, paused, onTogglePause }: {
 
   return (
     <div className={`border-b px-2.5 py-1.5 text-white transition-colors duration-700 sm:px-5 sm:py-2.5 ${hudTone}`}>
-      <div className="flex min-w-0 items-center gap-2 border-b border-white/[.08] pb-1.5 pr-11 sm:block sm:pb-2 sm:pr-36">
+      <div className="flex min-w-0 items-center gap-2 border-b border-white/[.08] pb-1.5 pt-11 sm:block sm:pb-2 sm:pr-36 sm:pt-0">
         <p className="min-w-0 flex-1 truncate text-[15px] font-black uppercase tracking-[-.015em] text-white sm:text-base">
           {team.nome}
         </p>
-        <button
-          type="button"
-          onClick={onTogglePause}
-          aria-label={paused ? "Riprendi la partita" : "Metti in pausa"}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/18 bg-slate-950/72 text-sm font-black text-white shadow-md transition active:scale-95 sm:hidden"
-        >
-          <span aria-hidden="true">{paused ? "▶" : "Ⅱ"}</span>
-        </button>
       </div>
 
       <div className="grid grid-cols-[66px_minmax(0,1fr)_82px] items-center gap-1.5 pt-1 sm:grid-cols-[105px_minmax(0,560px)_125px] sm:justify-center sm:gap-4 sm:pt-1.5">

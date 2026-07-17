@@ -8,6 +8,8 @@ import {
   DIFFICULTY_BANDS,
   DIFFICULTY_CONFIG,
   ENTITY_DENSITY_CONFIG,
+  EARLY_GAME_END_METERS,
+  EARLY_GAME_RATING_FLOOR,
   FLOW_PERFECT_OBSTACLE,
   FLOW_PROGRESS_PER_SECOND,
   GAME_HEIGHT,
@@ -38,6 +40,7 @@ import {
   pickBossPattern,
   pickRafficaPattern,
   type GameplayPattern,
+  type BossPattern,
   type PatternCategory,
   type RafficaBeat,
 } from "@/lib/game/patterns";
@@ -177,9 +180,11 @@ type Runtime = {
     spawnTimer: number;
     lastShotAt: number;
     attackIndex: number;
-    pattern: readonly RafficaBeat[];
+    pattern: BossPattern;
+    volleysSinceRecovery: number;
+    recoveryEvery: number;
   } | null;
-  lastBossPattern: readonly RafficaBeat[] | null;
+  lastBossPattern: BossPattern | null;
   nextBossAt: number;
   reducedPerformance: boolean;
   mobileVisualScale: number;
@@ -1005,7 +1010,7 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
   runtime.spawnTimer -= delta * (1 - dybalaStrength * 0.52);
 
   if (runtime.spawnTimer <= 0 && !runtime.burst && !runtime.boss) {
-    if (tryStartRaffica(runtime, time)) {
+    if (tryStartRaffica(runtime, time, speed)) {
       runtime.spawnTimer = 0.5;
     } else if (trySpawnPowerUp(runtime, false)) {
       runtime.spawnTimer = getSafeSpawnInterval(speed, difficulty) * 1.15;
@@ -1022,6 +1027,11 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
     }
   }
 
+  const nicoStrength = getPowerUpStrength(runtime, "nico-paz");
+  const gimenezStrength = getPowerUpStrength(runtime, "gimenez");
+  const magnetTarget = nicoStrength > 0 ? getPlayerHitbox(runtime, time) : null;
+  const magnetTargetX = magnetTarget ? magnetTarget.x + magnetTarget.width / 2 : 0;
+  const magnetTargetY = magnetTarget ? magnetTarget.y + magnetTarget.height / 2 : 0;
   for (const entity of runtime.entities) {
     if (entity.type === "physical" && entity.motion === "launched") {
       entity.x += ((entity.velocityX ?? 440) - worldSpeed * 0.22) * delta;
@@ -1081,27 +1091,32 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
       entity.type === "event" &&
       EVENT_DEFINITIONS[entity.kind as EventKind].category === "bonus"
     ) {
-      const playerCenterY = runtime.playerY + PLAYER_SIZE / 2;
       const entityCenterY = entity.y + entity.height / 2;
       const horizontalDistance = entity.x - runtime.playerX;
-      const nicoStrength = getPowerUpStrength(runtime, "nico-paz");
-      const gimenezStrength = getPowerUpStrength(runtime, "gimenez");
-      if (nicoStrength > 0 && horizontalDistance > 0 && horizontalDistance < 400) {
-        const blockingObstacle = findBlockingObstacle(runtime, entity);
-        const targetY = blockingObstacle
-          ? Math.max(GROUND_Y - entity.height - 128, blockingObstacle.y - entity.height - 14)
-          : playerCenterY - entity.height / 2;
-        entity.y += (targetY - entity.y) * Math.min(1, delta * 5.4 * nicoStrength);
-        if (!blockingObstacle) {
-          entity.x -= worldSpeed * delta * (0.28 + (1 - clamp01(horizontalDistance / 400)) * 0.16) * nicoStrength;
+      if (nicoStrength > 0 && magnetTarget) {
+        const entityCenterX = entity.x + entity.width / 2;
+        const deltaX = magnetTargetX - entityCenterX;
+        const deltaY = magnetTargetY - entityCenterY;
+        const distanceToTarget = Math.max(0.001, Math.hypot(deltaX, deltaY));
+        const attractionSpeed = (420 + (1 - clamp01(distanceToTarget / 720)) * 520) *
+          (0.72 + nicoStrength * 0.28);
+        const step = Math.min(distanceToTarget, attractionSpeed * delta);
+        entity.x += deltaX / distanceToTarget * step;
+        entity.y += deltaY / distanceToTarget * step;
+        if (distanceToTarget <= Math.max(22, attractionSpeed * delta * 1.35)) {
+          entity.x = magnetTargetX - entity.width / 2;
+          entity.y = magnetTargetY - entity.height / 2;
+          entity.magnetCaptured = true;
         }
       }
       const alreadyVanishing = (entity.opacity ?? 1) < 1;
       if (
+        nicoStrength <= 0 &&
         (gimenezStrength > 0 || alreadyVanishing) &&
         (alreadyVanishing || (horizontalDistance > -20 && horizontalDistance < 150))
       ) {
         const dissolveStrength = gimenezStrength > 0 ? gimenezStrength : 1;
+        const playerCenterY = runtime.playerY + PLAYER_SIZE / 2;
         const direction = entityCenterY <= playerCenterY ? -1 : 1;
         const proximity = 1 - clamp01(Math.max(0, horizontalDistance) / 150);
         entity.fleeing = true;
@@ -1182,7 +1197,9 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
       EVENT_DEFINITIONS[entity.kind as EventKind].category === "bonus" &&
       (getPowerUpStrength(runtime, "gimenez") > 0 || entity.fleeing);
     const launchedObstacle = entity.type === "physical" && entity.motion === "launched";
-    const hit = !protectedByGimenez && !launchedObstacle && intersects(collisionPlayerRect, entityRect);
+    const capturedByNico = entity.type === "event" && entity.magnetCaptured === true;
+    const hit = capturedByNico ||
+      (!protectedByGimenez && !launchedObstacle && intersects(collisionPlayerRect, entityRect));
 
     if (hit) {
       if (entity.type === "event") {
@@ -1323,7 +1340,8 @@ function updateBackgroundState(runtime: Runtime, delta: number) {
 
 function tryStartRaffica(
   runtime: Runtime,
-  time: number
+  time: number,
+  speed: number
 ) {
   if (
     runtime.burst ||
@@ -1338,6 +1356,7 @@ function tryStartRaffica(
   ) return false;
 
   const canStartMalus =
+    runtime.distance >= EARLY_GAME_END_METERS &&
     runtime.elapsed >= RAFFICA_CONFIG.malus.minimumStartSeconds &&
     runtime.malusBurstCooldown <= 0;
   const canStartBonus =
@@ -1370,7 +1389,12 @@ function tryStartRaffica(
   if (!type) return false;
 
   const config = RAFFICA_CONFIG[type];
-  const pattern = pickRafficaPattern(type, runtime.lastRafficaPatterns[type] ?? null);
+  const pattern = pickRafficaPattern(
+    type,
+    runtime.lastRafficaPatterns[type] ?? null,
+    runtime.mobileLayout,
+    speed
+  );
   runtime.lastRafficaPatterns[type] = pattern;
   runtime.burst = {
     type,
@@ -1450,7 +1474,12 @@ function updateRaffica(
     burst.beatIndex = burst.pattern.length;
     burst.timer = burst.durationRemaining + 1;
   } else if (burst.type === "malus" && nextBeatIndex >= burst.pattern.length) {
-    const nextPattern = pickRafficaPattern("malus", burst.pattern);
+    const nextPattern = pickRafficaPattern(
+      "malus",
+      burst.pattern,
+      runtime.mobileLayout,
+      speed
+    );
     burst.pattern = nextPattern;
     runtime.lastRafficaPatterns.malus = nextPattern;
     burst.beatIndex = 0;
@@ -1569,6 +1598,8 @@ function updateBoss(
       lastShotAt: -10,
       attackIndex: 0,
       pattern,
+      volleysSinceRecovery: 0,
+      recoveryEvery: Math.random() < 0.5 ? 2 : 3,
     };
     runtime.presentation = {
       asset: BOSS_CONFIG.warningAsset,
@@ -1613,13 +1644,13 @@ function updateBoss(
       boss.spawnTimer = 0.18;
       return;
     }
-    const beat = boss.pattern[boss.attackIndex % boss.pattern.length];
+    const beat = boss.pattern.beats[boss.attackIndex % boss.pattern.beats.length];
     const kind = beat.kind;
     const bossRect = getBossRect(runtime);
     const dimensions = getEventDimensions(kind);
     const scale = runtime.mobileLayout ? MOBILE_EVENT_SCALE : 1;
     const spread = Math.max(beat.spacing, kind === "missedPenalty" ? 16 : 2);
-    const projectileSpeed = (runtime.mobileLayout ? 390 : 480) + difficulty * 110;
+    const projectileSpeed = (runtime.mobileLayout ? 370 : 455) + difficulty * 95;
     const volleyCount = beat.count;
     for (let itemIndex = 0; itemIndex < volleyCount; itemIndex += 1) {
       const spawnX = bossRect.x + bossRect.width * 0.18 +
@@ -1644,7 +1675,7 @@ function updateBoss(
     }
     boss.lastShotAt = runtime.elapsed;
     const nextAttackIndex = boss.attackIndex + 1;
-    if (nextAttackIndex >= boss.pattern.length) {
+    if (nextAttackIndex >= boss.pattern.beats.length) {
       const nextPattern = pickBossPattern(boss.pattern);
       boss.pattern = nextPattern;
       runtime.lastBossPattern = nextPattern;
@@ -1652,6 +1683,7 @@ function updateBoss(
     } else {
       boss.attackIndex = nextAttackIndex;
     }
+    boss.volleysSinceRecovery += 1;
     boss.spawnTimer = Math.min(
       BOSS_CONFIG.itemIntervalSeconds.maximum,
       Math.max(
@@ -1659,6 +1691,11 @@ function updateBoss(
         beat.intervalAfter * (0.94 - difficulty * 0.18)
       )
     );
+    if (boss.volleysSinceRecovery >= boss.recoveryEvery) {
+      boss.spawnTimer += boss.pattern.difficulty === "extreme" ? 0.42 : 0.3;
+      boss.volleysSinceRecovery = 0;
+      boss.recoveryEvery = Math.random() < 0.5 ? 2 : 3;
+    }
   }
   if (boss.timer > 0) return;
 
@@ -1727,8 +1764,9 @@ function spawnNext(runtime: Runtime, speed: number, difficulty: number) {
     return 1.15;
   }
 
-  // Il tratto introduttivo resta libero dopo il primo Assist: nessun Malus può filtrare.
-  if (runtime.distance < 40) return 0.72;
+  // Il primo Assist attraversa il campo da solo; poi il motore usa esclusivamente
+  // pattern dichiarati introSafe fino a 30 m ed earlyGame fino a 70 m.
+  if (runtime.distance < 12) return 0.72;
 
   const luperto = getPowerUpStrength(runtime, "luperto");
   const nicoPaz = getPowerUpStrength(runtime, "nico-paz");
@@ -1963,6 +2001,7 @@ function acquireEntity(
   entity.amplitude = undefined;
   entity.phase = undefined;
   entity.motionSpeed = undefined;
+  entity.magnetCaptured = undefined;
   return entity;
 }
 
@@ -2042,6 +2081,9 @@ function changeTeamRating(
   const previousRating = runtime.teamRating;
   const previousGoals = runtime.confirmedGoals;
   runtime.teamRating = roundRating(runtime.teamRating + delta);
+  if (reason === "malus" && runtime.distance < EARLY_GAME_END_METERS) {
+    runtime.teamRating = Math.max(EARLY_GAME_RATING_FLOOR, runtime.teamRating);
+  }
   logRatingChange(previousRating, runtime.teamRating, reason, detail);
   const goals = calculateGoals(runtime.teamRating);
   runtime.confirmedGoals = goals;
@@ -2088,20 +2130,6 @@ function launchObstacle(runtime: Runtime, entity: RunnerEntity, time: number) {
   runtime.messageStartedAt = time;
   runtime.messageUntil = time + 720;
   runtime.score += 75;
-}
-
-function findBlockingObstacle(runtime: Runtime, bonus: RunnerEntity) {
-  const bonusCenterY = bonus.y + bonus.height / 2;
-  return runtime.entities.find((entity) => {
-    if (entity.type !== "physical" || entity.motion === "launched") return false;
-    const betweenPlayerAndBonus =
-      entity.x > runtime.playerX + PLAYER_SIZE * 0.55 &&
-      entity.x < bonus.x + bonus.width;
-    const blocksPath =
-      bonusCenterY > entity.y - 12 &&
-      runtime.playerY + PLAYER_SIZE / 2 > entity.y - 12;
-    return betweenPlayerAndBonus && blocksPath;
-  });
 }
 
 function applyPhysicalHit(runtime: Runtime, time: number, repel: boolean) {

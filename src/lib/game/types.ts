@@ -58,6 +58,7 @@ export type RunnerEntity = {
   amplitude?: number;
   phase?: number;
   motionSpeed?: number;
+  magnetCaptured?: boolean;
 };
 
 export type ActivePowerUpSnapshot = {

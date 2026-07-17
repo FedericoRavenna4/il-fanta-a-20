@@ -1,7 +1,9 @@
 import type { EventKind, PhysicalObstacleKind, RafficaType } from "./types";
+import { EARLY_GAME_END_METERS, INTRO_SAFE_END_METERS } from "./config";
 
 export type PatternTier = 1 | 2 | 3 | 4;
 export type PatternCategory = "bonus" | "malus" | "mixed";
+export type PatternPhase = "introSafe" | "earlyGame" | "normal" | "advanced";
 
 export type PatternItem =
   | { type: "event"; kind: EventKind; x: number; line: 0 | 1 | 2 }
@@ -13,6 +15,7 @@ export type GameplayPattern = {
   tier: PatternTier;
   items: readonly PatternItem[];
   recovery: number;
+  phases: readonly PatternPhase[];
 };
 
 export type RafficaBeat = {
@@ -24,11 +27,25 @@ export type RafficaBeat = {
   mobileLine?: 0 | 1 | 2;
 };
 
+export type BossPatternDifficulty = "medium" | "hard" | "extreme";
+export type BossPattern = {
+  id: string;
+  difficulty: BossPatternDifficulty;
+  beats: readonly RafficaBeat[];
+};
+
 type MixedShape = "low" | "middle" | "high" | "rise" | "fall" | "arc" | "zigzag" | "choice";
 
 const e = (kind: EventKind, x: number, line: 0 | 1 | 2): PatternItem => ({ type: "event", kind, x, line });
 const o = (kind: PhysicalObstacleKind, x: number): PatternItem => ({ type: "physical", kind, x });
-const p = (id: string, category: PatternCategory, tier: PatternTier, recovery: number, items: PatternItem[]): GameplayPattern => ({ id, category, tier, recovery, items });
+const p = (
+  id: string,
+  category: PatternCategory,
+  tier: PatternTier,
+  recovery: number,
+  items: PatternItem[],
+  phases: readonly PatternPhase[] = tier === 4 ? ["advanced"] : ["normal", "advanced"]
+): GameplayPattern => ({ id, category, tier, recovery, items, phases });
 
 const SHAPES: Record<MixedShape, readonly [number, 0 | 1 | 2][]> = {
   low: [[0,0],[82,0],[164,0]],
@@ -40,6 +57,32 @@ const SHAPES: Record<MixedShape, readonly [number, 0 | 1 | 2][]> = {
   zigzag: [[0,0],[82,2],[164,1]],
   choice: [[0,1],[94,0],[188,2]],
 };
+
+export const INTRO_SAFE_PATTERNS: readonly GameplayPattern[] = [
+  p("intro-assist-isolato", "bonus", 1, 1.02, [e("assist",0,0)], ["introSafe"]),
+  p("intro-clean-isolato", "bonus", 1, 1.04, [e("cleanSheet",0,1)], ["introSafe"]),
+  p("intro-bandierina-isolata", "mixed", 1, 1.18, [o("cornerFlag",0)], ["introSafe"]),
+  p("intro-var-isolato", "mixed", 1, 1.22, [o("var",0)], ["introSafe"]),
+  p("intro-bandierina-assist", "mixed", 1, 1.24, [o("cornerFlag",0),e("assist",260,2)], ["introSafe"]),
+  p("intro-clean-bandierina", "mixed", 1, 1.26, [e("cleanSheet",0,1),o("cornerFlag",280)], ["introSafe"]),
+  p("intro-assist-var", "mixed", 1, 1.28, [e("assist",0,0),o("var",290)], ["introSafe"]),
+  p("intro-barella-isolata", "mixed", 1, 1.3, [o("stretcher",0)], ["introSafe"]),
+  p("intro-assist-bandierina", "mixed", 1, 1.26, [e("assist",0,1),o("cornerFlag",285)], ["introSafe"]),
+  p("intro-clean-var", "mixed", 1, 1.3, [e("cleanSheet",0,2),o("var",300)], ["introSafe"]),
+  p("intro-bandierina-clean", "mixed", 1, 1.28, [o("cornerFlag",0),e("cleanSheet",275,2)], ["introSafe"]),
+  p("intro-scivolata-isolata", "mixed", 1, 1.42, [o("slidingTackle",0)], ["introSafe"]),
+] as const;
+
+export const EARLY_GAME_PATTERNS: readonly GameplayPattern[] = [
+  p("early-assist-clean", "bonus", 1, 1.02, [e("assist",0,0),e("cleanSheet",100,1)], ["earlyGame"]),
+  p("early-clean-assist", "bonus", 1, 1.04, [e("cleanSheet",0,1),e("assist",108,2)], ["earlyGame"]),
+  p("early-giallo-isolato", "malus", 1, 1.2, [e("yellowCard",0,0)], ["earlyGame"]),
+  p("early-giallo-assist", "mixed", 1, 1.24, [e("yellowCard",0,0),e("assist",210,2)], ["earlyGame"]),
+  p("early-bandierina", "mixed", 1, 1.18, [o("cornerFlag",0)], ["earlyGame"]),
+  p("early-barella", "mixed", 1, 1.3, [o("stretcher",0)], ["earlyGame"]),
+  p("early-var-clean", "mixed", 1, 1.32, [o("var",0),e("cleanSheet",270,2)], ["earlyGame"]),
+  p("early-scivolata-preavviso", "mixed", 1, 1.5, [o("slidingTackle",0),e("assist",340,2)], ["earlyGame"]),
+] as const;
 
 function mix(
   id: string,
@@ -120,7 +163,13 @@ export const MIXED_PATTERNS: readonly GameplayPattern[] = [
   mix("misto-autogol-gol-subito",4,["ownGoal","goal","concededGoal"],"low"),
 ] as const;
 
-export const GAMEPLAY_PATTERNS = [...BONUS_PATTERNS, ...MALUS_PATTERNS, ...MIXED_PATTERNS] as const;
+export const GAMEPLAY_PATTERNS = [
+  ...INTRO_SAFE_PATTERNS,
+  ...EARLY_GAME_PATTERNS,
+  ...BONUS_PATTERNS,
+  ...MALUS_PATTERNS,
+  ...MIXED_PATTERNS,
+] as const;
 
 export const RAFFICA_PATTERN_LIBRARY: Record<RafficaType, readonly (readonly RafficaBeat[])[]> = {
   bonus: [
@@ -177,31 +226,74 @@ export const RAFFICA_PATTERN_LIBRARY: Record<RafficaType, readonly (readonly Raf
   ],
 };
 
-export const BOSS_PATTERN_LIBRARY: readonly (readonly RafficaBeat[])[] = [
+export const MOBILE_MALUS_RAFFICA_PATTERNS: readonly (readonly RafficaBeat[])[] = [
   [
-    { kind:"yellowCard",count:5,line:0,mobileLine:0,spacing:3,intervalAfter:.5 },
-    { kind:"redCard",count:4,line:2,mobileLine:2,spacing:4,intervalAfter:.58 },
-    { kind:"concededGoal",count:5,line:1,mobileLine:2,spacing:3,intervalAfter:.52 },
-    { kind:"missedPenalty",count:2,line:0,mobileLine:0,spacing:22,intervalAfter:.74 },
+    { kind:"yellowCard",count:4,line:0,mobileLine:0,spacing:7,intervalAfter:.9 },
+    { kind:"concededGoal",count:3,line:2,mobileLine:2,spacing:8,intervalAfter:.68 },
+    { kind:"redCard",count:3,line:2,mobileLine:2,spacing:9,intervalAfter:.92 },
+    { kind:"missedPenalty",count:2,line:0,mobileLine:0,spacing:26,intervalAfter:1.02 },
   ],
   [
-    { kind:"concededGoal",count:4,line:0,mobileLine:0,spacing:3,intervalAfter:.48 },
-    { kind:"yellowCard",count:4,line:2,mobileLine:2,spacing:3,intervalAfter:.54 },
-    { kind:"redCard",count:3,line:1,mobileLine:2,spacing:5,intervalAfter:.6 },
-    { kind:"missedPenalty",count:3,line:2,mobileLine:0,spacing:20,intervalAfter:.76 },
+    { kind:"concededGoal",count:3,line:2,mobileLine:2,spacing:8,intervalAfter:.88 },
+    { kind:"yellowCard",count:4,line:0,mobileLine:0,spacing:7,intervalAfter:.64 },
+    { kind:"redCard",count:3,line:0,mobileLine:0,spacing:9,intervalAfter:.9 },
+    { kind:"missedPenalty",count:2,line:2,mobileLine:2,spacing:28,intervalAfter:1.04 },
   ],
   [
-    { kind:"redCard",count:4,line:1,mobileLine:2,spacing:5,intervalAfter:.56 },
-    { kind:"concededGoal",count:5,line:0,mobileLine:0,spacing:3,intervalAfter:.5 },
-    { kind:"missedPenalty",count:2,line:2,mobileLine:2,spacing:24,intervalAfter:.7 },
-    { kind:"yellowCard",count:5,line:1,mobileLine:0,spacing:2,intervalAfter:.46 },
+    { kind:"redCard",count:3,line:0,mobileLine:0,spacing:9,intervalAfter:.62 },
+    { kind:"yellowCard",count:4,line:0,mobileLine:0,spacing:7,intervalAfter:.94 },
+    { kind:"concededGoal",count:3,line:2,mobileLine:2,spacing:8,intervalAfter:.66 },
+    { kind:"missedPenalty",count:2,line:2,mobileLine:2,spacing:28,intervalAfter:1.06 },
   ],
   [
-    { kind:"missedPenalty",count:3,line:0,mobileLine:0,spacing:20,intervalAfter:.68 },
-    { kind:"yellowCard",count:5,line:2,mobileLine:2,spacing:2,intervalAfter:.48 },
-    { kind:"concededGoal",count:4,line:1,mobileLine:2,spacing:3,intervalAfter:.52 },
-    { kind:"redCard",count:4,line:0,mobileLine:0,spacing:5,intervalAfter:.64 },
+    { kind:"missedPenalty",count:2,line:2,mobileLine:2,spacing:28,intervalAfter:.9 },
+    { kind:"yellowCard",count:3,line:0,mobileLine:0,spacing:8,intervalAfter:.7 },
+    { kind:"concededGoal",count:3,line:0,mobileLine:0,spacing:9,intervalAfter:.92 },
+    { kind:"redCard",count:3,line:2,mobileLine:2,spacing:10,intervalAfter:1.08 },
   ],
+];
+
+export const BOSS_PATTERN_LIBRARY: readonly BossPattern[] = [
+  {
+    id: "boss-pressione-bassa",
+    difficulty: "medium",
+    beats: [
+      { kind:"yellowCard",count:4,line:0,mobileLine:0,spacing:5,intervalAfter:.62 },
+      { kind:"redCard",count:3,line:2,mobileLine:2,spacing:6,intervalAfter:.72 },
+      { kind:"concededGoal",count:4,line:1,mobileLine:2,spacing:5,intervalAfter:.68 },
+      { kind:"missedPenalty",count:2,line:0,mobileLine:0,spacing:24,intervalAfter:.86 },
+    ],
+  },
+  {
+    id: "boss-doppio-fronte",
+    difficulty: "medium",
+    beats: [
+      { kind:"concededGoal",count:3,line:0,mobileLine:0,spacing:6,intervalAfter:.7 },
+      { kind:"yellowCard",count:4,line:2,mobileLine:2,spacing:5,intervalAfter:.66 },
+      { kind:"redCard",count:3,line:1,mobileLine:2,spacing:7,intervalAfter:.76 },
+      { kind:"missedPenalty",count:2,line:0,mobileLine:0,spacing:26,intervalAfter:.88 },
+    ],
+  },
+  {
+    id: "boss-cambio-ritmo",
+    difficulty: "hard",
+    beats: [
+      { kind:"redCard",count:3,line:1,mobileLine:2,spacing:7,intervalAfter:.66 },
+      { kind:"concededGoal",count:4,line:0,mobileLine:0,spacing:5,intervalAfter:.6 },
+      { kind:"missedPenalty",count:2,line:2,mobileLine:2,spacing:26,intervalAfter:.82 },
+      { kind:"yellowCard",count:4,line:1,mobileLine:0,spacing:5,intervalAfter:.64 },
+    ],
+  },
+  {
+    id: "boss-assedio",
+    difficulty: "extreme",
+    beats: [
+      { kind:"missedPenalty",count:2,line:0,mobileLine:0,spacing:24,intervalAfter:.72 },
+      { kind:"yellowCard",count:4,line:2,mobileLine:2,spacing:5,intervalAfter:.6 },
+      { kind:"concededGoal",count:4,line:1,mobileLine:2,spacing:5,intervalAfter:.64 },
+      { kind:"redCard",count:3,line:0,mobileLine:0,spacing:7,intervalAfter:.78 },
+    ],
+  },
 ];
 
 export function getPatternTier(distance: number): PatternTier {
@@ -211,6 +303,13 @@ export function getPatternTier(distance: number): PatternTier {
   return 4;
 }
 
+export function getPatternPhase(distance: number): PatternPhase {
+  if (distance < INTRO_SAFE_END_METERS) return "introSafe";
+  if (distance < EARLY_GAME_END_METERS) return "earlyGame";
+  if (distance < 300) return "normal";
+  return "advanced";
+}
+
 export function pickGameplayPattern(
   distance: number,
   categoryWeights: Record<PatternCategory, number>,
@@ -218,33 +317,69 @@ export function pickGameplayPattern(
   random = Math.random
 ) {
   const tier = getPatternTier(distance);
-  const categories: PatternCategory[] = ["bonus", "malus", "mixed"];
+  const phase = getPatternPhase(distance);
+  const phasePatterns = GAMEPLAY_PATTERNS.filter((pattern) =>
+    pattern.phases.includes(phase) && pattern.id !== previousId
+  );
+  const categories: PatternCategory[] = (["bonus", "malus", "mixed"] as const)
+    .filter((category) => phasePatterns.some((pattern) => pattern.category === category));
   let cursor = random() * categories.reduce((total, category) => total + categoryWeights[category], 0);
   let category = categories[0];
   for (const candidate of categories) {
     cursor -= categoryWeights[candidate];
     if (cursor <= 0) { category = candidate; break; }
   }
-  const candidates = GAMEPLAY_PATTERNS.filter((pattern) =>
-    pattern.category === category && pattern.tier === tier && pattern.id !== previousId
+  const candidates = phasePatterns.filter((pattern) =>
+    pattern.category === category &&
+    (phase === "introSafe" || phase === "earlyGame" || pattern.tier === tier)
   );
-  return candidates[Math.floor(random() * candidates.length)] ?? GAMEPLAY_PATTERNS[0];
+  return candidates[Math.floor(random() * candidates.length)] ?? phasePatterns[0] ?? GAMEPLAY_PATTERNS[0];
 }
 
 export function pickRafficaPattern(
   type: RafficaType,
   previousPattern: readonly RafficaBeat[] | null = null,
+  mobile = false,
+  speed = 0,
   random = Math.random
 ) {
-  const patterns = RAFFICA_PATTERN_LIBRARY[type];
+  const patterns = mobile && type === "malus"
+    ? MOBILE_MALUS_RAFFICA_PATTERNS.filter((pattern) =>
+        validateMobileRafficaPattern(pattern, speed)
+      )
+    : RAFFICA_PATTERN_LIBRARY[type];
   const candidates = patterns.filter((pattern) => pattern !== previousPattern);
   return candidates[Math.floor(random() * candidates.length)] ?? patterns[0];
 }
 
+export function validateMobileRafficaPattern(
+  pattern: readonly RafficaBeat[],
+  speed: number
+) {
+  if (!pattern.length) return false;
+  const projectileSpeed = Math.max(1, speed * 1.5);
+  for (let index = 0; index < pattern.length; index += 1) {
+    const beat = pattern[index];
+    const line = beat.mobileLine ?? beat.line;
+    if (line === 1 || beat.count > 4 || beat.count < 1 || beat.spacing < 6) return false;
+    const next = pattern[index + 1];
+    if (!next) continue;
+    const nextLine = next.mobileLine ?? next.line;
+    if (line === nextLine) continue;
+    const estimatedHorizontalGap = beat.intervalAfter * projectileSpeed;
+    const minimumLandingGap = projectileSpeed * 0.82;
+    if (estimatedHorizontalGap < minimumLandingGap) return false;
+  }
+  return true;
+}
+
 export function pickBossPattern(
-  previousPattern: readonly RafficaBeat[] | null = null,
+  previousPattern: BossPattern | null = null,
   random = Math.random
 ) {
-  const candidates = BOSS_PATTERN_LIBRARY.filter((pattern) => pattern !== previousPattern);
+  const candidates = BOSS_PATTERN_LIBRARY.filter((pattern) =>
+    pattern !== previousPattern &&
+    (previousPattern?.difficulty !== "extreme" || pattern.difficulty === "medium")
+  );
   return candidates[Math.floor(random() * candidates.length)] ?? BOSS_PATTERN_LIBRARY[0];
 }

@@ -188,7 +188,7 @@ export default function TeamSelector({
 
   function chooseTeam(team: GameTeam, replica = 1) {
     selectAndCenter(team, replica);
-    if (!isMobileFlow) setConfirmationTeam(team);
+    setConfirmationTeam(team);
   }
 
   function chooseRandomTeam() {
@@ -213,7 +213,7 @@ export default function TeamSelector({
     });
     randomTimerRef.current = window.setTimeout(() => {
       setIsRandomizing(false);
-      if (!isMobileFlow) setConfirmationTeam(randomTeam);
+      setConfirmationTeam(randomTeam);
     }, 620);
   }
 
@@ -446,14 +446,6 @@ export default function TeamSelector({
             <span className="mr-2 inline-block text-amber-300 transition-transform duration-300 group-hover:rotate-12 group-hover:scale-125">✦</span>
             {isRandomizing ? "Estrazione…" : "Sorprendimi"}
           </button>
-          <button
-            type="button"
-            onClick={() => activeTeam && launchTeam(activeTeam)}
-            disabled={!activeTeam || isLaunching || isRandomizing}
-            className="mx-auto mt-2 hidden min-h-11 w-full max-w-xs items-center justify-center rounded-full bg-amber-300 px-5 text-[9px] font-black uppercase tracking-[0.14em] text-blue-950 shadow-[0_12px_30px_rgba(251,191,36,0.2)] transition active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/35 disabled:shadow-none max-sm:flex"
-          >
-            {isLaunching ? "Preparazione…" : activeTeam ? `Gioca con ${activeTeam.nome}` : "Seleziona una società"}
-          </button>
         </div>
 
         <div className="relative">
@@ -629,14 +621,14 @@ export default function TeamSelector({
                 disabled={isLaunching}
                 className="min-h-11 rounded-full bg-amber-300 px-6 text-[9px] font-black uppercase tracking-[0.15em] text-blue-950 shadow-[0_12px_32px_rgba(251,191,36,0.18)] transition hover:-translate-y-0.5 hover:bg-amber-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-300/45"
               >
-                Scendi in campo
+                {isMobileFlow ? "Conferma squadra" : "Scendi in campo"}
               </button>
               <button
                 type="button"
                 onClick={() => setConfirmationTeam(null)}
                 className="min-h-10 rounded-full text-[9px] font-black uppercase tracking-[0.13em] text-white/55 transition hover:bg-white/[0.07] hover:text-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-400/30"
               >
-                Cambia società
+                {isMobileFlow ? "Cambia scelta" : "Cambia società"}
               </button>
             </div>
             </div>

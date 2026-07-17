@@ -217,12 +217,12 @@ export default function GameClient({
             tabIndex={-1}
             className="game-modal-panel relative max-w-full overflow-hidden rounded-[1rem] border border-white/15 bg-[linear-gradient(180deg,#06162d,#020817)] shadow-[0_35px_110px_rgba(2,8,23,.68),0_0_48px_rgba(56,189,248,.1)] outline-none max-sm:flex max-sm:flex-col sm:rounded-[1.6rem]"
           >
-            <div className="absolute right-2 top-2 z-30 flex items-center gap-1.5 sm:right-3 sm:top-3">
+            <div className="absolute right-3 top-3 z-30 hidden items-center gap-1.5 sm:flex">
               {(status === "running" || status === "paused") && (
                 <button
                   type="button"
                   onClick={() => setStatus((current) => current === "running" ? "paused" : current === "paused" ? "running" : current)}
-                  className="min-h-11 rounded-full border border-white/18 bg-slate-950/90 px-4 text-[9px] font-black uppercase tracking-[.12em] text-white shadow-lg transition hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white max-sm:hidden"
+                  className="min-h-11 rounded-full border border-white/18 bg-slate-950/90 px-4 text-[9px] font-black uppercase tracking-[.12em] text-white shadow-lg transition hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
                 >
                   {status === "paused" ? "Riprendi" : "Pausa"}
                 </button>
@@ -237,13 +237,30 @@ export default function GameClient({
               </button>
             </div>
 
+            <div className="absolute inset-x-0 top-0 z-30 hidden items-center justify-between pl-[max(.55rem,env(safe-area-inset-left))] pr-[max(.55rem,env(safe-area-inset-right))] pt-[max(.55rem,env(safe-area-inset-top))] max-sm:flex">
+              {(status === "running" || status === "paused") ? (
+                <button
+                  type="button"
+                  onClick={() => setStatus((current) => current === "running" ? "paused" : current === "paused" ? "running" : current)}
+                  aria-label={status === "paused" ? "Riprendi la partita" : "Metti in pausa"}
+                  className="flex h-11 w-11 items-center justify-center rounded-full border border-white/18 bg-slate-950/90 text-sm font-black text-white shadow-lg transition active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                >
+                  <span aria-hidden="true">{status === "paused" ? "▶" : "Ⅱ"}</span>
+                </button>
+              ) : <span className="h-11 w-11" aria-hidden="true" />}
+              <button
+                type="button"
+                onClick={() => returnToGameHome(true)}
+                aria-label="Chiudi il gioco e torna alla selezione"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-white/18 bg-slate-950/90 text-xl font-light text-white shadow-lg transition active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              >
+                ×
+              </button>
+            </div>
+
             <GameHud
               team={team}
               snapshot={snapshot}
-              paused={status === "paused"}
-              onTogglePause={() => setStatus((current) =>
-                current === "running" ? "paused" : current === "paused" ? "running" : current
-              )}
             />
 
             <div className="relative overflow-hidden max-sm:flex max-sm:flex-1 max-sm:items-center max-sm:bg-[radial-gradient(ellipse_at_center,rgba(14,55,92,.38),transparent_70%)]">
