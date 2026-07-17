@@ -315,6 +315,7 @@ export function pickGameplayPattern(
   distance: number,
   categoryWeights: Record<PatternCategory, number>,
   previousId: string | null,
+  advancedPressure = 0,
   random = Math.random
 ) {
   const tier = getPatternTier(distance);
@@ -334,7 +335,30 @@ export function pickGameplayPattern(
     pattern.category === category &&
     (phase === "introSafe" || phase === "earlyGame" || pattern.tier === tier)
   );
-  return candidates[Math.floor(random() * candidates.length)] ?? phasePatterns[0] ?? GAMEPLAY_PATTERNS[0];
+  const weightedCandidates = candidates.map((pattern) => {
+    const physicalCount = pattern.items.filter((item) => item.type === "physical").length;
+    const slidingCount = pattern.items.filter(
+      (item) => item.type === "physical" && item.kind === "slidingTackle"
+    ).length;
+    const malusCount = pattern.items.filter(
+      (item) => item.type === "event" &&
+        ["yellowCard", "redCard", "missedPenalty", "concededGoal", "ownGoal"].includes(item.kind)
+    ).length;
+    return {
+      pattern,
+      weight: 1 + advancedPressure *
+        (physicalCount * 1.35 + slidingCount * 2.2 + malusCount * 0.28),
+    };
+  });
+  let patternCursor = random() * weightedCandidates.reduce(
+    (total, candidate) => total + candidate.weight,
+    0
+  );
+  for (const candidate of weightedCandidates) {
+    patternCursor -= candidate.weight;
+    if (patternCursor <= 0) return candidate.pattern;
+  }
+  return candidates[0] ?? phasePatterns[0] ?? GAMEPLAY_PATTERNS[0];
 }
 
 export function pickRafficaPattern(

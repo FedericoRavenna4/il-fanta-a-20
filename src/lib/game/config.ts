@@ -75,16 +75,9 @@ export const OBSTACLE_PROGRESSION = [
   { distance: 0, mixedWeight: 10, intervalMultiplier: 1.18 },
   { distance: 70, mixedWeight: 38, intervalMultiplier: 1.05 },
   { distance: 150, mixedWeight: 65, intervalMultiplier: 0.96 },
-  { distance: 300, mixedWeight: 84, intervalMultiplier: 0.88 },
-  { distance: 500, mixedWeight: 100, intervalMultiplier: 0.82 },
-  { distance: 700, mixedWeight: 112, intervalMultiplier: 0.78 },
-] as const;
-
-export const BONUS_RATING_CURVE = [
-  { until: 78, multiplier: 1 },
-  { until: 90, multiplier: 0.82 },
-  { until: 100, multiplier: 0.52 },
-  { until: Number.POSITIVE_INFINITY, multiplier: 0.22 },
+  { distance: 300, mixedWeight: 92, intervalMultiplier: 0.84 },
+  { distance: 500, mixedWeight: 116, intervalMultiplier: 0.76 },
+  { distance: 700, mixedWeight: 132, intervalMultiplier: 0.72 },
 ] as const;
 
 export const HAT_TRICK_SPAWN_CONFIG = {

@@ -3,7 +3,6 @@
 import { memo, useCallback, useEffect, useRef } from "react";
 import {
   BONUS_HEIGHT_OFFSETS,
-  BONUS_RATING_CURVE,
   EVENT_DEFINITIONS,
   CROUCH_DURATION_MS,
   DIFFICULTY_BANDS,
@@ -127,7 +126,6 @@ type Runtime = {
   confirmedGoals: number;
   maxGoalsReached: number;
   nextHatTrickAt: number;
-  lastBonusCollectedAt: number;
   goalCelebrationUntil: number;
   goalCelebrationGoals: number;
   message: string;
@@ -233,7 +231,8 @@ const MOBILE_OBSTACLE_SCALE: Record<PhysicalObstacleKind, number> = {
 };
 const MOBILE_EVENT_SCALE = 1.4;
 const MOBILE_POWER_UP_SCALE = 1.35;
-const MOBILE_PLAYER_SCALE = 1.55;
+const DESKTOP_PLAYER_SCALE = 1.1;
+const MOBILE_PLAYER_SCALE = 1.68;
 
 type CanvasRenderState = {
   context: CanvasRenderingContext2D | null;
@@ -294,7 +293,6 @@ function createRuntime(): Runtime {
       HAT_TRICK_SPAWN_CONFIG.firstWindow.minimum,
       HAT_TRICK_SPAWN_CONFIG.firstWindow.maximum
     ),
-    lastBonusCollectedAt: -10,
     goalCelebrationUntil: 0,
     goalCelebrationGoals: 0,
     message: "",
@@ -1828,11 +1826,11 @@ function getObstacleProgression(distance: number) {
   };
 }
 
-function getBonusPatternWeightMultiplier(teamRating: number) {
-  if (teamRating < 78) return 1;
-  if (teamRating < 90) return 0.78;
-  if (teamRating < 100) return 0.5;
-  return 0.25;
+function getBonusPatternWeight(teamRating: number, requestedWeight: number) {
+  if (teamRating < 78) return requestedWeight;
+  if (teamRating < 90) return Math.min(requestedWeight, 10);
+  if (teamRating < 100) return Math.min(requestedWeight, 6);
+  return Math.min(requestedWeight, 3);
 }
 
 function spawnNext(runtime: Runtime, speed: number, difficulty: number) {
@@ -1865,24 +1863,33 @@ function spawnNext(runtime: Runtime, speed: number, difficulty: number) {
   const nicoPaz = getPowerUpStrength(runtime, "nico-paz");
   const gimenez = getPowerUpStrength(runtime, "gimenez");
   const lastWasBonus = runtime.lastPatternCategory === "bonus";
-  const maximumMixedStreak = runtime.distance >= 500 ? 4 : runtime.distance >= 300 ? 3 : 2;
+  const maximumMixedStreak = runtime.distance >= 500 ? 5 : runtime.distance >= 300 ? 4 : 2;
   const mixedStreakLimited = runtime.mixedPatternStreak >= maximumMixedStreak;
   const obstacleProgression = getObstacleProgression(runtime.distance);
   const highRatingPressure = clamp01((runtime.teamRating - 78) / 22);
+  const advancedPressure = clamp01(Math.max(
+    (runtime.distance - 280) / 420,
+    (speed - 480) / 300
+  ));
   const openingBonusWeight = runtime.distance < 70
     ? 18 * (1 - runtime.distance / 70)
     : 0;
   const pattern = pickGameplayPattern(
     runtime.distance,
     {
-      bonus: ((lastWasBonus ? 0 : mixedStreakLimited ? 26 : 11) +
-        nicoPaz * 8 + gimenez * 6 + openingBonusWeight) *
-        getBonusPatternWeightMultiplier(runtime.teamRating),
+      bonus: getBonusPatternWeight(
+        runtime.teamRating,
+        (lastWasBonus ? 0 : mixedStreakLimited ? 26 : 11) +
+          nicoPaz * 8 + gimenez * 6 + openingBonusWeight
+      ),
       malus: (runtime.lastPatternCategory === "malus" ? 8 : mixedStreakLimited ? 30 : 16) +
-        luperto * 6 + highRatingPressure * 18,
-      mixed: mixedStreakLimited ? 44 : obstacleProgression.mixedWeight,
+        luperto * 6 + highRatingPressure * 18 + advancedPressure * 22,
+      mixed: mixedStreakLimited
+        ? 44 + advancedPressure * 18
+        : obstacleProgression.mixedWeight + advancedPressure * 30,
     },
     runtime.lastPatternId,
+    advancedPressure,
   );
   runtime.lastPatternId = pattern.id;
   runtime.lastPatternCategory = pattern.category;
@@ -1946,7 +1953,12 @@ function spawnGameplayPattern(
       });
     }
   }
-  return furthestOffset / Math.max(1, speed) + pattern.recovery;
+  const advancedPressure = clamp01(Math.max(
+    (runtime.distance - 280) / 420,
+    (speed - 480) / 300
+  ));
+  const recovery = Math.max(0.58, pattern.recovery * (1 - advancedPressure * 0.35));
+  return furthestOffset / Math.max(1, speed) + recovery;
 }
 
 function pushEvent(
@@ -2159,14 +2171,11 @@ function applyEvent(runtime: Runtime, kind: EventKind, time: number) {
   const malusBlocked =
     definition.category === "malus" &&
     getPowerUpStrength(runtime, "luperto") > 0;
-  const effectiveRatingDelta = definition.category === "bonus"
-    ? getEffectiveBonusRatingDelta(runtime, definition.ratingDelta, time)
-    : definition.ratingDelta;
   const goalTriggered = malusBlocked
     ? false
     : changeTeamRating(
         runtime,
-        effectiveRatingDelta,
+        definition.ratingDelta,
         time,
         definition.category,
         definition.label
@@ -2179,7 +2188,6 @@ function applyEvent(runtime: Runtime, kind: EventKind, time: number) {
   }
 
   if (definition.category === "bonus") {
-    runtime.lastBonusCollectedAt = time;
     runtime.bonusesCollected += 1;
     runtime.multiplier = Math.min(5, runtime.multiplier + 0.25);
     if (!goalTriggered) runtime.effect = "bonus";
@@ -2198,52 +2206,14 @@ function applyEvent(runtime: Runtime, kind: EventKind, time: number) {
     return;
   }
 
-  const signedValue = effectiveRatingDelta > 0
-    ? `+${formatRating(effectiveRatingDelta)}`
-    : formatRating(effectiveRatingDelta);
+  const signedValue = definition.ratingDelta > 0
+    ? `+${formatRating(definition.ratingDelta)}`
+    : formatRating(definition.ratingDelta);
   runtime.message = signedValue;
   runtime.messageTone = definition.category;
   runtime.messageStartedAt = time;
   runtime.messageUntil = time + 920;
   if (!goalTriggered) runtime.effectUntil = time + 460;
-}
-
-function getEffectiveBonusRatingDelta(
-  runtime: Runtime,
-  rawDelta: number,
-  time: number
-) {
-  let remaining = rawDelta;
-  let cursor = runtime.teamRating;
-  let effective = 0;
-  for (const segment of BONUS_RATING_CURVE) {
-    if (remaining <= 0) break;
-    if (cursor >= segment.until) continue;
-    const portion = Math.min(remaining, segment.until - cursor);
-    effective += portion * segment.multiplier;
-    remaining -= portion;
-    cursor += portion;
-  }
-
-  if (runtime.teamRating >= 78 && time - runtime.lastBonusCollectedAt < 560) {
-    effective *= 0.82;
-  }
-  if (runtime.teamRating >= 90 && runtime.burst?.type === "bonus") {
-    effective *= 0.8;
-  }
-  if (runtime.teamRating >= 78 && getPowerUpStrength(runtime, "nico-paz") > 0) {
-    effective *= 0.9;
-  }
-  if (
-    runtime.teamRating >= 90 &&
-    POWER_UP_KINDS.reduce(
-      (count, kind) => count + (getPowerUpStrength(runtime, kind) > 0 ? 1 : 0),
-      0
-    ) >= 2
-  ) {
-    effective *= 0.88;
-  }
-  return Math.max(0.1, roundRating(effective));
 }
 
 function changeTeamRating(
@@ -2517,8 +2487,11 @@ function getPlayerHitbox(runtime: Runtime, time: number) {
       height: PLAYER_SIZE - 7,
     };
   }
+  const playerVisualScale = runtime.mobileLayout
+    ? MOBILE_PLAYER_SCALE
+    : DESKTOP_PLAYER_SCALE;
   const expansion = 34 * getPowerUpStrength(runtime, "lukaku") +
-    ((runtime.mobileLayout ? MOBILE_PLAYER_SCALE : 1) - 1) * PLAYER_SIZE * 0.34;
+    (playerVisualScale - 1) * PLAYER_SIZE * 0.28;
   return runtime.mobileLayout
     ? expandRectUpward(hitbox, expansion)
     : expandRect(hitbox, expansion);
@@ -3198,6 +3171,7 @@ function drawPlayer(
   const hitReaction = runtime.effect === "hit" || runtime.effect === "malus";
   const jitter = hitReaction && !reducedMotion ? Math.sin(time / 28) * 4 : 0;
   const lukakuStrength = getPowerUpStrength(runtime, "lukaku");
+  const playerShadowScale = runtime.mobileLayout ? 1.12 : 1.06;
 
   context.save();
   context.globalAlpha = airborne ? 0.16 : 0.3;
@@ -3206,7 +3180,8 @@ function drawPlayer(
   context.ellipse(
     runtime.playerX + PLAYER_SIZE / 2,
     runtime.playerY + PLAYER_SIZE + (airborne ? Math.min(38, (PLAYER_GROUND_Y - runtime.playerY) * 0.28) : 2),
-    (airborne ? 17 : crouching ? 31 : 25) * (1 + lukakuStrength * 0.42),
+    (airborne ? 17 : crouching ? 31 : 25) *
+      playerShadowScale * (1 + lukakuStrength * 0.42),
     airborne ? 4 : 6,
     0,
     0,
@@ -3238,8 +3213,10 @@ function drawPlayer(
   const centerY = (crouching
     ? groundedBottom - PLAYER_SIZE * 0.41
     : runtime.playerY + PLAYER_SIZE / 2 + (airborne ? 0 : runCycle * 1.4)) -
-      ((runtime.mobileLayout ? MOBILE_PLAYER_SCALE : 1) - 1) * PLAYER_SIZE * 0.5;
-  const basePlayerScale = runtime.mobileLayout ? MOBILE_PLAYER_SCALE : 1;
+      ((runtime.mobileLayout ? MOBILE_PLAYER_SCALE : DESKTOP_PLAYER_SCALE) - 1) * PLAYER_SIZE * 0.5;
+  const basePlayerScale = runtime.mobileLayout
+    ? MOBILE_PLAYER_SCALE
+    : DESKTOP_PLAYER_SCALE;
   const lukakuScale = (1 + lukakuStrength * 1.12) * basePlayerScale;
   const playerScale = (hitReaction
       ? 0.92
@@ -3313,7 +3290,9 @@ function drawPersistentPowerUpEffects(
 ) {
   const centerX = runtime.playerX + PLAYER_SIZE / 2;
   const centerY = runtime.playerY + PLAYER_SIZE / 2;
-  const visualScale = runtime.mobileLayout ? MOBILE_PLAYER_SCALE : 1;
+  const visualScale = runtime.mobileLayout
+    ? MOBILE_PLAYER_SCALE
+    : DESKTOP_PLAYER_SCALE;
   const sizeByKind: Record<PowerUpKind, number> = {
     luperto: 118,
     lukaku: 128,
