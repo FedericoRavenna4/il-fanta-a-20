@@ -9,6 +9,16 @@ import {
 } from "@/lib/game/config";
 import { GAME_ASSETS } from "@/lib/game/assets";
 import type { GameSnapshot, GameStatus, GameTeam } from "@/lib/game/types";
+import {
+  LEVEL_RULES,
+  applyLevelResult,
+  createDefaultClubProgress,
+  readArcadeProgress,
+  writeClubProgress,
+  type ClubProgress,
+  type GameLevel,
+  type LevelResolution,
+} from "@/lib/game/progression";
 import FantaRunner from "./FantaRunner";
 import GameHud from "./GameHud";
 import GameOver from "./GameOver";
@@ -73,22 +83,39 @@ export default function GameClient({
   const [isNewRecord, setIsNewRecord] = useState(false);
   const [snapshot, setSnapshot] = useState<GameSnapshot>(() => createEmptySnapshot());
   const [finalResult, setFinalResult] = useState<GameSnapshot | null>(null);
+  const [progressByClub, setProgressByClub] = useState<Record<string, ClubProgress>>({});
+  const [clubProgress, setClubProgress] = useState<ClubProgress>(() => createDefaultClubProgress());
+  const [activeLevel, setActiveLevel] = useState<GameLevel>(1);
+  const [finalResolution, setFinalResolution] = useState<LevelResolution | null>(null);
   const dialogRef = useRef<HTMLElement>(null);
   const selectionRootRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const modalOpen = Boolean(team) && status !== "selecting";
 
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      setProgressByClub(readArcadeProgress());
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
   const selectTeam = useCallback((selectedTeam: GameTeam) => {
     const savedBest = readBest(selectedTeam.id);
+    const savedProgress = readArcadeProgress()[String(selectedTeam.id)] ??
+      createDefaultClubProgress();
     setTeam(selectedTeam);
+    setClubProgress(savedProgress);
+    setActiveLevel(savedProgress.currentLevel);
     setBest(savedBest);
     setIsNewRecord(false);
     setFinalResult(null);
+    setFinalResolution(null);
     setSnapshot(createEmptySnapshot(savedBest));
     setAssetsReady(false);
     setLoadProgress(0);
     setLoadingTip(pickLoadingTip());
     setInitialSelectionAvailable(false);
+    setRunId((current) => current + 1);
     setStatus("ready");
   }, []);
 
@@ -97,21 +124,40 @@ export default function GameClient({
     setIsNewRecord(false);
     setFinalResult(null);
     setSnapshot(createEmptySnapshot(best));
-    setRunId((current) => current + 1);
     setStatus("running");
   }, [assetsReady, best]);
 
   const handleGameOver = useCallback((result: GameSnapshot) => {
     if (!team) return;
     const nextBest = Math.max(best, result.score);
+    const levelResult = applyLevelResult(clubProgress, activeLevel, result.distance);
     const completedResult = { ...result, best: nextBest };
     setIsNewRecord(result.score > best);
     setBest(nextBest);
     setSnapshot(completedResult);
     setFinalResult(completedResult);
+    setFinalResolution(levelResult.resolution);
+    setClubProgress(levelResult.progress);
+    setProgressByClub((current) => ({
+      ...current,
+      [String(team.id)]: levelResult.progress,
+    }));
     writeBest(team.id, nextBest);
+    writeClubProgress(team.id, levelResult.progress);
     setStatus("gameOver");
-  }, [best, team]);
+  }, [activeLevel, best, clubProgress, team]);
+
+  const prepareNextRun = useCallback(() => {
+    setActiveLevel(clubProgress.currentLevel);
+    setAssetsReady(false);
+    setLoadProgress(0);
+    setLoadingTip(pickLoadingTip());
+    setFinalResult(null);
+    setFinalResolution(null);
+    setSnapshot(createEmptySnapshot(best));
+    setRunId((current) => current + 1);
+    setStatus("ready");
+  }, [best, clubProgress.currentLevel]);
 
   const returnToGameHome = useCallback((requireConfirmation: boolean) => {
     if (
@@ -126,6 +172,7 @@ export default function GameClient({
     setBest(0);
     setIsNewRecord(false);
     setFinalResult(null);
+    setFinalResolution(null);
     setSnapshot(createEmptySnapshot());
     setAssetsReady(false);
     setLoadProgress(0);
@@ -264,12 +311,14 @@ export default function GameClient({
             <GameHud
               team={team}
               snapshot={snapshot}
+              level={activeLevel}
             />
 
             <div className="relative overflow-hidden max-sm:flex max-sm:flex-1 max-sm:items-center max-sm:bg-[radial-gradient(ellipse_at_center,rgba(14,55,92,.38),transparent_70%)]">
               <div className="relative w-full overflow-hidden max-sm:h-full">
                 <FantaRunner
                 team={team}
+                level={activeLevel}
                 status={status}
                 runId={runId}
                 best={best}
@@ -294,7 +343,16 @@ export default function GameClient({
               )}
 
                 {status === "gameOver" && finalResult && (
-                <GameOver team={team} result={finalResult} isNewRecord={isNewRecord} onRetry={startGame} onReturn={() => returnToGameHome(false)} />
+                <GameOver
+                  team={team}
+                  result={finalResult}
+                  isNewRecord={isNewRecord}
+                  playedLevel={activeLevel}
+                  progress={clubProgress}
+                  resolution={finalResolution}
+                  onRetry={prepareNextRun}
+                  onReturn={() => returnToGameHome(false)}
+                />
                 )}
               </div>
             </div>
@@ -309,7 +367,9 @@ export default function GameClient({
                     <div className="flex items-end justify-between gap-3">
                       <div className="min-w-0">
                         <p className="truncate text-[8px] font-black uppercase tracking-[.18em] text-sky-200/65">{team.nome}</p>
-                        <h2 className="text-sm font-black uppercase tracking-[-.02em] sm:text-base">Preparazione del campo</h2>
+                        <h2 className="text-sm font-black uppercase tracking-[-.02em] sm:text-base">
+                          Livello {activeLevel} · {LEVEL_RULES[activeLevel].name}
+                        </h2>
                       </div>
                       <span className="text-[10px] font-black tabular-nums text-white/65">{Math.round(loadProgress * 100)}%</span>
                     </div>
@@ -369,6 +429,7 @@ export default function GameClient({
           key={selectorVersion}
           teams={teams}
           initialTeamSlug={initialSelectionAvailable ? initialTeamSlug : undefined}
+          progressByClub={progressByClub}
           onSelect={selectTeam}
         />
       </div>

@@ -1,16 +1,23 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { GameTeam } from "@/lib/game/types";
+import {
+  createDefaultClubProgress,
+  type ClubProgress,
+} from "@/lib/game/progression";
+import LevelJourney from "./LevelJourney";
 
-export default function TeamSelector({
+function TeamSelector({
   teams,
   initialTeamSlug,
+  progressByClub,
   onSelect,
 }: {
   teams: GameTeam[];
   initialTeamSlug?: string;
+  progressByClub: Record<string, ClubProgress>;
   onSelect: (team: GameTeam) => void;
 }) {
   const initialTeam = teams.find((team) => team.slug === initialTeamSlug) ?? null;
@@ -595,7 +602,7 @@ export default function TeamSelector({
             >
               ×
             </button>
-            <div ref={confirmationLogoRef} className="relative mx-auto flex h-28 w-28 items-center justify-center sm:h-32 sm:w-32">
+            <div ref={confirmationLogoRef} className="relative mx-auto flex h-20 w-20 items-center justify-center sm:h-32 sm:w-32">
               <Image
                 src={confirmationTeam.logo}
                 alt={`Stemma ${confirmationTeam.nome}`}
@@ -615,7 +622,10 @@ export default function TeamSelector({
               {confirmationTeam.nome}
             </h3>
             <p className="relative mt-1 text-[10px] font-semibold text-white/52">La tua corsa comincia da qui.</p>
-            <div className="relative mx-auto mt-4 grid max-w-xs gap-1.5">
+            <LevelJourney
+              progress={progressByClub[String(confirmationTeam.id)] ?? createDefaultClubProgress()}
+            />
+            <div className="relative mx-auto mt-3 grid max-w-xs gap-1.5 sm:mt-4">
               <button
                 ref={confirmButtonRef}
                 type="button"
@@ -659,3 +669,5 @@ function normalizeTeamName(value: string) {
     .trim()
     .replace(/\s+/g, " ");
 }
+
+export default memo(TeamSelector);

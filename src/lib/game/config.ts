@@ -31,8 +31,6 @@ export const SPEED_CONFIG = {
   scoreForMaximum: 14000,
 } as const;
 
-export const SCENARIO_DISTANCE_METERS = 150;
-
 export const DIFFICULTY_CONFIG = {
   rampSeconds: 260,
   targetDistance: 3400,
@@ -66,7 +64,6 @@ export const ENTITY_DENSITY_CONFIG = {
   maximumActiveCollectiblesDuringBurst: 10,
   maximumActivePhysicalObstacles: 5,
   maximumActiveEntities: 12,
-  maximumActivePits: 2,
   minimumCollectibleDistance: 96,
   burstCollectibleDistance: 78,
 } as const;

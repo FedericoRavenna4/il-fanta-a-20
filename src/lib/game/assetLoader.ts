@@ -1,6 +1,7 @@
 import {
   GAME_ASSET_ENTRIES,
   GAME_ASSETS,
+  type GameBackgroundStage,
   type GameAssetKey,
 } from "./assets";
 
@@ -47,6 +48,34 @@ let essentialPromise: Promise<GameImageMap> | null = null;
 let fullPromise: Promise<GameImageMap> | null = null;
 let secondaryPromise: Promise<GameImageMap> | null = null;
 let overlayAssetPromise: Promise<void> | null = null;
+const levelAssetPromises = new Map<GameBackgroundStage, Promise<GameImageMap>>();
+
+export function preloadLevelGameAssets(
+  stage: GameBackgroundStage,
+  onProgress?: AssetProgressCallback
+): Promise<GameImageMap> {
+  const existing = levelAssetPromises.get(stage);
+  if (existing) {
+    onProgress?.(1);
+    return existing;
+  }
+  const stageKeys: GameAssetKey[] = [
+    `background.stage${stage}Stadium` as GameAssetKey,
+    `background.stage${stage}Ground` as GameAssetKey,
+  ];
+  const sharedKeys = GAME_ASSET_ENTRIES
+    .map(([key]) => key)
+    .filter((key) => !key.startsWith("background.") && !key.startsWith("hazard."));
+  const promise = Promise.all([
+    loadKeys([...stageKeys, ...sharedKeys], (progress) => onProgress?.(progress * 0.94)),
+    preloadOverlayAssets(),
+  ]).then(() => {
+    onProgress?.(1);
+    return images;
+  });
+  levelAssetPromises.set(stage, promise);
+  return promise;
+}
 
 export function preloadEssentialGameAssets(
   onProgress?: AssetProgressCallback

@@ -74,14 +74,6 @@ export type SpecialPresentation = {
   tone: "bonus" | "malus" | "neutral";
 };
 
-export type GroundPit = {
-  id: number;
-  x: number;
-  width: number;
-  stage?: 1 | 2 | 3;
-  rewarded?: boolean;
-};
-
 export type GameSnapshot = {
   score: number;
   best: number;

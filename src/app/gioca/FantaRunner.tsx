@@ -25,7 +25,6 @@ import {
   HAT_TRICK_SPAWN_CONFIG,
   OBSTACLE_PROGRESSION,
   RAFFICA_CONFIG,
-  SCENARIO_DISTANCE_METERS,
   GOAL_RATING_STEP,
   GOAL_THRESHOLD_COMBO_BONUS,
   GOAL_THRESHOLD_SCORE_BONUS,
@@ -47,7 +46,7 @@ import {
   type RafficaBeat,
 } from "@/lib/game/patterns";
 import {
-  preloadGameAssets,
+  preloadLevelGameAssets,
   preloadTeamLogo,
   type GameImageMap,
 } from "@/lib/game/assetLoader";
@@ -56,9 +55,13 @@ import {
   BACKGROUND_TRANSITION_CONFIG,
   EVENT_SPRITES,
   OBSTACLE_SPRITES,
-  getBackgroundStageForDistance,
   type GameBackgroundStage,
 } from "@/lib/game/assets";
+import {
+  LEVEL_RULES,
+  toDisplayDistance,
+  type GameLevel,
+} from "@/lib/game/progression";
 import {
   POWER_UP_CONFIG,
   POWER_UP_SPAWN_CONFIG,
@@ -75,7 +78,6 @@ import type {
   GameSnapshot,
   GameStatus,
   GameTeam,
-  GroundPit,
   PhysicalObstacleKind,
   PowerUpKind,
   RafficaType,
@@ -92,6 +94,7 @@ type PresentationState = {
 };
 
 type Runtime = {
+  level: GameLevel;
   playerX: number;
   playerVisible: boolean;
   playerY: number;
@@ -107,8 +110,7 @@ type Runtime = {
   entities: RunnerEntity[];
   entityScratch: RunnerEntity[];
   entityPool: RunnerEntity[];
-  pits: GroundPit[];
-  pitScratch: GroundPit[];
+  activeEntityCounts: Record<RunnerEntity["type"], number>;
   nextEntityId: number;
   spawnTimer: number;
   elapsed: number;
@@ -141,12 +143,6 @@ type Runtime = {
   backgroundStage: GameBackgroundStage;
   stadiumOffset: number;
   groundOffset: number;
-  backgroundTransition: {
-    from: GameBackgroundStage;
-    to: GameBackgroundStage;
-    progress: number;
-    duration: number;
-  } | null;
   burst: {
     type: RafficaType;
     phase: "warning" | "active";
@@ -208,12 +204,16 @@ const POWER_UP_KINDS: readonly PowerUpKind[] = [
 const RAFFICA_OVERLAY_CACHE = new Map<string, HTMLCanvasElement>();
 const BACKGROUND_TILE_CACHE = new Map<string, HTMLCanvasElement>();
 const GROUND_TILE_CACHE = new Map<string, HTMLCanvasElement>();
-const TRANSITION_VEIL_CACHE = new Map<string, HTMLCanvasElement>();
+const MIRRORED_TILE_CACHE = new WeakMap<HTMLCanvasElement, HTMLCanvasElement>();
 const POWER_UP_AURA_CACHE = new Map<PowerUpKind, HTMLCanvasElement>();
 const MOBILE_EVENT_RENDER_CACHE = new Map<EventKind, HTMLCanvasElement>();
 const MOBILE_OBSTACLE_RENDER_CACHE = new Map<PhysicalObstacleKind, HTMLCanvasElement>();
 const MOBILE_POWER_UP_RENDER_CACHE = new Map<PowerUpKind, HTMLCanvasElement>();
+const DESKTOP_EVENT_RENDER_CACHE = new Map<EventKind, HTMLCanvasElement>();
+const DESKTOP_OBSTACLE_RENDER_CACHE = new Map<PhysicalObstacleKind, HTMLCanvasElement>();
+const DESKTOP_POWER_UP_RENDER_CACHE = new Map<PowerUpKind, HTMLCanvasElement>();
 let mobileBossRenderCache: HTMLCanvasElement | null = null;
+let desktopBossRenderCache: HTMLCanvasElement | null = null;
 const WARMED_TEXTURES = new WeakSet<HTMLImageElement>();
 let textureWarmupCanvas: HTMLCanvasElement | null = null;
 let activeGameLoopCount = 0;
@@ -233,6 +233,8 @@ const MOBILE_EVENT_SCALE = 1.4;
 const MOBILE_POWER_UP_SCALE = 1.35;
 const DESKTOP_PLAYER_SCALE = 1.1;
 const MOBILE_PLAYER_SCALE = 1.68;
+const ENTITY_POOL_CAPACITY = 24;
+const HUD_UPDATE_INTERVAL_MS = 320;
 
 type CanvasRenderState = {
   context: CanvasRenderingContext2D | null;
@@ -254,8 +256,9 @@ type PerformanceMonitor = {
   hudUpdates: number;
 };
 
-function createRuntime(): Runtime {
+function createRuntime(level: GameLevel = 1): Runtime {
   return {
+    level,
     playerX: PLAYER_X,
     playerVisible: true,
     playerY: PLAYER_GROUND_Y,
@@ -270,9 +273,8 @@ function createRuntime(): Runtime {
     blockedObstacleId: null,
     entities: [],
     entityScratch: [],
-    entityPool: createEntityPool(16),
-    pits: [],
-    pitScratch: [],
+    entityPool: createEntityPool(ENTITY_POOL_CAPACITY),
+    activeEntityCounts: { event: 0, physical: 0, powerup: 0 },
     nextEntityId: 1,
     spawnTimer: 1.05,
     elapsed: 0,
@@ -305,10 +307,9 @@ function createRuntime(): Runtime {
     lastFrame: 0,
     lastHudUpdate: 0,
     finished: false,
-    backgroundStage: 1,
+    backgroundStage: LEVEL_RULES[level].background,
     stadiumOffset: 0,
     groundOffset: 0,
-    backgroundTransition: null,
     burst: null,
     malusBurstCooldown: 0,
     bonusBurstCooldown: 0,
@@ -338,7 +339,7 @@ function createRuntime(): Runtime {
     nextBossAt: randomBetween(
       BOSS_CONFIG.distanceWindowMeters.minimum,
       BOSS_CONFIG.distanceWindowMeters.maximum
-    ),
+    ) + getLevelBossDistanceOffset(level),
     reducedPerformance: false,
     renderQuality: "high",
     mobileVisualScale: 1,
@@ -372,6 +373,7 @@ function startRuntimeJump(runtime: Runtime, time: number) {
 
 function FantaRunner({
   team,
+  level,
   status,
   runId,
   best,
@@ -381,6 +383,7 @@ function FantaRunner({
   onLoadProgress,
 }: {
   team: GameTeam;
+  level: GameLevel;
   status: GameStatus;
   runId: number;
   best: number;
@@ -390,7 +393,7 @@ function FantaRunner({
   onLoadProgress: (progress: number) => void;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const runtimeRef = useRef<Runtime>(createRuntime());
+  const runtimeRef = useRef<Runtime>(createRuntime(level));
   const logoRef = useRef<HTMLImageElement | null>(null);
   const statusRef = useRef(status);
   const bestRef = useRef(best);
@@ -451,7 +454,8 @@ function FantaRunner({
       if (!cancelled) onLoadProgress(0.08);
       return logo;
     });
-    const assetPromise = preloadGameAssets((progress) => {
+    const stage = LEVEL_RULES[level].background;
+    const assetPromise = preloadLevelGameAssets(stage, (progress) => {
       if (!cancelled) onLoadProgress(0.08 + progress * 0.82);
     });
 
@@ -463,7 +467,7 @@ function FantaRunner({
       if (!canvas) return;
       runtimeRef.current.playerVisible = true;
       const context = prepareCanvas(canvas, renderStateRef.current, true);
-      prewarmRenderCaches(context, images, mobile);
+      prewarmRenderCaches(context, images, stage);
       onLoadProgress(0.96);
       prewarmImageTextures(images, logo);
       drawGame(
@@ -482,7 +486,7 @@ function FantaRunner({
     return () => {
       cancelled = true;
     };
-  }, [onAssetsReady, onLoadProgress, team.logo]);
+  }, [level, onAssetsReady, onLoadProgress, runId, team.logo]);
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -495,7 +499,7 @@ function FantaRunner({
   }, []);
 
   useEffect(() => {
-    const runtime = createRuntime();
+    const runtime = createRuntime(level);
     const mobile = window.matchMedia("(max-width: 639px)").matches;
     configureMobileRuntime(runtime, renderStateRef.current, mobile);
     runtime.playerVisible = true;
@@ -513,7 +517,7 @@ function FantaRunner({
     };
     renderStateRef.current.dirty = true;
     onSnapshot(toSnapshot(runtimeRef.current, bestRef.current, 0));
-  }, [onSnapshot, runId]);
+  }, [level, onSnapshot, runId]);
 
   const beginJump = useCallback(() => {
     if (statusRef.current !== "running") return;
@@ -636,7 +640,7 @@ function FantaRunner({
       );
       const frameFinishedAt = performance.now();
 
-      if (!runtime.finished && time - runtime.lastHudUpdate >= 250) {
+      if (!runtime.finished && time - runtime.lastHudUpdate >= HUD_UPDATE_INTERVAL_MS) {
         runtime.lastHudUpdate = time;
         onSnapshot(toSnapshot(runtime, best, time));
         performanceRef.current.hudUpdates += 1;
@@ -878,12 +882,12 @@ function updatePerformanceMonitor(
     ? monitor.slowWindows + 1
     : Math.max(0, monitor.slowWindows - 1);
 
-  if (runtime.mobileLayout && monitor.slowWindows >= 2 && runtime.renderQuality === "high") {
+  if (runtime.mobileLayout && monitor.slowWindows >= 1 && runtime.renderQuality === "high") {
     runtime.renderQuality = "balanced";
     runtime.reducedPerformance = true;
     renderState.dprLimit = 1;
     renderState.dirty = true;
-  } else if (runtime.mobileLayout && monitor.slowWindows >= 4 && runtime.renderQuality === "balanced") {
+  } else if (runtime.mobileLayout && monitor.slowWindows >= 2 && runtime.renderQuality === "balanced") {
     runtime.renderQuality = "low";
     renderState.dprLimit = 1;
     renderState.dirty = true;
@@ -1055,6 +1059,7 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
         getSafeSpawnInterval(speed, difficulty) *
           difficultyBand.intervalMultiplier *
           getObstacleProgression(runtime.distance).intervalMultiplier *
+          LEVEL_RULES[runtime.level].difficulty.spawnIntervalMultiplier *
           openingIntervalMultiplier +
         sequenceDelay;
     }
@@ -1062,6 +1067,7 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
 
   const nicoStrength = getPowerUpStrength(runtime, "nico-paz");
   const gimenezStrength = getPowerUpStrength(runtime, "gimenez");
+  const lukakuStrength = getPowerUpStrength(runtime, "lukaku");
   const magnetTarget = nicoStrength > 0 ? getPlayerHitbox(runtime, time) : null;
   const magnetTargetX = magnetTarget ? magnetTarget.x + magnetTarget.width / 2 : 0;
   const magnetTargetY = magnetTarget ? magnetTarget.y + magnetTarget.height / 2 : 0;
@@ -1183,6 +1189,10 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
 
     for (const entity of runtime.entities) {
       if (entity.type !== "physical" || entity.motion === "launched") continue;
+      if (
+        entity.x > runtime.playerX + PLAYER_SIZE + 20 ||
+        entity.x + entity.width < runtime.playerX - 20
+      ) continue;
       const obstacleRect = getObstacleHitbox(entity);
       const horizontalOverlap =
         runtime.playerX + PLAYER_SIZE - 9 > obstacleRect.x &&
@@ -1236,12 +1246,12 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
     const collisionPlayerRect =
       entity.type === "event" &&
       EVENT_DEFINITIONS[entity.kind as EventKind].category === "bonus"
-        ? expandRect(playerRect, 10 * getPowerUpStrength(runtime, "lukaku"))
+        ? expandRect(playerRect, 10 * lukakuStrength)
         : playerRect;
     const protectedByGimenez =
       entity.type === "event" &&
       EVENT_DEFINITIONS[entity.kind as EventKind].category === "bonus" &&
-      (getPowerUpStrength(runtime, "gimenez") > 0 || entity.fleeing);
+      (gimenezStrength > 0 || entity.fleeing);
     const launchedObstacle = entity.type === "physical" && entity.motion === "launched";
     const capturedByNico = entity.type === "event" && entity.magnetCaptured === true;
     const hit = capturedByNico ||
@@ -1257,7 +1267,7 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
         releaseEntity(runtime, entity);
         continue;
       } else {
-        if (getPowerUpStrength(runtime, "lukaku") > 0) {
+        if (lukakuStrength > 0) {
           launchObstacle(runtime, entity, time);
           remainingEntities.push(entity);
           continue;
@@ -1310,78 +1320,9 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
     runtime.finished = true;
   }
 
-  const remainingPits = runtime.pitScratch;
-  remainingPits.length = 0;
-  const playerCenter = runtime.playerX + PLAYER_SIZE / 2;
-  const nearGround = runtime.grounded && runtime.playerY > PLAYER_GROUND_Y - 3;
-
-  for (const pit of runtime.pits) {
-    pit.x -= worldSpeed * delta;
-    if (
-      nearGround &&
-      playerCenter > pit.x + 4 &&
-      playerCenter < pit.x + pit.width - 4
-    ) {
-      runtime.gameOverReason = "Caduta in una buca";
-      runtime.effect = "hit";
-      runtime.finished = true;
-    }
-
-    if (
-      !pit.rewarded &&
-      pit.x + pit.width < runtime.playerX &&
-      !runtime.finished
-    ) {
-      pit.rewarded = true;
-      awardPerfectPass(runtime);
-    }
-    if (pit.x + pit.width > -40) remainingPits.push(pit);
-  }
-  runtime.pitScratch = runtime.pits;
-  runtime.pits = remainingPits;
-
-  updateBackgroundState(runtime, delta);
-
   if (runtime.teamRating < TEAM_RATING_THRESHOLD && !runtime.finished) {
     runtime.gameOverReason = `Voto squadra sotto ${TEAM_RATING_THRESHOLD}`;
     runtime.finished = true;
-  }
-}
-
-function updateBackgroundState(runtime: Runtime, delta: number) {
-  const desiredStage = getBackgroundStageForDistance(
-    runtime.distance,
-    SCENARIO_DISTANCE_METERS
-  );
-  const activeTarget = runtime.backgroundTransition?.to ?? runtime.backgroundStage;
-
-  if ((runtime.burst || runtime.boss) && !runtime.backgroundTransition && desiredStage !== activeTarget) {
-    return;
-  }
-
-  if (desiredStage !== activeTarget) {
-    const from = runtime.backgroundTransition && runtime.backgroundTransition.progress >= 0.5
-      ? runtime.backgroundTransition.to
-      : runtime.backgroundStage;
-    if (desiredStage === from) {
-      runtime.backgroundStage = from;
-      runtime.backgroundTransition = null;
-      return;
-    }
-    runtime.backgroundTransition = {
-      from,
-      to: desiredStage,
-      progress: 0,
-      duration: BACKGROUND_TRANSITION_CONFIG.fadeDurationSeconds,
-    };
-  }
-
-  const transition = runtime.backgroundTransition;
-  if (!transition) return;
-  transition.progress = Math.min(1, transition.progress + delta / transition.duration);
-  if (transition.progress >= 1) {
-    runtime.backgroundStage = transition.to;
-    runtime.backgroundTransition = null;
   }
 }
 
@@ -1395,8 +1336,7 @@ function tryStartRaffica(
     runtime.boss ||
     !runtime.initialBonusSpawned ||
     runtime.presentation ||
-    runtime.backgroundTransition ||
-    runtime.entities.some((entity) => entity.type === "powerup") ||
+    runtime.activeEntityCounts.powerup > 0 ||
     runtime.distance < SPAWN_CONFIG.openingBonus.distanceEndMeters ||
     runtime.mutualBurstCooldown > 0 ||
     runtime.elapsed < runtime.nextBurstEligibleAt
@@ -1428,7 +1368,7 @@ function tryStartRaffica(
 
   const preferMalus = Math.random() < Math.max(
     0.78,
-    getDynamicMalusShare(runtime.teamRating)
+    getDynamicMalusShare(runtime.teamRating, runtime.level)
   );
   const type: RafficaType | null = preferMalus
     ? canStartMalus ? "malus" : canStartBonus ? "bonus" : null
@@ -1564,7 +1504,7 @@ function trySpawnPowerUp(runtime: Runtime, guaranteed: boolean) {
     runtime.burst ||
     runtime.boss ||
     (!guaranteed && Math.random() >= spawnChance) ||
-    runtime.entities.some((entity) => entity.type === "powerup")
+    runtime.activeEntityCounts.powerup > 0
   ) return false;
   const definition = pickPowerUp();
   const scale = runtime.mobileLayout ? MOBILE_POWER_UP_SCALE : 1;
@@ -1633,19 +1573,16 @@ function updateBoss(
     if (
       runtime.distance < runtime.nextBossAt ||
       runtime.burst ||
-      runtime.entities.some((entity) => entity.type === "powerup") ||
-      runtime.backgroundTransition
-      || runtime.distance < SPAWN_CONFIG.openingBonus.distanceEndMeters
+      runtime.activeEntityCounts.powerup > 0 ||
+      runtime.distance < SPAWN_CONFIG.openingBonus.distanceEndMeters
     ) return;
-    const pattern = pickBossPattern(
-      runtime.lastBossPattern,
-      runtime.mobileLayout,
-      speed
-    );
+    const pattern = pickLevelBossPattern(runtime, runtime.lastBossPattern, speed);
     runtime.lastBossPattern = pattern;
     runtime.boss = {
       phase: "warning",
-      timer: BOSS_CONFIG.warningSeconds + (runtime.mobileLayout ? 0.5 : 0),
+      timer: BOSS_CONFIG.warningSeconds +
+        (runtime.mobileLayout ? 0.5 : 0) +
+        (runtime.level === 1 ? 0.2 : runtime.level === 3 ? -0.08 : 0),
       spawnTimer: 0,
       lastShotAt: -10,
       attackIndex: 0,
@@ -1660,7 +1597,11 @@ function updateBoss(
       title: "Boss 20 in arrivo",
       subtitle: "Non farti trascinare in fondo",
       tone: "malus",
-      until: time + (BOSS_CONFIG.warningSeconds + (runtime.mobileLayout ? 0.5 : 0)) * 1000,
+      until: time + (
+        BOSS_CONFIG.warningSeconds +
+        (runtime.mobileLayout ? 0.5 : 0) +
+        (runtime.level === 1 ? 0.2 : runtime.level === 3 ? -0.08 : 0)
+      ) * 1000,
     };
     return;
   }
@@ -1704,9 +1645,11 @@ function updateBoss(
     const dimensions = getEventDimensions(kind);
     const scale = runtime.mobileLayout ? MOBILE_EVENT_SCALE : 1;
     const spread = Math.max(beat.spacing, kind === "missedPenalty" ? 16 : 2);
-    const projectileSpeed = runtime.mobileLayout
+    const baseProjectileSpeed = runtime.mobileLayout
       ? 325 + difficulty * 65
       : 455 + difficulty * 95;
+    const projectileSpeed = baseProjectileSpeed *
+      LEVEL_RULES[runtime.level].difficulty.bossProjectileMultiplier;
     const volleyCount = beat.count;
     for (let itemIndex = 0; itemIndex < volleyCount; itemIndex += 1) {
       const spawnX = bossRect.x + bossRect.width * 0.18 +
@@ -1732,11 +1675,7 @@ function updateBoss(
     boss.lastShotAt = runtime.elapsed;
     const nextAttackIndex = boss.attackIndex + 1;
     if (nextAttackIndex >= boss.pattern.beats.length) {
-      const nextPattern = pickBossPattern(
-        boss.pattern,
-        runtime.mobileLayout,
-        speed
-      );
+      const nextPattern = pickLevelBossPattern(runtime, boss.pattern, speed);
       boss.pattern = nextPattern;
       runtime.lastBossPattern = nextPattern;
       boss.attackIndex = 0;
@@ -1754,6 +1693,10 @@ function updateBoss(
     if (boss.volleysSinceRecovery >= boss.recoveryEvery) {
       boss.spawnTimer += boss.pattern.difficulty === "extreme" ? 0.42 : 0.3;
       if (runtime.mobileLayout) boss.spawnTimer += 0.24;
+      boss.spawnTimer = Math.max(
+        0.2,
+        boss.spawnTimer + LEVEL_RULES[runtime.level].difficulty.bossRecoveryBonus
+      );
       boss.volleysSinceRecovery = 0;
       boss.recoveryEvery = runtime.mobileLayout
         ? 2 + Math.floor(Math.random() * 2)
@@ -1768,9 +1711,22 @@ function updateBoss(
   runtime.nextBossAt = runtime.distance + randomBetween(
     BOSS_CONFIG.distanceWindowMeters.minimum,
     BOSS_CONFIG.distanceWindowMeters.maximum
-  );
+  ) + getLevelBossDistanceOffset(runtime.level);
   changeTeamRating(runtime, BOSS_CONFIG.rewardRating, time, "boss-reward", "Boss 20 superato");
   runtime.presentation = null;
+}
+
+function pickLevelBossPattern(
+  runtime: Runtime,
+  previousPattern: BossPattern | null,
+  speed: number
+) {
+  let pattern = pickBossPattern(previousPattern, runtime.mobileLayout, speed);
+  if (runtime.level !== 1) return pattern;
+  for (let attempt = 0; attempt < 3 && pattern.difficulty === "extreme"; attempt += 1) {
+    pattern = pickBossPattern(previousPattern, runtime.mobileLayout, speed);
+  }
+  return pattern;
 }
 
 function updateRafficaOverlay(runtime: Runtime, delta: number) {
@@ -1789,22 +1745,31 @@ function randomBetween(minimum: number, maximum: number) {
   return minimum + Math.random() * (maximum - minimum);
 }
 
-function getDynamicMalusShare(teamRating: number) {
+function getLevelBossDistanceOffset(level: GameLevel) {
+  return level === 1 ? 80 : level === 3 ? -60 : 0;
+}
+
+function getDynamicMalusShare(teamRating: number, level: GameLevel) {
   const balance = RAFFICA_CONFIG.dynamicMalusShare;
   if (teamRating < 70) {
     const progress = clamp01((teamRating - TEAM_RATING_THRESHOLD) / (70 - TEAM_RATING_THRESHOLD));
-    return balance.lowRating + (balance.neutralRating - balance.lowRating) * progress;
+    return Math.min(
+      0.92,
+      balance.lowRating + (balance.neutralRating - balance.lowRating) * progress +
+        (level - 1) * 0.05
+    );
   }
   const progress = clamp01((teamRating - 70) / 20);
-  return balance.neutralRating +
-    (balance.highRatingMaximum - balance.neutralRating) * progress;
+  return Math.min(
+    0.92,
+    balance.neutralRating +
+      (balance.highRatingMaximum - balance.neutralRating) * progress +
+      (level - 1) * 0.05
+  );
 }
 
 function getVisibleBackgroundStage(runtime: Runtime) {
-  const transition = runtime.backgroundTransition;
-  return transition && transition.progress >= 0.5
-    ? transition.to
-    : transition?.from ?? runtime.backgroundStage;
+  return runtime.backgroundStage;
 }
 
 function getMaximumActiveEntities(runtime: Runtime) {
@@ -1826,11 +1791,16 @@ function getObstacleProgression(distance: number) {
   };
 }
 
-function getBonusPatternWeight(teamRating: number, requestedWeight: number) {
-  if (teamRating < 78) return requestedWeight;
-  if (teamRating < 90) return Math.min(requestedWeight, 10);
-  if (teamRating < 100) return Math.min(requestedWeight, 6);
-  return Math.min(requestedWeight, 3);
+function getBonusPatternWeight(
+  teamRating: number,
+  requestedWeight: number,
+  level: GameLevel
+) {
+  const levelMaximum = level === 1 ? Number.POSITIVE_INFINITY : level === 2 ? 10 : 7;
+  if (teamRating < 78) return Math.min(requestedWeight, levelMaximum);
+  if (teamRating < 90) return Math.min(requestedWeight, 10, levelMaximum);
+  if (teamRating < 100) return Math.min(requestedWeight, 6, levelMaximum);
+  return Math.min(requestedWeight, 3, levelMaximum);
 }
 
 function spawnNext(runtime: Runtime, speed: number, difficulty: number) {
@@ -1870,7 +1840,7 @@ function spawnNext(runtime: Runtime, speed: number, difficulty: number) {
   const advancedPressure = clamp01(Math.max(
     (runtime.distance - 280) / 420,
     (speed - 480) / 300
-  ));
+  ) + LEVEL_RULES[runtime.level].difficulty.advancedPressureBoost);
   const openingBonusWeight = runtime.distance < 70
     ? 18 * (1 - runtime.distance / 70)
     : 0;
@@ -1880,13 +1850,16 @@ function spawnNext(runtime: Runtime, speed: number, difficulty: number) {
       bonus: getBonusPatternWeight(
         runtime.teamRating,
         (lastWasBonus ? 0 : mixedStreakLimited ? 26 : 11) +
-          nicoPaz * 8 + gimenez * 6 + openingBonusWeight
+          nicoPaz * 8 + gimenez * 6 + openingBonusWeight,
+        runtime.level
       ),
       malus: (runtime.lastPatternCategory === "malus" ? 8 : mixedStreakLimited ? 30 : 16) +
         luperto * 6 + highRatingPressure * 18 + advancedPressure * 22,
       mixed: mixedStreakLimited
         ? 44 + advancedPressure * 18
-        : obstacleProgression.mixedWeight + advancedPressure * 30,
+        : obstacleProgression.mixedWeight +
+          LEVEL_RULES[runtime.level].difficulty.mixedWeightBonus +
+          advancedPressure * 30,
     },
     runtime.lastPatternId,
     advancedPressure,
@@ -1956,7 +1929,7 @@ function spawnGameplayPattern(
   const advancedPressure = clamp01(Math.max(
     (runtime.distance - 280) / 420,
     (speed - 480) / 300
-  ));
+  ) + LEVEL_RULES[runtime.level].difficulty.advancedPressureBoost);
   const recovery = Math.max(0.58, pattern.recovery * (1 - advancedPressure * 0.35));
   return furthestOffset / Math.max(1, speed) + recovery;
 }
@@ -1985,15 +1958,11 @@ function pushEvent(
     if (runtime.distance < 400 || runtime.distance < runtime.nextHatTrickAt) return false;
     if (runtime.entities.some((entity) => entity.kind === "hatTrick")) return false;
   }
-  const eventCount = runtime.entities.reduce(
-    (count, entity) => count + (entity.type === "event" ? 1 : 0),
-    0
-  );
   const maximumEvents = options.burst || options.pattern
     ? ENTITY_DENSITY_CONFIG.maximumActiveCollectiblesDuringBurst
     : ENTITY_DENSITY_CONFIG.maximumActiveCollectibles;
   if (
-    eventCount >= maximumEvents ||
+    runtime.activeEntityCounts.event >= maximumEvents ||
     runtime.entities.length >= getMaximumActiveEntities(runtime)
   ) {
     return false;
@@ -2077,12 +2046,8 @@ function pushPhysicalObstacle(
   x: number,
   difficulty: number
 ) {
-  const physicalCount = runtime.entities.reduce(
-    (count, entity) => count + (entity.type === "physical" ? 1 : 0),
-    0
-  );
   if (
-    physicalCount >= ENTITY_DENSITY_CONFIG.maximumActivePhysicalObstacles ||
+    runtime.activeEntityCounts.physical >= ENTITY_DENSITY_CONFIG.maximumActivePhysicalObstacles ||
     runtime.entities.length >= getMaximumActiveEntities(runtime)
   ) {
     return false;
@@ -2147,11 +2112,16 @@ function acquireEntity(
   entity.phase = undefined;
   entity.motionSpeed = undefined;
   entity.magnetCaptured = undefined;
+  runtime.activeEntityCounts[type] += 1;
   return entity;
 }
 
 function releaseEntity(runtime: Runtime, entity: RunnerEntity) {
-  if (runtime.entityPool.length < 16) runtime.entityPool.push(entity);
+  runtime.activeEntityCounts[entity.type] = Math.max(
+    0,
+    runtime.activeEntityCounts[entity.type] - 1
+  );
+  if (runtime.entityPool.length < ENTITY_POOL_CAPACITY) runtime.entityPool.push(entity);
 }
 
 function applyEvent(runtime: Runtime, kind: EventKind, time: number) {
@@ -2287,7 +2257,6 @@ function applyPhysicalHit(runtime: Runtime, time: number, repel: boolean) {
 
 function toSnapshot(runtime: Runtime, best: number, time: number): GameSnapshot {
   const score = Math.max(0, Math.round(runtime.score));
-  const scenario = getStageScenario(runtime);
   return {
     score,
     best: Math.max(best, score),
@@ -2304,8 +2273,8 @@ function toSnapshot(runtime: Runtime, best: number, time: number): GameSnapshot 
         : 0,
     flowProgress: Math.round(runtime.flowProgress),
     speedLevel: getSpeedLevel(getScoreSpeedProgress(runtime)),
-    distance: Math.round(runtime.distance),
-    scenarioName: scenario.name,
+    distance: toDisplayDistance(runtime.distance),
+    scenarioName: LEVEL_RULES[runtime.level].name,
     bonusesCollected: runtime.bonusesCollected,
     malusesCollected: runtime.malusesCollected,
     message: time < runtime.messageUntil ? runtime.message : "",
@@ -2354,11 +2323,18 @@ function getDifficultyProgress(runtime: Runtime) {
     weighted +
     Math.pow(clamp01(weighted), DIFFICULTY_CONFIG.curvePower) *
       DIFFICULTY_CONFIG.nonlinearBoost;
-  return Math.max(getDifficultyBand(runtime.teamRating).floor, clamp01(curved));
+  return clamp01(Math.max(
+    getDifficultyBand(runtime.teamRating).floor,
+    curved + LEVEL_RULES[runtime.level].difficulty.difficultyBoost
+  ));
 }
 
 function getScoreSpeedProgress(runtime: Runtime) {
-  return clamp01(runtime.peakScore / SPEED_CONFIG.scoreForMaximum);
+  return clamp01(
+    runtime.peakScore /
+      (SPEED_CONFIG.scoreForMaximum /
+        LEVEL_RULES[runtime.level].difficulty.speedProgressMultiplier)
+  );
 }
 
 function getRunSpeed(scoreProgress: number) {
@@ -2566,34 +2542,39 @@ function drawGame(
   reducedMotion: boolean
 ) {
   const viewport = getLogicalCanvasViewport(context);
-  context.clearRect(0, 0, viewport.width, viewport.height);
   const scenario = getStageScenario(runtime);
   const reducedEffects =
     reducedMotion ||
     runtime.reducedPerformance ||
-    getScoreSpeedProgress(runtime) > 0.72;
+    getScoreSpeedProgress(runtime) > 0.72 ||
+    runtime.entities.length >= 8 ||
+    Boolean(runtime.burst || runtime.boss);
 
-  const hasAssetBackground = drawAssetBackground(context, runtime, assets);
+  const hasAssetBackground = drawAssetBackground(context, runtime, assets, viewport);
   if (!hasAssetBackground) {
     drawScenario(context, scenario, runtime, 1, reducedMotion);
-    drawGround(context, scenario, runtime.pits, 1);
+    drawGround(context, scenario, 1);
   }
-  drawSpeedComfortOverlay(context, runtime);
-  drawRafficaOverlay(context, runtime);
+  drawSpeedComfortOverlay(context, runtime, viewport);
+  drawRafficaOverlay(context, runtime, viewport);
 
   context.save();
   if (runtime.mobileLayout) {
     context.translate(0, MOBILE_WORLD_OFFSET_Y + GROUND_Y * (1 - MOBILE_CAMERA_SCALE));
     context.scale(MOBILE_CAMERA_SCALE, MOBILE_CAMERA_SCALE);
   }
-  if (hasAssetBackground) drawAssetHazards(context, runtime, assets);
   drawBoss(context, runtime, assets);
   for (const entity of runtime.entities) {
     if (entity.x + entity.width <= 0 || entity.x >= runtime.worldWidth + 80) continue;
-    context.save();
-    context.globalAlpha *= entity.opacity ?? 1;
-    drawEntity(context, entity, assets, runtime.elapsed, runtime.mobileLayout);
-    context.restore();
+    const opacity = entity.opacity ?? 1;
+    if (opacity < 0.999) {
+      context.save();
+      context.globalAlpha *= opacity;
+      drawEntity(context, entity, assets, runtime.elapsed, runtime.mobileLayout, reducedEffects);
+      context.restore();
+    } else {
+      drawEntity(context, entity, assets, runtime.elapsed, runtime.mobileLayout, reducedEffects);
+    }
   }
   if (runtime.playerVisible) {
     drawPlayer(context, runtime, logo, time, scenario, reducedEffects);
@@ -2610,78 +2591,17 @@ function getStageScenario(runtime: Runtime) {
 function drawAssetBackground(
   context: CanvasRenderingContext2D,
   runtime: Runtime,
-  assets: GameImageMap
+  assets: GameImageMap,
+  viewport: { width: number; height: number }
 ) {
-  const viewport = getLogicalCanvasViewport(context);
-  const transition = runtime.backgroundTransition;
-  const currentStage = transition?.from ?? runtime.backgroundStage;
+  const currentStage = runtime.backgroundStage;
   const currentConfig = BACKGROUND_STAGE_CONFIG[currentStage];
   if (!assets.get(currentConfig.stadium) || !assets.get(currentConfig.ground)) {
     return false;
   }
 
-  if (!transition) {
-    drawStageLayers(context, currentStage, runtime, assets, 1, viewport);
-    return true;
-  }
-
-  const targetConfig = BACKGROUND_STAGE_CONFIG[transition.to];
-  if (!assets.get(targetConfig.stadium) || !assets.get(targetConfig.ground)) {
-    drawStageLayers(context, currentStage, runtime, assets, 1, viewport);
-    return true;
-  }
-
-  const progress = smoothProgress(transition.progress);
-  drawStageLayers(context, currentStage, runtime, assets, 1 - progress * 0.16, viewport);
-  drawStageLayers(context, transition.to, runtime, assets, progress, viewport);
-  if (!runtime.mobileLayout || runtime.renderQuality !== "low") {
-    drawScenarioTransitionVeil(context, progress, viewport);
-  }
+  drawStageLayers(context, currentStage, runtime, assets, 1, viewport);
   return true;
-}
-
-function drawScenarioTransitionVeil(
-  context: CanvasRenderingContext2D,
-  progress: number,
-  viewport: { width: number; height: number }
-) {
-  const intensity = Math.sin(Math.PI * progress);
-  if (intensity <= 0.001) return;
-  context.save();
-  context.globalAlpha = intensity * 0.52;
-  context.drawImage(getTransitionVeil(viewport), 0, 0, viewport.width, viewport.height);
-  context.restore();
-}
-
-function getTransitionVeil(viewport: { width: number; height: number }) {
-  const key = `${Math.round(viewport.width)}x${Math.round(viewport.height)}`;
-  const cached = TRANSITION_VEIL_CACHE.get(key);
-  if (cached) return cached;
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.max(1, Math.ceil(viewport.width));
-  canvas.height = Math.max(1, Math.ceil(viewport.height));
-  const layer = canvas.getContext("2d");
-  if (!layer) return canvas;
-  const tunnel = layer.createRadialGradient(
-    canvas.width * 0.5,
-    canvas.height * 0.48,
-    canvas.height * 0.08,
-    canvas.width * 0.5,
-    canvas.height * 0.48,
-    canvas.width * 0.72
-  );
-  tunnel.addColorStop(0, "rgba(148,203,235,0.13)");
-  tunnel.addColorStop(0.38, "rgba(11,31,52,0.18)");
-  tunnel.addColorStop(1, "rgba(1,6,17,0.72)");
-  layer.fillStyle = tunnel;
-  layer.fillRect(0, 0, canvas.width, canvas.height);
-  const groundBlend = layer.createLinearGradient(0, canvas.height * 0.64, 0, canvas.height);
-  groundBlend.addColorStop(0, "rgba(5,20,35,0)");
-  groundBlend.addColorStop(1, "rgba(4,17,28,0.3)");
-  layer.fillStyle = groundBlend;
-  layer.fillRect(0, canvas.height * 0.58, canvas.width, canvas.height * 0.42);
-  TRANSITION_VEIL_CACHE.set(key, canvas);
-  return canvas;
 }
 
 function drawStageLayers(
@@ -2727,15 +2647,7 @@ function drawBackgroundTiles(
 
   while (tileX < viewport.width) {
     const mirrored = Math.abs(tileIndex) % 2 === 1;
-    if (mirrored) {
-      context.save();
-      context.translate(tileX + tileWidth, 0);
-      context.scale(-1, 1);
-      context.drawImage(tile, 0, y);
-      context.restore();
-    } else {
-      context.drawImage(tile, tileX, y);
-    }
+    context.drawImage(mirrored ? getMirroredTile(tile) : tile, tileX, y);
     tileX += step;
     tileIndex += 1;
   }
@@ -2759,17 +2671,25 @@ function drawGroundTiles(
   let tileIndex = Math.floor(offset / step);
   for (let tileX = firstX; tileX < viewport.width; tileX += step) {
     const mirrorForSeam = stage !== 1 && Math.abs(tileIndex) % 2 === 1;
-    context.save();
-    if (mirrorForSeam) {
-      context.translate(tileX + tileWidth, 0);
-      context.scale(-1, 1);
-      context.drawImage(tile, 0, y);
-    } else {
-      context.drawImage(tile, tileX, y);
-    }
-    context.restore();
+    context.drawImage(mirrorForSeam ? getMirroredTile(tile) : tile, tileX, y);
     tileIndex += 1;
   }
+}
+
+function getMirroredTile(tile: HTMLCanvasElement) {
+  const cached = MIRRORED_TILE_CACHE.get(tile);
+  if (cached) return cached;
+  const mirrored = document.createElement("canvas");
+  mirrored.width = tile.width;
+  mirrored.height = tile.height;
+  const context = mirrored.getContext("2d");
+  if (context) {
+    context.translate(mirrored.width, 0);
+    context.scale(-1, 1);
+    context.drawImage(tile, 0, 0);
+  }
+  MIRRORED_TILE_CACHE.set(tile, mirrored);
+  return mirrored;
 }
 
 function getCachedBackgroundTile(
@@ -2784,7 +2704,7 @@ function getCachedBackgroundTile(
   canvas.width = Math.max(1, Math.ceil(image.naturalWidth * scale));
   canvas.height = Math.max(1, Math.ceil(image.naturalHeight * scale));
   canvas.getContext("2d")?.drawImage(image, 0, 0, canvas.width, canvas.height);
-  BACKGROUND_TILE_CACHE.set(key, canvas);
+  setBoundedCanvasCache(BACKGROUND_TILE_CACHE, key, canvas, 12);
   return canvas;
 }
 
@@ -2810,16 +2730,16 @@ function getCachedGroundTile(
     canvas.width,
     canvas.height
   );
-  GROUND_TILE_CACHE.set(key, canvas);
+  setBoundedCanvasCache(GROUND_TILE_CACHE, key, canvas, 12);
   return canvas;
 }
 
 function drawRafficaOverlay(
   context: CanvasRenderingContext2D,
-  runtime: Runtime
+  runtime: Runtime,
+  viewport: { width: number; height: number }
 ) {
   if (!runtime.burstOverlayType || runtime.burstOverlayIntensity <= 0) return;
-  const viewport = getLogicalCanvasViewport(context);
   const isMalus = runtime.burstOverlayType === "malus";
   const slowPulse = 0.94 + Math.sin(runtime.elapsed * (isMalus ? 2.1 : 1.45)) * 0.06;
   const staticOverlay = getRafficaStaticOverlay(
@@ -2871,14 +2791,27 @@ function getRafficaStaticOverlay(
       overlay.fillRect(0, 0, width, height * 0.58);
     }
   }
-  RAFFICA_OVERLAY_CACHE.set(key, canvas);
+  setBoundedCanvasCache(RAFFICA_OVERLAY_CACHE, key, canvas, 8);
   return canvas;
+}
+
+function setBoundedCanvasCache(
+  cache: Map<string, HTMLCanvasElement>,
+  key: string,
+  value: HTMLCanvasElement,
+  maximumEntries: number
+) {
+  if (!cache.has(key) && cache.size >= maximumEntries) {
+    const oldestKey = cache.keys().next().value;
+    if (oldestKey !== undefined) cache.delete(oldestKey);
+  }
+  cache.set(key, value);
 }
 
 function prewarmRenderCaches(
   context: CanvasRenderingContext2D,
   images: GameImageMap,
-  mobile: boolean
+  stage: GameBackgroundStage
 ) {
   const currentViewport = getLogicalCanvasViewport(context);
   const viewports = [
@@ -2889,53 +2822,87 @@ function prewarmRenderCaches(
   for (const viewport of viewports) {
     getRafficaStaticOverlay("bonus", viewport.width, viewport.height);
     getRafficaStaticOverlay("malus", viewport.width, viewport.height);
-    getTransitionVeil(viewport);
-    for (const stage of [1, 2, 3] as const) {
-      const config = BACKGROUND_STAGE_CONFIG[stage];
-      const stadium = images.get(config.stadium);
-      const ground = images.get(config.ground);
-      if (stadium) getCachedBackgroundTile(stadium, viewport);
-      if (ground) getCachedGroundTile(ground, viewport);
+    const config = BACKGROUND_STAGE_CONFIG[stage];
+    const stadium = images.get(config.stadium);
+    const ground = images.get(config.ground);
+    if (stadium) {
+      const tile = getCachedBackgroundTile(stadium, viewport);
+      getMirroredTile(tile);
+    }
+    if (ground) {
+      const tile = getCachedGroundTile(ground, viewport);
+      if (stage !== 1) getMirroredTile(tile);
     }
   }
   for (const kind of POWER_UP_KINDS) getPowerUpAura(kind);
-  if (mobile) prewarmMobileRenderVariants(images);
+  prewarmRenderVariants(images);
 }
 
-function prewarmMobileRenderVariants(images: GameImageMap) {
+function prewarmRenderVariants(images: GameImageMap) {
   for (const kind of Object.keys(EVENT_SPRITES) as EventKind[]) {
     const sprite = EVENT_SPRITES[kind];
     if (!sprite) continue;
     const image = images.get(sprite.asset);
-    if (!image || MOBILE_EVENT_RENDER_CACHE.has(kind)) continue;
-    MOBILE_EVENT_RENDER_CACHE.set(kind, createCroppedRenderVariant(
-      image,
-      sprite.source,
-      sprite.width * MOBILE_EVENT_SCALE,
-      sprite.height * MOBILE_EVENT_SCALE
-    ));
+    if (!image) continue;
+    if (!MOBILE_EVENT_RENDER_CACHE.has(kind)) {
+      MOBILE_EVENT_RENDER_CACHE.set(kind, createCroppedRenderVariant(
+        image,
+        sprite.source,
+        sprite.width * MOBILE_EVENT_SCALE,
+        sprite.height * MOBILE_EVENT_SCALE
+      ));
+    }
+    if (!DESKTOP_EVENT_RENDER_CACHE.has(kind)) {
+      DESKTOP_EVENT_RENDER_CACHE.set(kind, createCroppedRenderVariant(
+        image,
+        sprite.source,
+        sprite.width,
+        sprite.height
+      ));
+    }
   }
   for (const kind of Object.keys(OBSTACLE_SPRITES) as PhysicalObstacleKind[]) {
     const sprite = OBSTACLE_SPRITES[kind];
     const image = images.get(sprite.asset);
-    if (!image || MOBILE_OBSTACLE_RENDER_CACHE.has(kind)) continue;
-    MOBILE_OBSTACLE_RENDER_CACHE.set(kind, createCroppedRenderVariant(
-      image,
-      sprite.source,
-      sprite.width * MOBILE_OBSTACLE_SCALE[kind],
-      sprite.height * MOBILE_OBSTACLE_SCALE[kind]
-    ));
+    if (!image) continue;
+    if (!MOBILE_OBSTACLE_RENDER_CACHE.has(kind)) {
+      MOBILE_OBSTACLE_RENDER_CACHE.set(kind, createCroppedRenderVariant(
+        image,
+        sprite.source,
+        sprite.width * MOBILE_OBSTACLE_SCALE[kind],
+        sprite.height * MOBILE_OBSTACLE_SCALE[kind]
+      ));
+    }
+    if (!DESKTOP_OBSTACLE_RENDER_CACHE.has(kind)) {
+      DESKTOP_OBSTACLE_RENDER_CACHE.set(kind, createCroppedRenderVariant(
+        image,
+        sprite.source,
+        sprite.width,
+        sprite.height
+      ));
+    }
   }
   for (const kind of POWER_UP_KINDS) {
     const definition = POWER_UP_CONFIG[kind];
     const image = images.get(definition.assetKey);
-    if (!image || MOBILE_POWER_UP_RENDER_CACHE.has(kind)) continue;
-    MOBILE_POWER_UP_RENDER_CACHE.set(kind, createCroppedRenderVariant(
-      image,
-      { x: 0, y: 0, width: image.naturalWidth, height: image.naturalHeight },
-      definition.width * MOBILE_POWER_UP_SCALE,
-      definition.height * MOBILE_POWER_UP_SCALE
-    ));
+    if (!image) continue;
+    const source = { x: 0, y: 0, width: image.naturalWidth, height: image.naturalHeight };
+    if (!MOBILE_POWER_UP_RENDER_CACHE.has(kind)) {
+      MOBILE_POWER_UP_RENDER_CACHE.set(kind, createCroppedRenderVariant(
+        image,
+        source,
+        definition.width * MOBILE_POWER_UP_SCALE,
+        definition.height * MOBILE_POWER_UP_SCALE
+      ));
+    }
+    if (!DESKTOP_POWER_UP_RENDER_CACHE.has(kind)) {
+      DESKTOP_POWER_UP_RENDER_CACHE.set(kind, createCroppedRenderVariant(
+        image,
+        source,
+        definition.width,
+        definition.height
+      ));
+    }
   }
   const boss = images.get("event.boss");
   if (boss && !mobileBossRenderCache) {
@@ -2944,6 +2911,14 @@ function prewarmMobileRenderVariants(images: GameImageMap) {
       { x: 0, y: 0, width: boss.naturalWidth, height: boss.naturalHeight },
       200,
       300
+    );
+  }
+  if (boss && !desktopBossRenderCache) {
+    desktopBossRenderCache = createCroppedRenderVariant(
+      boss,
+      { x: 0, y: 0, width: boss.naturalWidth, height: boss.naturalHeight },
+      250,
+      375
     );
   }
 }
@@ -2998,10 +2973,10 @@ function prewarmImageTextures(images: GameImageMap, logo: HTMLImageElement) {
 
 function drawSpeedComfortOverlay(
   context: CanvasRenderingContext2D,
-  runtime: Runtime
+  runtime: Runtime,
+  viewport: { width: number; height: number }
 ) {
   if (runtime.visualComfort <= 0 || runtime.reducedPerformance) return;
-  const viewport = getLogicalCanvasViewport(context);
   context.save();
   context.globalAlpha = runtime.visualComfort * 0.12;
   context.fillStyle = "#0f2743";
@@ -3016,54 +2991,6 @@ function getLogicalCanvasViewport(context: CanvasRenderingContext2D) {
     width: canvas.width / Math.max(0.0001, Math.abs(transform.a)),
     height: canvas.height / Math.max(0.0001, Math.abs(transform.d)),
   };
-}
-
-function drawAssetHazards(
-  context: CanvasRenderingContext2D,
-  runtime: Runtime,
-  assets: GameImageMap
-) {
-  for (const pit of runtime.pits) {
-    const stage = pit.stage ?? getVisibleBackgroundStage(runtime);
-    const image = assets.get(BACKGROUND_STAGE_CONFIG[stage].hazard);
-    if (!image) {
-      drawFallbackPit(context, pit);
-      continue;
-    }
-    const width = pit.width * 2.1;
-    const height = width * (image.naturalHeight / image.naturalWidth);
-    const x = pit.x - pit.width * 0.59;
-    const y = GROUND_Y - pit.width * 0.27;
-    context.drawImage(image, x, y, width, height);
-  }
-}
-
-function drawFallbackPit(context: CanvasRenderingContext2D, pit: GroundPit) {
-  context.save();
-  const gradient = context.createRadialGradient(
-    pit.x + pit.width / 2,
-    GROUND_Y + 5,
-    4,
-    pit.x + pit.width / 2,
-    GROUND_Y + 8,
-    pit.width * 0.62
-  );
-  gradient.addColorStop(0, "#020617");
-  gradient.addColorStop(0.65, "#160d08");
-  gradient.addColorStop(1, "rgba(101,68,45,0)");
-  context.fillStyle = gradient;
-  context.beginPath();
-  context.ellipse(
-    pit.x + pit.width / 2,
-    GROUND_Y + 10,
-    pit.width * 0.62,
-    pit.width * 0.34,
-    0,
-    0,
-    Math.PI * 2
-  );
-  context.fill();
-  context.restore();
 }
 
 function smoothProgress(value: number) {
@@ -3093,7 +3020,6 @@ function drawScenario(
 function drawGround(
   context: CanvasRenderingContext2D,
   scenario: GameScenario,
-  pits: GroundPit[],
   alpha: number
 ) {
   context.save();
@@ -3121,40 +3047,6 @@ function drawGround(
   context.stroke();
   context.globalAlpha = alpha;
 
-  for (const pit of pits) {
-    const rim = context.createLinearGradient(pit.x, 0, pit.x + pit.width, 0);
-    rim.addColorStop(0, "#65442d");
-    rim.addColorStop(0.48, "#1c130e");
-    rim.addColorStop(1, "#6f4a2f");
-    context.fillStyle = rim;
-    context.beginPath();
-    context.moveTo(pit.x - 7, GROUND_Y - 3);
-    context.lineTo(pit.x + pit.width + 7, GROUND_Y - 3);
-    context.lineTo(pit.x + pit.width - 5, GAME_HEIGHT);
-    context.lineTo(pit.x + 5, GAME_HEIGHT);
-    context.closePath();
-    context.fill();
-
-    const depth = context.createLinearGradient(0, GROUND_Y, 0, GAME_HEIGHT);
-    depth.addColorStop(0, "#120c08");
-    depth.addColorStop(0.55, "#080503");
-    depth.addColorStop(1, "#24150d");
-    context.fillStyle = depth;
-    context.beginPath();
-    context.moveTo(pit.x + 3, GROUND_Y + 2);
-    context.lineTo(pit.x + pit.width - 3, GROUND_Y + 2);
-    context.lineTo(pit.x + pit.width - 12, GAME_HEIGHT);
-    context.lineTo(pit.x + 12, GAME_HEIGHT);
-    context.closePath();
-    context.fill();
-
-    context.strokeStyle = "rgba(214,178,122,0.78)";
-    context.lineWidth = 2;
-    context.beginPath();
-    context.moveTo(pit.x - 5, GROUND_Y - 2);
-    context.quadraticCurveTo(pit.x + pit.width / 2, GROUND_Y + 10, pit.x + pit.width + 5, GROUND_Y - 2);
-    context.stroke();
-  }
   context.restore();
 }
 
@@ -3393,7 +3285,8 @@ function drawEntity(
   entity: RunnerEntity,
   assets: GameImageMap,
   elapsed: number,
-  mobileLayout: boolean
+  mobileLayout: boolean,
+  reducedEffects: boolean
 ) {
   if (entity.type === "powerup") {
     drawPowerUp(context, entity, assets, elapsed, mobileLayout);
@@ -3406,7 +3299,7 @@ function drawEntity(
 
   const definition = EVENT_DEFINITIONS[entity.kind as EventKind];
   const isBonus = definition.category === "bonus";
-  if ((entity.horizontalSpeedFactor ?? 1) > 1.08) {
+  if (!reducedEffects && (entity.horizontalSpeedFactor ?? 1) > 1.08) {
     context.save();
     context.globalAlpha = 0.2;
     context.strokeStyle = isBonus ? "#7dd3fc" : "#fda4af";
@@ -3424,8 +3317,8 @@ function drawEntity(
     }
     context.restore();
   }
-  drawEventIdentity(context, entity, isBonus, elapsed);
-  if (!isBonus && entity.motion && entity.motion !== "ground") {
+  if (!reducedEffects) drawEventIdentity(context, entity, isBonus, elapsed);
+  if (!reducedEffects && !isBonus && entity.motion && entity.motion !== "ground") {
     context.save();
     context.globalAlpha = 0.28;
     context.strokeStyle = definition.border;
@@ -3456,7 +3349,7 @@ function drawEntity(
     context.shadowOffsetY = 2;
     const mobileSprite = mobileLayout
       ? MOBILE_EVENT_RENDER_CACHE.get(entity.kind as EventKind)
-      : undefined;
+      : DESKTOP_EVENT_RENDER_CACHE.get(entity.kind as EventKind);
     if (mobileSprite) {
       context.drawImage(mobileSprite, entity.x, entity.y, entity.width, entity.height);
     } else {
@@ -3517,7 +3410,7 @@ function drawPowerUp(
   context.shadowBlur = 0;
   const renderImage = mobileLayout
     ? MOBILE_POWER_UP_RENDER_CACHE.get(entity.kind as PowerUpKind) ?? image
-    : image;
+    : DESKTOP_POWER_UP_RENDER_CACHE.get(entity.kind as PowerUpKind) ?? image;
   if (renderImage) {
     context.drawImage(renderImage, -entity.width / 2, -entity.height / 2, entity.width, entity.height);
   } else {
@@ -3537,7 +3430,7 @@ function drawBoss(
   if (!runtime.boss) return;
   const image = runtime.mobileLayout
     ? mobileBossRenderCache ?? assets.get("event.boss")
-    : assets.get("event.boss");
+    : desktopBossRenderCache ?? assets.get("event.boss");
   if (!image) return;
   const bossRect = getBossRect(runtime);
   const { x, y, width, height } = bossRect;
@@ -3632,7 +3525,7 @@ function drawPhysicalObstacle(
   }
   const mobileSprite = mobileLayout
     ? MOBILE_OBSTACLE_RENDER_CACHE.get(entity.kind as PhysicalObstacleKind)
-    : undefined;
+    : DESKTOP_OBSTACLE_RENDER_CACHE.get(entity.kind as PhysicalObstacleKind);
   if (mobileSprite) {
     context.drawImage(mobileSprite, entity.x, entity.y, entity.width, entity.height);
   } else {

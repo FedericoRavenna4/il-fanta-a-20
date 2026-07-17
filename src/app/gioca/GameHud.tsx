@@ -1,10 +1,12 @@
 "use client";
 
 import type { GameSnapshot, GameTeam } from "@/lib/game/types";
+import { LEVEL_RULES, type GameLevel } from "@/lib/game/progression";
 
-export default function GameHud({ team, snapshot }: {
+export default function GameHud({ team, snapshot, level }: {
   team: GameTeam;
   snapshot: GameSnapshot;
+  level: GameLevel;
 }) {
   const warning = snapshot.teamRating <= 64;
   const critical = snapshot.teamRating <= 62.5;
@@ -17,6 +19,7 @@ export default function GameHud({ team, snapshot }: {
     : snapshot.rafficaType === "bonus"
       ? "border-amber-200/22 bg-[linear-gradient(135deg,#181104,#5d3a0c_48%,#130e04_100%)]"
       : "border-white/10 bg-[linear-gradient(135deg,#06142c_0%,#0c2c52_52%,#07162f_100%)]";
+  const levelStatus = getLevelStatus(level, snapshot.distance);
 
   return (
     <div className={`border-b px-2.5 py-1.5 text-white transition-colors duration-700 sm:px-5 sm:py-2.5 ${hudTone}`}>
@@ -69,6 +72,18 @@ export default function GameHud({ team, snapshot }: {
         </div>
       </div>
 
+      <div className="mt-1 flex min-w-0 items-center justify-center gap-2 border-t border-white/[.07] pt-1 text-center sm:mt-1.5 sm:gap-3 sm:pt-1.5">
+        <span className="shrink-0 text-[7px] font-black uppercase tracking-[.14em] text-amber-300 sm:text-[8px]">
+          Livello {level}
+        </span>
+        <span className="truncate text-[7px] font-bold text-white/48 sm:text-[8px]">
+          {LEVEL_RULES[level].name}
+        </span>
+        <span className={`truncate text-[7px] font-black uppercase tracking-[.05em] sm:text-[8px] ${levelStatus.tone}`}>
+          {levelStatus.text}
+        </span>
+      </div>
+
       <style jsx global>{`
         @keyframes life-critical-pulse { 0%,100% { transform:scaleY(1); } 50% { transform:scaleY(1.08); } }
         @keyframes warning-icon-pulse { 0%,100% { opacity:.78; transform:scale(.96); } 50% { opacity:1; transform:scale(1.08); } }
@@ -80,6 +95,26 @@ export default function GameHud({ team, snapshot }: {
       `}</style>
     </div>
   );
+}
+
+function getLevelStatus(level: GameLevel, distance: number) {
+  const rule = LEVEL_RULES[level];
+  if (level === 1) {
+    const remaining = Math.max(0, rule.promotionAt! - distance);
+    return remaining > 0
+      ? { text: `Promozione: ${formatNumber(remaining)} m mancanti`, tone: "text-sky-100/72" }
+      : { text: "Promozione acquisita", tone: "text-emerald-300" };
+  }
+  if (level === 2) {
+    if (distance < rule.relegationBelow!) return { text: "Zona retrocessione", tone: "text-rose-300" };
+    const remaining = Math.max(0, rule.promotionAt! - distance);
+    return remaining > 0
+      ? { text: `Categoria mantenuta · ${formatNumber(remaining)} m alla promozione`, tone: "text-amber-200" }
+      : { text: "Promozione acquisita", tone: "text-emerald-300" };
+  }
+  return distance < rule.relegationBelow!
+    ? { text: `Zona retrocessione · ${formatNumber(rule.relegationBelow! - distance)} m alla salvezza`, tone: "text-rose-300" }
+    : { text: "Salvezza raggiunta", tone: "text-emerald-300" };
 }
 
 function Metric({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) {
