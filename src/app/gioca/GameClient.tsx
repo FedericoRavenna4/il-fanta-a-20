@@ -237,22 +237,25 @@ export default function GameClient({
               </button>
             </div>
 
-            <div className="absolute inset-x-0 top-0 z-30 hidden items-center justify-between pl-[max(.55rem,env(safe-area-inset-left))] pr-[max(.55rem,env(safe-area-inset-right))] pt-[max(.55rem,env(safe-area-inset-top))] max-sm:flex">
+            <div
+              className="absolute right-0 top-0 z-30 hidden items-center justify-end gap-2 pr-[max(.55rem,env(safe-area-inset-right))] pt-[max(.55rem,env(safe-area-inset-top))] max-sm:flex"
+              onPointerDown={(event) => event.stopPropagation()}
+            >
               {(status === "running" || status === "paused") ? (
                 <button
                   type="button"
                   onClick={() => setStatus((current) => current === "running" ? "paused" : current === "paused" ? "running" : current)}
                   aria-label={status === "paused" ? "Riprendi la partita" : "Metti in pausa"}
-                  className="flex h-11 w-11 items-center justify-center rounded-full border border-white/18 bg-slate-950/90 text-sm font-black text-white shadow-lg transition active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-white/18 bg-slate-950/90 text-[20px] font-black leading-none text-white shadow-lg transition active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
                 >
                   <span aria-hidden="true">{status === "paused" ? "▶" : "Ⅱ"}</span>
                 </button>
-              ) : <span className="h-11 w-11" aria-hidden="true" />}
+              ) : null}
               <button
                 type="button"
                 onClick={() => returnToGameHome(true)}
                 aria-label="Chiudi il gioco e torna alla selezione"
-                className="flex h-11 w-11 items-center justify-center rounded-full border border-white/18 bg-slate-950/90 text-xl font-light text-white shadow-lg transition active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-white/18 bg-slate-950/90 text-[21px] font-light leading-none text-white shadow-lg transition active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
               >
                 ×
               </button>

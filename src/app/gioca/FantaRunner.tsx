@@ -3,6 +3,7 @@
 import { memo, useCallback, useEffect, useRef } from "react";
 import {
   BONUS_HEIGHT_OFFSETS,
+  BONUS_RATING_CURVE,
   EVENT_DEFINITIONS,
   CROUCH_DURATION_MS,
   DIFFICULTY_BANDS,
@@ -22,6 +23,8 @@ import {
   JUMP_HOLD_ACCELERATION,
   JUMP_MAX_HOLD_SECONDS,
   JUMP_RELEASE_FACTOR,
+  HAT_TRICK_SPAWN_CONFIG,
+  OBSTACLE_PROGRESSION,
   RAFFICA_CONFIG,
   SCENARIO_DISTANCE_METERS,
   GOAL_RATING_STEP,
@@ -123,7 +126,8 @@ type Runtime = {
   flowProgress: number;
   confirmedGoals: number;
   maxGoalsReached: number;
-  hatTricksSpawned: number;
+  nextHatTrickAt: number;
+  lastBonusCollectedAt: number;
   goalCelebrationUntil: number;
   goalCelebrationGoals: number;
   message: string;
@@ -286,7 +290,11 @@ function createRuntime(): Runtime {
     flowProgress: 0,
     confirmedGoals: 0,
     maxGoalsReached: 0,
-    hatTricksSpawned: 0,
+    nextHatTrickAt: randomBetween(
+      HAT_TRICK_SPAWN_CONFIG.firstWindow.minimum,
+      HAT_TRICK_SPAWN_CONFIG.firstWindow.maximum
+    ),
+    lastBonusCollectedAt: -10,
     goalCelebrationUntil: 0,
     goalCelebrationGoals: 0,
     message: "",
@@ -1048,6 +1056,7 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
       runtime.spawnTimer =
         getSafeSpawnInterval(speed, difficulty) *
           difficultyBand.intervalMultiplier *
+          getObstacleProgression(runtime.distance).intervalMultiplier *
           openingIntervalMultiplier +
         sequenceDelay;
     }
@@ -1119,12 +1128,15 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
     ) {
       const entityCenterY = entity.y + entity.height / 2;
       const horizontalDistance = entity.x - runtime.playerX;
-      if (nicoStrength > 0 && magnetTarget) {
+      const alreadyVanishing = (entity.opacity ?? 1) < 1;
+      if (nicoStrength > 0 && gimenezStrength <= 0 && !alreadyVanishing && magnetTarget) {
         const entityCenterX = entity.x + entity.width / 2;
         const deltaX = magnetTargetX - entityCenterX;
         const deltaY = magnetTargetY - entityCenterY;
         const distanceToTarget = Math.max(0.001, Math.hypot(deltaX, deltaY));
-        const attractionRadius = 360;
+        const attractionRadius = entity.kind === "hatTrick"
+          ? HAT_TRICK_SPAWN_CONFIG.nicoAttractionRadius
+          : 360;
         if (distanceToTarget <= attractionRadius) {
           const proximity = 1 - clamp01(distanceToTarget / attractionRadius);
           const attractionSpeed = (135 + proximity * 205) *
@@ -1147,26 +1159,18 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
           }
         }
       }
-      const alreadyVanishing = (entity.opacity ?? 1) < 1;
       if (
-        nicoStrength <= 0 &&
         (gimenezStrength > 0 || alreadyVanishing) &&
         (alreadyVanishing || (horizontalDistance > -20 && horizontalDistance < 150))
       ) {
         const dissolveStrength = gimenezStrength > 0 ? gimenezStrength : 1;
-        const playerCenterY = runtime.playerY + PLAYER_SIZE / 2;
-        const direction = entityCenterY <= playerCenterY ? -1 : 1;
         const proximity = 1 - clamp01(Math.max(0, horizontalDistance) / 150);
         entity.fleeing = true;
-        entity.opacity = Math.max(0, (entity.opacity ?? 1) - delta * (1.8 + proximity * 0.8) * dissolveStrength);
-        entity.y = Math.max(
-          GROUND_Y - entity.height - 120,
-          Math.min(
-            GROUND_Y - entity.height,
-            entity.y + direction * (42 + proximity * 38) * delta * dissolveStrength
-          )
+        entity.magnetCaptured = undefined;
+        entity.opacity = Math.max(
+          0,
+          (entity.opacity ?? 1) - delta * (2.65 + proximity * 1.15) * dissolveStrength
         );
-        entity.x += worldSpeed * (0.95 + proximity * 0.25) * delta * dissolveStrength;
       }
     }
   }
@@ -1643,20 +1647,22 @@ function updateBoss(
     runtime.lastBossPattern = pattern;
     runtime.boss = {
       phase: "warning",
-      timer: BOSS_CONFIG.warningSeconds + (runtime.mobileLayout ? 0.35 : 0),
+      timer: BOSS_CONFIG.warningSeconds + (runtime.mobileLayout ? 0.5 : 0),
       spawnTimer: 0,
       lastShotAt: -10,
       attackIndex: 0,
       pattern,
       volleysSinceRecovery: 0,
-      recoveryEvery: 2 + Math.floor(Math.random() * 3),
+      recoveryEvery: runtime.mobileLayout
+        ? 2 + Math.floor(Math.random() * 2)
+        : 2 + Math.floor(Math.random() * 3),
     };
     runtime.presentation = {
       asset: BOSS_CONFIG.warningAsset,
       title: "Boss 20 in arrivo",
       subtitle: "Non farti trascinare in fondo",
       tone: "malus",
-      until: time + (BOSS_CONFIG.warningSeconds + (runtime.mobileLayout ? 0.35 : 0)) * 1000,
+      until: time + (BOSS_CONFIG.warningSeconds + (runtime.mobileLayout ? 0.5 : 0)) * 1000,
     };
     return;
   }
@@ -1701,7 +1707,7 @@ function updateBoss(
     const scale = runtime.mobileLayout ? MOBILE_EVENT_SCALE : 1;
     const spread = Math.max(beat.spacing, kind === "missedPenalty" ? 16 : 2);
     const projectileSpeed = runtime.mobileLayout
-      ? 340 + difficulty * 75
+      ? 325 + difficulty * 65
       : 455 + difficulty * 95;
     const volleyCount = beat.count;
     for (let itemIndex = 0; itemIndex < volleyCount; itemIndex += 1) {
@@ -1749,9 +1755,11 @@ function updateBoss(
     );
     if (boss.volleysSinceRecovery >= boss.recoveryEvery) {
       boss.spawnTimer += boss.pattern.difficulty === "extreme" ? 0.42 : 0.3;
-      if (runtime.mobileLayout) boss.spawnTimer += 0.14;
+      if (runtime.mobileLayout) boss.spawnTimer += 0.24;
       boss.volleysSinceRecovery = 0;
-      boss.recoveryEvery = 2 + Math.floor(Math.random() * 3);
+      boss.recoveryEvery = runtime.mobileLayout
+        ? 2 + Math.floor(Math.random() * 2)
+        : 2 + Math.floor(Math.random() * 3);
     }
   }
   if (boss.timer > 0) return;
@@ -1805,6 +1813,28 @@ function getMaximumActiveEntities(runtime: Runtime) {
   return runtime.mobileLayout ? 10 : ENTITY_DENSITY_CONFIG.maximumActiveEntities;
 }
 
+function getObstacleProgression(distance: number) {
+  const upperIndex = OBSTACLE_PROGRESSION.findIndex((step) => distance < step.distance);
+  if (upperIndex <= 0) return OBSTACLE_PROGRESSION[0];
+  if (upperIndex < 0) return OBSTACLE_PROGRESSION[OBSTACLE_PROGRESSION.length - 1];
+  const lower = OBSTACLE_PROGRESSION[upperIndex - 1];
+  const upper = OBSTACLE_PROGRESSION[upperIndex];
+  const progress = clamp01((distance - lower.distance) / (upper.distance - lower.distance));
+  return {
+    distance,
+    mixedWeight: lower.mixedWeight + (upper.mixedWeight - lower.mixedWeight) * progress,
+    intervalMultiplier: lower.intervalMultiplier +
+      (upper.intervalMultiplier - lower.intervalMultiplier) * progress,
+  };
+}
+
+function getBonusPatternWeightMultiplier(teamRating: number) {
+  if (teamRating < 78) return 1;
+  if (teamRating < 90) return 0.78;
+  if (teamRating < 100) return 0.5;
+  return 0.25;
+}
+
 function spawnNext(runtime: Runtime, speed: number, difficulty: number) {
   if (runtime.entities.length >= getMaximumActiveEntities(runtime)) {
     return 0;
@@ -1829,17 +1859,28 @@ function spawnNext(runtime: Runtime, speed: number, difficulty: number) {
   // pattern dichiarati introSafe fino a 30 m ed earlyGame fino a 70 m.
   if (runtime.distance < 12) return 0.72;
 
+  if (trySpawnRareHatTrick(runtime, startX, difficulty)) return 1.28;
+
   const luperto = getPowerUpStrength(runtime, "luperto");
   const nicoPaz = getPowerUpStrength(runtime, "nico-paz");
   const gimenez = getPowerUpStrength(runtime, "gimenez");
   const lastWasBonus = runtime.lastPatternCategory === "bonus";
-  const mixedStreakLimited = runtime.mixedPatternStreak >= 2;
+  const maximumMixedStreak = runtime.distance >= 500 ? 4 : runtime.distance >= 300 ? 3 : 2;
+  const mixedStreakLimited = runtime.mixedPatternStreak >= maximumMixedStreak;
+  const obstacleProgression = getObstacleProgression(runtime.distance);
+  const highRatingPressure = clamp01((runtime.teamRating - 78) / 22);
+  const openingBonusWeight = runtime.distance < 70
+    ? 18 * (1 - runtime.distance / 70)
+    : 0;
   const pattern = pickGameplayPattern(
     runtime.distance,
     {
-      bonus: (lastWasBonus ? 0 : mixedStreakLimited ? 26 : 11) + nicoPaz * 8 + gimenez * 6,
-      malus: (runtime.lastPatternCategory === "malus" ? 8 : mixedStreakLimited ? 30 : 16) + luperto * 6,
-      mixed: mixedStreakLimited ? 44 : 73,
+      bonus: ((lastWasBonus ? 0 : mixedStreakLimited ? 26 : 11) +
+        nicoPaz * 8 + gimenez * 6 + openingBonusWeight) *
+        getBonusPatternWeightMultiplier(runtime.teamRating),
+      malus: (runtime.lastPatternCategory === "malus" ? 8 : mixedStreakLimited ? 30 : 16) +
+        luperto * 6 + highRatingPressure * 18,
+      mixed: mixedStreakLimited ? 44 : obstacleProgression.mixedWeight,
     },
     runtime.lastPatternId,
   );
@@ -1849,6 +1890,34 @@ function spawnNext(runtime: Runtime, speed: number, difficulty: number) {
     ? runtime.mixedPatternStreak + 1
     : 0;
   return spawnGameplayPattern(runtime, pattern, startX, speed, difficulty);
+}
+
+function trySpawnRareHatTrick(
+  runtime: Runtime,
+  startX: number,
+  difficulty: number
+) {
+  if (
+    runtime.distance < runtime.nextHatTrickAt ||
+    Math.random() > HAT_TRICK_SPAWN_CONFIG.eligibleSpawnChance ||
+    runtime.entities.some((entity) => entity.kind === "hatTrick")
+  ) return false;
+  const line: 1 | 2 = Math.random() < 0.5 ? 1 : 2;
+  const spawned = pushEvent(runtime, "hatTrick", startX + 280, line, {
+    pattern: true,
+    tight: true,
+    motion: "ground",
+  });
+  if (!spawned) return false;
+  pushPhysicalObstacle(
+    runtime,
+    runtime.distance >= 500 && Math.random() < 0.55 ? "slidingTackle" : "cornerFlag",
+    startX,
+    difficulty
+  );
+  runtime.lastPatternId = "evento-raro-tripletta";
+  runtime.lastPatternCategory = "mixed";
+  return true;
 }
 
 function spawnGameplayPattern(
@@ -1900,6 +1969,10 @@ function pushEvent(
     velocityY?: number;
   } = {}
 ) {
+  if (kind === "hatTrick") {
+    if (runtime.distance < 400 || runtime.distance < runtime.nextHatTrickAt) return false;
+    if (runtime.entities.some((entity) => entity.kind === "hatTrick")) return false;
+  }
   const eventCount = runtime.entities.reduce(
     (count, entity) => count + (entity.type === "event" ? 1 : 0),
     0
@@ -1959,12 +2032,11 @@ function pushEvent(
     return false;
   }
 
-  if (kind === "hatTrick" && !options.burst && !options.pattern) {
-    const maximumHatTricks = runtime.elapsed >= ENTITY_DENSITY_CONFIG.hatTrickThirdAppearanceSeconds
-      ? ENTITY_DENSITY_CONFIG.hatTrickLongRunLimit
-      : ENTITY_DENSITY_CONFIG.hatTrickRegularLimit;
-    if (runtime.hatTricksSpawned >= maximumHatTricks) return false;
-    runtime.hatTricksSpawned += 1;
+  if (kind === "hatTrick") {
+    runtime.nextHatTrickAt = runtime.distance + randomBetween(
+      HAT_TRICK_SPAWN_CONFIG.repeatWindow.minimum,
+      HAT_TRICK_SPAWN_CONFIG.repeatWindow.maximum
+    );
   }
 
   const motion = options.motion ?? "ground";
@@ -2087,11 +2159,14 @@ function applyEvent(runtime: Runtime, kind: EventKind, time: number) {
   const malusBlocked =
     definition.category === "malus" &&
     getPowerUpStrength(runtime, "luperto") > 0;
+  const effectiveRatingDelta = definition.category === "bonus"
+    ? getEffectiveBonusRatingDelta(runtime, definition.ratingDelta, time)
+    : definition.ratingDelta;
   const goalTriggered = malusBlocked
     ? false
     : changeTeamRating(
         runtime,
-        definition.ratingDelta,
+        effectiveRatingDelta,
         time,
         definition.category,
         definition.label
@@ -2104,6 +2179,7 @@ function applyEvent(runtime: Runtime, kind: EventKind, time: number) {
   }
 
   if (definition.category === "bonus") {
+    runtime.lastBonusCollectedAt = time;
     runtime.bonusesCollected += 1;
     runtime.multiplier = Math.min(5, runtime.multiplier + 0.25);
     if (!goalTriggered) runtime.effect = "bonus";
@@ -2122,14 +2198,52 @@ function applyEvent(runtime: Runtime, kind: EventKind, time: number) {
     return;
   }
 
-  const signedValue = definition.ratingDelta > 0
-    ? `+${formatRating(definition.ratingDelta)}`
-    : formatRating(definition.ratingDelta);
+  const signedValue = effectiveRatingDelta > 0
+    ? `+${formatRating(effectiveRatingDelta)}`
+    : formatRating(effectiveRatingDelta);
   runtime.message = signedValue;
   runtime.messageTone = definition.category;
   runtime.messageStartedAt = time;
   runtime.messageUntil = time + 920;
   if (!goalTriggered) runtime.effectUntil = time + 460;
+}
+
+function getEffectiveBonusRatingDelta(
+  runtime: Runtime,
+  rawDelta: number,
+  time: number
+) {
+  let remaining = rawDelta;
+  let cursor = runtime.teamRating;
+  let effective = 0;
+  for (const segment of BONUS_RATING_CURVE) {
+    if (remaining <= 0) break;
+    if (cursor >= segment.until) continue;
+    const portion = Math.min(remaining, segment.until - cursor);
+    effective += portion * segment.multiplier;
+    remaining -= portion;
+    cursor += portion;
+  }
+
+  if (runtime.teamRating >= 78 && time - runtime.lastBonusCollectedAt < 560) {
+    effective *= 0.82;
+  }
+  if (runtime.teamRating >= 90 && runtime.burst?.type === "bonus") {
+    effective *= 0.8;
+  }
+  if (runtime.teamRating >= 78 && getPowerUpStrength(runtime, "nico-paz") > 0) {
+    effective *= 0.9;
+  }
+  if (
+    runtime.teamRating >= 90 &&
+    POWER_UP_KINDS.reduce(
+      (count, kind) => count + (getPowerUpStrength(runtime, kind) > 0 ? 1 : 0),
+      0
+    ) >= 2
+  ) {
+    effective *= 0.88;
+  }
+  return Math.max(0.1, roundRating(effective));
 }
 
 function changeTeamRating(

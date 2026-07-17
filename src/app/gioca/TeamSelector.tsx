@@ -33,6 +33,7 @@ export default function TeamSelector({
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const randomTimerRef = useRef(0);
   const launchTimerRef = useRef(0);
+  const selectionTimerRef = useRef(0);
   const handledPointerSelectionRef = useRef(0);
   const dragRef = useRef({
     active: false,
@@ -63,6 +64,7 @@ export default function TeamSelector({
   useEffect(() => () => {
     window.clearTimeout(randomTimerRef.current);
     window.clearTimeout(launchTimerRef.current);
+    window.clearTimeout(selectionTimerRef.current);
   }, []);
 
   useEffect(() => {
@@ -188,7 +190,12 @@ export default function TeamSelector({
 
   function chooseTeam(team: GameTeam, replica = 1) {
     selectAndCenter(team, replica);
-    setConfirmationTeam(team);
+    window.clearTimeout(selectionTimerRef.current);
+    if (isMobileFlow) {
+      selectionTimerRef.current = window.setTimeout(() => setConfirmationTeam(team), 180);
+    } else {
+      setConfirmationTeam(team);
+    }
   }
 
   function chooseRandomTeam() {
@@ -217,16 +224,11 @@ export default function TeamSelector({
     }, 620);
   }
 
-  function launchTeam(team: GameTeam) {
-    if (isLaunching) return;
+  function confirmSelectedTeam() {
+    if (!confirmationTeam || isLaunching) return;
     setIsLaunching(true);
     window.clearTimeout(launchTimerRef.current);
-    launchTimerRef.current = window.setTimeout(() => onSelect(team), 260);
-  }
-
-  function launchSelectedTeam() {
-    if (!confirmationTeam || isLaunching) return;
-    launchTeam(confirmationTeam);
+    launchTimerRef.current = window.setTimeout(() => onSelect(confirmationTeam), 260);
   }
 
   function beginDrag(event: React.PointerEvent<HTMLDivElement>) {
@@ -259,7 +261,7 @@ export default function TeamSelector({
     if (Math.abs(delta) > 6) {
       drag.moved = true;
     }
-    ribbon.scrollLeft = drag.startScroll - delta * 1.28;
+    ribbon.scrollLeft = drag.startScroll - delta * (isMobileFlow ? 1 : 1.28);
     const now = event.timeStamp;
     const elapsed = Math.max(8, now - drag.lastTime);
     drag.velocity = (drag.lastX - event.clientX) / elapsed;
@@ -282,14 +284,14 @@ export default function TeamSelector({
       }
     }
 
-    let velocity = drag.moved ? drag.velocity * 18 : 0;
+    let velocity = drag.moved ? drag.velocity * (isMobileFlow ? 12 : 18) : 0;
     const glide = () => {
       if (Math.abs(velocity) < 0.18) {
         if (drag.moved) selectClosestLogo();
         return;
       }
       ribbon.scrollLeft += velocity;
-      velocity *= 0.9;
+      velocity *= isMobileFlow ? 0.87 : 0.9;
       drag.frame = requestAnimationFrame(glide);
     };
     drag.frame = requestAnimationFrame(glide);
@@ -438,7 +440,7 @@ export default function TeamSelector({
               type="search"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Cerca una società o una lega..."
+              placeholder="Cerca una società"
               className="min-h-10 w-full rounded-2xl border border-sky-200/20 bg-slate-950/55 px-5 text-center text-xs font-bold text-white shadow-[0_12px_35px_rgba(2,8,23,0.25),inset_0_1px_0_rgba(255,255,255,0.08)] outline-none transition placeholder:text-white/35 focus:border-sky-200/50 focus:bg-slate-900/75 focus:ring-4 focus:ring-sky-400/10 sm:min-h-14 sm:text-base"
             />
           </label>
@@ -491,10 +493,10 @@ export default function TeamSelector({
                   }}
                   aria-pressed={selected}
                   aria-label={`Seleziona ${team.nome}`}
-                  className={`group relative flex shrink-0 items-center justify-center rounded-full border border-transparent bg-transparent opacity-100 outline-none transition-[transform,width,height,filter] duration-500 [transform-style:preserve-3d] ${
+                  className={`group relative flex h-[112px] w-[112px] shrink-0 items-center justify-center rounded-full border border-transparent bg-transparent opacity-100 outline-none transition-transform duration-300 max-sm:will-change-transform [transform-style:preserve-3d] sm:transition-[transform,width,height,filter] sm:duration-500 ${
                     selected
-                      ? "z-[2] h-[136px] w-[136px] -translate-y-2 sm:h-[200px] sm:w-[200px] sm:-translate-y-3"
-                      : "h-[94px] w-[94px] translate-y-2 hover:-translate-y-0 sm:h-[136px] sm:w-[136px] sm:translate-y-3"
+                      ? "z-[2] -translate-y-1 scale-[1.14] sm:h-[200px] sm:w-[200px] sm:-translate-y-3 sm:scale-100"
+                      : "translate-y-1 scale-[.88] sm:h-[136px] sm:w-[136px] sm:translate-y-3 sm:scale-100 sm:hover:-translate-y-0"
                   } focus-visible:ring-2 focus-visible:ring-blue-500`}
                 >
                   {selected && (
@@ -509,7 +511,7 @@ export default function TeamSelector({
                     height={320}
                     sizes="(max-width: 639px) 136px, 200px"
                     unoptimized
-                    className={`h-[86%] w-[86%] object-contain [image-rendering:auto] transition-[filter] duration-500 ${selected ? "drop-shadow-[0_24px_30px_rgba(0,0,0,0.5)]" : "drop-shadow-[0_10px_16px_rgba(0,0,0,0.38)]"}`}
+                    className={`h-[86%] w-[86%] object-contain [image-rendering:auto] sm:transition-[filter] sm:duration-500 ${selected ? "sm:drop-shadow-[0_24px_30px_rgba(0,0,0,0.5)]" : "sm:drop-shadow-[0_10px_16px_rgba(0,0,0,0.38)]"}`}
                   />
                 </button>
               );
@@ -617,7 +619,7 @@ export default function TeamSelector({
               <button
                 ref={confirmButtonRef}
                 type="button"
-                onClick={launchSelectedTeam}
+                onClick={confirmSelectedTeam}
                 disabled={isLaunching}
                 className="min-h-11 rounded-full bg-amber-300 px-6 text-[9px] font-black uppercase tracking-[0.15em] text-blue-950 shadow-[0_12px_32px_rgba(251,191,36,0.18)] transition hover:-translate-y-0.5 hover:bg-amber-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-300/45"
               >

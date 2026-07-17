@@ -143,6 +143,9 @@ export const MALUS_PATTERNS: readonly GameplayPattern[] = [
 // I pattern Misti con eventi mantengono un Bonus ogni due Malus; gli altri sono
 // sequenze fisiche prefabbricate che riportano le barriere nel ritmo di base.
 export const MIXED_PATTERNS: readonly GameplayPattern[] = [
+  // Ostacoli prefabbricati: tier 1=early, 2=medium, 3=hard, 4=extreme.
+  p("ostacolo-early-bandierina", "mixed", 1, 1.04, [o("cornerFlag",0),e("assist",260,2)]),
+  p("ostacolo-early-var", "mixed", 1, 1.1, [o("var",0),e("cleanSheet",285,2)]),
   p("misto-barriera-singola", "mixed", 1, .82, [o("cornerFlag",0)]),
   p("misto-barriera-bonus-alto", "mixed", 1, .9, [o("cornerFlag",0),e("assist",180,2),e("yellowCard",270,0),e("concededGoal",350,1)]),
   p("misto-bonus-prima-barriera", "mixed", 1, .92, [e("cleanSheet",0,1),e("yellowCard",82,0),o("cornerFlag",220),e("redCard",370,2)]),
@@ -160,24 +163,30 @@ export const MIXED_PATTERNS: readonly GameplayPattern[] = [
   mix("misto-giallo-gol-autogol",2,["yellowCard","goal","ownGoal"],"middle"),
   mix("misto-subito-clean-rigore",2,["concededGoal","cleanSheet","missedPenalty"],"low"),
   mix("misto-rosso-gol-giallo",2,["redCard","goal","yellowCard"],"high"),
+  p("ostacolo-medium-doppio", "mixed", 2, 1.02, [o("cornerFlag",0),e("assist",250,2),o("stretcher",470)]),
+  p("ostacolo-medium-var-scivolata", "mixed", 2, 1.12, [o("var",0),e("cleanSheet",270,2),o("slidingTackle",500)]),
+  p("ostacolo-medium-barella-var", "mixed", 2, 1.08, [o("stretcher",0),e("yellowCard",255,0),o("var",490)]),
 
   mix("misto-autogol-gol-rosso",3,["ownGoal","goal","redCard"],"rise",{kind:"slidingTackle",x:390}),
   mix("misto-rigore-clean-subito",3,["missedPenalty","cleanSheet","concededGoal"],"fall",{kind:"slidingTackle",x:410}),
-  mix("misto-rosso-tripletta-giallo",3,["redCard","hatTrick","yellowCard"],"choice"),
   mix("misto-subito-assist-autogol",3,["concededGoal","assist","ownGoal"],"arc",{kind:"stretcher",x:350}),
   mix("misto-giallo-gol-rosso-3",3,["yellowCard","goal","redCard"],"zigzag"),
   mix("misto-autogol-clean-rigore",3,["ownGoal","cleanSheet","missedPenalty"],"middle"),
   mix("misto-rosso-assist-autogol",3,["redCard","assist","ownGoal"],"high",{kind:"var",x:360}),
   mix("misto-rigore-gol-giallo",3,["missedPenalty","goal","yellowCard"],"low",{kind:"slidingTackle",x:400}),
+  p("ostacolo-hard-cambio-ritmo", "mixed", 3, 1.04, [o("slidingTackle",0),e("assist",285,2),o("cornerFlag",510),e("yellowCard",700,0)]),
+  p("ostacolo-hard-tris", "mixed", 3, 1.14, [o("var",0),o("stretcher",410),e("cleanSheet",650,2),o("slidingTackle",850)]),
+  p("ostacolo-hard-barella-scivolata", "mixed", 3, 1.1, [o("stretcher",0),e("goal",300,2),o("slidingTackle",560)]),
 
-  mix("misto-subito-tripletta-rosso",4,["concededGoal","hatTrick","redCard"],"choice",{kind:"slidingTackle",x:380}),
   mix("misto-rigore-gol-autogol",4,["missedPenalty","goal","ownGoal"],"rise",{kind:"slidingTackle",x:410}),
   mix("misto-rosso-clean-rigore",4,["redCard","cleanSheet","missedPenalty"],"fall",{kind:"stretcher",x:390}),
-  mix("misto-autogol-tripletta-giallo",4,["ownGoal","hatTrick","yellowCard"],"arc",{kind:"slidingTackle",x:430}),
   mix("misto-subito-gol-rigore",4,["concededGoal","goal","missedPenalty"],"zigzag",{kind:"var",x:400}),
   mix("misto-rosso-assist-subito-4",4,["redCard","assist","concededGoal"],"middle",{kind:"slidingTackle",x:420}),
   mix("misto-rigore-clean-rosso",4,["missedPenalty","cleanSheet","redCard"],"high",{kind:"cornerFlag",x:370}),
   mix("misto-autogol-gol-subito",4,["ownGoal","goal","concededGoal"],"low"),
+  p("ostacolo-extreme-pressione", "mixed", 4, 1.02, [o("slidingTackle",0),e("yellowCard",285,0),o("var",500),e("assist",735,2),o("stretcher",940)]),
+  p("ostacolo-extreme-alternanza", "mixed", 4, 1.08, [o("cornerFlag",0),e("redCard",250,0),o("slidingTackle",500),e("cleanSheet",735,2),o("var",970)]),
+  p("ostacolo-extreme-tris", "mixed", 4, 1.14, [o("stretcher",0),o("cornerFlag",410),e("goal",650,2),o("slidingTackle",890)]),
 ] as const;
 
 export const GAMEPLAY_PATTERNS = [
@@ -193,14 +202,12 @@ export const RAFFICA_PATTERN_LIBRARY: Record<RafficaType, readonly (readonly Raf
     [
       { kind:"assist",count:3,line:1,spacing:2,intervalAfter:.9 },
       { kind:"goal",count:1,line:2,spacing:0,intervalAfter:.85 },
-      { kind:"cleanSheet",count:2,line:0,spacing:2,intervalAfter:.42 },
-      { kind:"hatTrick",count:1,line:2,spacing:0,intervalAfter:1.25 },
+      { kind:"cleanSheet",count:2,line:0,spacing:2,intervalAfter:.82 },
     ],
     [
       { kind:"cleanSheet",count:2,line:0,spacing:2,intervalAfter:1.05 },
       { kind:"assist",count:2,line:1,spacing:2,intervalAfter:.82 },
-      { kind:"cleanSheet",count:2,line:2,spacing:2,intervalAfter:.5 },
-      { kind:"hatTrick",count:1,line:0,spacing:0,intervalAfter:1.3 },
+      { kind:"cleanSheet",count:2,line:2,spacing:2,intervalAfter:.88 },
     ],
   ],
   malus: [
@@ -282,16 +289,16 @@ export const BOSS_BLOCK_LIBRARY: readonly BossBlock[] = [
 ];
 
 export const MOBILE_BOSS_BLOCK_LIBRARY: readonly BossBlock[] = [
-  { id:"mobile-short-low",type:"shortBurst",difficulty:"medium",beats:[{kind:"yellowCard",count:3,line:0,mobileLine:0,spacing:9,intervalAfter:.72}],pauseOptions:[.16,.24,.32] },
-  { id:"mobile-medium-high",type:"mediumBurst",difficulty:"medium",beats:[{kind:"concededGoal",count:3,line:2,mobileLine:2,spacing:10,intervalAfter:.76}],pauseOptions:[.18,.26,.34] },
-  { id:"mobile-recovery",type:"recoveryWindow",difficulty:"medium",beats:[{kind:"yellowCard",count:2,line:0,mobileLine:0,spacing:12,intervalAfter:.76}],pauseOptions:[.4,.5,.58] },
-  { id:"mobile-fake-pause",type:"fakePause",difficulty:"hard",beats:[{kind:"missedPenalty",count:1,line:2,mobileLine:2,spacing:30,intervalAfter:.88},{kind:"yellowCard",count:2,line:0,mobileLine:0,spacing:11,intervalAfter:.78}],pauseOptions:[.18,.28,.38] },
-  { id:"mobile-vertical-switch",type:"verticalSwitch",difficulty:"hard",beats:[{kind:"concededGoal",count:3,line:0,mobileLine:0,spacing:10,intervalAfter:.9},{kind:"redCard",count:3,line:2,mobileLine:2,spacing:11,intervalAfter:.8}],pauseOptions:[.2,.3,.4] },
-  { id:"mobile-double-wave",type:"doubleWave",difficulty:"extreme",beats:[{kind:"redCard",count:3,line:2,mobileLine:2,spacing:11,intervalAfter:.92},{kind:"concededGoal",count:3,line:0,mobileLine:0,spacing:12,intervalAfter:.84}],pauseOptions:[.28,.38,.48] },
+  { id:"mobile-short-low",type:"shortBurst",difficulty:"medium",beats:[{kind:"yellowCard",count:3,line:0,mobileLine:0,spacing:10,intervalAfter:.76}],pauseOptions:[.24,.34,.44] },
+  { id:"mobile-medium-high",type:"mediumBurst",difficulty:"medium",beats:[{kind:"concededGoal",count:3,line:2,mobileLine:2,spacing:11,intervalAfter:.8}],pauseOptions:[.26,.36,.46] },
+  { id:"mobile-recovery",type:"recoveryWindow",difficulty:"medium",beats:[{kind:"yellowCard",count:2,line:0,mobileLine:0,spacing:13,intervalAfter:.82}],pauseOptions:[.5,.62,.74] },
+  { id:"mobile-fake-pause",type:"fakePause",difficulty:"hard",beats:[{kind:"missedPenalty",count:1,line:2,mobileLine:2,spacing:32,intervalAfter:1},{kind:"yellowCard",count:2,line:0,mobileLine:0,spacing:12,intervalAfter:.82}],pauseOptions:[.28,.4,.52] },
+  { id:"mobile-vertical-switch",type:"verticalSwitch",difficulty:"hard",beats:[{kind:"concededGoal",count:3,line:0,mobileLine:0,spacing:12,intervalAfter:1.04},{kind:"redCard",count:3,line:2,mobileLine:2,spacing:12,intervalAfter:.86}],pauseOptions:[.3,.42,.54] },
+  { id:"mobile-double-wave",type:"doubleWave",difficulty:"extreme",beats:[{kind:"redCard",count:3,line:2,mobileLine:2,spacing:13,intervalAfter:1.06},{kind:"concededGoal",count:3,line:0,mobileLine:0,spacing:14,intervalAfter:.92}],pauseOptions:[.4,.52,.64] },
 ];
 
 export function getPatternTier(distance: number): PatternTier {
-  if (distance < 50) return 1;
+  if (distance < 70) return 1;
   if (distance < 150) return 2;
   if (distance < 300) return 3;
   return 4;
@@ -375,7 +382,8 @@ export function pickBossPattern(
   validationAttempt = 0
 ) {
   const library = mobile ? MOBILE_BOSS_BLOCK_LIBRARY : BOSS_BLOCK_LIBRARY;
-  const blockCount = 4 + (random() > 0.58 ? 1 : 0);
+  const blockCount = mobile ? 4 : 4 + (random() > 0.58 ? 1 : 0);
+  const allowMobileExtreme = !mobile || random() < 0.24;
   const selected: BossBlock[] = [];
   let lastKind: EventKind | null = null;
   let lastLine: 0 | 1 | 2 | null = null;
@@ -386,6 +394,9 @@ export function pickBossPattern(
     let candidates = library.filter((block) => {
       if (selected.at(-1)?.id === block.id) return false;
       if (block.difficulty === "extreme" && hasExtreme) return false;
+      if (previousPattern?.difficulty === "extreme" && block.difficulty === "extreme") return false;
+      if (mobile && block.difficulty === "extreme" && !allowMobileExtreme) return false;
+      if (mobile && block.type === "fakePause" && selected.some((item) => item.type === "fakePause")) return false;
       if (slot === 0 && previousPattern?.difficulty === "extreme" && block.difficulty !== "medium") return false;
       const firstBeat = block.beats[0];
       const firstLine = mobile ? firstBeat.mobileLine ?? firstBeat.line : firstBeat.line;
@@ -441,10 +452,10 @@ function validateMobileBossBeats(beats: readonly RafficaBeat[], speed: number) {
   // Deterministic approximation of the mobile runner physics: the player can
   // remain grounded or commit to a jump, but cannot crouch or reverse a jump.
   const speedProgress = Math.max(0, Math.min(1, (speed - 292) / (900 - 292)));
-  const projectileSpeed = 340 + speedProgress * 75;
+  const projectileSpeed = 325 + speedProgress * 65;
   const estimatedReactionTime = 360 / projectileSpeed;
-  const minimumReactionTime = 0.64;
-  const minimumLandingWindow = 0.84;
+  const minimumReactionTime = 0.7;
+  const minimumLandingWindow = 0.96;
   const maximumContinuousAirWindow = 1.08;
   if (estimatedReactionTime < minimumReactionTime) return false;
   let continuousLowPressure = 0;

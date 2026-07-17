@@ -69,9 +69,29 @@ export const ENTITY_DENSITY_CONFIG = {
   maximumActivePits: 2,
   minimumCollectibleDistance: 96,
   burstCollectibleDistance: 78,
-  hatTrickRegularLimit: 2,
-  hatTrickLongRunLimit: 3,
-  hatTrickThirdAppearanceSeconds: 180,
+} as const;
+
+export const OBSTACLE_PROGRESSION = [
+  { distance: 0, mixedWeight: 10, intervalMultiplier: 1.18 },
+  { distance: 70, mixedWeight: 38, intervalMultiplier: 1.05 },
+  { distance: 150, mixedWeight: 65, intervalMultiplier: 0.96 },
+  { distance: 300, mixedWeight: 84, intervalMultiplier: 0.88 },
+  { distance: 500, mixedWeight: 100, intervalMultiplier: 0.82 },
+  { distance: 700, mixedWeight: 112, intervalMultiplier: 0.78 },
+] as const;
+
+export const BONUS_RATING_CURVE = [
+  { until: 78, multiplier: 1 },
+  { until: 90, multiplier: 0.82 },
+  { until: 100, multiplier: 0.52 },
+  { until: Number.POSITIVE_INFINITY, multiplier: 0.22 },
+] as const;
+
+export const HAT_TRICK_SPAWN_CONFIG = {
+  firstWindow: { minimum: 400, maximum: 520 },
+  repeatWindow: { minimum: 450, maximum: 600 },
+  eligibleSpawnChance: 0.22,
+  nicoAttractionRadius: 180,
 } as const;
 
 export const RAFFICA_CONFIG = {
@@ -106,7 +126,6 @@ export const RAFFICA_CONFIG = {
     maximumItemInterval: 0.84,
     cooldownSeconds: 65,
     overlayOpacity: 0.24,
-    hatTrickChance: 0.018,
   },
 } as const;
 
