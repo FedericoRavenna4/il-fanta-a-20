@@ -239,7 +239,7 @@ const MOBILE_POWER_UP_SCALE = 1.35;
 const DESKTOP_PLAYER_SCALE = 1.1;
 const MOBILE_PLAYER_SCALE = 1.68;
 const ENTITY_POOL_CAPACITY = 24;
-const HUD_UPDATE_INTERVAL_MS = 80;
+const HUD_UPDATE_INTERVAL_MS = 70;
 
 type CanvasRenderState = {
   context: CanvasRenderingContext2D | null;

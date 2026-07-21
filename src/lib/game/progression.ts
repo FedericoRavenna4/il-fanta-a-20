@@ -23,7 +23,7 @@ export type LevelResolution = {
 
 export const ARCADE_PROGRESS_STORAGE_KEY = "fanta-a-20-arcade-progress-v1";
 export const ARCADE_PROGRESS_STORAGE_VERSION = 3;
-export const DISPLAY_DISTANCE_RATE = 1.2;
+export const DISPLAY_DISTANCE_RATE = 1.3;
 
 export const LEVEL_RULES: Record<GameLevel, {
   name: string;

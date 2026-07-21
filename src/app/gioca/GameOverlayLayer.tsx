@@ -27,7 +27,7 @@ export default function GameOverlayLayer({
   return (
     <div className="pointer-events-none absolute inset-0 z-[8] overflow-hidden" aria-live="polite">
       <div
-        className={`absolute inset-0 flex items-start justify-center pt-[6%] sm:pt-[5%] ${presentation ? "" : "invisible"}`}
+        className={`absolute inset-0 flex items-start justify-center pt-[1%] sm:pt-[1.5%] ${presentation ? "" : "invisible"}`}
         aria-hidden={!presentation}
       >
           <div className={`${presentation ? "special-presentation" : "opacity-0"} flex w-[min(56%,205px)] flex-col items-center sm:w-[min(62%,480px)]`}>
@@ -44,10 +44,10 @@ export default function GameOverlayLayer({
                 />
               ))}
             </div>
-            <h3 className="-mt-4 max-w-[92vw] text-center text-xs font-black uppercase leading-tight tracking-[.08em] text-amber-200 [text-shadow:0_2px_8px_rgba(2,8,23,1)] sm:-mt-6 sm:text-sm">
+            <h3 className="-mt-6 max-w-[92vw] text-center text-[13px] font-black uppercase leading-tight tracking-[.08em] text-amber-200 [text-shadow:0_2px_8px_rgba(2,8,23,1)] sm:-mt-9 sm:text-[15px]">
               {presentation?.title}
             </h3>
-            <p className="mt-1.5 max-w-[92vw] text-balance text-center text-[11px] font-bold leading-[1.4] text-white/90 [text-shadow:0_2px_9px_rgba(2,8,23,1),0_0_4px_rgba(2,8,23,1)] max-sm:max-w-[300px] max-sm:[text-shadow:0_2px_6px_rgba(2,8,23,.92)] sm:whitespace-nowrap sm:text-[13px]">
+            <p className="mt-0.5 max-w-[92vw] text-balance text-center text-[13px] font-bold leading-[1.35] text-white/92 [text-shadow:0_2px_9px_rgba(2,8,23,1),0_0_4px_rgba(2,8,23,1)] max-sm:max-w-[320px] max-sm:[text-shadow:0_2px_6px_rgba(2,8,23,.92)] sm:whitespace-nowrap sm:text-[15px]">
               {presentation?.subtitle}
             </p>
           </div>

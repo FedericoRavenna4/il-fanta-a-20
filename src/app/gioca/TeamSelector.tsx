@@ -581,7 +581,7 @@ function TeamSelector({
 
       {confirmationTeam && (
         <div
-          className={`absolute inset-0 z-20 flex items-center justify-center bg-[radial-gradient(circle_at_50%_34%,rgba(56,189,248,0.2),rgba(5,20,45,0.86)_52%,rgba(2,8,23,0.94)_100%)] p-4 transition-opacity duration-300 motion-safe:animate-[team-confirmation-backdrop_220ms_ease-out] sm:p-6 ${isLaunching ? "bg-[#020817]/95" : ""}`}
+          className={`absolute inset-0 z-20 flex items-center justify-center bg-[radial-gradient(circle_at_50%_34%,rgba(56,189,248,0.2),rgba(5,20,45,0.86)_52%,rgba(2,8,23,0.94)_100%)] p-2 transition-opacity duration-300 motion-safe:animate-[team-confirmation-backdrop_220ms_ease-out] sm:p-6 ${isLaunching ? "bg-[#020817]/95" : ""}`}
           onPointerDown={(event) => {
             if (event.target === event.currentTarget) setConfirmationTeam(null);
           }}
@@ -592,7 +592,7 @@ function TeamSelector({
             aria-labelledby="team-confirmation-title"
             className="relative w-full max-w-md text-center text-white motion-safe:animate-[team-confirmation-panel_320ms_cubic-bezier(0.22,1,0.36,1)]"
           >
-            <span className={`pointer-events-none absolute left-1/2 top-8 h-28 w-52 -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse,rgba(125,211,252,.2),transparent_68%)] transition-opacity duration-200 ${isLaunching ? "opacity-0" : "opacity-100"}`} />
+            <span className={`pointer-events-none absolute left-1/2 top-8 hidden h-28 w-52 -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse,rgba(125,211,252,.2),transparent_68%)] transition-opacity duration-200 sm:block ${isLaunching ? "opacity-0" : "opacity-100"}`} />
             <button
               type="button"
               onClick={() => setConfirmationTeam(null)}
@@ -602,7 +602,7 @@ function TeamSelector({
             >
               ×
             </button>
-            <div ref={confirmationLogoRef} className="relative mx-auto flex h-20 w-20 items-center justify-center sm:h-32 sm:w-32">
+            <div ref={confirmationLogoRef} className="relative mx-auto hidden h-20 w-20 items-center justify-center sm:flex sm:h-32 sm:w-32">
               <Image
                 src={confirmationTeam.logo}
                 alt={`Stemma ${confirmationTeam.nome}`}
@@ -615,17 +615,17 @@ function TeamSelector({
               />
             </div>
             <div className={`transition-all duration-200 ${isLaunching ? "translate-y-1 opacity-0" : "translate-y-0 opacity-100"}`}>
-            <p className="relative mt-1 text-[8px] font-black uppercase tracking-[0.2em] text-amber-300">
+            <p className="relative mt-0 text-[7px] font-black uppercase tracking-[0.18em] text-amber-300 sm:mt-1 sm:text-[8px] sm:tracking-[0.2em]">
               Società scelta
             </p>
             <h3 id="team-confirmation-title" className="relative mt-1 text-xl font-black uppercase leading-tight tracking-tight text-white sm:text-2xl">
               {confirmationTeam.nome}
             </h3>
-            <p className="relative mt-1 text-[10px] font-semibold text-white/52">La tua corsa comincia da qui.</p>
+            <p className="relative mt-0.5 text-[9px] font-semibold text-white/52 sm:mt-1 sm:text-[10px]">La tua corsa comincia da qui.</p>
             <LevelJourney
               progress={progressByClub[String(confirmationTeam.id)] ?? createDefaultClubProgress()}
             />
-            <div className="relative mx-auto mt-3 grid max-w-xs gap-1.5 sm:mt-4">
+            <div className="relative mx-auto mt-2 grid max-w-xs gap-1 sm:mt-4 sm:gap-1.5">
               <button
                 ref={confirmButtonRef}
                 type="button"

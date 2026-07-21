@@ -402,10 +402,10 @@ export default function GameClient({
                     <Image src={loadingTip.image} alt="" width={320} height={240} unoptimized priority className="max-h-full max-w-full object-contain drop-shadow-[0_16px_22px_rgba(0,0,0,.48)]" />
                   </div>
                   <h3 className="mt-1 text-base font-black uppercase tracking-[-.025em] sm:text-xl">{loadingTip.title}</h3>
-                  <p className="mt-1.5 text-[13px] font-semibold leading-5 text-white/72 sm:text-sm sm:leading-5">“{loadingTip.text}”</p>
+                  <p className="mt-1.5 text-[15px] font-semibold leading-[1.45] text-white/76 sm:text-base">“{loadingTip.text}”</p>
                   <div className="mt-3 w-full border-t border-white/10 pt-2.5">
                     <p className="text-[7px] font-black uppercase tracking-[.2em] text-sky-200/65">Suggerimento</p>
-                    <p className="mx-auto mt-1.5 max-w-sm text-xs font-semibold leading-[1.45] text-white/68 sm:text-[13px]">{gameplayTip}</p>
+                    <p className="mx-auto mt-1.5 max-w-sm text-sm font-semibold leading-[1.5] text-white/72 sm:text-[15px]">{gameplayTip}</p>
                   </div>
                 </article>
                 <section className="mx-auto w-full max-w-xl rounded-xl border border-white/10 bg-slate-950/42 px-3 py-2 text-left shadow-[inset_0_1px_0_rgba(255,255,255,.06)] sm:px-4 sm:py-3">
