@@ -76,6 +76,7 @@ import {
   RAFFICA_PRESENTATION_ASSETS,
 } from "@/lib/game/specialEvents";
 import { logRatingChange, type RatingChangeReason } from "@/lib/game/rating";
+import { writePersonalDistanceRecord } from "@/lib/game/records";
 import type {
   EventKind,
   GameScenario,
@@ -142,6 +143,10 @@ type Runtime = {
   effect: "bonus" | "malus" | "jump" | "hit" | "goal" | null;
   effectUntil: number;
   gameOverReason: string;
+  recordBroken: boolean;
+  recordCelebrationUntil: number;
+  recordCelebrationDistance: number;
+  lastPersistedRecord: number;
   lastFrame: number;
   lastHudUpdate: number;
   finished: boolean;
@@ -239,9 +244,9 @@ const MOBILE_EVENT_SCALE = 1.4;
 const MOBILE_POWER_UP_SCALE = 1.35;
 const DESKTOP_PLAYER_SCALE = 1.1;
 const MOBILE_PLAYER_SCALE = 1.68;
-const MOBILE_DPR_HIGH = 1.4;
-const MOBILE_DPR_BALANCED = 1.2;
-const MOBILE_DPR_LOW = 1.1;
+const MOBILE_DPR_HIGH = 2;
+const MOBILE_DPR_BALANCED = 1.65;
+const MOBILE_DPR_LOW = 1.4;
 const ENTITY_POOL_CAPACITY = 24;
 const HUD_UPDATE_INTERVAL_MS = 70;
 
@@ -314,6 +319,10 @@ function createRuntime(level: GameLevel = 1): Runtime {
     effect: null,
     effectUntil: 0,
     gameOverReason: "",
+    recordBroken: false,
+    recordCelebrationUntil: 0,
+    recordCelebrationDistance: 0,
+    lastPersistedRecord: 0,
     lastFrame: 0,
     lastHudUpdate: 0,
     finished: false,
@@ -388,6 +397,7 @@ function FantaRunner({
   status,
   runId,
   best,
+  distanceRecord,
   onSnapshot,
   onGameOver,
   onAssetsReady,
@@ -398,6 +408,7 @@ function FantaRunner({
   status: GameStatus;
   runId: number;
   best: number;
+  distanceRecord: number;
   onSnapshot: (snapshot: GameSnapshot) => void;
   onGameOver: (snapshot: GameSnapshot) => void;
   onAssetsReady: (ready: boolean) => void;
@@ -408,6 +419,7 @@ function FantaRunner({
   const logoRef = useRef<HTMLImageElement | null>(null);
   const statusRef = useRef(status);
   const bestRef = useRef(best);
+  const distanceRecordRef = useRef(distanceRecord);
   const reducedMotionRef = useRef(false);
   const assetsRef = useRef<GameImageMap>(new Map());
   const renderStateRef = useRef<CanvasRenderState>({
@@ -452,6 +464,10 @@ function FantaRunner({
   useEffect(() => {
     bestRef.current = best;
   }, [best]);
+
+  useEffect(() => {
+    distanceRecordRef.current = distanceRecord;
+  }, [distanceRecord]);
 
   useEffect(() => {
     let cancelled = false;
@@ -527,7 +543,7 @@ function FantaRunner({
       hudUpdates: 0,
     };
     renderStateRef.current.dirty = true;
-    onSnapshot(toSnapshot(runtimeRef.current, bestRef.current, 0));
+    onSnapshot(toSnapshot(runtimeRef.current, bestRef.current, distanceRecordRef.current, 0));
   }, [level, onSnapshot, runId]);
 
   const beginJump = useCallback(() => {
@@ -654,7 +670,8 @@ function FantaRunner({
       if (!runtime.finished && time - runtime.lastHudUpdate >= HUD_UPDATE_INTERVAL_MS) {
         runtime.lastHudUpdate = time;
         advanceDisplayDistance(runtime);
-        onSnapshot(toSnapshot(runtime, best, time));
+        updatePersonalRecord(runtime, distanceRecordRef.current, time);
+        onSnapshot(toSnapshot(runtime, best, distanceRecordRef.current, time));
         performanceRef.current.hudUpdates += 1;
       }
 
@@ -671,7 +688,8 @@ function FantaRunner({
 
       if (runtime.finished) {
         advanceDisplayDistance(runtime);
-        const finalSnapshot = toSnapshot(runtime, best, time);
+        updatePersonalRecord(runtime, distanceRecordRef.current, time);
+        const finalSnapshot = toSnapshot(runtime, best, distanceRecordRef.current, time);
         onSnapshot(finalSnapshot);
         onGameOver(finalSnapshot);
         return;
@@ -1559,6 +1577,7 @@ function activatePowerUp(runtime: Runtime, kind: PowerUpKind, time: number) {
     tone: kind === "gimenez" ? "malus" : "bonus",
     until: time + 2800,
   };
+  triggerHaptic(runtime, 18);
 }
 
 function updateActivePowerUps(runtime: Runtime) {
@@ -1614,6 +1633,7 @@ function updateBoss(
       tone: "malus",
       until: time + 2800,
     };
+    triggerHaptic(runtime, [18, 42, 18]);
     return;
   }
 
@@ -2198,10 +2218,12 @@ function applyEvent(runtime: Runtime, kind: EventKind, time: number) {
   }
 
   if (definition.category === "bonus") {
+    triggerHaptic(runtime, 8);
     runtime.bonusesCollected += 1;
     runtime.multiplier = Math.min(5, runtime.multiplier + 0.25);
     if (!goalTriggered) runtime.effect = "bonus";
   } else {
+    if (!malusBlocked) triggerHaptic(runtime, 26);
     runtime.malusesCollected += 1;
     if (!malusBlocked) runtime.multiplier = 1;
     if (!goalTriggered) runtime.effect = malusBlocked ? "bonus" : "malus";
@@ -2293,13 +2315,32 @@ function applyPhysicalHit(runtime: Runtime, time: number, repel: boolean) {
   if (repel) runtime.horizontalVelocity = Math.min(runtime.horizontalVelocity, -185);
   runtime.effect = "hit";
   runtime.effectUntil = time + 420;
+  triggerHaptic(runtime, 22);
 }
 
-function toSnapshot(runtime: Runtime, best: number, time: number): GameSnapshot {
+function triggerHaptic(runtime: Runtime, pattern: number | number[]) {
+  if (
+    !runtime.mobileLayout ||
+    typeof navigator === "undefined" ||
+    typeof navigator.vibrate !== "function"
+  ) return;
+  navigator.vibrate(pattern);
+}
+
+function toSnapshot(
+  runtime: Runtime,
+  best: number,
+  personalRecord: number,
+  time: number
+): GameSnapshot {
   const score = Math.max(0, Math.round(runtime.score));
   return {
     score,
     best: Math.max(best, score),
+    personalRecord: Math.max(personalRecord, runtime.displayDistance),
+    recordCelebrationDistance: time < runtime.recordCelebrationUntil
+      ? runtime.recordCelebrationDistance
+      : 0,
     multiplier: runtime.multiplier,
     teamRating: runtime.teamRating,
     threshold: TEAM_RATING_THRESHOLD,
@@ -2345,6 +2386,28 @@ function toSnapshot(runtime: Runtime, best: number, time: number): GameSnapshot 
     bossRemaining:
       runtime.boss?.phase === "active" ? Math.max(0, runtime.boss.timer) : 0,
   };
+}
+
+function updatePersonalRecord(runtime: Runtime, personalRecord: number, time: number) {
+  if (
+    runtime.displayDistance > personalRecord &&
+    (
+      runtime.lastPersistedRecord === 0 ||
+      runtime.displayDistance - runtime.lastPersistedRecord >= 10
+    )
+  ) {
+    writePersonalDistanceRecord(runtime.displayDistance);
+    runtime.lastPersistedRecord = runtime.displayDistance;
+  }
+  if (
+    runtime.recordBroken ||
+    personalRecord <= 0 ||
+    runtime.displayDistance <= personalRecord
+  ) return;
+  runtime.recordBroken = true;
+  runtime.recordCelebrationDistance = runtime.displayDistance;
+  runtime.recordCelebrationUntil = time + 2400;
+  triggerHaptic(runtime, [10, 35, 18]);
 }
 
 function advanceDisplayDistance(runtime: Runtime) {

@@ -31,7 +31,7 @@ export default function GameHud({ team, snapshot, level }: {
 
       <div className="grid grid-cols-[66px_minmax(0,1fr)_82px] items-center gap-1.5 pt-1 sm:grid-cols-[105px_minmax(0,560px)_125px] sm:justify-center sm:gap-4 sm:pt-1.5">
         <div className="space-y-1 border-r border-white/10 pr-1.5 text-center sm:pr-3">
-          <Metric label="Record" value={formatNumber(snapshot.best)} />
+          <Metric label="Record" value={`${formatNumber(snapshot.personalRecord)} m`} />
           <Metric label="Gol" value={String(snapshot.goals)} accent />
         </div>
 

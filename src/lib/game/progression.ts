@@ -46,9 +46,9 @@ export const LEVEL_RULES: Record<GameLevel, {
   1: {
     name: "Campo di strada",
     background: 1,
-    promotionAt: 2000,
+    promotionAt: 1250,
     relegationBelow: null,
-    objective: "Raggiungi 2.000 m per essere promosso.",
+    objective: "Raggiungi 1.250 m per essere promosso.",
     difficulty: {
       difficultyBoost: 0,
       speedProgressMultiplier: 0.94,
@@ -62,9 +62,9 @@ export const LEVEL_RULES: Record<GameLevel, {
   2: {
     name: "Campo di provincia",
     background: 2,
-    promotionAt: 2000,
-    relegationBelow: 1000,
-    objective: "1.000 m per restare, 2.000 m per la promozione.",
+    promotionAt: 1750,
+    relegationBelow: 1250,
+    objective: "1.250 m per restare, 1.750 m per la promozione.",
     difficulty: {
       difficultyBoost: 0.07,
       speedProgressMultiplier: 1.04,
@@ -79,8 +79,8 @@ export const LEVEL_RULES: Record<GameLevel, {
     name: "Stadio gremito",
     background: 3,
     promotionAt: null,
-    relegationBelow: 1500,
-    objective: "Raggiungi 1.500 m per ottenere la salvezza.",
+    relegationBelow: 1750,
+    objective: "Raggiungi 1.750 m per ottenere la salvezza.",
     difficulty: {
       difficultyBoost: 0.14,
       speedProgressMultiplier: 1.14,

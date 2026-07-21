@@ -66,6 +66,17 @@ export default function GameOverlayLayer({
         </div>
       )}
 
+      {snapshot.recordCelebrationDistance > 0 && (
+        <div className="record-celebration absolute inset-x-0 top-[18%] flex justify-center px-4" role="status">
+          <div className="rounded-full border border-amber-200/35 bg-slate-950/88 px-5 py-2 text-center shadow-[0_14px_36px_rgba(2,8,23,.4),0_0_24px_rgba(251,191,36,.14)] backdrop-blur-md">
+            <strong className="block text-[11px] font-black uppercase tracking-[.16em] text-amber-300 sm:text-xs">Nuovo record!</strong>
+            <span className="mt-0.5 block text-sm font-black tabular-nums text-white sm:text-base">
+              {snapshot.recordCelebrationDistance.toLocaleString("it-IT")} m
+            </span>
+          </div>
+        </div>
+      )}
+
       <style jsx global>{`
         @keyframes special-presentation-in {
           0% { opacity: 0; transform: scale(.86); }
@@ -77,7 +88,13 @@ export default function GameOverlayLayer({
           animation: special-presentation-in 2.8s cubic-bezier(.2,.8,.2,1) both;
           will-change: transform, opacity;
         }
-        @media (prefers-reduced-motion: reduce) { .special-presentation { animation: none; } }
+        @keyframes record-celebration-in {
+          0% { opacity:0; transform:translateY(8px) scale(.92); }
+          16%,82% { opacity:1; transform:none; }
+          100% { opacity:0; transform:translateY(-5px) scale(.98); }
+        }
+        .record-celebration { animation:record-celebration-in 2.4s cubic-bezier(.2,.8,.2,1) both; }
+        @media (prefers-reduced-motion: reduce) { .special-presentation,.record-celebration { animation: none; } }
       `}</style>
     </div>
   );

@@ -15,6 +15,10 @@ import {
 } from "@/lib/game/content";
 import type { GameSnapshot, GameStatus, GameTeam } from "@/lib/game/types";
 import {
+  readPersonalDistanceRecord,
+  writePersonalDistanceRecord,
+} from "@/lib/game/records";
+import {
   LEVEL_RULES,
   applyLevelResult,
   createDefaultClubProgress,
@@ -40,10 +44,12 @@ type PendingVarReview = {
   relegation: LevelResolution;
 };
 
-function createEmptySnapshot(best = 0): GameSnapshot {
+function createEmptySnapshot(best = 0, personalRecord = 0): GameSnapshot {
   return {
     score: 0,
     best,
+    personalRecord,
+    recordCelebrationDistance: 0,
     multiplier: 1,
     teamRating: TEAM_RATING_INITIAL,
     threshold: TEAM_RATING_THRESHOLD,
@@ -80,6 +86,7 @@ export default function GameClient({
   const [status, setStatus] = useState<GameStatus>("selecting");
   const [runId, setRunId] = useState(0);
   const [best, setBest] = useState(0);
+  const [personalRecord, setPersonalRecord] = useState(0);
   const [assetsReady, setAssetsReady] = useState(false);
   const [loadProgress, setLoadProgress] = useState(0);
   const [loadingTip, setLoadingTip] = useState(LOADING_GUIDES[0]);
@@ -107,17 +114,19 @@ export default function GameClient({
 
   const selectTeam = useCallback((selectedTeam: GameTeam) => {
     const savedBest = readBest(selectedTeam.id);
+    const savedPersonalRecord = readPersonalDistanceRecord();
     const savedProgress = readArcadeProgress()[String(selectedTeam.id)] ??
       createDefaultClubProgress();
     setTeam(selectedTeam);
     setClubProgress(savedProgress);
     setActiveLevel(savedProgress.currentLevel);
     setBest(savedBest);
+    setPersonalRecord(savedPersonalRecord);
     setIsNewRecord(false);
     setFinalResult(null);
     setFinalResolution(null);
     setPendingVarReview(null);
-    setSnapshot(createEmptySnapshot(savedBest));
+    setSnapshot(createEmptySnapshot(savedBest, savedPersonalRecord));
     setAssetsReady(false);
     setLoadProgress(0);
     setLoadingTip(pickLoadingGuide());
@@ -134,7 +143,7 @@ export default function GameClient({
     }
     setIsNewRecord(false);
     setFinalResult(null);
-    setSnapshot(createEmptySnapshot(best));
+    setSnapshot(createEmptySnapshot(best, personalRecord));
     setStatus("starting");
     const transitionDuration = window.matchMedia("(prefers-reduced-motion: reduce)").matches
       ? 0
@@ -143,20 +152,27 @@ export default function GameClient({
       startTransitionTimerRef.current = null;
       setStatus("running");
     }, transitionDuration);
-  }, [assetsReady, best]);
+  }, [assetsReady, best, personalRecord]);
 
   const commitGameOver = useCallback((result: GameSnapshot, resolutionOverride?: LevelResolution) => {
     if (!team) return;
     const nextBest = Math.max(best, result.score);
+    const nextPersonalRecord = Math.max(personalRecord, result.distance);
     const levelResult = applyLevelResult(
       clubProgress,
       activeLevel,
       result.distance,
       resolutionOverride
     );
-    const completedResult = { ...result, best: nextBest };
-    setIsNewRecord(result.score > best);
+    const completedResult = {
+      ...result,
+      best: nextBest,
+      personalRecord: nextPersonalRecord,
+      recordCelebrationDistance: 0,
+    };
+    setIsNewRecord(result.distance > personalRecord);
     setBest(nextBest);
+    setPersonalRecord(nextPersonalRecord);
     setSnapshot(completedResult);
     setFinalResult(completedResult);
     setFinalResolution(levelResult.resolution);
@@ -166,10 +182,12 @@ export default function GameClient({
       [String(team.id)]: levelResult.progress,
     }));
     writeBest(team.id, nextBest);
+    writePersonalDistanceRecord(nextPersonalRecord);
     writeClubProgress(team.id, levelResult.progress);
+    triggerOutcomeHaptic(levelResult.resolution.outcome);
     setPendingVarReview(null);
     setStatus("gameOver");
-  }, [activeLevel, best, clubProgress, team]);
+  }, [activeLevel, best, clubProgress, personalRecord, team]);
 
   const handleGameOver = useCallback((result: GameSnapshot) => {
     const outcome = resolveLevelOutcome(activeLevel, result.distance);
@@ -202,10 +220,10 @@ export default function GameClient({
     setFinalResult(null);
     setFinalResolution(null);
     setPendingVarReview(null);
-    setSnapshot(createEmptySnapshot(best));
+    setSnapshot(createEmptySnapshot(best, personalRecord));
     setRunId((current) => current + 1);
     setStatus("ready");
-  }, [best, clubProgress.currentLevel]);
+  }, [best, clubProgress.currentLevel, personalRecord]);
 
   const returnToGameHome = useCallback((requireConfirmation: boolean) => {
     if (
@@ -223,6 +241,7 @@ export default function GameClient({
     setTeam(null);
     setRunId((current) => current + 1);
     setBest(0);
+    setPersonalRecord(0);
     setIsNewRecord(false);
     setFinalResult(null);
     setFinalResolution(null);
@@ -382,6 +401,7 @@ export default function GameClient({
                 status={status}
                 runId={runId}
                 best={best}
+                distanceRecord={personalRecord}
                 onSnapshot={setSnapshot}
                 onGameOver={handleGameOver}
                 onAssetsReady={setAssetsReady}
@@ -396,7 +416,7 @@ export default function GameClient({
                     <h2 className="mt-1 text-3xl font-black uppercase">Pausa</h2>
                     <div className="mt-5 flex flex-col justify-center gap-2 sm:flex-row">
                       <button type="button" onClick={() => setStatus("running")} className="min-h-12 rounded-full bg-white px-7 text-[10px] font-black uppercase tracking-[.16em] text-blue-950">Riprendi</button>
-                      <button type="button" onClick={() => returnToGameHome(true)} className="min-h-12 rounded-full border border-white/15 px-6 text-[10px] font-black uppercase tracking-[.14em] text-white/75">Torna alla selezione</button>
+                      <button type="button" onClick={() => returnToGameHome(true)} className="min-h-12 rounded-full border border-white/15 px-6 text-[10px] font-black uppercase tracking-[.14em] text-white/75">Esci</button>
                     </div>
                   </div>
                 </div>
@@ -545,4 +565,14 @@ function readBest(teamId: number) {
 function writeBest(teamId: number, score: number) {
   try { window.localStorage.setItem(storageKey(teamId), String(score)); }
   catch { /* Il gioco resta utilizzabile se lo storage è bloccato. */ }
+}
+
+function triggerOutcomeHaptic(outcome: LevelResolution["outcome"]) {
+  if (
+    typeof window === "undefined" ||
+    !window.matchMedia("(max-width: 639px)").matches ||
+    typeof navigator.vibrate !== "function"
+  ) return;
+  if (outcome === "promoted") navigator.vibrate([12, 28, 20]);
+  else if (outcome === "relegated") navigator.vibrate([32, 35, 42]);
 }

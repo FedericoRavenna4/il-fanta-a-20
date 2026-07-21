@@ -58,7 +58,7 @@ export default async function GiocaPage({
           <Rule code="CTRL" title="Due movimenti" text="Salta gli ostacoli bassi e abbassati sotto quelli sospesi." />
           <Rule code="VOTO" title="Difendi il 62" text="Bonus e malus cambiano il voto. Sotto la soglia la corsa termina." />
           <Rule code="GOL" title="Segna ogni quattro" text="Ogni quattro punti sopra il 62 vale un nuovo gol." />
-          <Rule code="REC" title="Batti il record" text="Il punteggio arcade viene salvato per ogni società." />
+          <Rule code="REC" title="Batti il record" text="La migliore distanza resta salvata sul dispositivo." />
         </section>
       </div>
     </main>

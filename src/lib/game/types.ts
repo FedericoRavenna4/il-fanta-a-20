@@ -79,6 +79,8 @@ export type SpecialPresentation = {
 export type GameSnapshot = {
   score: number;
   best: number;
+  personalRecord: number;
+  recordCelebrationDistance: number;
   multiplier: number;
   teamRating: number;
   threshold: number;

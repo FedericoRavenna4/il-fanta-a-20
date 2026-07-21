@@ -62,7 +62,11 @@ export default function GameOver({
         <div className="mt-3 grid grid-cols-3 gap-2 max-sm:mt-1.5 max-sm:gap-1.5">
           <Score label="Punteggio" value={result.score.toLocaleString("it-IT")} highlight />
           <Score label="Distanza" value={`${result.distance} m`} />
-          <Score label={`Record L${playedLevel}`} value={`${progress.bestDistanceByLevel[playedLevel].toLocaleString("it-IT")} m`} />
+          <Score
+            label="Record personale"
+            value={`${result.personalRecord.toLocaleString("it-IT")} m`}
+            highlight={isNewRecord}
+          />
         </div>
 
         <div className="mt-2 flex items-center justify-between gap-3 rounded-lg border border-white/[.07] bg-white/[.035] px-3 py-2 text-left max-sm:mt-1.5 max-sm:py-1.5">
