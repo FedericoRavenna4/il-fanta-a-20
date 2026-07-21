@@ -1,6 +1,7 @@
 export type GameStatus =
   | "selecting"
   | "ready"
+  | "starting"
   | "running"
   | "paused"
   | "gameOver";

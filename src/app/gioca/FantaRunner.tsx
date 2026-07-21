@@ -58,8 +58,8 @@ import {
   type GameBackgroundStage,
 } from "@/lib/game/assets";
 import {
+  DISPLAY_DISTANCE_RATE,
   LEVEL_RULES,
-  toDisplayDistance,
   type GameLevel,
 } from "@/lib/game/progression";
 import {
@@ -67,6 +67,10 @@ import {
   POWER_UP_SPAWN_CONFIG,
   pickPowerUp,
 } from "@/lib/game/powerups";
+import {
+  POWER_UP_COPY,
+  SPECIAL_EVENT_COPY,
+} from "@/lib/game/content";
 import {
   BOSS_CONFIG,
   RAFFICA_PRESENTATION_ASSETS,
@@ -119,6 +123,7 @@ type Runtime = {
   multiplier: number;
   teamRating: number;
   distance: number;
+  displayDistance: number;
   bonusesCollected: number;
   malusesCollected: number;
   crouchUntil: number;
@@ -234,7 +239,7 @@ const MOBILE_POWER_UP_SCALE = 1.35;
 const DESKTOP_PLAYER_SCALE = 1.1;
 const MOBILE_PLAYER_SCALE = 1.68;
 const ENTITY_POOL_CAPACITY = 24;
-const HUD_UPDATE_INTERVAL_MS = 320;
+const HUD_UPDATE_INTERVAL_MS = 80;
 
 type CanvasRenderState = {
   context: CanvasRenderingContext2D | null;
@@ -283,6 +288,7 @@ function createRuntime(level: GameLevel = 1): Runtime {
     multiplier: 1,
     teamRating: TEAM_RATING_INITIAL,
     distance: 0,
+    displayDistance: 0,
     bonusesCollected: 0,
     malusesCollected: 0,
     crouchUntil: 0,
@@ -642,6 +648,7 @@ function FantaRunner({
 
       if (!runtime.finished && time - runtime.lastHudUpdate >= HUD_UPDATE_INTERVAL_MS) {
         runtime.lastHudUpdate = time;
+        advanceDisplayDistance(runtime);
         onSnapshot(toSnapshot(runtime, best, time));
         performanceRef.current.hudUpdates += 1;
       }
@@ -658,6 +665,7 @@ function FantaRunner({
       );
 
       if (runtime.finished) {
+        advanceDisplayDistance(runtime);
         const finalSnapshot = toSnapshot(runtime, best, time);
         onSnapshot(finalSnapshot);
         onGameOver(finalSnapshot);
@@ -1376,6 +1384,7 @@ function tryStartRaffica(
   if (!type) return false;
 
   const config = RAFFICA_CONFIG[type];
+  const presentationCopy = SPECIAL_EVENT_COPY.raffica[type];
   const pattern = pickRafficaPattern(
     type,
     runtime.lastRafficaPatterns[type] ?? null,
@@ -1397,10 +1406,10 @@ function tryStartRaffica(
   runtime.burstOverlayType = type;
   runtime.presentation = {
     asset: RAFFICA_PRESENTATION_ASSETS[type],
-    title: type === "malus" ? "Raffica di Malus" : "Raffica di Bonus",
-    subtitle: type === "malus" ? "Resisti alla pressione" : "Precisione e tempismo",
+    title: presentationCopy.title,
+    subtitle: presentationCopy.description,
     tone: type,
-    until: time + 4500,
+    until: time + 2800,
   };
   return true;
 }
@@ -1532,6 +1541,7 @@ function trySpawnPowerUp(runtime: Runtime, guaranteed: boolean) {
 
 function activatePowerUp(runtime: Runtime, kind: PowerUpKind, time: number) {
   const definition = POWER_UP_CONFIG[kind];
+  const presentationCopy = POWER_UP_COPY[kind];
   runtime.activePowerUps[kind] = {
     expiresAt: runtime.elapsed + definition.durationSeconds,
     charges: 0,
@@ -1539,10 +1549,10 @@ function activatePowerUp(runtime: Runtime, kind: PowerUpKind, time: number) {
   runtime.powerUpCollectionEffect = { kind, until: time + 820 };
   runtime.presentation = {
     asset: definition.banner,
-    title: definition.name,
-    subtitle: definition.effect,
+    title: presentationCopy.title,
+    subtitle: presentationCopy.description,
     tone: kind === "gimenez" ? "malus" : "bonus",
-    until: time + 4500,
+    until: time + 2800,
   };
 }
 
@@ -1594,14 +1604,10 @@ function updateBoss(
     };
     runtime.presentation = {
       asset: BOSS_CONFIG.warningAsset,
-      title: "Boss 20 in arrivo",
-      subtitle: "Non farti trascinare in fondo",
+      title: SPECIAL_EVENT_COPY.boss.title,
+      subtitle: SPECIAL_EVENT_COPY.boss.description,
       tone: "malus",
-      until: time + (
-        BOSS_CONFIG.warningSeconds +
-        (runtime.mobileLayout ? 0.5 : 0) +
-        (runtime.level === 1 ? 0.2 : runtime.level === 3 ? -0.08 : 0)
-      ) * 1000,
+      until: time + 2800,
     };
     return;
   }
@@ -1619,10 +1625,10 @@ function updateBoss(
     boss.spawnTimer = 0.48;
     runtime.presentation = {
       asset: BOSS_CONFIG.bannerAsset,
-      title: "Boss 20",
-      subtitle: "Sopravvivi per conquistare +3",
+      title: SPECIAL_EVENT_COPY.boss.title,
+      subtitle: SPECIAL_EVENT_COPY.boss.description,
       tone: "malus",
-      until: time + 4500,
+      until: time + 2800,
     };
     return;
   }
@@ -2273,7 +2279,7 @@ function toSnapshot(runtime: Runtime, best: number, time: number): GameSnapshot 
         : 0,
     flowProgress: Math.round(runtime.flowProgress),
     speedLevel: getSpeedLevel(getScoreSpeedProgress(runtime)),
-    distance: toDisplayDistance(runtime.distance),
+    distance: runtime.displayDistance,
     scenarioName: LEVEL_RULES[runtime.level].name,
     bonusesCollected: runtime.bonusesCollected,
     malusesCollected: runtime.malusesCollected,
@@ -2305,6 +2311,11 @@ function toSnapshot(runtime: Runtime, best: number, time: number): GameSnapshot 
     bossRemaining:
       runtime.boss?.phase === "active" ? Math.max(0, runtime.boss.timer) : 0,
   };
+}
+
+function advanceDisplayDistance(runtime: Runtime) {
+  const targetDistance = Math.floor(runtime.distance * DISPLAY_DISTANCE_RATE);
+  if (runtime.displayDistance < targetDistance) runtime.displayDistance += 1;
 }
 
 function getDifficultyProgress(runtime: Runtime) {

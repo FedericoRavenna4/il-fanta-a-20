@@ -44,7 +44,10 @@ export default function GameOverlayLayer({
                 />
               ))}
             </div>
-            <p className="-mt-4 max-w-[92vw] text-balance text-center text-[11px] font-black leading-tight tracking-[-.01em] text-white [text-shadow:0_2px_9px_rgba(2,8,23,1),0_0_4px_rgba(2,8,23,1)] max-sm:max-w-[280px] max-sm:[text-shadow:0_2px_6px_rgba(2,8,23,.92)] sm:-mt-6 sm:whitespace-nowrap sm:text-[15px]">
+            <h3 className="-mt-4 max-w-[92vw] text-center text-xs font-black uppercase leading-tight tracking-[.08em] text-amber-200 [text-shadow:0_2px_8px_rgba(2,8,23,1)] sm:-mt-6 sm:text-sm">
+              {presentation?.title}
+            </h3>
+            <p className="mt-1.5 max-w-[92vw] text-balance text-center text-[11px] font-bold leading-[1.4] text-white/90 [text-shadow:0_2px_9px_rgba(2,8,23,1),0_0_4px_rgba(2,8,23,1)] max-sm:max-w-[300px] max-sm:[text-shadow:0_2px_6px_rgba(2,8,23,.92)] sm:whitespace-nowrap sm:text-[13px]">
               {presentation?.subtitle}
             </p>
           </div>
@@ -71,7 +74,7 @@ export default function GameOverlayLayer({
           100% { opacity: 0; transform: translateY(-2%) scale(.96); }
         }
         .special-presentation {
-          animation: special-presentation-in 4.5s cubic-bezier(.2,.8,.2,1) both;
+          animation: special-presentation-in 2.8s cubic-bezier(.2,.8,.2,1) both;
           will-change: transform, opacity;
         }
         @media (prefers-reduced-motion: reduce) { .special-presentation { animation: none; } }

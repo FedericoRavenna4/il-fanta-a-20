@@ -22,12 +22,8 @@ export type LevelResolution = {
 };
 
 export const ARCADE_PROGRESS_STORAGE_KEY = "fanta-a-20-arcade-progress-v1";
-export const ARCADE_PROGRESS_STORAGE_VERSION = 2;
-export const DISPLAY_DISTANCE_MULTIPLIER = 2;
-
-export function toDisplayDistance(internalDistance: number) {
-  return Math.max(0, Math.round(internalDistance * DISPLAY_DISTANCE_MULTIPLIER));
-}
+export const ARCADE_PROGRESS_STORAGE_VERSION = 3;
+export const DISPLAY_DISTANCE_RATE = 1.2;
 
 export const LEVEL_RULES: Record<GameLevel, {
   name: string;
@@ -48,9 +44,9 @@ export const LEVEL_RULES: Record<GameLevel, {
   1: {
     name: "Campo di strada",
     background: 1,
-    promotionAt: 4000,
+    promotionAt: 2000,
     relegationBelow: null,
-    objective: "Raggiungi 4.000 m per essere promosso.",
+    objective: "Raggiungi 2.000 m per essere promosso.",
     difficulty: {
       difficultyBoost: 0,
       speedProgressMultiplier: 0.94,
@@ -64,9 +60,9 @@ export const LEVEL_RULES: Record<GameLevel, {
   2: {
     name: "Campo di provincia",
     background: 2,
-    promotionAt: 4000,
-    relegationBelow: 2000,
-    objective: "2.000 m per restare, 4.000 m per la promozione.",
+    promotionAt: 2000,
+    relegationBelow: 1000,
+    objective: "1.000 m per restare, 2.000 m per la promozione.",
     difficulty: {
       difficultyBoost: 0.07,
       speedProgressMultiplier: 1.04,
@@ -81,8 +77,8 @@ export const LEVEL_RULES: Record<GameLevel, {
     name: "Stadio gremito",
     background: 3,
     promotionAt: null,
-    relegationBelow: 3000,
-    objective: "Raggiungi 3.000 m per ottenere la salvezza.",
+    relegationBelow: 1500,
+    objective: "Raggiungi 1.500 m per ottenere la salvezza.",
     difficulty: {
       difficultyBoost: 0.14,
       speedProgressMultiplier: 1.14,
@@ -190,13 +186,13 @@ export function readArcadeProgress(): Record<string, ClubProgress> {
   if (typeof window === "undefined") return {};
   try {
     const parsed = JSON.parse(window.localStorage.getItem(ARCADE_PROGRESS_STORAGE_KEY) ?? "{}");
-    const storedVersion = isRecord(parsed) && Number(parsed.version) >= 2 ? 2 : 1;
+    const storedVersion = isRecord(parsed) ? safeStorageVersion(parsed.version) : 1;
     const clubs = isRecord(parsed) && isRecord(parsed.clubs) ? parsed.clubs : parsed;
     if (!isRecord(clubs)) return {};
     return Object.fromEntries(
       Object.entries(clubs).map(([clubId, value]) => [
         clubId,
-        sanitizeClubProgress(value, storedVersion === 1 ? DISPLAY_DISTANCE_MULTIPLIER : 1),
+        sanitizeClubProgress(value, storedVersion === 2 ? 0.5 : 1),
       ])
     );
   } catch {
@@ -228,9 +224,9 @@ function sanitizeClubProgress(value: unknown, distanceMultiplier = 1): ClubProgr
   return {
     currentLevel: level,
     bestDistanceByLevel: {
-      1: safeNumber(distances[1] ?? distances["1"]) * distanceMultiplier,
-      2: safeNumber(distances[2] ?? distances["2"]) * distanceMultiplier,
-      3: safeNumber(distances[3] ?? distances["3"]) * distanceMultiplier,
+      1: Math.round(safeNumber(distances[1] ?? distances["1"]) * distanceMultiplier),
+      2: Math.round(safeNumber(distances[2] ?? distances["2"]) * distanceMultiplier),
+      3: Math.round(safeNumber(distances[3] ?? distances["3"]) * distanceMultiplier),
     },
     level3Saves: safeNumber(value.level3Saves),
     lastOutcome,
@@ -241,6 +237,11 @@ function sanitizeClubProgress(value: unknown, distanceMultiplier = 1): ClubProgr
 function safeNumber(value: unknown) {
   const number = Number(value);
   return Number.isFinite(number) && number > 0 ? Math.round(number) : 0;
+}
+
+function safeStorageVersion(value: unknown) {
+  const version = Number(value);
+  return Number.isInteger(version) && version > 0 ? version : 1;
 }
 
 function isRecord(value: unknown): value is Record<string | number, unknown> {

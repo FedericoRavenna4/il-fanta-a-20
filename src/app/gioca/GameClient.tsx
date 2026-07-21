@@ -7,7 +7,12 @@ import {
   TEAM_RATING_INITIAL,
   TEAM_RATING_THRESHOLD,
 } from "@/lib/game/config";
-import { GAME_ASSETS } from "@/lib/game/assets";
+import {
+  GAMEPLAY_TIPS,
+  LOADING_GUIDES,
+  pickGameplayTip,
+  pickLoadingGuide,
+} from "@/lib/game/content";
 import type { GameSnapshot, GameStatus, GameTeam } from "@/lib/game/types";
 import {
   LEVEL_RULES,
@@ -24,18 +29,6 @@ import GameHud from "./GameHud";
 import GameOver from "./GameOver";
 import GameOverlayLayer from "./GameOverlayLayer";
 import TeamSelector from "./TeamSelector";
-
-const LOADING_TIPS = [
-  { image: GAME_ASSETS.powerups.luperto, title: "Luperto", text: "I malus non hanno effetto" },
-  { image: GAME_ASSETS.powerups.lukaku, title: "Lukaku", text: "La potenza respinge le barriere" },
-  { image: GAME_ASSETS.powerups.nicoPaz, title: "Nico Paz", text: "Attira i bonus verso di te" },
-  { image: GAME_ASSETS.powerups.dybala, title: "Dybala", text: "Rallenta la corsa e ritrova il ritmo" },
-  { image: GAME_ASSETS.events.bonusBurst, title: "Raffica Bonus", text: "Sfrutta ogni occasione" },
-  { image: GAME_ASSETS.events.malusBurst, title: "Raffica Malus", text: "Preparati a schivare" },
-  { image: GAME_ASSETS.bonus.goal, title: "Gol", text: "+3 al voto squadra" },
-  { image: GAME_ASSETS.malus.redCard, title: "Espulsione", text: "Proteggi la tua soglia vitale" },
-  { image: GAME_ASSETS.events.boss, title: "Boss 20", text: "Preparati alle raffiche di malus" },
-] as const;
 
 function createEmptySnapshot(best = 0): GameSnapshot {
   return {
@@ -79,7 +72,8 @@ export default function GameClient({
   const [best, setBest] = useState(0);
   const [assetsReady, setAssetsReady] = useState(false);
   const [loadProgress, setLoadProgress] = useState(0);
-  const [loadingTip, setLoadingTip] = useState(() => pickLoadingTip());
+  const [loadingTip, setLoadingTip] = useState(LOADING_GUIDES[0]);
+  const [gameplayTip, setGameplayTip] = useState<string>(GAMEPLAY_TIPS[0]);
   const [isNewRecord, setIsNewRecord] = useState(false);
   const [snapshot, setSnapshot] = useState<GameSnapshot>(() => createEmptySnapshot());
   const [finalResult, setFinalResult] = useState<GameSnapshot | null>(null);
@@ -90,6 +84,7 @@ export default function GameClient({
   const dialogRef = useRef<HTMLElement>(null);
   const selectionRootRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+  const startTransitionTimerRef = useRef<number | null>(null);
   const modalOpen = Boolean(team) && status !== "selecting";
 
   useEffect(() => {
@@ -113,7 +108,8 @@ export default function GameClient({
     setSnapshot(createEmptySnapshot(savedBest));
     setAssetsReady(false);
     setLoadProgress(0);
-    setLoadingTip(pickLoadingTip());
+    setLoadingTip(pickLoadingGuide());
+    setGameplayTip(pickGameplayTip());
     setInitialSelectionAvailable(false);
     setRunId((current) => current + 1);
     setStatus("ready");
@@ -121,10 +117,20 @@ export default function GameClient({
 
   const startGame = useCallback(() => {
     if (!assetsReady) return;
+    if (startTransitionTimerRef.current !== null) {
+      window.clearTimeout(startTransitionTimerRef.current);
+    }
     setIsNewRecord(false);
     setFinalResult(null);
     setSnapshot(createEmptySnapshot(best));
-    setStatus("running");
+    setStatus("starting");
+    const transitionDuration = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      ? 0
+      : 650;
+    startTransitionTimerRef.current = window.setTimeout(() => {
+      startTransitionTimerRef.current = null;
+      setStatus("running");
+    }, transitionDuration);
   }, [assetsReady, best]);
 
   const handleGameOver = useCallback((result: GameSnapshot) => {
@@ -151,7 +157,8 @@ export default function GameClient({
     setActiveLevel(clubProgress.currentLevel);
     setAssetsReady(false);
     setLoadProgress(0);
-    setLoadingTip(pickLoadingTip());
+    setLoadingTip(pickLoadingGuide());
+    setGameplayTip(pickGameplayTip());
     setFinalResult(null);
     setFinalResolution(null);
     setSnapshot(createEmptySnapshot(best));
@@ -166,6 +173,11 @@ export default function GameClient({
       !window.confirm("Vuoi abbandonare la partita in corso?")
     ) return;
 
+    if (startTransitionTimerRef.current !== null) {
+      window.clearTimeout(startTransitionTimerRef.current);
+      startTransitionTimerRef.current = null;
+    }
+
     setStatus("selecting");
     setTeam(null);
     setRunId((current) => current + 1);
@@ -178,6 +190,12 @@ export default function GameClient({
     setLoadProgress(0);
     setSelectorVersion((current) => current + 1);
   }, [status]);
+
+  useEffect(() => () => {
+    if (startTransitionTimerRef.current !== null) {
+      window.clearTimeout(startTransitionTimerRef.current);
+    }
+  }, []);
 
   useEffect(() => {
     if (status !== "ready" || !assetsReady) return;
@@ -255,7 +273,7 @@ export default function GameClient({
 
   const gameModal = typeof document !== "undefined" && modalOpen && team
     ? createPortal(
-        <div className="game-modal-backdrop fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/90 p-[max(.35rem,env(safe-area-inset-top))_max(.35rem,env(safe-area-inset-right))_max(.35rem,env(safe-area-inset-bottom))_max(.35rem,env(safe-area-inset-left))]">
+        <div className="game-modal-backdrop fixed inset-0 z-[120] flex items-center justify-center bg-[#020817] p-[max(.35rem,env(safe-area-inset-top))_max(.35rem,env(safe-area-inset-right))_max(.35rem,env(safe-area-inset-bottom))_max(.35rem,env(safe-area-inset-left))]">
           <section
             ref={dialogRef}
             role="dialog"
@@ -357,8 +375,8 @@ export default function GameClient({
               </div>
             </div>
 
-            {status === "ready" && (
-              <div className="game-loading-screen absolute inset-0 z-40 grid grid-rows-[auto_1fr_auto] bg-[radial-gradient(circle_at_50%_36%,#174d7b_0%,#082341_34%,#020817_78%)] px-4 py-[max(.8rem,env(safe-area-inset-top))] text-center text-white sm:px-8 sm:py-6">
+            {(status === "ready" || status === "starting") && (
+              <div className={`game-loading-screen absolute inset-0 z-40 grid grid-rows-[auto_1fr_auto] bg-[radial-gradient(circle_at_50%_36%,#174d7b_0%,#082341_34%,#020817_78%)] px-4 py-[max(.8rem,env(safe-area-inset-top))] text-center text-white sm:px-8 sm:py-6 ${status === "starting" ? "game-loading-screen-out" : ""}`}>
                 <header className="mx-auto flex w-full max-w-md items-center gap-3 text-left">
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center sm:h-14 sm:w-14">
                     <Image src={team.logo} alt="" width={112} height={112} unoptimized priority className="max-h-full max-w-full object-contain drop-shadow-[0_10px_18px_rgba(0,0,0,.45)]" />
@@ -379,12 +397,16 @@ export default function GameClient({
                   </div>
                 </header>
                 <article className="relative mx-auto flex w-full max-w-[290px] self-center flex-col items-center rounded-[1.25rem] border border-white/10 bg-[linear-gradient(145deg,rgba(15,50,84,.72),rgba(2,8,23,.5))] px-4 py-3 shadow-[0_22px_55px_rgba(0,0,0,.3),inset_0_1px_0_rgba(255,255,255,.08)] sm:max-w-sm sm:px-6 sm:py-5">
-                  <p className="text-[7px] font-black uppercase tracking-[.23em] text-amber-300/75">Consiglio di gioco</p>
+                  <p className="text-[7px] font-black uppercase tracking-[.23em] text-amber-300/75">Guida rapida</p>
                   <div className="mt-2 flex h-24 w-32 items-center justify-center sm:h-36 sm:w-48">
                     <Image src={loadingTip.image} alt="" width={320} height={240} unoptimized priority className="max-h-full max-w-full object-contain drop-shadow-[0_16px_22px_rgba(0,0,0,.48)]" />
                   </div>
                   <h3 className="mt-1 text-base font-black uppercase tracking-[-.025em] sm:text-xl">{loadingTip.title}</h3>
-                  <p className="mt-1 text-[10px] font-semibold leading-4 text-white/68 sm:text-xs">“{loadingTip.text}”</p>
+                  <p className="mt-1.5 text-[13px] font-semibold leading-5 text-white/72 sm:text-sm sm:leading-5">“{loadingTip.text}”</p>
+                  <div className="mt-3 w-full border-t border-white/10 pt-2.5">
+                    <p className="text-[7px] font-black uppercase tracking-[.2em] text-sky-200/65">Suggerimento</p>
+                    <p className="mx-auto mt-1.5 max-w-sm text-xs font-semibold leading-[1.45] text-white/68 sm:text-[13px]">{gameplayTip}</p>
+                  </div>
                 </article>
                 <section className="mx-auto w-full max-w-xl rounded-xl border border-white/10 bg-slate-950/42 px-3 py-2 text-left shadow-[inset_0_1px_0_rgba(255,255,255,.06)] sm:px-4 sm:py-3">
                   <p className="mb-3 text-center text-[10px] font-black uppercase tracking-[.22em] text-sky-100">Controlli</p>
@@ -409,13 +431,24 @@ export default function GameClient({
               width:min(97vw,calc((100dvh - 7rem) * 1.8),1280px);
               animation:game-modal-panel-in 420ms cubic-bezier(.2,.8,.2,1) both;
             }
+            .game-loading-screen {
+              opacity:1;
+              transform:scale(1);
+              transition:opacity 650ms cubic-bezier(.4,0,.2,1),transform 650ms cubic-bezier(.2,.8,.2,1);
+              will-change:opacity,transform;
+            }
+            .game-loading-screen-out {
+              opacity:0;
+              transform:scale(1.012);
+              pointer-events:none;
+            }
             @media (max-width:639px) {
               .game-modal-panel {
                 width:min(calc(100vw - .7rem),calc((100dvh - .7rem) * 9 / 16));
                 height:min(calc(100dvh - .7rem),calc((100vw - .7rem) * 16 / 9));
               }
             }
-            @media (prefers-reduced-motion:reduce) { .game-modal-backdrop,.game-modal-panel { animation-duration:1ms; } }
+            @media (prefers-reduced-motion:reduce) { .game-modal-backdrop,.game-modal-panel { animation-duration:1ms; } .game-loading-screen { transition-duration:1ms; } }
           `}</style>
         </div>,
         document.body
@@ -462,8 +495,4 @@ function readBest(teamId: number) {
 function writeBest(teamId: number, score: number) {
   try { window.localStorage.setItem(storageKey(teamId), String(score)); }
   catch { /* Il gioco resta utilizzabile se lo storage è bloccato. */ }
-}
-
-function pickLoadingTip() {
-  return LOADING_TIPS[Math.floor(Math.random() * LOADING_TIPS.length)];
 }
