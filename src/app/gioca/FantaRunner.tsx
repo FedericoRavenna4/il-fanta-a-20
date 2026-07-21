@@ -380,7 +380,7 @@ function startRuntimeJump(runtime: Runtime, time: number) {
   runtime.grounded = false;
   runtime.blockedObstacleId = null;
   const lukakuStrength = getPowerUpStrength(runtime, "lukaku");
-  const mobileJumpBoost = runtime.mobileLayout ? 1.2 : 1;
+  const mobileJumpBoost = runtime.mobileLayout ? 1.22 : 1;
   runtime.velocityY = JUMP_FORCE * mobileJumpBoost * (1 + lukakuStrength * 0.26);
   runtime.jumpHeld = true;
   runtime.jumpHoldRemaining = JUMP_MAX_HOLD_SECONDS *
@@ -1940,13 +1940,15 @@ function spawnGameplayPattern(
 ) {
   let furthestOffset = 0;
   let spawnedPhysical = false;
+  const patternSpacing = runtime.mobileLayout ? 1.1 : 1;
   for (const item of pattern.items) {
-    furthestOffset = Math.max(furthestOffset, item.x);
+    const itemOffset = item.x * patternSpacing;
+    furthestOffset = Math.max(furthestOffset, itemOffset);
     if (item.type === "physical") {
       spawnedPhysical = pushPhysicalObstacle(
         runtime,
         item.kind,
-        startX + item.x,
+        startX + itemOffset,
         difficulty
       ) || spawnedPhysical;
     } else {
@@ -1955,7 +1957,7 @@ function spawnGameplayPattern(
         item.line === 1
           ? 2
           : item.line;
-      pushEvent(runtime, item.kind, startX + item.x, mobileLine, {
+      pushEvent(runtime, item.kind, startX + itemOffset, mobileLine, {
         pattern: true,
         tight: true,
         motion: "ground",
@@ -1977,14 +1979,29 @@ function spawnGameplayPattern(
   // Nelle fasi avanzate gli ostacoli fisici non spariscono dal ritmo di gioco.
   // L'inserimento avviene dopo il pattern, con spazio di reazione dedicato: in
   // questo modo la pressione resta costante senza produrre combinazioni cieche.
-  if (runtime.distance >= 300 && runtime.physicalFreePatternStreak >= 3) {
-    const reactionGap = Math.max(300, speed * 0.68);
+  const physicalFreeLimit = runtime.mobileLayout
+    ? runtime.distance >= 1200 ? 1 : runtime.distance >= 700 ? 2 : 3
+    : 3;
+  if (
+    runtime.distance >= 300 &&
+    runtime.physicalFreePatternStreak >= physicalFreeLimit
+  ) {
+    const reactionTime = runtime.mobileLayout
+      ? 0.72 - advancedPressure * 0.1
+      : 0.68;
+    const reactionGap = Math.max(300, speed * reactionTime);
     const obstacleKinds: readonly PhysicalObstacleKind[] = advancedPressure > 0.55
       ? ["cornerFlag", "stretcher", "slidingTackle", "var"]
       : ["cornerFlag", "stretcher", "var"];
     const kind = obstacleKinds[Math.floor(Math.random() * obstacleKinds.length)];
     const obstacleOffset = furthestOffset + reactionGap;
-    if (pushPhysicalObstacle(runtime, kind, startX + obstacleOffset, difficulty)) {
+    if (pushPhysicalObstacle(
+      runtime,
+      kind,
+      startX + obstacleOffset,
+      difficulty,
+      runtime.mobileLayout && runtime.distance >= 700
+    )) {
       furthestOffset = obstacleOffset;
       runtime.physicalFreePatternStreak = 0;
     }
@@ -2104,11 +2121,12 @@ function pushPhysicalObstacle(
   runtime: Runtime,
   kind: PhysicalObstacleKind,
   x: number,
-  difficulty: number
+  difficulty: number,
+  allowCapacityReserve = false
 ) {
   if (
     runtime.activeEntityCounts.physical >= ENTITY_DENSITY_CONFIG.maximumActivePhysicalObstacles ||
-    runtime.entities.length >= getMaximumActiveEntities(runtime)
+    (!allowCapacityReserve && runtime.entities.length >= getMaximumActiveEntities(runtime))
   ) {
     return false;
   }
@@ -2766,7 +2784,7 @@ function drawGroundTiles(
   image: HTMLImageElement,
   offset: number,
   viewport: { width: number; height: number },
-  stage: GameBackgroundStage
+  _stage: GameBackgroundStage
 ) {
   const tile = getCachedGroundTile(image, viewport);
   const tileWidth = tile.width;
@@ -2776,11 +2794,10 @@ function drawGroundTiles(
   const step = Math.max(1, tileWidth - overlap);
   const localOffset = ((offset % step) + step) % step;
   const firstX = -Math.floor(localOffset);
-  let tileIndex = Math.floor(offset / step);
   for (let tileX = firstX; tileX < viewport.width; tileX += step) {
-    const mirrorForSeam = stage !== 1 && Math.abs(tileIndex) % 2 === 1;
-    context.drawImage(mirrorForSeam ? getMirroredTile(tile) : tile, tileX, y);
-    tileIndex += 1;
+    // Il terreno conserva sempre lo stesso asse verticale e la stessa
+    // orientazione: cambia esclusivamente la coordinata orizzontale.
+    context.drawImage(tile, Math.round(tileX), y);
   }
 }
 

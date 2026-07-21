@@ -16,15 +16,18 @@ export default function VarCheck({
   onComplete: () => void;
 }) {
   const [revealed, setRevealed] = useState(false);
+  const [analysisStep, setAnalysisStep] = useState(0);
 
   useEffect(() => {
-    const revealTimer = window.setTimeout(() => setRevealed(true), 2200);
-    const completeTimer = window.setTimeout(onComplete, 3900);
+    const firstStepTimer = window.setTimeout(() => setAnalysisStep(1), 1800);
+    const secondStepTimer = window.setTimeout(() => setAnalysisStep(2), 3500);
+    const revealTimer = window.setTimeout(() => setRevealed(true), 5200);
     return () => {
+      window.clearTimeout(firstStepTimer);
+      window.clearTimeout(secondStepTimer);
       window.clearTimeout(revealTimer);
-      window.clearTimeout(completeTimer);
     };
-  }, [onComplete]);
+  }, []);
 
   const overturned = verdict === "overturned";
 
@@ -68,7 +71,11 @@ export default function VarCheck({
             ? overturned
               ? "La decisione cambia: categoria mantenuta e salvezza registrata."
               : "La decisione è confermata: la retrocessione resta valida."
-            : "La sala VAR sta verificando l'esito della corsa."}
+            : analysisStep === 0
+              ? "La sala VAR sta ricostruendo l'azione."
+              : analysisStep === 1
+                ? "Controllo della decisione sul campo."
+                : "Verdetto in arrivo."}
         </p>
         {!revealed && (
           <div className="mx-auto mt-5 flex w-20 justify-between" aria-hidden="true">
@@ -77,15 +84,24 @@ export default function VarCheck({
             <i className="var-check-dot h-1.5 w-1.5 rounded-full bg-sky-200 [animation-delay:280ms]" />
           </div>
         )}
+        {revealed && (
+          <button
+            type="button"
+            onClick={onComplete}
+            className={`mt-5 min-h-11 rounded-full px-8 text-[10px] font-black uppercase tracking-[.18em] text-slate-950 shadow-[0_12px_30px_rgba(0,0,0,.28)] transition hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${overturned ? "bg-emerald-300 hover:bg-emerald-200" : "bg-rose-300 hover:bg-rose-200"}`}
+          >
+            Prosegui
+          </button>
+        )}
       </section>
       <style jsx>{`
         @keyframes var-scan { 0% { transform: translateY(0); opacity: 0; } 12% { opacity: .8; } 88% { opacity: .8; } 100% { transform: translateY(25rem); opacity: 0; } }
         @keyframes var-ring { 0%,100% { transform: scale(.92); opacity: .35; } 50% { transform: scale(1.08); opacity: .9; } }
         @keyframes var-dot { 0%,100% { transform: translateY(0); opacity: .3; } 50% { transform: translateY(-5px); opacity: 1; } }
         .var-check-card { animation: var-card-in 380ms cubic-bezier(.2,.8,.2,1) both; }
-        .var-check-scan { animation: var-scan 1.55s linear infinite; }
-        .var-check-ring { animation: var-ring 1.2s ease-in-out infinite; }
-        .var-check-dot { animation: var-dot .8s ease-in-out infinite; }
+        .var-check-scan { animation: var-scan 2.1s linear infinite; }
+        .var-check-ring { animation: var-ring 1.65s ease-in-out infinite; }
+        .var-check-dot { animation: var-dot 1.05s ease-in-out infinite; }
         @keyframes var-card-in { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: none; } }
         @media (prefers-reduced-motion: reduce) { .var-check-card,.var-check-scan,.var-check-ring,.var-check-dot { animation-duration: 1ms; animation-iteration-count: 1; } }
       `}</style>
