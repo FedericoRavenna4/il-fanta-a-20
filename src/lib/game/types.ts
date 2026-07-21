@@ -4,6 +4,7 @@ export type GameStatus =
   | "starting"
   | "running"
   | "paused"
+  | "varCheck"
   | "gameOver";
 
 export type GameTeam = {

@@ -19,16 +19,26 @@ import {
   applyLevelResult,
   createDefaultClubProgress,
   readArcadeProgress,
+  resolveLevelOutcome,
+  resolveVarOutcome,
   writeClubProgress,
   type ClubProgress,
   type GameLevel,
   type LevelResolution,
+  type VarVerdict,
 } from "@/lib/game/progression";
 import FantaRunner from "./FantaRunner";
 import GameHud from "./GameHud";
 import GameOver from "./GameOver";
 import GameOverlayLayer from "./GameOverlayLayer";
 import TeamSelector from "./TeamSelector";
+import VarCheck from "./VarCheck";
+
+type PendingVarReview = {
+  result: GameSnapshot;
+  verdict: VarVerdict;
+  relegation: LevelResolution;
+};
 
 function createEmptySnapshot(best = 0): GameSnapshot {
   return {
@@ -81,6 +91,7 @@ export default function GameClient({
   const [clubProgress, setClubProgress] = useState<ClubProgress>(() => createDefaultClubProgress());
   const [activeLevel, setActiveLevel] = useState<GameLevel>(1);
   const [finalResolution, setFinalResolution] = useState<LevelResolution | null>(null);
+  const [pendingVarReview, setPendingVarReview] = useState<PendingVarReview | null>(null);
   const dialogRef = useRef<HTMLElement>(null);
   const selectionRootRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
@@ -105,6 +116,7 @@ export default function GameClient({
     setIsNewRecord(false);
     setFinalResult(null);
     setFinalResolution(null);
+    setPendingVarReview(null);
     setSnapshot(createEmptySnapshot(savedBest));
     setAssetsReady(false);
     setLoadProgress(0);
@@ -133,10 +145,15 @@ export default function GameClient({
     }, transitionDuration);
   }, [assetsReady, best]);
 
-  const handleGameOver = useCallback((result: GameSnapshot) => {
+  const commitGameOver = useCallback((result: GameSnapshot, resolutionOverride?: LevelResolution) => {
     if (!team) return;
     const nextBest = Math.max(best, result.score);
-    const levelResult = applyLevelResult(clubProgress, activeLevel, result.distance);
+    const levelResult = applyLevelResult(
+      clubProgress,
+      activeLevel,
+      result.distance,
+      resolutionOverride
+    );
     const completedResult = { ...result, best: nextBest };
     setIsNewRecord(result.score > best);
     setBest(nextBest);
@@ -150,8 +167,31 @@ export default function GameClient({
     }));
     writeBest(team.id, nextBest);
     writeClubProgress(team.id, levelResult.progress);
+    setPendingVarReview(null);
     setStatus("gameOver");
   }, [activeLevel, best, clubProgress, team]);
+
+  const handleGameOver = useCallback((result: GameSnapshot) => {
+    const outcome = resolveLevelOutcome(activeLevel, result.distance);
+    if (outcome.outcome === "relegated") {
+      setPendingVarReview({
+        result,
+        relegation: outcome,
+        verdict: Math.random() < 0.5 ? "overturned" : "validated",
+      });
+      setStatus("varCheck");
+      return;
+    }
+    commitGameOver(result);
+  }, [activeLevel, commitGameOver]);
+
+  const completeVarReview = useCallback(() => {
+    if (!pendingVarReview) return;
+    commitGameOver(
+      pendingVarReview.result,
+      resolveVarOutcome(pendingVarReview.relegation, pendingVarReview.verdict)
+    );
+  }, [commitGameOver, pendingVarReview]);
 
   const prepareNextRun = useCallback(() => {
     setActiveLevel(clubProgress.currentLevel);
@@ -161,6 +201,7 @@ export default function GameClient({
     setGameplayTip(pickGameplayTip());
     setFinalResult(null);
     setFinalResolution(null);
+    setPendingVarReview(null);
     setSnapshot(createEmptySnapshot(best));
     setRunId((current) => current + 1);
     setStatus("ready");
@@ -185,6 +226,7 @@ export default function GameClient({
     setIsNewRecord(false);
     setFinalResult(null);
     setFinalResolution(null);
+    setPendingVarReview(null);
     setSnapshot(createEmptySnapshot());
     setAssetsReady(false);
     setLoadProgress(0);
@@ -371,6 +413,14 @@ export default function GameClient({
                   onRetry={prepareNextRun}
                   onReturn={() => returnToGameHome(false)}
                 />
+                )}
+
+                {status === "varCheck" && pendingVarReview && (
+                  <VarCheck
+                    team={team}
+                    verdict={pendingVarReview.verdict}
+                    onComplete={completeVarReview}
+                  />
                 )}
               </div>
             </div>

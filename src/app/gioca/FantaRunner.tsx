@@ -171,6 +171,7 @@ type Runtime = {
   lastPatternId: string | null;
   lastPatternCategory: PatternCategory | null;
   mixedPatternStreak: number;
+  physicalFreePatternStreak: number;
   initialBonusSpawned: boolean;
   activePowerUps: Partial<Record<PowerUpKind, ActivePowerUp>>;
   powerUpCollectionEffect: { kind: PowerUpKind; until: number } | null;
@@ -238,6 +239,9 @@ const MOBILE_EVENT_SCALE = 1.4;
 const MOBILE_POWER_UP_SCALE = 1.35;
 const DESKTOP_PLAYER_SCALE = 1.1;
 const MOBILE_PLAYER_SCALE = 1.68;
+const MOBILE_DPR_HIGH = 1.4;
+const MOBILE_DPR_BALANCED = 1.2;
+const MOBILE_DPR_LOW = 1.1;
 const ENTITY_POOL_CAPACITY = 24;
 const HUD_UPDATE_INTERVAL_MS = 70;
 
@@ -334,6 +338,7 @@ function createRuntime(level: GameLevel = 1): Runtime {
     lastPatternId: null,
     lastPatternCategory: null,
     mixedPatternStreak: 0,
+    physicalFreePatternStreak: 0,
     initialBonusSpawned: false,
     activePowerUps: {},
     powerUpCollectionEffect: null,
@@ -408,7 +413,7 @@ function FantaRunner({
   const renderStateRef = useRef<CanvasRenderState>({
     context: null,
     dirty: true,
-    dprLimit: 1.15,
+    dprLimit: MOBILE_DPR_HIGH,
     logicalWidth: GAME_WIDTH,
     logicalHeight: GAME_HEIGHT,
   });
@@ -452,7 +457,7 @@ function FantaRunner({
     let cancelled = false;
     const mobile = window.matchMedia("(max-width: 639px)").matches;
     configureMobileRuntime(runtimeRef.current, renderStateRef.current, mobile);
-    renderStateRef.current.dprLimit = mobile ? 1.15 : 1.25;
+    renderStateRef.current.dprLimit = mobile ? MOBILE_DPR_HIGH : 1.25;
     renderStateRef.current.dirty = true;
     onAssetsReady(false);
     onLoadProgress(0);
@@ -858,7 +863,7 @@ function configureMobileRuntime(
   runtime.worldWidth = mobile ? MOBILE_GAME_WIDTH / MOBILE_CAMERA_SCALE : GAME_WIDTH;
   renderState.logicalWidth = mobile ? MOBILE_GAME_WIDTH : GAME_WIDTH;
   renderState.logicalHeight = mobile ? MOBILE_GAME_HEIGHT : GAME_HEIGHT;
-  renderState.dprLimit = mobile ? 1.15 : 1.25;
+  renderState.dprLimit = mobile ? MOBILE_DPR_HIGH : 1.25;
   renderState.dirty = true;
 }
 
@@ -893,11 +898,11 @@ function updatePerformanceMonitor(
   if (runtime.mobileLayout && monitor.slowWindows >= 1 && runtime.renderQuality === "high") {
     runtime.renderQuality = "balanced";
     runtime.reducedPerformance = true;
-    renderState.dprLimit = 1;
+    renderState.dprLimit = MOBILE_DPR_BALANCED;
     renderState.dirty = true;
   } else if (runtime.mobileLayout && monitor.slowWindows >= 2 && runtime.renderQuality === "balanced") {
     runtime.renderQuality = "low";
-    renderState.dprLimit = 1;
+    renderState.dprLimit = MOBILE_DPR_LOW;
     renderState.dirty = true;
   } else if (!runtime.mobileLayout && monitor.slowWindows >= 1 && !runtime.reducedPerformance) {
     runtime.reducedPerformance = true;
@@ -1914,10 +1919,16 @@ function spawnGameplayPattern(
   difficulty: number
 ) {
   let furthestOffset = 0;
+  let spawnedPhysical = false;
   for (const item of pattern.items) {
     furthestOffset = Math.max(furthestOffset, item.x);
     if (item.type === "physical") {
-      pushPhysicalObstacle(runtime, item.kind, startX + item.x, difficulty);
+      spawnedPhysical = pushPhysicalObstacle(
+        runtime,
+        item.kind,
+        startX + item.x,
+        difficulty
+      ) || spawnedPhysical;
     } else {
       const mobileLine = runtime.mobileLayout &&
         EVENT_DEFINITIONS[item.kind].category === "malus" &&
@@ -1936,6 +1947,29 @@ function spawnGameplayPattern(
     (runtime.distance - 280) / 420,
     (speed - 480) / 300
   ) + LEVEL_RULES[runtime.level].difficulty.advancedPressureBoost);
+
+  if (spawnedPhysical) {
+    runtime.physicalFreePatternStreak = 0;
+  } else {
+    runtime.physicalFreePatternStreak += 1;
+  }
+
+  // Nelle fasi avanzate gli ostacoli fisici non spariscono dal ritmo di gioco.
+  // L'inserimento avviene dopo il pattern, con spazio di reazione dedicato: in
+  // questo modo la pressione resta costante senza produrre combinazioni cieche.
+  if (runtime.distance >= 300 && runtime.physicalFreePatternStreak >= 3) {
+    const reactionGap = Math.max(300, speed * 0.68);
+    const obstacleKinds: readonly PhysicalObstacleKind[] = advancedPressure > 0.55
+      ? ["cornerFlag", "stretcher", "slidingTackle", "var"]
+      : ["cornerFlag", "stretcher", "var"];
+    const kind = obstacleKinds[Math.floor(Math.random() * obstacleKinds.length)];
+    const obstacleOffset = furthestOffset + reactionGap;
+    if (pushPhysicalObstacle(runtime, kind, startX + obstacleOffset, difficulty)) {
+      furthestOffset = obstacleOffset;
+      runtime.physicalFreePatternStreak = 0;
+    }
+  }
+
   const recovery = Math.max(0.58, pattern.recovery * (1 - advancedPressure * 0.35));
   return furthestOffset / Math.max(1, speed) + recovery;
 }
@@ -3159,6 +3193,10 @@ function drawPlayer(
   }
 
   if (logo?.complete && logo.naturalWidth > 0) {
+    // Lo stemma usa sempre l'immagine originale e l'interpolazione migliore;
+    // insieme al DPR mobile dedicato evita la rasterizzazione sgranata.
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = "high";
     const scale = Math.min(
       PLAYER_SIZE / logo.naturalWidth,
       PLAYER_SIZE / logo.naturalHeight
@@ -3299,6 +3337,12 @@ function drawEntity(
   mobileLayout: boolean,
   reducedEffects: boolean
 ) {
+  if (
+    mobileLayout &&
+    reducedEffects &&
+    drawMobileEntityFast(context, entity, assets)
+  ) return;
+
   if (entity.type === "powerup") {
     drawPowerUp(context, entity, assets, elapsed, mobileLayout);
     return;
@@ -3402,6 +3446,46 @@ function drawEntity(
     entity.y + entity.height - 10
   );
   context.restore();
+}
+
+function drawMobileEntityFast(
+  context: CanvasRenderingContext2D,
+  entity: RunnerEntity,
+  assets: GameImageMap
+) {
+  if (entity.type === "powerup") {
+    const definition = POWER_UP_CONFIG[entity.kind as PowerUpKind];
+    const image = MOBILE_POWER_UP_RENDER_CACHE.get(entity.kind as PowerUpKind) ??
+      assets.get(definition.assetKey);
+    if (!image) return false;
+    context.drawImage(image, entity.x, entity.y, entity.width, entity.height);
+    return true;
+  }
+
+  if (entity.type === "physical" && entity.motion !== "launched") {
+    const sprite = OBSTACLE_SPRITES[entity.kind as PhysicalObstacleKind];
+    const image = MOBILE_OBSTACLE_RENDER_CACHE.get(entity.kind as PhysicalObstacleKind) ??
+      assets.get(sprite.asset);
+    if (!image) return false;
+    context.drawImage(image, entity.x, entity.y, entity.width, entity.height);
+    return true;
+  }
+
+  if (entity.type === "event") {
+    const sprite = EVENT_SPRITES[entity.kind as EventKind];
+    const image = MOBILE_EVENT_RENDER_CACHE.get(entity.kind as EventKind);
+    if (image) {
+      context.drawImage(image, entity.x, entity.y, entity.width, entity.height);
+      return true;
+    }
+    const source = sprite ? assets.get(sprite.asset) : undefined;
+    if (sprite && source) {
+      drawCroppedSprite(context, source, sprite.source, entity);
+      return true;
+    }
+  }
+
+  return false;
 }
 
 function drawPowerUp(

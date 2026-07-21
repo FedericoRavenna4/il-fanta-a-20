@@ -21,6 +21,8 @@ export type LevelResolution = {
   message: string;
 };
 
+export type VarVerdict = "validated" | "overturned";
+
 export const ARCADE_PROGRESS_STORAGE_KEY = "fanta-a-20-arcade-progress-v1";
 export const ARCADE_PROGRESS_STORAGE_VERSION = 3;
 export const DISPLAY_DISTANCE_RATE = 1.3;
@@ -163,9 +165,10 @@ export function applyLevelResult(
   progress: ClubProgress,
   playedLevel: GameLevel,
   distance: number,
+  resolutionOverride?: LevelResolution,
   playedAt = Date.now()
 ) {
-  const resolution = resolveLevelOutcome(playedLevel, distance);
+  const resolution = resolutionOverride ?? resolveLevelOutcome(playedLevel, distance);
   const nextProgress: ClubProgress = {
     currentLevel: resolution.newLevel,
     bestDistanceByLevel: {
@@ -180,6 +183,27 @@ export function applyLevelResult(
     lastPlayedAt: playedAt,
   };
   return { progress: nextProgress, resolution };
+}
+
+export function resolveVarOutcome(
+  relegation: LevelResolution,
+  verdict: VarVerdict
+): LevelResolution {
+  if (relegation.outcome !== "relegated") return relegation;
+  if (verdict === "validated") {
+    return {
+      ...relegation,
+      title: "Retrocessione convalidata",
+    };
+  }
+  return {
+    ...relegation,
+    outcome: "safe",
+    newLevel: relegation.playedLevel,
+    badgeEarned: relegation.playedLevel === 3,
+    title: "Retrocessione annullata",
+    message: "Salvezza assegnata dopo il CHECK VAR",
+  };
 }
 
 export function readArcadeProgress(): Record<string, ClubProgress> {

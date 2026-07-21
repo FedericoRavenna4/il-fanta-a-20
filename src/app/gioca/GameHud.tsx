@@ -37,7 +37,7 @@ export default function GameHud({ team, snapshot, level }: {
 
         <div className="min-w-0 text-center">
           <p className={`text-[8px] font-black uppercase tracking-[.18em] sm:text-[7px] ${warning ? "text-rose-100" : "text-white/52"}`}>
-            Voto · vita
+            Soglia
           </p>
           <div className="flex h-8 items-center justify-center gap-1 sm:h-10 sm:gap-2">
             {warning && <span aria-hidden="true" className={`life-warning-icon text-[1.25rem] leading-none sm:text-[1.75rem] ${critical ? "text-rose-300" : "text-amber-200"}`}>⚠</span>}
