@@ -305,7 +305,7 @@ const emblemiDaDifendereVisuali = emblemiDaDifendere.map(toEmblemaVisuale);
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-2 sm:gap-4 md:grid-cols-4">
+            <div className="grid gap-2 sm:gap-4 md:grid-cols-3">
               <Link
                 href="/statistiche#ranking"
                 className="rounded-2xl bg-slate-50 p-3 transition hover:-translate-y-0.5 hover:bg-sky-50 hover:shadow-md sm:p-6"
@@ -327,21 +327,13 @@ const emblemiDaDifendereVisuali = emblemiDaDifendere.map(toEmblemaVisuale);
               </Link>
 
               <Link
-                href="#storia"
+                href={`/gioca?societa=${encodeURIComponent(team.slug)}`}
                 className="rounded-2xl bg-slate-50 p-3 transition hover:-translate-y-0.5 hover:bg-sky-50 hover:shadow-md sm:p-6"
               >
-                <p className="text-sm font-bold text-slate-500">Storia</p>
-                <p className="text-2xl font-black text-blue-950">
-                  Esplora
+                <p className="text-sm font-bold text-slate-500">Gioca</p>
+                <p className="text-base font-black leading-tight text-blue-950 sm:text-xl">
+                  Scendi in campo con questa società
                 </p>
-              </Link>
-
-              <Link
-                href={`/gioca?societa=${encodeURIComponent(team.slug)}`}
-                className="rounded-2xl bg-blue-950 p-3 text-white shadow-[0_10px_26px_rgba(23,37,84,0.14)] transition hover:-translate-y-0.5 hover:bg-blue-900 hover:shadow-md sm:p-6"
-              >
-                <p className="text-sm font-bold text-sky-200">Gioca</p>
-                <p className="text-base font-black leading-tight sm:text-xl">Scendi in campo</p>
               </Link>
             </div>
           </div>

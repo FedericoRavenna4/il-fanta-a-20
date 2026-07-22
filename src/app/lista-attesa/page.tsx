@@ -20,22 +20,17 @@ export default async function WaitlistPage() {
       <div className="mx-auto w-full max-w-6xl px-4 pb-10 pt-5 sm:px-6 sm:pb-16 sm:pt-10 lg:pb-20 lg:pt-12">
         <header className="border-b border-blue-950/10 pb-4 sm:pb-6">
           <p className="text-[9px] font-black uppercase tracking-[.24em] text-amber-600 sm:text-[10px]">Il prossimo capitolo</p>
-          <div className="mt-2 grid gap-2 lg:grid-cols-[auto_minmax(0,1fr)] lg:items-end lg:gap-8">
-            <h1 className="text-3xl font-black uppercase leading-none tracking-[-.035em] text-blue-950 sm:text-5xl lg:text-6xl">Lista d’attesa</h1>
-            <p className="max-w-2xl text-sm font-semibold leading-5 text-slate-500 sm:text-base sm:leading-6 lg:pb-1">
-              I posti sono limitati. Presenta la tua candidatura per le prossime società disponibili.
-            </p>
-          </div>
+          <h1 className="mt-2 text-3xl font-black uppercase leading-none tracking-[-.035em] text-blue-950 sm:text-5xl lg:text-6xl">Lista d’attesa</h1>
         </header>
 
         <section className="relative mt-4 overflow-hidden rounded-[1.4rem] border border-white/10 bg-[linear-gradient(130deg,#06152e_0%,#0a2f5c_62%,#155284_100%)] px-3.5 py-3 text-white shadow-[0_22px_65px_rgba(7,31,69,.18)] sm:mt-6 sm:rounded-[1.75rem] sm:px-7 sm:py-6">
           <div className="pointer-events-none absolute -right-16 -top-24 h-64 w-64 rounded-full bg-sky-300/20 blur-[70px]" />
-          <div className="relative grid gap-3 sm:gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-8">
-            <blockquote className="max-w-3xl text-base font-black leading-[1.2] tracking-[-.02em] sm:text-2xl lg:text-3xl">
+          <div className="relative grid gap-2.5 sm:gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-8">
+            <blockquote className="max-w-3xl text-[17px] font-black leading-[1.18] tracking-[-.02em] sm:text-2xl lg:text-3xl">
               Non scegliamo i più forti. Scegliamo chi renderà migliore la community.
             </blockquote>
-            <div className="flex flex-wrap gap-2 lg:justify-end">
-              <StatusPill label="Società occupate" value="100/100" tone="text-amber-300" />
+            <div className="grid grid-cols-2 border-t border-white/10 pt-2.5 sm:flex sm:flex-wrap sm:gap-2 sm:border-t-0 sm:pt-0 lg:justify-end">
+              <StatusPill label="Società occupate" value="100/100" tone="text-amber-300" mobileDivider />
               <StatusPill
                 label={waitlistCount === 1 ? "Candidato in attesa" : "Candidati in attesa"}
                 value={waitlistCount === null ? "—" : waitlistCount.toLocaleString("it-IT")}
@@ -68,11 +63,11 @@ async function safeWaitlistCount() {
   }
 }
 
-function StatusPill({ label, value, tone }: { label: string; value: string; tone: string }) {
+function StatusPill({ label, value, tone, mobileDivider = false }: { label: string; value: string; tone: string; mobileDivider?: boolean }) {
   return (
-    <div className="flex min-h-10 items-center gap-2 rounded-full border border-white/10 bg-white/[.06] px-3 backdrop-blur sm:min-h-12 sm:gap-2.5 sm:px-4">
-      <strong className={`text-lg font-black leading-none tabular-nums sm:text-2xl ${tone}`}>{value}</strong>
-      <span className="max-w-24 text-[8px] font-black uppercase leading-tight tracking-[.09em] text-white/55 sm:text-[9px]">{label}</span>
+    <div className={`flex min-h-0 items-center gap-2 px-2 py-1 sm:min-h-12 sm:rounded-full sm:border sm:border-white/10 sm:bg-white/[.06] sm:px-4 sm:py-0 sm:backdrop-blur ${mobileDivider ? "border-r border-white/10" : ""}`}>
+      <strong className={`text-xl font-black leading-none tabular-nums sm:text-2xl ${tone}`}>{value}</strong>
+      <span className="max-w-20 text-[7px] font-black uppercase leading-tight tracking-[.08em] text-white/55 sm:max-w-24 sm:text-[9px] sm:tracking-[.09em]">{label}</span>
     </div>
   );
 }

@@ -188,21 +188,22 @@ function formatRisultatoMobile(item: Risultato, vittoria: boolean) {
 
   if (item.competizione === "Campionato") {
     const numero = posizioneNumero(risultato);
-    return numero ? `${numero}°` : risultato;
+    return numero ? `${numero}° POSTO` : risultato;
   }
 
   if (lower.includes("qualificazione")) {
     const numero = risultato.match(/\d+/)?.[0];
-    return numero ? `${numero}°` : "Gir.";
+    return numero ? `${numero}° POSTO` : "GIRONI";
   }
 
   if (lower.startsWith("girone")) {
     const numero = risultato.match(/\d+/)?.[0];
-    return numero ? `Gir. ${numero}` : "Gir.";
+    return numero ? `GIRONE ${numero}` : "GIRONI";
   }
 
-  if (lower.includes("gironi")) return "Gir.";
+  if (lower.includes("gironi")) return "GIRONI";
   if (lower.includes("trentadues")) return "TRENTADUES.";
+  if (lower.includes("sedices")) return "SEDICESIMI";
   if (lower.includes("ottav")) return "OTTAVI";
   if (lower.includes("quart")) return "QUARTI";
   if (lower.includes("semifinale")) return "SEMIF.";
@@ -449,7 +450,7 @@ export default function StoriaSocieta({
                       return (
                         <div
                           key={`${item.stagioneId}-${item.competizione}-${index}`}
-                          className={`group relative min-h-[84px] overflow-hidden rounded-[1.35rem] border px-4 py-3 shadow-md transition hover:-translate-y-0.5 hover:shadow-lg max-sm:aspect-square max-sm:h-auto max-sm:min-h-0 max-sm:min-w-0 max-sm:rounded-[0.85rem] max-sm:px-2 max-sm:py-2 max-sm:hover:translate-y-0 lg:h-[76px] lg:min-h-0 lg:px-5 ${getCardStyle(
+                          className={`group relative min-h-[84px] overflow-hidden rounded-[1.35rem] border px-4 py-3 shadow-md transition hover:-translate-y-0.5 hover:shadow-lg max-sm:h-[88px] max-sm:min-h-0 max-sm:min-w-0 max-sm:rounded-xl max-sm:px-2.5 max-sm:py-2.5 max-sm:hover:translate-y-0 lg:h-[76px] lg:min-h-0 lg:px-5 ${getCardStyle(
   item,
   vittoria
 )}`}
@@ -468,11 +469,8 @@ export default function StoriaSocieta({
                           )}
 
                           <div className={`relative z-10 flex h-full min-w-0 flex-col justify-center max-sm:justify-between max-sm:max-w-full ${vittoria && icona ? "max-w-[calc(100%-4.5rem)] lg:max-w-[68%]" : "max-w-full lg:max-w-[68%]"}`}>
-                            <span className={`hidden text-[8px] font-black uppercase tracking-[0.08em] max-sm:block ${isDarkCard(item) ? "text-white/55" : "text-blue-950/45"}`}>
-                              {item.stagione}
-                            </span>
                             <h4
-                              className={`line-clamp-1 text-[12px] font-black uppercase tracking-[0.12em] max-sm:text-[9px] max-sm:leading-tight max-sm:tracking-[0.025em] ${
+                              className={`line-clamp-1 text-[12px] font-black uppercase tracking-[0.12em] max-sm:text-[10px] max-sm:leading-tight max-sm:tracking-[0.015em] ${
                                 isDarkCard(item)
                                   ? "text-white/70"
                                   : "text-blue-950/60"
@@ -487,7 +485,7 @@ export default function StoriaSocieta({
                             </h4>
 
                             <p
-                              className={`mt-2 break-words text-[14px] font-black uppercase leading-tight tracking-tight max-sm:mt-1 max-sm:text-[12px] max-sm:leading-[1.05] max-sm:tracking-[-.02em] lg:whitespace-nowrap lg:text-[15px] lg:leading-none ${
+                              className={`mt-2 break-words text-[14px] font-black uppercase leading-tight tracking-tight max-sm:mt-1 max-sm:whitespace-nowrap max-sm:text-[clamp(10px,3vw,13px)] max-sm:leading-none max-sm:tracking-[-.035em] lg:whitespace-nowrap lg:text-[15px] lg:leading-none ${
                                 isDarkCard(item)
                                   ? "text-white"
                                   : "text-blue-950"
@@ -498,6 +496,7 @@ export default function StoriaSocieta({
                               </span>
                               <span className="hidden sm:inline">{risultato}</span>
                             </p>
+                            <span className={`hidden h-0.5 w-8 rounded-full max-sm:block ${isDarkCard(item) ? "bg-white/35" : "bg-blue-950/20"}`} aria-hidden="true" />
                           </div>
                         </div>
                       );
