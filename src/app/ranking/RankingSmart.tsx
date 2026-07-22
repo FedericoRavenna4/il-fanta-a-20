@@ -29,7 +29,7 @@ export default function RankingSmart({ rows }: { rows: RankingRow[] }) {
 
   function updateFascia(event: React.UIEvent<HTMLDivElement>) {
     const container = event.currentTarget;
-    const threshold = container.getBoundingClientRect().top + 48 + (modalHeaderRef.current?.offsetHeight ?? 72) + 8;
+    const threshold = container.getBoundingClientRect().top + 32 + (modalHeaderRef.current?.offsetHeight ?? 72) + 8;
     const rows = Array.from(container.querySelectorAll<HTMLElement>("[data-ranking-row]"));
     const current = rows.find((row) => row.getBoundingClientRect().bottom > threshold);
     if (current?.dataset.fascia) setFasciaAttiva(Number(current.dataset.fascia));
@@ -83,17 +83,16 @@ export default function RankingSmart({ rows }: { rows: RankingRow[] }) {
       {open && (
         <div role="dialog" aria-modal="true" aria-label="Classifica completa del ranking" className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/65 p-2 backdrop-blur-md sm:p-4" onMouseDown={() => setOpen(false)}>
           <div className="max-h-[calc(100dvh-1rem)] w-full max-w-6xl overflow-y-auto overscroll-contain rounded-[1.5rem] bg-[#f8fbff] shadow-2xl sm:max-h-[90dvh] sm:rounded-[2rem]" onMouseDown={(event) => event.stopPropagation()} onScroll={updateFascia}>
-            <div className="sticky top-0 z-50 flex h-12 items-center justify-end border-b border-slate-200/90 bg-white/95 px-3 shadow-[0_10px_24px_-22px_rgba(7,31,69,.75)] backdrop-blur-xl sm:px-5">
-              <button type="button" onClick={() => setOpen(false)} className="inline-flex min-h-9 items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 text-[9px] font-black uppercase tracking-[.1em] text-blue-950 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-200">
-                <span className="text-base font-light leading-none" aria-hidden="true">×</span>
-                Chiudi
+            <div className="sticky top-0 z-50 flex h-8 items-center justify-end bg-gradient-to-b from-[#f8fbff] via-[#f8fbff]/95 to-transparent px-2 sm:px-3">
+              <button type="button" onClick={() => setOpen(false)} aria-label="Chiudi la classifica completa" className="flex h-7 w-7 items-center justify-center rounded-full border border-blue-950/10 bg-white/90 text-base font-light leading-none text-blue-950 shadow-[0_5px_16px_rgba(7,31,69,.12)] backdrop-blur transition hover:border-blue-300 hover:bg-blue-50 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-200">
+                <span aria-hidden="true">×</span>
               </button>
             </div>
             <div className="border-b border-slate-200 bg-white/95 px-4 pb-4 pt-4 sm:px-6 sm:pb-5 sm:pt-5">
               <div className="min-w-0"><p className="text-[9px] font-black uppercase tracking-[0.15em] text-amber-500 sm:text-[10px] sm:tracking-[0.2em]">Il Ranking</p><h2 className="mt-1 text-xl font-black uppercase text-blue-950 sm:text-2xl">Classifica completa</h2></div>
               <input value={search} onChange={(event) => updateSearch(event.target.value)} placeholder="Cerca società, fantallenatore o nickname..." className="mt-4 w-full rounded-2xl border border-slate-200 bg-slate-50 px-5 py-3 text-sm font-semibold outline-none focus:border-blue-900" />
             </div>
-            {!search && <div ref={modalHeaderRef} className="sticky top-12 z-20 border-b border-slate-200/90 bg-[#f8fbff]/95 px-5 py-2.5 shadow-[0_12px_24px_-24px_rgba(7,31,69,0.85)] backdrop-blur-xl sm:px-7 sm:py-3 lg:px-11">
+            {!search && <div ref={modalHeaderRef} className="sticky top-8 z-20 border-b border-slate-200/90 bg-[#f8fbff]/95 px-5 py-2.5 shadow-[0_12px_24px_-24px_rgba(7,31,69,0.85)] backdrop-blur-xl sm:px-7 sm:py-3 lg:px-11">
                 <div className="mb-2 flex items-center gap-2.5">
                   <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400 shadow-[0_0_0_4px_rgba(251,191,36,0.12)]" aria-hidden="true" />
                   <p className="text-[10px] font-black uppercase tracking-[0.18em] text-blue-950 sm:text-xs">{fasciaAttiva}ª Fascia</p>

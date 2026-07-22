@@ -53,10 +53,22 @@ export default async function GiocaPage({
         </header>
 
         <section className="mb-3 grid grid-cols-2 gap-2 sm:mb-4 lg:grid-cols-4">
-          <Rule title="Controlli" text="Salta e abbassati." />
-          <Rule title="Soglia 62" text="Non scendere sotto il 62." />
-          <Rule title="Gol" text="+4 punti = 1 gol." />
-          <Rule title="Record" text="Supera la tua distanza migliore." />
+          <Rule
+            index="01"
+            title="Muoviti e sopravvivi"
+            text="Salta gli ostacoli e abbassati sotto quelli sospesi."
+            mobileTitle="Salta. Schiva. Corri."
+            mobileText="Supera gli ostacoli senza fermarti."
+            tone="sky"
+          />
+          <Rule
+            index="02"
+            title="Resta sopra il 62"
+            text="Bonus e malus cambiano il voto. Sotto la soglia, la corsa finisce."
+            mobileTitle="Difendi il 62"
+            mobileText="Sotto la soglia, la corsa finisce."
+            tone="amber"
+          />
         </section>
 
         <GameClient teams={teams} initialTeamSlug={requestedTeam} />
@@ -71,11 +83,18 @@ function getLeagueAccent(league: string): GameTeam["accent"] {
   return "violet";
 }
 
-function Rule({ title, text }: { title: string; text: string }) {
+function Rule({ index, title, text, mobileTitle, mobileText, tone }: { index: string; title: string; text: string; mobileTitle: string; mobileText: string; tone: "sky" | "amber" }) {
+  const accent = tone === "sky" ? "from-sky-400/30 text-sky-700" : "from-amber-400/35 text-amber-700";
   return (
-    <article className="rounded-xl border border-white/80 bg-white/75 px-3 py-2.5 shadow-[0_10px_28px_rgba(15,23,42,0.05)] backdrop-blur-md sm:rounded-2xl">
-      <h2 className="text-[10px] font-black uppercase tracking-[0.1em] text-amber-600 sm:text-xs">{title}</h2>
-      <p className="mt-0.5 text-[10px] font-semibold leading-4 text-slate-500 sm:text-[11px]">{text}</p>
+    <article className="group relative overflow-hidden rounded-xl border border-white/90 bg-white/80 px-3 py-2.5 shadow-[0_12px_34px_rgba(15,23,42,0.065)] backdrop-blur-md sm:rounded-2xl sm:px-4 sm:py-3 lg:col-span-2">
+      <span className={`pointer-events-none absolute inset-y-0 left-0 w-1 bg-gradient-to-b ${accent.split(" ")[0]} to-transparent`} />
+      <span className={`absolute right-2 top-1.5 text-[8px] font-black tabular-nums opacity-55 sm:right-3 sm:top-2 ${accent.split(" ")[1]}`}>{index}</span>
+      <h2 className={`pr-5 text-[10px] font-black uppercase leading-tight tracking-[0.08em] sm:text-sm ${accent.split(" ")[1]}`}>
+        <span className="sm:hidden">{mobileTitle}</span><span className="hidden sm:inline">{title}</span>
+      </h2>
+      <p className="mt-1 text-[9px] font-semibold leading-3.5 text-slate-500 sm:text-xs sm:leading-4">
+        <span className="sm:hidden">{mobileText}</span><span className="hidden sm:inline">{text}</span>
+      </p>
     </article>
   );
 }

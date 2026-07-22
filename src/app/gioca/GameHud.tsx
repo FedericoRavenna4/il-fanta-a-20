@@ -23,7 +23,7 @@ export default function GameHud({ team, snapshot, level }: {
 
   return (
     <div className={`border-b px-2.5 py-1 text-white transition-colors duration-700 sm:px-5 sm:py-2.5 ${hudTone}`}>
-      <div className="flex min-h-11 min-w-0 items-center gap-2 border-b border-white/[.08] pb-1 pr-[5.75rem] pt-0 sm:block sm:min-h-0 sm:pb-2 sm:pr-36 sm:pt-0">
+      <div className="flex min-h-10 min-w-0 items-center gap-2 border-b border-white/[.08] pb-1 pr-[5rem] pt-0 sm:block sm:min-h-0 sm:pb-2 sm:pr-36 sm:pt-0">
         <p className="min-w-0 flex-1 truncate text-[16px] font-black uppercase tracking-[-.02em] text-white sm:text-base">
           {team.nome}
         </p>

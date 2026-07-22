@@ -364,7 +364,7 @@ export default function GameClient({
             </div>
 
             <div
-              className="absolute right-0 top-0 z-30 hidden items-center justify-end gap-1.5 pr-[max(.4rem,env(safe-area-inset-right))] pt-[max(.4rem,env(safe-area-inset-top))] max-sm:flex"
+              className="absolute right-0 top-0 z-30 hidden items-center justify-end gap-1 pr-[max(.35rem,env(safe-area-inset-right))] pt-[max(.35rem,env(safe-area-inset-top))] max-sm:flex"
               onPointerDown={(event) => event.stopPropagation()}
             >
               {(status === "running" || status === "paused") ? (
@@ -372,7 +372,7 @@ export default function GameClient({
                   type="button"
                   onClick={() => setStatus((current) => current === "running" ? "paused" : current === "paused" ? "running" : current)}
                   aria-label={status === "paused" ? "Riprendi la partita" : "Metti in pausa"}
-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-white/18 bg-slate-950/90 text-[20px] font-black leading-none text-white shadow-lg transition active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-white/18 bg-slate-950/90 text-[17px] font-black leading-none text-white shadow-lg transition active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
                 >
                   <span aria-hidden="true">{status === "paused" ? "▶" : "Ⅱ"}</span>
                 </button>
@@ -381,7 +381,7 @@ export default function GameClient({
                 type="button"
                 onClick={() => returnToGameHome(true)}
                 aria-label="Chiudi il gioco e torna alla selezione"
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-white/18 bg-slate-950/90 text-[21px] font-light leading-none text-white shadow-lg transition active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-white/18 bg-slate-950/90 text-[19px] font-light leading-none text-white shadow-lg transition active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
               >
                 ×
               </button>
@@ -502,6 +502,9 @@ export default function GameClient({
             .game-modal-panel {
               width:min(97vw,calc((100dvh - 7rem) * 1.8),1280px);
               animation:game-modal-panel-in 420ms cubic-bezier(.2,.8,.2,1) both;
+            }
+            @media (min-width:1024px) {
+              .game-modal-panel { width:min(94vw,calc((100dvh - 8rem) * 1.8),1220px); }
             }
             .game-loading-screen {
               opacity:1;
