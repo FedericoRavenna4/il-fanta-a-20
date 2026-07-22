@@ -265,14 +265,6 @@ const emblemiDaDifendereVisuali = emblemiDaDifendere.map(toEmblemaVisuale);
               {team.legaAttuale}
             </p>
 
-            <Link
-              href={`/gioca?societa=${encodeURIComponent(team.slug)}`}
-              className="mb-5 inline-flex min-h-10 items-center gap-2 rounded-full border border-blue-950/10 bg-blue-950 px-5 text-[9px] font-black uppercase tracking-[0.14em] text-white shadow-[0_10px_26px_rgba(23,37,84,0.16)] transition hover:-translate-y-0.5 hover:bg-blue-900 hover:shadow-[0_14px_32px_rgba(23,37,84,0.22)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-200 sm:mb-8 sm:min-h-11 sm:px-6 sm:text-[10px]"
-            >
-              Scendi in campo con questa società
-              <span aria-hidden="true">→</span>
-            </Link>
-
             <div className="hidden flex-wrap justify-center sm:mb-8 sm:flex sm:gap-3">
               {team.leader && (
                 <div className="rounded-full border border-red-200 bg-red-100 px-4 py-2 text-sm font-bold text-red-700">
@@ -313,7 +305,7 @@ const emblemiDaDifendereVisuali = emblemiDaDifendere.map(toEmblemaVisuale);
               </div>
             )}
 
-            <div className="grid gap-2 sm:gap-4 md:grid-cols-3">
+            <div className="grid grid-cols-2 gap-2 sm:gap-4 md:grid-cols-4">
               <Link
                 href="/statistiche#ranking"
                 className="rounded-2xl bg-slate-50 p-3 transition hover:-translate-y-0.5 hover:bg-sky-50 hover:shadow-md sm:p-6"
@@ -343,6 +335,14 @@ const emblemiDaDifendereVisuali = emblemiDaDifendere.map(toEmblemaVisuale);
                   Esplora
                 </p>
               </Link>
+
+              <Link
+                href={`/gioca?societa=${encodeURIComponent(team.slug)}`}
+                className="rounded-2xl bg-blue-950 p-3 text-white shadow-[0_10px_26px_rgba(23,37,84,0.14)] transition hover:-translate-y-0.5 hover:bg-blue-900 hover:shadow-md sm:p-6"
+              >
+                <p className="text-sm font-bold text-sky-200">Gioca</p>
+                <p className="text-base font-black leading-tight sm:text-xl">Scendi in campo</p>
+              </Link>
             </div>
           </div>
         </div>
@@ -361,12 +361,23 @@ const emblemiDaDifendereVisuali = emblemiDaDifendere.map(toEmblemaVisuale);
                 ["Lega attuale", team.legaAttuale],
                 ["Presente dal", team.stagioneIngresso],
               ].map(([label, value]) => (
-                <div key={label} className="flex min-w-0 items-center justify-between gap-3 py-4 sm:gap-5">
+                <div key={label} className="flex min-w-0 items-start justify-between gap-3 py-4 sm:items-center sm:gap-5">
                   <dt className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-400">
-                    {label}
+                    {label === "Fantallenatore" ? (
+                      <><span className="sm:hidden">{team.fantallenatore.includes(" - ") ? "Fantallenatori" : label}</span><span className="hidden sm:inline">{label}</span></>
+                    ) : label}
                   </dt>
                   <dd className="min-w-0 break-words text-right text-sm font-black text-blue-950">
-                    {value}
+                    {label === "Fantallenatore" && team.fantallenatore.includes(" - ") ? (
+                      <>
+                        <span className="hidden sm:inline">{value}</span>
+                        <span className="flex flex-col items-end gap-1 sm:hidden">
+                          {team.fantallenatore.split(" - ").map((nome, index) => (
+                            <span key={nome} className={index > 0 ? "border-t border-slate-100 pt-1" : ""}>{nome}</span>
+                          ))}
+                        </span>
+                      </>
+                    ) : value}
                   </dd>
                 </div>
               ))}

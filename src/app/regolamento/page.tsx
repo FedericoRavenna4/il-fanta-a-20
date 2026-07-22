@@ -573,9 +573,8 @@ export default function RegolamentoPage() {
     </p>
 
     <a
-      href="/regolamento.pdf"
-      target="_blank"
-      rel="noopener noreferrer"
+      href="/documenti/regolamento-fanta-a-20-2026-27.pdf"
+      download="regolamento-fanta-a-20-2026-27.pdf"
       className="group mx-auto mt-8 inline-flex w-full items-center justify-center rounded-full bg-amber-400 px-5 py-4 text-center text-sm font-black uppercase tracking-[0.12em] text-blue-950 transition-all duration-300 hover:-translate-y-1 hover:bg-amber-300 hover:shadow-[0_0_40px_rgba(251,191,36,0.45)] max-sm:mt-5 max-sm:min-h-11 max-sm:py-3 max-sm:text-xs sm:mt-10 sm:w-auto sm:px-10 sm:py-5 sm:text-lg sm:tracking-[0.18em]"
     >
       <span className="sm:hidden">Scarica il PDF</span>

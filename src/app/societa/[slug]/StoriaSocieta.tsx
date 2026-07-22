@@ -181,7 +181,7 @@ function formatRisultato(item: Risultato) {
 }
 
 function formatRisultatoMobile(item: Risultato, vittoria: boolean) {
-  if (vittoria) return "Win";
+  if (vittoria) return "VINCITORE";
 
   const risultato = item.risultatoTesto.trim();
   const lower = risultato.toLowerCase();
@@ -202,10 +202,11 @@ function formatRisultatoMobile(item: Risultato, vittoria: boolean) {
   }
 
   if (lower.includes("gironi")) return "Gir.";
-  if (lower.includes("ottav")) return "Ott.";
-  if (lower.includes("quart")) return "QF";
-  if (lower.includes("semifinale")) return "SF";
-  if (lower.includes("final")) return "F";
+  if (lower.includes("trentadues")) return "TRENTADUES.";
+  if (lower.includes("ottav")) return "OTTAVI";
+  if (lower.includes("quart")) return "QUARTI";
+  if (lower.includes("semifinale")) return "SEMIF.";
+  if (lower.includes("final")) return "FINALE";
 
   return formatFase(risultato);
 }
@@ -466,9 +467,12 @@ export default function StoriaSocieta({
                             </div>
                           )}
 
-                          <div className={`relative z-10 flex h-full min-w-0 flex-col justify-center max-sm:max-w-full ${vittoria && icona ? "max-w-[calc(100%-4.5rem)] lg:max-w-[68%]" : "max-w-full lg:max-w-[68%]"}`}>
+                          <div className={`relative z-10 flex h-full min-w-0 flex-col justify-center max-sm:justify-between max-sm:max-w-full ${vittoria && icona ? "max-w-[calc(100%-4.5rem)] lg:max-w-[68%]" : "max-w-full lg:max-w-[68%]"}`}>
+                            <span className={`hidden text-[8px] font-black uppercase tracking-[0.08em] max-sm:block ${isDarkCard(item) ? "text-white/55" : "text-blue-950/45"}`}>
+                              {item.stagione}
+                            </span>
                             <h4
-                              className={`line-clamp-1 text-[12px] font-black uppercase tracking-[0.12em] max-sm:text-[8px] max-sm:tracking-[0.03em] ${
+                              className={`line-clamp-1 text-[12px] font-black uppercase tracking-[0.12em] max-sm:text-[9px] max-sm:leading-tight max-sm:tracking-[0.025em] ${
                                 isDarkCard(item)
                                   ? "text-white/70"
                                   : "text-blue-950/60"
@@ -483,7 +487,7 @@ export default function StoriaSocieta({
                             </h4>
 
                             <p
-                              className={`mt-2 break-words text-[14px] font-black uppercase leading-tight tracking-tight max-sm:mt-1 max-sm:text-[13px] max-sm:leading-none lg:whitespace-nowrap lg:text-[15px] lg:leading-none ${
+                              className={`mt-2 break-words text-[14px] font-black uppercase leading-tight tracking-tight max-sm:mt-1 max-sm:text-[12px] max-sm:leading-[1.05] max-sm:tracking-[-.02em] lg:whitespace-nowrap lg:text-[15px] lg:leading-none ${
                                 isDarkCard(item)
                                   ? "text-white"
                                   : "text-blue-950"

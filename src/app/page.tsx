@@ -151,45 +151,6 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 pb-2 sm:px-6 sm:pb-4">
-        <Link
-          href="/gioca"
-          className="group relative grid overflow-hidden rounded-[1.5rem] border border-blue-900/10 bg-[linear-gradient(120deg,#071a36_0%,#0b315b_62%,#145486_100%)] px-4 py-4 text-white shadow-[0_18px_48px_rgba(15,23,42,0.16)] transition duration-500 hover:-translate-y-0.5 hover:shadow-[0_24px_65px_rgba(15,23,42,0.22)] sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center sm:gap-7 sm:rounded-[1.8rem] sm:px-7 sm:py-5"
-        >
-          <span className="pointer-events-none absolute -right-10 -top-20 h-48 w-48 rounded-full bg-sky-300/20 blur-3xl transition duration-700 group-hover:bg-sky-300/30" />
-          <span className="pointer-events-none absolute inset-x-16 top-0 h-px bg-gradient-to-r from-transparent via-sky-200/70 to-transparent" />
-
-          <span className="relative min-w-0">
-            <span className="block text-[8px] font-black uppercase tracking-[0.23em] text-amber-300 sm:text-[9px]">
-              Sala Giochi · Arcade
-            </span>
-            <span className="mt-1 block text-lg font-black uppercase tracking-tight sm:text-2xl">
-              Quanto lontano riesci ad arrivare?
-            </span>
-            <span className="mt-1 block text-xs font-semibold text-white/55 sm:text-sm">
-              Scegli una società e scendi in campo.
-            </span>
-          </span>
-
-          <span className="relative mt-3 flex h-12 items-center pl-3 sm:mt-0 sm:h-14">
-            {societaMarquee.slice(0, 3).map((team, index) => (
-              <span
-                key={team.id}
-                className="-ml-3 flex h-11 w-11 items-center justify-center transition duration-500 group-hover:-translate-y-1 sm:h-14 sm:w-14"
-                style={{ transitionDelay: `${index * 55}ms` }}
-              >
-                <TeamLogo team={team} size={52} />
-              </span>
-            ))}
-            <span className="ml-2 h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-300 shadow-[0_0_12px_rgba(110,231,183,0.9)]" />
-          </span>
-
-          <span className="relative mt-3 inline-flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/[0.08] px-4 py-2 text-[9px] font-black uppercase tracking-[0.15em] backdrop-blur transition group-hover:bg-white group-hover:text-blue-950 sm:mt-0">
-            Gioca ora <span aria-hidden="true">→</span>
-          </span>
-        </Link>
-      </section>
-
       <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-16 lg:py-20">
         <SectionHeading eyebrow="Le protagoniste" title="Le società" text="Cento identità, cento storie: il cuore del Fanta a 20." />
         <Link href="/societa" aria-label="Esplora tutte le società" className="group relative left-1/2 mb-7 block w-screen -translate-x-1/2 overflow-hidden py-4 [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)] sm:mb-12 sm:py-8">
@@ -218,6 +179,35 @@ export default async function Home() {
             </Link>
           ))}
         </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 pb-8 sm:px-6 sm:pb-16 lg:pb-20">
+        <Link
+          href="/gioca"
+          className="group relative grid overflow-hidden rounded-[1.5rem] border border-blue-900/10 bg-[linear-gradient(120deg,#071a36_0%,#0b315b_62%,#145486_100%)] px-4 py-4 text-white shadow-[0_18px_48px_rgba(15,23,42,0.16)] transition duration-500 hover:-translate-y-0.5 hover:shadow-[0_24px_65px_rgba(15,23,42,0.22)] sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center sm:gap-7 sm:rounded-[1.8rem] sm:px-7 sm:py-5"
+        >
+          <span className="pointer-events-none absolute -right-10 -top-20 h-48 w-48 rounded-full bg-sky-300/20 blur-3xl transition duration-700 group-hover:bg-sky-300/30" />
+          <span className="pointer-events-none absolute inset-x-16 top-0 h-px bg-gradient-to-r from-transparent via-sky-200/70 to-transparent" />
+
+          <span className="relative min-w-0">
+            <span className="block text-[8px] font-black uppercase tracking-[0.23em] text-amber-300 sm:text-[9px]">Sala Giochi · Arcade</span>
+            <span className="mt-1 block text-lg font-black uppercase tracking-tight sm:text-2xl">Quanto lontano riesci ad arrivare?</span>
+            <span className="mt-1 block text-xs font-semibold text-white/55 sm:text-sm">Scegli una società e scendi in campo.</span>
+          </span>
+
+          <span className="relative mt-3 flex h-12 items-center pl-3 sm:mt-0 sm:h-14">
+            {societaMarquee.slice(0, 3).map((team, index) => (
+              <span key={team.id} className="-ml-3 flex h-11 w-11 items-center justify-center transition duration-500 group-hover:-translate-y-1 sm:h-14 sm:w-14" style={{ transitionDelay: `${index * 55}ms` }}>
+                <TeamLogo team={team} size={52} />
+              </span>
+            ))}
+            <span className="ml-2 h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-300 shadow-[0_0_12px_rgba(110,231,183,0.9)]" />
+          </span>
+
+          <span className="relative mt-3 inline-flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/[0.08] px-4 py-2 text-[9px] font-black uppercase tracking-[0.15em] backdrop-blur transition group-hover:bg-white group-hover:text-blue-950 sm:mt-0">
+            Gioca ora <span aria-hidden="true">→</span>
+          </span>
+        </Link>
       </section>
 
       <section className="border-y border-slate-200/80 bg-white/65 py-8 sm:py-16 lg:py-20">
@@ -306,7 +296,7 @@ export default async function Home() {
           <div className="relative grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-10">
             <div className="max-w-4xl">
               <p className="text-[9px] font-black uppercase tracking-[.24em] text-amber-600 sm:text-[10px]">Il prossimo capitolo</p>
-              <h2 className="mt-2 text-[1.65rem] font-black uppercase leading-none tracking-[-.03em] text-blue-950 sm:text-4xl lg:text-5xl">La tua occasione</h2>
+              <h2 className="mt-2 text-[1.65rem] font-black uppercase leading-none tracking-[-.03em] text-blue-950 sm:text-4xl lg:text-5xl">La tua occasione!</h2>
               <p className="mt-3 max-w-3xl text-[13px] font-semibold leading-5 text-slate-500 sm:text-base sm:leading-7">
                 Le 100 società del Fanta a 20 sono già state assegnate. Ogni stagione, però, alcuni posti tornano disponibili. Entra nella lista d’attesa e potresti essere il prossimo.
               </p>

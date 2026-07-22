@@ -28,10 +28,10 @@ export default async function WaitlistPage() {
           </div>
         </header>
 
-        <section className="relative mt-4 overflow-hidden rounded-[1.4rem] border border-white/10 bg-[linear-gradient(130deg,#06152e_0%,#0a2f5c_62%,#155284_100%)] px-4 py-4 text-white shadow-[0_22px_65px_rgba(7,31,69,.18)] sm:mt-6 sm:rounded-[1.75rem] sm:px-7 sm:py-6">
+        <section className="relative mt-4 overflow-hidden rounded-[1.4rem] border border-white/10 bg-[linear-gradient(130deg,#06152e_0%,#0a2f5c_62%,#155284_100%)] px-3.5 py-3 text-white shadow-[0_22px_65px_rgba(7,31,69,.18)] sm:mt-6 sm:rounded-[1.75rem] sm:px-7 sm:py-6">
           <div className="pointer-events-none absolute -right-16 -top-24 h-64 w-64 rounded-full bg-sky-300/20 blur-[70px]" />
-          <div className="relative grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-8">
-            <blockquote className="max-w-3xl text-lg font-black leading-tight tracking-[-.02em] sm:text-2xl lg:text-3xl">
+          <div className="relative grid gap-3 sm:gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-8">
+            <blockquote className="max-w-3xl text-base font-black leading-[1.2] tracking-[-.02em] sm:text-2xl lg:text-3xl">
               Non scegliamo i più forti. Scegliamo chi renderà migliore la community.
             </blockquote>
             <div className="flex flex-wrap gap-2 lg:justify-end">
@@ -70,8 +70,8 @@ async function safeWaitlistCount() {
 
 function StatusPill({ label, value, tone }: { label: string; value: string; tone: string }) {
   return (
-    <div className="flex min-h-11 items-center gap-2.5 rounded-full border border-white/10 bg-white/[.06] px-3.5 backdrop-blur sm:min-h-12 sm:px-4">
-      <strong className={`text-xl font-black leading-none tabular-nums sm:text-2xl ${tone}`}>{value}</strong>
+    <div className="flex min-h-10 items-center gap-2 rounded-full border border-white/10 bg-white/[.06] px-3 backdrop-blur sm:min-h-12 sm:gap-2.5 sm:px-4">
+      <strong className={`text-lg font-black leading-none tabular-nums sm:text-2xl ${tone}`}>{value}</strong>
       <span className="max-w-24 text-[8px] font-black uppercase leading-tight tracking-[.09em] text-white/55 sm:text-[9px]">{label}</span>
     </div>
   );

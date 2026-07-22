@@ -486,8 +486,8 @@ export default function GameClient({
                     <ControlHint icon="↑" label="Freccia su" action="Salta" />
                     <ControlHint icon="↓" label="Freccia giù" action="Abbassati" />
                   </div>
-                  <div className="mx-auto grid max-w-[220px] grid-cols-1 sm:hidden">
-                    <ControlHint icon="↑" label="Tap breve o pressione" action="Salto modulabile" />
+                  <div className="mx-auto w-full max-w-[250px] sm:hidden">
+                    <MobileJumpHint />
                   </div>
                 </section>
               </div>
@@ -549,6 +549,23 @@ function ControlHint({ icon, label, action }: { icon: string; label: string; act
         <span className="block truncate text-[9px] font-bold text-white/65">{label}</span>
         <span className="block text-[10px] font-black uppercase tracking-[.07em] text-white">{action}</span>
       </span>
+    </div>
+  );
+}
+
+function MobileJumpHint() {
+  return (
+    <div className="flex min-w-0 items-center justify-center gap-3 rounded-lg border border-sky-200/20 bg-sky-300/[.07] px-3 py-2">
+      <span className="relative flex h-11 w-12 shrink-0 items-end justify-center" aria-hidden="true">
+        <span className="absolute left-1/2 top-0 h-5 w-px -translate-x-1/2 bg-gradient-to-t from-sky-300 to-transparent" />
+        <span className="absolute left-1/2 top-0 h-2 w-2 -translate-x-1/2 rotate-45 border-l-2 border-t-2 border-sky-200" />
+        <svg viewBox="0 0 48 48" className="h-9 w-9 text-white drop-shadow-[0_5px_10px_rgba(14,165,233,.35)]" fill="none">
+          <circle cx="24" cy="13" r="7" className="stroke-sky-300/45" strokeWidth="2" />
+          <circle cx="24" cy="13" r="11" className="stroke-sky-300/20" strokeWidth="2" />
+          <path d="M22 37V14a3 3 0 0 1 6 0v11-3a3 3 0 0 1 6 0v3-1a3 3 0 0 1 6 0v7c0 8-5 13-13 13h-2c-4 0-7-2-9-5l-5-8a3.2 3.2 0 0 1 5-4l6 6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </span>
+      <span className="text-left text-[12px] font-black uppercase leading-tight tracking-[.04em] text-white">Tocca lo schermo<br /><span className="text-sky-200">per saltare</span></span>
     </div>
   );
 }
