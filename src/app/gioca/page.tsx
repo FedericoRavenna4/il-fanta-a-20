@@ -52,14 +52,14 @@ export default async function GiocaPage({
           </div>
         </header>
 
-        <GameClient teams={teams} initialTeamSlug={requestedTeam} />
-
-        <section className="mt-4 grid gap-2 sm:mt-5 sm:grid-cols-2 lg:grid-cols-4">
-          <Rule code="CTRL" title="Due movimenti" text="Salta gli ostacoli bassi e abbassati sotto quelli sospesi." />
-          <Rule code="VOTO" title="Difendi il 62" text="Bonus e malus cambiano il voto. Sotto la soglia la corsa termina." />
-          <Rule code="GOL" title="Segna ogni quattro" text="Ogni quattro punti sopra il 62 vale un nuovo gol." />
-          <Rule code="REC" title="Batti il record" text="La migliore distanza resta salvata sul dispositivo." />
+        <section className="mb-3 grid grid-cols-2 gap-2 sm:mb-4 lg:grid-cols-4">
+          <Rule title="Controlli" text="Salta e abbassati." />
+          <Rule title="Soglia 62" text="Non scendere sotto il 62." />
+          <Rule title="Gol" text="+4 punti = 1 gol." />
+          <Rule title="Record" text="Supera la tua distanza migliore." />
         </section>
+
+        <GameClient teams={teams} initialTeamSlug={requestedTeam} />
       </div>
     </main>
   );
@@ -71,12 +71,11 @@ function getLeagueAccent(league: string): GameTeam["accent"] {
   return "violet";
 }
 
-function Rule({ code, title, text }: { code: string; title: string; text: string }) {
+function Rule({ title, text }: { title: string; text: string }) {
   return (
-    <article className="rounded-2xl border border-white/80 bg-white/75 p-3 shadow-[0_12px_34px_rgba(15,23,42,0.055)] backdrop-blur-md">
-      <p className="text-[7px] font-black uppercase tracking-[0.18em] text-amber-600">{code}</p>
-      <h2 className="mt-1 text-xs font-black uppercase tracking-[0.08em] text-blue-950">{title}</h2>
-      <p className="mt-1 text-[11px] font-semibold leading-4 text-slate-500">{text}</p>
+    <article className="rounded-xl border border-white/80 bg-white/75 px-3 py-2.5 shadow-[0_10px_28px_rgba(15,23,42,0.05)] backdrop-blur-md sm:rounded-2xl">
+      <h2 className="text-[10px] font-black uppercase tracking-[0.1em] text-amber-600 sm:text-xs">{title}</h2>
+      <p className="mt-0.5 text-[10px] font-semibold leading-4 text-slate-500 sm:text-[11px]">{text}</p>
     </article>
   );
 }

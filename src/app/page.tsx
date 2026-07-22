@@ -150,7 +150,14 @@ export default async function Home() {
           </div>
         </div>
 
-        <Link href="/societa" aria-label="Esplora tutte le società" className="group relative left-1/2 mt-5 block w-screen -translate-x-1/2 overflow-hidden py-4 [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)] sm:mt-10 sm:py-8">
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-14 lg:py-16">
+        <div className="max-w-3xl border-l-2 border-amber-400 pl-3 sm:pl-5">
+          <p className="text-[10px] font-black uppercase tracking-[0.24em] text-amber-600 sm:text-xs sm:tracking-[0.3em]">Le protagoniste</p>
+          <p className="mt-2 text-sm font-semibold leading-5 text-slate-600 sm:mt-3 sm:text-lg sm:leading-7">Cento identità, cento storie: il cuore del Fanta a 20.</p>
+        </div>
+        <Link href="/societa" aria-label="Esplora tutte le società" className="group relative left-1/2 mb-5 mt-1 block w-screen -translate-x-1/2 overflow-hidden py-4 [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)] sm:mb-8 sm:mt-0 sm:py-7">
           <div className="home-club-marquee flex w-max items-center gap-6 pr-6 transition duration-300 group-hover:opacity-35 sm:gap-10 sm:pr-10">
             {[...societaMarquee, ...societaMarquee].map((team, index) => (
               <div key={`${team.id}-${index}`} aria-hidden={index >= societaMarquee.length} className="flex h-14 w-14 shrink-0 items-center justify-center sm:h-20 sm:w-20"><TeamLogo team={team} size={76} /></div>
@@ -158,13 +165,6 @@ export default async function Home() {
           </div>
           <span className="pointer-events-none absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 rounded-full border border-blue-950/10 bg-white/90 px-6 py-3 text-xs font-black uppercase tracking-[0.16em] text-blue-950 opacity-0 shadow-xl backdrop-blur transition duration-300 group-hover:opacity-100">Esplora tutte le società</span>
         </Link>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-14 lg:py-16">
-        <div className="mb-6 max-w-3xl border-l-2 border-amber-400 pl-3 sm:mb-10 sm:pl-5">
-          <p className="text-[10px] font-black uppercase tracking-[0.24em] text-amber-600 sm:text-xs sm:tracking-[0.3em]">Le protagoniste</p>
-          <p className="mt-2 text-sm font-semibold leading-5 text-slate-600 sm:mt-3 sm:text-lg sm:leading-7">Cento identità, cento storie: il cuore del Fanta a 20.</p>
-        </div>
         <div className="mb-6 flex items-center gap-4">
           <h3 className="text-xl font-black uppercase tracking-tight text-blue-950 sm:text-2xl">Società in evidenza</h3>
           <span className="h-px flex-1 bg-slate-200" />

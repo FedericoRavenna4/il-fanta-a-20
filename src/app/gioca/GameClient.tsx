@@ -343,12 +343,12 @@ export default function GameClient({
             tabIndex={-1}
             className="game-modal-panel relative max-w-full overflow-hidden rounded-[1rem] border border-white/15 bg-[linear-gradient(180deg,#06162d,#020817)] shadow-[0_35px_110px_rgba(2,8,23,.68),0_0_48px_rgba(56,189,248,.1)] outline-none max-sm:flex max-sm:flex-col sm:rounded-[1.6rem]"
           >
-            <div className="absolute right-3 top-3 z-30 hidden items-center gap-1.5 sm:flex">
+            <div className="absolute right-3 top-3 z-30 hidden items-center gap-1.5 sm:flex lg:right-2 lg:top-2">
               {(status === "running" || status === "paused") && (
                 <button
                   type="button"
                   onClick={() => setStatus((current) => current === "running" ? "paused" : current === "paused" ? "running" : current)}
-                  className="min-h-11 rounded-full border border-white/18 bg-slate-950/90 px-4 text-[9px] font-black uppercase tracking-[.12em] text-white shadow-lg transition hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                  className="min-h-11 rounded-full border border-white/18 bg-slate-950/90 px-4 text-[9px] font-black uppercase tracking-[.12em] text-white shadow-lg transition hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white lg:min-h-10"
                 >
                   {status === "paused" ? "Riprendi" : "Pausa"}
                 </button>
@@ -357,14 +357,14 @@ export default function GameClient({
                 type="button"
                 onClick={() => returnToGameHome(true)}
                 aria-label="Chiudi il gioco e torna alla selezione"
-                className="flex h-11 w-11 items-center justify-center rounded-full border border-white/18 bg-slate-950/90 text-xl font-light text-white shadow-lg transition hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-white/18 bg-slate-950/90 text-xl font-light text-white shadow-lg transition hover:bg-slate-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white lg:h-10 lg:w-10"
               >
                 ×
               </button>
             </div>
 
             <div
-              className="absolute right-0 top-0 z-30 hidden items-center justify-end gap-2 pr-[max(.55rem,env(safe-area-inset-right))] pt-[max(.55rem,env(safe-area-inset-top))] max-sm:flex"
+              className="absolute right-0 top-0 z-30 hidden items-center justify-end gap-1.5 pr-[max(.4rem,env(safe-area-inset-right))] pt-[max(.4rem,env(safe-area-inset-top))] max-sm:flex"
               onPointerDown={(event) => event.stopPropagation()}
             >
               {(status === "running" || status === "paused") ? (
@@ -410,11 +410,11 @@ export default function GameClient({
                 <GameOverlayLayer presentation={snapshot.presentation} snapshot={snapshot} />
 
                 {status === "paused" && (
-                <div className="absolute inset-0 z-20 flex items-center justify-center bg-[#020817]/84 p-4 backdrop-blur-md">
-                  <div className="text-center text-white">
+                <div className="absolute inset-0 z-20 flex items-center justify-center overflow-y-auto bg-[#020817]/84 p-4 backdrop-blur-md lg:p-2">
+                  <div className="max-h-full w-full max-w-sm overflow-y-auto text-center text-white lg:rounded-2xl lg:border lg:border-white/10 lg:bg-slate-950/35 lg:p-4">
                     <p className="text-[9px] font-black uppercase tracking-[.24em] text-amber-300">Sessione sospesa</p>
                     <h2 className="mt-1 text-3xl font-black uppercase">Pausa</h2>
-                    <div className="mt-5 flex flex-col justify-center gap-2 sm:flex-row">
+                    <div className="mt-5 flex flex-col justify-center gap-2 sm:flex-row lg:mt-4">
                       <button type="button" onClick={() => setStatus("running")} className="min-h-12 rounded-full bg-white px-7 text-[10px] font-black uppercase tracking-[.16em] text-blue-950">Riprendi</button>
                       <button type="button" onClick={() => returnToGameHome(true)} className="min-h-12 rounded-full border border-white/15 px-6 text-[10px] font-black uppercase tracking-[.14em] text-white/75">Esci</button>
                     </div>
@@ -481,8 +481,10 @@ export default function GameClient({
                 <section className="mx-auto w-full max-w-xl rounded-xl border border-white/10 bg-slate-950/42 px-3 py-2 text-left shadow-[inset_0_1px_0_rgba(255,255,255,.06)] sm:px-4 sm:py-3">
                   <p className="mb-3 text-center text-[10px] font-black uppercase tracking-[.22em] text-sky-100">Controlli</p>
                   <div className="hidden grid-cols-4 gap-2 sm:grid">
-                    <ControlHint icon="L" label="Mouse sinistro" action="Salta" />
-                    <ControlHint icon="R" label="Mouse destro" action="Abbassati" />
+                    <div className="lg:hidden"><ControlHint icon="L" label="Mouse sinistro" action="Salta" /></div>
+                    <div className="lg:hidden"><ControlHint icon="R" label="Mouse destro" action="Abbassati" /></div>
+                    <div className="hidden lg:block"><MouseControlHint side="left" label="Mouse sinistro" action="Salta" /></div>
+                    <div className="hidden lg:block"><MouseControlHint side="right" label="Mouse destro" action="Abbassati" /></div>
                     <ControlHint icon="↑" label="Freccia su" action="Salta" />
                     <ControlHint icon="↓" label="Freccia giù" action="Abbassati" />
                   </div>
@@ -533,6 +535,7 @@ export default function GameClient({
           teams={teams}
           initialTeamSlug={initialSelectionAvailable ? initialTeamSlug : undefined}
           progressByClub={progressByClub}
+          keyboardEnabled={!modalOpen}
           onSelect={selectTeam}
         />
       </div>
@@ -546,6 +549,24 @@ function ControlHint({ icon, label, action }: { icon: string; label: string; act
     <div className="flex min-w-0 items-center gap-3 rounded-lg border border-white/[.12] bg-white/[.055] px-3 py-2.5">
       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-sky-100/35 bg-sky-950/80 text-base font-black text-white shadow-[inset_0_1px_0_rgba(255,255,255,.12)]">{icon}</span>
       <span className="min-w-0">
+        <span className="block truncate text-[9px] font-bold text-white/65">{label}</span>
+        <span className="block text-[10px] font-black uppercase tracking-[.07em] text-white">{action}</span>
+      </span>
+    </div>
+  );
+}
+
+function MouseControlHint({ side, label, action }: { side: "left" | "right"; label: string; action: string }) {
+  return (
+    <div className="flex min-w-0 items-center gap-3 rounded-lg border border-white/[.12] bg-white/[.055] px-3 py-2.5">
+      <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-sky-100/35 bg-sky-950/80 shadow-[inset_0_1px_0_rgba(255,255,255,.12)]" aria-hidden="true">
+        <svg viewBox="0 0 28 38" className="h-7 w-6" fill="none">
+          <path d="M3 14C3 6.8 7.4 2 14 2s11 4.8 11 12v10c0 7.2-4.4 12-11 12S3 31.2 3 24V14Z" className="stroke-white/80" strokeWidth="2" />
+          <path d="M14 3v12M4 14h20" className="stroke-white/30" strokeWidth="1.5" />
+          <path d={side === "left" ? "M4.5 13.5V12C4.5 6.7 8 3.5 13.2 3.5v10Z" : "M14.8 3.5C20 3.5 23.5 6.7 23.5 12v1.5h-8.7Z"} className="fill-sky-300" />
+        </svg>
+      </span>
+      <span className="min-w-0 text-left">
         <span className="block truncate text-[9px] font-bold text-white/65">{label}</span>
         <span className="block text-[10px] font-black uppercase tracking-[.07em] text-white">{action}</span>
       </span>

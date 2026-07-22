@@ -46,8 +46,8 @@ export default function HeroCoppe() {
         <p className="mt-6 max-w-6xl text-[20px] font-medium leading-9 text-white/85">
           Le coppe ufficiali sono il palcoscenico delle grandi notti del Fanta
           a 20: dalle competizioni europee interne a ogni lega fino alla Coppa
-          Fanta a 20, il trofeo più ambito e l'unico capace di riunire tutte le
-          100 società in un'unica corsa verso la gloria.
+          Fanta a 20, il trofeo più ambito e l&apos;unico capace di riunire tutte le
+          100 società in un&apos;unica corsa verso la gloria.
         </p>
       </div>
 

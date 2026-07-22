@@ -13,11 +13,13 @@ function TeamSelector({
   teams,
   initialTeamSlug,
   progressByClub,
+  keyboardEnabled = true,
   onSelect,
 }: {
   teams: GameTeam[];
   initialTeamSlug?: string;
   progressByClub: Record<string, ClubProgress>;
+  keyboardEnabled?: boolean;
   onSelect: (team: GameTeam) => void;
 }) {
   const initialTeam = teams.find((team) => team.slug === initialTeamSlug) ?? null;
@@ -184,7 +186,7 @@ function TeamSelector({
     };
   }, [confirmationTeam]);
 
-  function selectAndCenter(team: GameTeam, replica = 1) {
+  const selectAndCenter = useCallback((team: GameTeam, replica = 1) => {
     setSelectedTeam(team);
     requestAnimationFrame(() => {
       buttonRefs.current.get(`${replica}-${team.id}`)?.scrollIntoView({
@@ -193,7 +195,7 @@ function TeamSelector({
         inline: "center",
       });
     });
-  }
+  }, []);
 
   function chooseTeam(team: GameTeam, replica = 1) {
     selectAndCenter(team, replica);
@@ -389,21 +391,7 @@ function TeamSelector({
     }
   }
 
-  function moveSelection(direction: -1 | 1) {
-    if (!filteredTeams.length) return;
-    const currentIndex = Math.max(
-      0,
-      filteredTeams.findIndex((team) => team.id === activeTeam?.id)
-    );
-    const nextIndex =
-      (currentIndex + direction + filteredTeams.length) % filteredTeams.length;
-    selectAndCenter(
-      filteredTeams[nextIndex],
-      getDirectionalReplica(filteredTeams[nextIndex], direction)
-    );
-  }
-
-  function getDirectionalReplica(team: GameTeam, direction: -1 | 1) {
+  const getDirectionalReplica = useCallback((team: GameTeam, direction: -1 | 1) => {
     const ribbon = ribbonRef.current;
     if (!ribbon) return 1;
     const ribbonCenter = ribbon.getBoundingClientRect().left + ribbon.clientWidth / 2;
@@ -418,7 +406,37 @@ function TeamSelector({
       .filter((candidate) => direction > 0 ? candidate.distance > 0 : candidate.distance < 0)
       .sort((first, second) => Math.abs(first.distance) - Math.abs(second.distance));
     return candidates[0]?.replica ?? 1;
-  }
+  }, []);
+
+  const moveSelection = useCallback((direction: -1 | 1) => {
+    if (!filteredTeams.length) return;
+    const currentIndex = Math.max(
+      0,
+      filteredTeams.findIndex((team) => team.id === activeTeam?.id)
+    );
+    const nextIndex =
+      (currentIndex + direction + filteredTeams.length) % filteredTeams.length;
+    selectAndCenter(
+      filteredTeams[nextIndex],
+      getDirectionalReplica(filteredTeams[nextIndex], direction)
+    );
+  }, [activeTeam?.id, filteredTeams, getDirectionalReplica, selectAndCenter]);
+
+  useEffect(() => {
+    if (!keyboardEnabled || isMobileFlow || confirmationTeam) return;
+
+    function handleSelectionKeys(event: KeyboardEvent) {
+      if (!window.matchMedia("(min-width: 1024px)").matches) return;
+      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+      const target = event.target as HTMLElement | null;
+      if (target?.matches("input, textarea, select") || target?.isContentEditable) return;
+      event.preventDefault();
+      moveSelection(event.key === "ArrowLeft" ? -1 : 1);
+    }
+
+    window.addEventListener("keydown", handleSelectionKeys);
+    return () => window.removeEventListener("keydown", handleSelectionKeys);
+  }, [confirmationTeam, isMobileFlow, keyboardEnabled, moveSelection]);
 
   return (
     <section className="relative flex min-h-[390px] flex-col overflow-hidden rounded-[1.5rem] border border-white/10 bg-[linear-gradient(145deg,#010611_0%,#08213f_42%,#0b3158_67%,#020918_100%)] text-white shadow-[0_36px_100px_rgba(2,8,23,0.32),inset_0_1px_0_rgba(255,255,255,0.1)] sm:min-h-[540px] sm:rounded-[2rem] lg:min-h-[660px]">

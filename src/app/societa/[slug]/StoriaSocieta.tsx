@@ -159,10 +159,18 @@ function getCardStyle(item: Risultato, vittoria: boolean) {
 function formatRisultato(item: Risultato) {
   const risultato = item.risultatoTesto.trim();
   const lower = risultato.toLowerCase();
+  const competizioneEuropea = ["Champions League", "Europa League", "Conference League"].includes(item.competizione);
+  const coppaFanta2024 = item.competizione === "Coppa Fanta a 20" && item.stagione === "2024/25";
 
   if (item.competizione === "Campionato") {
     return formatPosizione(risultato);
   }
+
+  if ((competizioneEuropea && lower.startsWith("girone")) || (coppaFanta2024 && lower.includes("gironi"))) {
+    return "Fuori ai gironi";
+  }
+
+  if (coppaFanta2024 && lower.includes("semifinale")) return "Semifinale";
 
   if (item.competizione === "Coppa Fanta a 20") {
     if (lower.includes("qualificazione")) {
@@ -185,11 +193,22 @@ function formatRisultatoMobile(item: Risultato, vittoria: boolean) {
 
   const risultato = item.risultatoTesto.trim();
   const lower = risultato.toLowerCase();
+  const competizioneEuropea = ["Champions League", "Europa League", "Conference League"].includes(item.competizione);
+  const coppaFanta2024 = item.competizione === "Coppa Fanta a 20" && item.stagione === "2024/25";
 
   if (item.competizione === "Campionato") {
     const numero = posizioneNumero(risultato);
     return numero ? `${numero}° POSTO` : risultato;
   }
+
+  if ((competizioneEuropea && lower.startsWith("girone")) || (coppaFanta2024 && lower.includes("gironi"))) {
+    return "Fuori ai GIR.";
+  }
+
+  if (coppaFanta2024 && lower.includes("semifinale")) return "Semifinale";
+
+  const turnoPlayoff = lower.match(/(\d+)\s*(?:°)?\s*turno playoff/);
+  if (turnoPlayoff) return `${turnoPlayoff[1]}° T. Playoff`;
 
   if (lower.includes("qualificazione")) {
     const numero = risultato.match(/\d+/)?.[0];
@@ -206,7 +225,7 @@ function formatRisultatoMobile(item: Risultato, vittoria: boolean) {
   if (lower.includes("sedices")) return "SEDICESIMI";
   if (lower.includes("ottav")) return "OTTAVI";
   if (lower.includes("quart")) return "QUARTI";
-  if (lower.includes("semifinale")) return "SEMIF.";
+  if (lower.includes("semifinale")) return "Semifinale";
   if (lower.includes("final")) return "FINALE";
 
   return formatFase(risultato);

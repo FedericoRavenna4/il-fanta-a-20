@@ -331,8 +331,8 @@ const emblemiDaDifendereVisuali = emblemiDaDifendere.map(toEmblemaVisuale);
                 className="rounded-2xl bg-slate-50 p-3 transition hover:-translate-y-0.5 hover:bg-sky-50 hover:shadow-md sm:p-6"
               >
                 <p className="text-sm font-bold text-slate-500">Gioca</p>
-                <p className="text-base font-black leading-tight text-blue-950 sm:text-xl">
-                  Scendi in campo con questa società
+                <p className="text-2xl font-black text-blue-950">
+                  Scendi in campo
                 </p>
               </Link>
             </div>

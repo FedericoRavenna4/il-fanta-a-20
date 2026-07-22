@@ -7,7 +7,8 @@ export default function SocietaPage() {
   const societa = getSocieta();
 
   return (
-    <section className="mx-auto max-w-7xl px-4 py-7 sm:px-5 sm:py-12 lg:px-6 lg:py-16">
+    <section className="bg-[linear-gradient(180deg,#f8fbff_0%,#f3f8fc_48%,#f8fafc_100%)]">
+    <div className="mx-auto max-w-7xl px-4 py-7 sm:px-5 sm:py-12 lg:px-6 lg:py-16">
       <PageHeader
         eyebrow="Archivio ufficiale"
         title="Le Società"
@@ -36,6 +37,7 @@ export default function SocietaPage() {
       </div>
 
       <SocietaClient societa={societa} />
+    </div>
     </section>
   );
 }
