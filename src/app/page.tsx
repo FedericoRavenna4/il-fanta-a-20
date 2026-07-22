@@ -4,6 +4,9 @@ import type { ReactNode } from "react";
 import { getPalmares } from "@/lib/palmares";
 import { getRanking } from "@/lib/ranking";
 import { getSocieta, type Societa } from "@/lib/societa";
+import { getWaitlistCount } from "@/lib/waitlist/server";
+
+export const dynamic = "force-dynamic";
 
 const competizioni = [
   {
@@ -102,10 +105,11 @@ function SectionHeading({
   );
 }
 
-export default function Home() {
+export default async function Home() {
   const societa = getSocieta();
   const ranking = getRanking();
   const palmares = getPalmares();
+  const waitlistCount = await safeWaitlistCount();
 
   const podioRanking = ranking.slice(0, 3).flatMap((item) => {
     const team = societa.find((societaItem) => societaItem.id === item.squadraId);
@@ -294,6 +298,40 @@ export default function Home() {
           </div>
         </Link>
       </section>
+
+      <section className="mx-auto max-w-7xl px-4 pb-14 sm:px-6 sm:pb-20 lg:pb-24">
+        <div className="relative overflow-hidden rounded-[1.6rem] border border-blue-900/10 bg-[linear-gradient(125deg,#ffffff_0%,#f3f8fd_58%,#e9f3fb_100%)] px-5 py-6 shadow-[0_20px_60px_rgba(15,23,42,.08)] sm:rounded-[2rem] sm:px-9 sm:py-9 lg:px-11">
+          <div className="pointer-events-none absolute -right-16 -top-24 h-64 w-64 rounded-full bg-sky-300/30 blur-[75px]" />
+          <div className="pointer-events-none absolute bottom-0 left-10 h-px w-2/3 bg-gradient-to-r from-transparent via-amber-300/55 to-transparent" />
+          <div className="relative grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end lg:gap-10">
+            <div className="max-w-4xl">
+              <p className="text-[9px] font-black uppercase tracking-[.24em] text-amber-600 sm:text-[10px]">Il prossimo capitolo</p>
+              <h2 className="mt-2 text-2xl font-black uppercase leading-tight tracking-[-.025em] text-blue-950 sm:text-4xl lg:text-5xl">Le porte sono chiuse. Le candidature no.</h2>
+              <p className="mt-3 max-w-3xl text-sm font-semibold leading-6 text-slate-500 sm:text-base sm:leading-7">
+                Le 100 società del Fanta a 20 sono già state assegnate. Ogni stagione, però, alcuni posti tornano disponibili. Entra nella lista d’attesa e potresti essere il prossimo.
+              </p>
+            </div>
+            <div className="flex flex-col items-start gap-3 lg:items-end">
+              <p className="text-sm font-black text-blue-950">
+                {waitlistCount === null
+                  ? "Conteggio candidature in aggiornamento"
+                  : `${waitlistCount.toLocaleString("it-IT")} ${waitlistCount === 1 ? "candidato già in attesa" : "candidati già in attesa"}`}
+              </p>
+              <Link href="/lista-attesa" className="inline-flex min-h-12 items-center justify-center rounded-full bg-blue-950 px-6 text-center text-[10px] font-black uppercase tracking-[.15em] text-white shadow-[0_12px_30px_rgba(7,31,69,.18)] transition hover:-translate-y-0.5 hover:bg-blue-900">
+                Entra nella lista d’attesa
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
+}
+
+async function safeWaitlistCount() {
+  try {
+    return await getWaitlistCount();
+  } catch {
+    return null;
+  }
 }
