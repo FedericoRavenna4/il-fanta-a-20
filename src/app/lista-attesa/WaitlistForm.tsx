@@ -58,7 +58,6 @@ export default function WaitlistForm() {
           name="data_nascita"
           type="date"
           label="Data di nascita"
-          help="La data serve esclusivamente per valutare la candidatura."
           error={errors?.data_nascita}
           autoComplete="bday"
           required
@@ -66,8 +65,8 @@ export default function WaitlistForm() {
         <FormField
           id="instagram"
           name="instagram"
-          label="Nickname Instagram"
-          help="Puoi inserirlo con o senza @. Ti contatteremo qui."
+          label="Instagram"
+          help="Con o senza @."
           placeholder="nomeutente"
           error={errors?.instagram}
           autoComplete="off"
@@ -80,7 +79,7 @@ export default function WaitlistForm() {
         <div className="flex items-end justify-between gap-4">
           <div className="flex min-w-0 items-center gap-2">
             <label htmlFor="motivazione" className="text-sm font-black uppercase tracking-[.08em] text-blue-950">
-              Presentati
+              Presentazione
             </label>
             <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[8px] font-black uppercase tracking-[.12em] text-slate-400">Opzionale</span>
           </div>
@@ -89,18 +88,18 @@ export default function WaitlistForm() {
           </span>
         </div>
         <p id="motivazione-help" className="mt-1 text-[11px] font-semibold leading-4 text-slate-500 sm:text-xs sm:leading-5">
-          Non è obbligatorio, ma una buona presentazione può aiutarti nella selezione.
+          Opzionale, ma può aiutarti nella selezione.
         </p>
         <textarea
           id="motivazione"
           name="motivazione"
           maxLength={MOTIVATION_MAX_LENGTH}
-          rows={5}
+          rows={3}
           onChange={(event) => setMotivationLength(event.currentTarget.value.length)}
           aria-invalid={Boolean(errors?.motivazione)}
           aria-describedby={errors?.motivazione ? "motivazione-help motivazione-error" : "motivazione-help"}
           placeholder="Raccontaci qualcosa di te e del tuo modo di vivere il fantacalcio..."
-          className={inputClass(Boolean(errors?.motivazione), "min-h-32 resize-y py-3.5 sm:min-h-44")}
+          className={inputClass(Boolean(errors?.motivazione), "min-h-24 resize-y py-3 sm:min-h-28")}
         />
         <FieldError id="motivazione-error" message={errors?.motivazione} />
       </div>
@@ -150,10 +149,13 @@ function FormField({
 } & Omit<React.InputHTMLAttributes<HTMLInputElement>, "id" | "type">) {
   const helpId = help ? `${id}-help` : undefined;
   const errorId = error ? `${id}-error` : undefined;
+  const isRequired = Boolean(props.required);
   return (
     <div className="min-w-0">
-      <label htmlFor={id} className="text-sm font-black uppercase tracking-[.08em] text-blue-950">{label}</label>
-      {help && <p id={helpId} className="mt-1 text-xs font-semibold leading-5 text-slate-500">{help}</p>}
+      <label htmlFor={id} className="text-sm font-black uppercase tracking-[.08em] text-blue-950">
+        {label}{isRequired && <span className="ml-1 text-amber-600" aria-hidden="true">*</span>}
+      </label>
+      {help && <p id={helpId} className="mt-1 text-[11px] font-semibold leading-4 text-slate-500 sm:text-xs">{help}</p>}
       <input
         id={id}
         type={type}

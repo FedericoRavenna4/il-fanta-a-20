@@ -303,23 +303,24 @@ export default async function Home() {
         <div className="relative overflow-hidden rounded-[1.6rem] border border-blue-900/10 bg-[linear-gradient(125deg,#ffffff_0%,#f3f8fd_58%,#e9f3fb_100%)] px-4 py-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] sm:rounded-[2rem] sm:px-9 sm:py-9 lg:px-11">
           <div className="pointer-events-none absolute -right-16 -top-24 h-64 w-64 rounded-full bg-sky-300/30 blur-[75px]" />
           <div className="pointer-events-none absolute bottom-0 left-10 h-px w-2/3 bg-gradient-to-r from-transparent via-amber-300/55 to-transparent" />
-          <div className="relative grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end lg:gap-10">
+          <div className="relative grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-10">
             <div className="max-w-4xl">
               <p className="text-[9px] font-black uppercase tracking-[.24em] text-amber-600 sm:text-[10px]">Il prossimo capitolo</p>
-              <h2 className="mt-2 text-[1.65rem] font-black leading-[1.04] tracking-[-.03em] text-blue-950 sm:text-4xl lg:text-5xl">Le grandi storie iniziano tutte allo stesso modo: con un’opportunità.</h2>
+              <h2 className="mt-2 text-[1.65rem] font-black uppercase leading-none tracking-[-.03em] text-blue-950 sm:text-4xl lg:text-5xl">La tua occasione</h2>
               <p className="mt-3 max-w-3xl text-[13px] font-semibold leading-5 text-slate-500 sm:text-base sm:leading-7">
                 Le 100 società del Fanta a 20 sono già state assegnate. Ogni stagione, però, alcuni posti tornano disponibili. Entra nella lista d’attesa e potresti essere il prossimo.
               </p>
             </div>
-            <div className="flex flex-col items-center gap-2 lg:items-end">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center lg:justify-end">
+              <div className="order-2 inline-flex min-h-9 items-center justify-center gap-2 rounded-full border border-blue-950/10 bg-white/65 px-4 text-[9px] font-black uppercase tracking-[.09em] text-slate-500 shadow-sm backdrop-blur sm:order-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-500 shadow-[0_0_0_4px_rgba(245,158,11,.1)]" aria-hidden="true" />
+                {waitlistCount === null
+                  ? "Conteggio in aggiornamento"
+                  : `${waitlistCount.toLocaleString("it-IT")} ${waitlistCount === 1 ? "candidato in attesa" : "candidati in attesa"}`}
+              </div>
               <Link href="/lista-attesa" className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-amber-300 px-6 text-center text-[10px] font-black uppercase tracking-[.15em] text-blue-950 shadow-[0_14px_34px_rgba(245,184,45,.26)] transition hover:-translate-y-0.5 hover:bg-amber-200 sm:w-auto">
                 Entra nella lista d’attesa
               </Link>
-              <p className="text-[10px] font-bold uppercase tracking-[.08em] text-slate-400">
-                {waitlistCount === null
-                  ? "Conteggio candidature in aggiornamento"
-                  : `${waitlistCount.toLocaleString("it-IT")} ${waitlistCount === 1 ? "candidato in attesa" : "candidati in attesa"}`}
-              </p>
             </div>
           </div>
         </div>
