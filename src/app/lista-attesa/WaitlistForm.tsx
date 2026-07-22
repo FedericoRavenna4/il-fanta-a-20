@@ -17,7 +17,7 @@ export default function WaitlistForm() {
   const errors = state?.fieldErrors;
 
   return (
-    <form action={formAction} className="relative space-y-5">
+    <form action={formAction} className="relative space-y-4 sm:space-y-5">
       <div className="pointer-events-none absolute left-[-10000px] top-auto h-px w-px overflow-hidden" aria-hidden="true">
         <label htmlFor="waitlist-website">Sito web</label>
         <input
@@ -29,7 +29,7 @@ export default function WaitlistForm() {
         />
       </div>
 
-      <div className="grid gap-5 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2 sm:gap-5">
         <FormField
           id="nome"
           name="nome"
@@ -52,7 +52,7 @@ export default function WaitlistForm() {
         />
       </div>
 
-      <div className="grid gap-5 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2 sm:gap-5">
         <FormField
           id="data_nascita"
           name="data_nascita"
@@ -78,34 +78,35 @@ export default function WaitlistForm() {
 
       <div>
         <div className="flex items-end justify-between gap-4">
-          <label htmlFor="motivazione" className="text-sm font-black uppercase tracking-[.08em] text-blue-950">
-            Perché dovremmo scegliere te?
-          </label>
+          <div className="flex min-w-0 items-center gap-2">
+            <label htmlFor="motivazione" className="text-sm font-black uppercase tracking-[.08em] text-blue-950">
+              Presentati
+            </label>
+            <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[8px] font-black uppercase tracking-[.12em] text-slate-400">Opzionale</span>
+          </div>
           <span className="shrink-0 text-[10px] font-bold tabular-nums text-slate-400">
             {motivationLength}/{MOTIVATION_MAX_LENGTH}
           </span>
         </div>
-        <p id="motivazione-help" className="mt-1 text-xs font-semibold leading-5 text-slate-500">
-          Raccontaci cosa porteresti nella community. Minimo 30 caratteri.
+        <p id="motivazione-help" className="mt-1 text-[11px] font-semibold leading-4 text-slate-500 sm:text-xs sm:leading-5">
+          Non è obbligatorio, ma una buona presentazione può aiutarti nella selezione.
         </p>
         <textarea
           id="motivazione"
           name="motivazione"
-          required
-          minLength={30}
           maxLength={MOTIVATION_MAX_LENGTH}
-          rows={7}
+          rows={5}
           onChange={(event) => setMotivationLength(event.currentTarget.value.length)}
           aria-invalid={Boolean(errors?.motivazione)}
           aria-describedby={errors?.motivazione ? "motivazione-help motivazione-error" : "motivazione-help"}
-          placeholder="La tua storia, il tuo modo di vivere il fantacalcio e ciò che ti rende la persona giusta..."
-          className={inputClass(Boolean(errors?.motivazione), "min-h-44 resize-y py-3.5")}
+          placeholder="Raccontaci qualcosa di te e del tuo modo di vivere il fantacalcio..."
+          className={inputClass(Boolean(errors?.motivazione), "min-h-32 resize-y py-3.5 sm:min-h-44")}
         />
         <FieldError id="motivazione-error" message={errors?.motivazione} />
       </div>
 
       <div>
-        <label className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition ${errors?.privacy_accettata ? "border-rose-300 bg-rose-50" : "border-slate-200 bg-slate-50/80 hover:border-blue-200"}`}>
+        <label className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-3 transition sm:p-4 ${errors?.privacy_accettata ? "border-rose-300 bg-rose-50" : "border-slate-200 bg-slate-50/80 hover:border-blue-200"}`}>
           <input
             type="checkbox"
             name="privacy_accettata"
@@ -115,7 +116,7 @@ export default function WaitlistForm() {
             aria-describedby={errors?.privacy_accettata ? "privacy-error" : undefined}
             className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer accent-blue-800"
           />
-          <span className="text-xs font-semibold leading-5 text-slate-600 sm:text-sm">
+          <span className="text-[11px] font-semibold leading-4 text-slate-600 sm:text-sm sm:leading-5">
             Accetto che i dati inseriti vengano utilizzati per valutare la candidatura e per essere ricontattato tramite Instagram.
           </span>
         </label>

@@ -9,7 +9,6 @@ import {
 } from "./types";
 
 const NAME_MAX_LENGTH = 80;
-const MOTIVATION_MIN_LENGTH = 30;
 const MOTIVATION_MAX_LENGTH = 1500;
 const INSTAGRAM_PATTERN = /^[a-z0-9._]{1,30}$/;
 
@@ -140,10 +139,7 @@ function validateWaitlistApplication(input: WaitlistApplicationInput):
     fieldErrors.instagram = "Il nickname Instagram può contenere solo lettere, numeri, punti e underscore.";
   }
 
-  if (!motivazione) fieldErrors.motivazione = "Spiega perché vuoi entrare nel Fanta a 20.";
-  else if (motivazione.length < MOTIVATION_MIN_LENGTH) {
-    fieldErrors.motivazione = `La motivazione deve contenere almeno ${MOTIVATION_MIN_LENGTH} caratteri.`;
-  } else if (motivazione.length > MOTIVATION_MAX_LENGTH) {
+  if (motivazione.length > MOTIVATION_MAX_LENGTH) {
     fieldErrors.motivazione = `La motivazione non può superare ${MOTIVATION_MAX_LENGTH} caratteri.`;
   }
 
