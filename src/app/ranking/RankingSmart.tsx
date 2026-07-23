@@ -12,6 +12,7 @@ export default function RankingSmart({ rows }: { rows: RankingRow[] }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [fasciaAttiva, setFasciaAttiva] = useState(1);
+  const [rankingScrolled, setRankingScrolled] = useState(false);
   const modalHeaderRef = useRef<HTMLDivElement>(null);
   const podio = rows.slice(0, 3);
 
@@ -27,9 +28,10 @@ export default function RankingSmart({ rows }: { rows: RankingRow[] }) {
     return () => { document.removeEventListener("keydown", close); document.body.style.overflow = ""; };
   }, [open]);
 
-  function updateFascia(event: React.UIEvent<HTMLDivElement>) {
+  function updateRankingScroll(event: React.UIEvent<HTMLDivElement>) {
     const container = event.currentTarget;
-    const threshold = container.getBoundingClientRect().top + 32 + (modalHeaderRef.current?.offsetHeight ?? 72) + 8;
+    setRankingScrolled(container.scrollTop > 72);
+    const threshold = container.getBoundingClientRect().top + (modalHeaderRef.current?.offsetHeight ?? 72) + 8;
     const rows = Array.from(container.querySelectorAll<HTMLElement>("[data-ranking-row]"));
     const current = rows.find((row) => row.getBoundingClientRect().bottom > threshold);
     if (current?.dataset.fascia) setFasciaAttiva(Number(current.dataset.fascia));
@@ -77,22 +79,21 @@ export default function RankingSmart({ rows }: { rows: RankingRow[] }) {
             <span className="hidden text-sm font-bold text-slate-500 lg:block">{row.team?.stagioneIngresso ?? "—"}</span><span className="hidden truncate text-sm font-bold text-slate-500 lg:block">{row.team?.legaAttuale ?? "—"}</span><span className="hidden text-right text-sm font-black text-blue-950 lg:block">{row.trofei.totaleTrofei}</span><span className="text-right text-base font-black text-blue-950">{row.puntiRanking}</span>
           </div>
         ))}
-        <div className="border-t border-slate-200 p-4 text-center sm:p-5"><button type="button" onClick={() => { setFasciaAttiva(1); setOpen(true); }} className="min-h-12 w-full rounded-full bg-blue-950 px-4 py-3 text-xs font-black uppercase tracking-[0.08em] text-white transition hover:bg-blue-800 sm:w-auto sm:px-7 sm:tracking-[0.14em]">Vedi tutta la classifica del Ranking</button></div>
+        <div className="border-t border-slate-200 p-4 text-center sm:p-5"><button type="button" onClick={() => { setFasciaAttiva(1); setRankingScrolled(false); setOpen(true); }} className="min-h-12 w-full rounded-full bg-blue-950 px-4 py-3 text-xs font-black uppercase tracking-[0.08em] text-white transition hover:bg-blue-800 sm:w-auto sm:px-7 sm:tracking-[0.14em]">Vedi tutta la classifica del Ranking</button></div>
       </div>
 
       {open && (
         <div role="dialog" aria-modal="true" aria-label="Classifica completa del ranking" className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/65 p-2 backdrop-blur-md sm:p-4" onMouseDown={() => setOpen(false)}>
-          <div className="max-h-[calc(100dvh-1rem)] w-full max-w-6xl overflow-y-auto overscroll-contain rounded-[1.5rem] bg-[#f8fbff] shadow-2xl sm:max-h-[90dvh] sm:rounded-[2rem]" onMouseDown={(event) => event.stopPropagation()} onScroll={updateFascia}>
-            <div className="sticky top-0 z-50 flex h-8 items-center justify-end bg-gradient-to-b from-[#f8fbff] via-[#f8fbff]/95 to-transparent px-2 sm:px-3">
-              <button type="button" onClick={() => setOpen(false)} aria-label="Chiudi la classifica completa" className="flex h-7 w-7 items-center justify-center rounded-full border border-blue-950/10 bg-white/90 text-base font-light leading-none text-blue-950 shadow-[0_5px_16px_rgba(7,31,69,.12)] backdrop-blur transition hover:border-blue-300 hover:bg-blue-50 hover:shadow-md focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-200">
+          <div className="relative w-full max-w-6xl sm:w-[calc(100%-4rem)]" onMouseDown={(event) => event.stopPropagation()}>
+            <button type="button" onClick={() => setOpen(false)} aria-label="Chiudi la classifica completa" className="absolute -right-12 top-2 hidden h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-white/90 text-xl font-light leading-none text-blue-950 shadow-[0_10px_30px_rgba(2,8,23,.24)] backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-200 sm:flex">
                 <span aria-hidden="true">×</span>
-              </button>
-            </div>
+            </button>
+            <div className="max-h-[calc(100dvh-1rem)] w-full overflow-y-auto overscroll-contain rounded-[1.5rem] bg-[#f8fbff] shadow-2xl sm:max-h-[90dvh] sm:rounded-[2rem]" onScroll={updateRankingScroll}>
             <div className="border-b border-slate-200 bg-white/95 px-4 pb-4 pt-4 sm:px-6 sm:pb-5 sm:pt-5">
               <div className="min-w-0"><p className="text-[9px] font-black uppercase tracking-[0.15em] text-amber-500 sm:text-[10px] sm:tracking-[0.2em]">Il Ranking</p><h2 className="mt-1 text-xl font-black uppercase text-blue-950 sm:text-2xl">Classifica completa</h2></div>
               <input value={search} onChange={(event) => updateSearch(event.target.value)} placeholder="Cerca società, fantallenatore o nickname..." className="mt-4 w-full rounded-2xl border border-slate-200 bg-slate-50 px-5 py-3 text-sm font-semibold outline-none focus:border-blue-900" />
             </div>
-            {!search && <div ref={modalHeaderRef} className="sticky top-8 z-20 border-b border-slate-200/90 bg-[#f8fbff]/95 px-5 py-2.5 shadow-[0_12px_24px_-24px_rgba(7,31,69,0.85)] backdrop-blur-xl sm:px-7 sm:py-3 lg:px-11">
+            {!search && <div ref={modalHeaderRef} className="sticky top-0 z-20 border-b border-slate-200/90 bg-[#f8fbff]/95 px-5 py-2.5 shadow-[0_12px_24px_-24px_rgba(7,31,69,0.85)] backdrop-blur-xl sm:px-7 sm:py-3 lg:px-11">
                 <div className="mb-2 flex items-center gap-2.5">
                   <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400 shadow-[0_0_0_4px_rgba(251,191,36,0.12)]" aria-hidden="true" />
                   <p className="text-[10px] font-black uppercase tracking-[0.18em] text-blue-950 sm:text-xs">{fasciaAttiva}ª Fascia</p>
@@ -109,7 +110,7 @@ export default function RankingSmart({ rows }: { rows: RankingRow[] }) {
                   <span className="text-right text-blue-950">PT</span>
                 </div>
               </div>}
-            <div className="p-3 sm:p-5 lg:p-7">
+            <div className="p-3 pb-20 sm:p-5 lg:p-7">
               {classifica.map((row, index) => (
                 <div key={row.posizione} data-ranking-row data-fascia={fascia(row.posizione)}>
                   {!search && index > 0 && fascia(row.posizione) !== fascia(classifica[index - 1].posizione) && (
@@ -138,6 +139,12 @@ export default function RankingSmart({ rows }: { rows: RankingRow[] }) {
               )}
             </div>
           </div>
+          </div>
+          {rankingScrolled && (
+            <button type="button" onClick={() => setOpen(false)} className="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-1/2 z-[110] min-h-10 -translate-x-1/2 rounded-full border border-white/20 bg-blue-950/92 px-6 text-[10px] font-black uppercase tracking-[0.14em] text-white shadow-[0_12px_32px_rgba(2,8,23,.3)] backdrop-blur-md transition hover:bg-blue-900 sm:hidden">
+              Chiudi
+            </button>
+          )}
         </div>
       )}
     </>

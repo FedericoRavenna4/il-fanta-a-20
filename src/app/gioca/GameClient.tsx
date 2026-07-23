@@ -504,7 +504,7 @@ export default function GameClient({
               animation:game-modal-panel-in 420ms cubic-bezier(.2,.8,.2,1) both;
             }
             @media (min-width:1024px) {
-              .game-modal-panel { width:min(94vw,calc((100dvh - 8rem) * 1.8),1220px); }
+              .game-modal-panel { width:min(94vw,calc((100dvh - 9rem) * 1.8),1160px); }
             }
             .game-loading-screen {
               opacity:1;

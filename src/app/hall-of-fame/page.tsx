@@ -218,12 +218,12 @@ export function HallOfFameContent({ embedded = false }: { embedded?: boolean }) 
 
                 if (isCoppaFanta) {
                   return (
-                    <div key={gruppo.label} className={`rounded-[1.75rem] border p-3 shadow-xl sm:p-5 ${gruppo.style.replace(" darkCard", "")}`}>
-                      <div className="mb-6 grid grid-cols-[104px_minmax(0,1fr)] items-center gap-4 sm:grid-cols-[144px_minmax(0,1fr)] sm:gap-6">
-                        <div className="relative flex h-28 w-24 shrink-0 items-center justify-center sm:h-36 sm:w-36">
-                          <div className="pointer-events-none absolute h-20 w-20 rounded-full bg-amber-300/55 blur-2xl sm:h-28 sm:w-28" />
-                          <div className="pointer-events-none absolute h-16 w-16 rounded-full bg-blue-950/10 blur-xl sm:h-20 sm:w-20" />
-                          <Image unoptimized src={gruppo.icona} alt={gruppo.label} width={150} height={150} className={`relative max-h-28 max-w-24 object-contain sm:max-h-36 sm:max-w-32 ${trofeoGlow(gruppo.icona)}`} />
+                    <div key={gruppo.label} className={`rounded-[1.75rem] border p-3 shadow-xl sm:p-5 lg:grid lg:grid-cols-[220px_minmax(0,1fr)] lg:items-center lg:gap-8 lg:p-7 ${gruppo.style.replace(" darkCard", "")}`}>
+                      <div className="mb-6 grid grid-cols-[104px_minmax(0,1fr)] items-center gap-4 sm:grid-cols-[144px_minmax(0,1fr)] sm:gap-6 lg:mb-0 lg:grid-cols-1 lg:justify-items-center lg:gap-2 lg:text-center">
+                        <div className="relative flex h-28 w-24 shrink-0 items-center justify-center sm:h-36 sm:w-36 lg:h-48 lg:w-48">
+                          <div className="pointer-events-none absolute h-20 w-20 rounded-full bg-amber-300/55 blur-2xl sm:h-28 sm:w-28 lg:h-36 lg:w-36" />
+                          <div className="pointer-events-none absolute h-16 w-16 rounded-full bg-blue-950/10 blur-xl sm:h-20 sm:w-20 lg:h-28 lg:w-28" />
+                          <Image unoptimized src={gruppo.icona} alt={gruppo.label} width={190} height={190} className={`relative max-h-28 max-w-24 object-contain sm:max-h-36 sm:max-w-32 lg:max-h-44 lg:max-w-40 ${trofeoGlow(gruppo.icona)}`} />
                         </div>
                         <div>
                           <h3 className="text-xl font-black text-blue-950">{gruppo.label}</h3>
@@ -231,7 +231,7 @@ export function HallOfFameContent({ embedded = false }: { embedded?: boolean }) 
                         </div>
                       </div>
 
-                      <div className="grid gap-3 md:grid-cols-2">
+                      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
                         {vincitoriCoppaFanta.length > 0 ? vincitoriCoppaFanta.map(({ stagione, team }) => (
                           <Link key={`${stagione}-${team!.id}`} href={`/societa/${team!.slug}`} className="group grid grid-cols-[72px_52px_minmax(0,1fr)] items-center gap-3 rounded-[1.4rem] border border-amber-200 bg-white/75 p-3 shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-md sm:grid-cols-[90px_64px_minmax(0,1fr)] sm:gap-4 sm:p-4">
                             <div><p className="text-[9px] font-black uppercase tracking-[0.18em] text-amber-700">Edizione</p><p className="mt-1 text-lg font-black text-blue-950">{stagione}</p></div>
@@ -239,6 +239,11 @@ export function HallOfFameContent({ embedded = false }: { embedded?: boolean }) 
                             <div className="min-w-0"><p className="text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">Campione</p><p className="mt-1 truncate text-xs font-black uppercase text-blue-950 sm:text-base">{team!.nome}</p></div>
                           </Link>
                         )) : <p className="rounded-2xl bg-white/70 p-4 text-sm font-semibold text-slate-500">Nessun vincitore registrato.</p>}
+                        <div className="relative hidden min-h-24 grid-cols-[72px_minmax(0,1fr)] items-center gap-3 overflow-hidden rounded-[1.4rem] border border-dashed border-amber-300/70 bg-[linear-gradient(135deg,rgba(255,255,255,.78),rgba(254,243,199,.55))] p-3 shadow-sm lg:grid">
+                          <div className="pointer-events-none absolute -right-6 -top-8 h-24 w-24 rounded-full bg-amber-300/25 blur-2xl" />
+                          <div><p className="text-[9px] font-black uppercase tracking-[0.18em] text-amber-700">Edizione</p><p className="mt-1 text-lg font-black text-blue-950">2026/27</p></div>
+                          <div className="relative min-w-0"><p className="text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">Il prossimo capitolo</p><p className="mt-1 text-sm font-black leading-tight text-blue-950">Chi sarà il prossimo vincitore?</p></div>
+                        </div>
                       </div>
                     </div>
                   );

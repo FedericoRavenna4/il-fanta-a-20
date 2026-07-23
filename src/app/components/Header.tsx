@@ -133,30 +133,30 @@ export default function Header() {
 
           <div
             className="relative"
-            onMouseEnter={() => setOpenMenu("statistiche")}
+            onMouseEnter={() => setOpenMenu("competizioni")}
             onMouseLeave={() => setOpenMenu(null)}
           >
             <Link
-              href="/statistiche"
+              href="/competizioni"
               onClick={closeMenu}
               className={`rounded-full px-4 py-2 transition ${
-                openMenu === "statistiche"
+                openMenu === "competizioni"
                   ? "bg-blue-950 text-white"
                   : "hover:bg-blue-950 hover:text-white"
               }`}
             >
-              Statistiche
+              Competizioni
             </Link>
 
             <div
               className={`absolute left-1/2 top-full z-50 w-[260px] -translate-x-1/2 pt-2 transition-all duration-200 ${
-                openMenu === "statistiche"
+                openMenu === "competizioni"
                   ? "pointer-events-auto translate-y-0 opacity-100"
                   : "pointer-events-none -translate-y-1 opacity-0"
               }`}
             >
               <div className="overflow-hidden rounded-[1.25rem] border border-slate-200 bg-white/95 p-2 shadow-2xl shadow-blue-950/10 backdrop-blur-xl">
-                {statisticheLinks.map((item) => (
+                {competizioniLinks.map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}
@@ -178,30 +178,30 @@ export default function Header() {
 
           <div
             className="relative"
-            onMouseEnter={() => setOpenMenu("competizioni")}
+            onMouseEnter={() => setOpenMenu("statistiche")}
             onMouseLeave={() => setOpenMenu(null)}
           >
             <Link
-              href="/competizioni"
+              href="/statistiche"
               onClick={closeMenu}
               className={`rounded-full px-4 py-2 transition ${
-                openMenu === "competizioni"
+                openMenu === "statistiche"
                   ? "bg-blue-950 text-white"
                   : "hover:bg-blue-950 hover:text-white"
               }`}
             >
-              Competizioni
+              Statistiche
             </Link>
 
             <div
               className={`absolute left-1/2 top-full z-50 w-[280px] -translate-x-1/2 pt-2 transition-all duration-200 ${
-                openMenu === "competizioni"
+                openMenu === "statistiche"
                   ? "pointer-events-auto translate-y-0 opacity-100"
                   : "pointer-events-none -translate-y-1 opacity-0"
               }`}
             >
               <div className="overflow-hidden rounded-[1.25rem] border border-slate-200 bg-white/95 p-2 shadow-2xl shadow-blue-950/10 backdrop-blur-xl">
-                {competizioniLinks.map((item) => (
+                {statisticheLinks.map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}
@@ -260,8 +260,8 @@ export default function Header() {
           {[
             { href: "/", title: "Home", text: "Il portale ufficiale" },
             { href: "/societa", title: "Società", text: "Le 100 protagoniste" },
-            { href: "/statistiche", title: "Statistiche", text: "Ranking e Hall of Fame" },
             { href: "/competizioni", title: "Competizioni", text: "Campionati, coppe e promozioni" },
+            { href: "/statistiche", title: "Statistiche", text: "Ranking e Hall of Fame" },
             { href: "/gioca", title: "Gioca", text: "Il runner arcade del Fanta a 20" },
             { href: "/regolamento", title: "Regolamento", text: "Le regole ufficiali" },
           ].map((item) => (

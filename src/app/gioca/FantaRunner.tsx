@@ -1472,7 +1472,8 @@ function updateRaffica(
   let spawned = 0;
   for (let itemIndex = 0; itemIndex < beat.count; itemIndex += 1) {
     const heightLevel = runtime.mobileLayout ? beat.mobileLine ?? beat.line : beat.line;
-    const x = burstStartX + itemIndex * (dimensions.width * scale + beat.spacing);
+    const mobileIconGap = runtime.mobileLayout ? 6 : 0;
+    const x = burstStartX + itemIndex * (dimensions.width * scale + beat.spacing + mobileIconGap);
     if (pushEvent(runtime, beat.kind, x, heightLevel, {
       burst: true,
       tight: true,
@@ -1675,7 +1676,8 @@ function updateBoss(
     const bossRect = getBossRect(runtime);
     const dimensions = getEventDimensions(kind);
     const scale = runtime.mobileLayout ? MOBILE_EVENT_SCALE : 1;
-    const spread = Math.max(beat.spacing, kind === "missedPenalty" ? 16 : 2);
+    const spread = Math.max(beat.spacing, kind === "missedPenalty" ? 16 : 2) +
+      (runtime.mobileLayout ? 6 : 0);
     const baseProjectileSpeed = runtime.mobileLayout
       ? 325 + difficulty * 65
       : 455 + difficulty * 95;
@@ -1942,7 +1944,8 @@ function spawnGameplayPattern(
   let spawnedPhysical = false;
   const patternSpacing = runtime.mobileLayout ? 1.1 : 1;
   for (const item of pattern.items) {
-    const itemOffset = item.x * patternSpacing;
+    const itemSpacing = runtime.mobileLayout && item.type === "event" ? 1.14 : patternSpacing;
+    const itemOffset = item.x * itemSpacing;
     furthestOffset = Math.max(furthestOffset, itemOffset);
     if (item.type === "physical") {
       spawnedPhysical = pushPhysicalObstacle(

@@ -4,9 +4,6 @@ import type { ReactNode } from "react";
 import { getPalmares } from "@/lib/palmares";
 import { getRanking } from "@/lib/ranking";
 import { getSocieta, type Societa } from "@/lib/societa";
-import { getWaitlistCount } from "@/lib/waitlist/server";
-
-export const dynamic = "force-dynamic";
 
 const competizioni = [
   {
@@ -109,7 +106,6 @@ export default async function Home() {
   const societa = getSocieta();
   const ranking = getRanking();
   const palmares = getPalmares();
-  const waitlistCount = await safeWaitlistCount();
 
   const podioRanking = ranking.slice(0, 3).flatMap((item) => {
     const team = societa.find((societaItem) => societaItem.id === item.squadraId);
@@ -126,7 +122,7 @@ export default async function Home() {
 
   return (
     <div className="overflow-hidden bg-[linear-gradient(180deg,#f8fbff_0%,#eef5fb_36%,#f8fafc_100%)]">
-      <section className="relative mx-auto max-w-7xl px-4 pb-9 pt-8 sm:px-6 sm:pb-20 sm:pt-16 lg:pb-24 lg:pt-24">
+      <section className="relative mx-auto max-w-7xl px-4 pb-6 pt-8 sm:px-6 sm:pb-14 sm:pt-16 lg:pb-16 lg:pt-24">
         <div className="pointer-events-none absolute left-1/2 top-0 hidden h-[34rem] w-[50rem] -translate-x-1/2 rounded-full bg-sky-200/35 blur-3xl sm:block" />
         <div className="relative grid grid-cols-[minmax(0,1fr)_76px] items-center gap-x-3 gap-y-4 sm:grid-cols-1 sm:gap-12 lg:grid-cols-[1.15fr_0.85fr]">
           <div className="contents sm:block">
@@ -152,7 +148,7 @@ export default async function Home() {
 
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-14 lg:py-16">
+      <section className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:pb-14 sm:pt-10 lg:pb-16 lg:pt-12">
         <SectionHeading eyebrow="Le protagoniste" title="Le società" text="Cento identità, cento storie: il cuore del Fanta a 20." />
         <Link href="/societa" aria-label="Esplora tutte le società" className="group relative left-1/2 mb-5 -mt-2 block w-screen -translate-x-1/2 overflow-hidden py-4 [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)] sm:mb-8 sm:-mt-4 sm:py-7">
           <div className="home-club-marquee flex w-max items-center gap-6 pr-6 transition duration-300 group-hover:opacity-35 sm:gap-10 sm:pr-10">
@@ -211,7 +207,8 @@ export default async function Home() {
         </Link>
       </section>
 
-      <section className="border-y border-slate-200/80 bg-white/65 py-8 sm:py-16 lg:py-20">
+      <div className="flex flex-col">
+      <section className="order-2 border-y border-slate-200/80 bg-white/65 py-8 sm:py-16 lg:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <SectionHeading eyebrow={<><span className="sm:hidden">Numeri e storia</span><span className="hidden sm:inline">Numeri e storia</span></>} title="Le statistiche" text="Il valore delle società prende forma attraverso ranking, record e trofei conquistati nel tempo." />
           <div className="grid gap-3 sm:gap-5 lg:grid-cols-[1.45fr_0.75fr]">
@@ -249,7 +246,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-8 max-sm:py-6 sm:px-6 sm:py-16 lg:py-20">
+      <section className="order-1 mx-auto w-full max-w-7xl px-4 py-8 max-sm:py-6 sm:px-6 sm:py-16 lg:py-20">
         <div className="mb-6 grid items-center gap-4 max-sm:mb-4 sm:mb-11 sm:gap-8 md:grid-cols-[1fr_290px] lg:grid-cols-[1fr_380px]">
             <div className="max-w-3xl lg:max-w-none">
               <p className="text-xs font-black uppercase tracking-[0.3em] text-amber-500">Il sistema sportivo</p>
@@ -279,6 +276,7 @@ export default async function Home() {
           </div>
         </div>
       </section>
+      </div>
 
       <section className="mx-auto max-w-7xl px-4 pb-14 pt-2 sm:px-6 sm:pb-20 sm:pt-4">
         <Link href="/regolamento" className="group relative block overflow-hidden rounded-[2rem] bg-blue-950 px-6 py-9 text-white shadow-2xl shadow-blue-950/20 sm:rounded-[2.25rem] sm:px-12 sm:py-14">
@@ -302,13 +300,7 @@ export default async function Home() {
                 Le 100 società del Fanta a 20 sono già state assegnate. Ogni stagione, però, alcuni posti tornano disponibili. Entra nella lista d’attesa e potresti essere il prossimo.
               </p>
             </div>
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center lg:justify-end">
-              <div className="order-2 inline-flex min-h-9 items-center justify-center gap-2 rounded-full border border-blue-950/10 bg-white/65 px-4 text-[9px] font-black uppercase tracking-[.09em] text-slate-500 shadow-sm backdrop-blur sm:order-1">
-                <span className="h-1.5 w-1.5 rounded-full bg-amber-500 shadow-[0_0_0_4px_rgba(245,158,11,.1)]" aria-hidden="true" />
-                {waitlistCount === null
-                  ? "Conteggio in aggiornamento"
-                  : `${waitlistCount.toLocaleString("it-IT")} ${waitlistCount === 1 ? "candidato in attesa" : "candidati in attesa"}`}
-              </div>
+            <div className="flex items-center justify-center lg:justify-end">
               <Link href="/lista-attesa" className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-amber-300 px-6 text-center text-[10px] font-black uppercase tracking-[.15em] text-blue-950 shadow-[0_14px_34px_rgba(245,184,45,.26)] transition hover:-translate-y-0.5 hover:bg-amber-200 sm:w-auto">
                 Entra nella lista d’attesa
               </Link>
@@ -318,12 +310,4 @@ export default async function Home() {
       </section>
     </div>
   );
-}
-
-async function safeWaitlistCount() {
-  try {
-    return await getWaitlistCount();
-  } catch {
-    return null;
-  }
 }

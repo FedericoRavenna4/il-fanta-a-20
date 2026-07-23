@@ -54,7 +54,6 @@ export default async function GiocaPage({
 
         <section className="mb-3 grid grid-cols-2 gap-2 sm:mb-4 lg:grid-cols-4">
           <Rule
-            index="01"
             title="Muoviti e sopravvivi"
             text="Salta gli ostacoli e abbassati sotto quelli sospesi."
             mobileTitle="Salta. Schiva. Corri."
@@ -62,7 +61,6 @@ export default async function GiocaPage({
             tone="sky"
           />
           <Rule
-            index="02"
             title="Resta sopra il 62"
             text="Bonus e malus cambiano il voto. Sotto la soglia, la corsa finisce."
             mobileTitle="Difendi il 62"
@@ -83,13 +81,12 @@ function getLeagueAccent(league: string): GameTeam["accent"] {
   return "violet";
 }
 
-function Rule({ index, title, text, mobileTitle, mobileText, tone }: { index: string; title: string; text: string; mobileTitle: string; mobileText: string; tone: "sky" | "amber" }) {
+function Rule({ title, text, mobileTitle, mobileText, tone }: { title: string; text: string; mobileTitle: string; mobileText: string; tone: "sky" | "amber" }) {
   const accent = tone === "sky" ? "from-sky-400/30 text-sky-700" : "from-amber-400/35 text-amber-700";
   return (
     <article className="group relative overflow-hidden rounded-xl border border-white/90 bg-white/80 px-3 py-2.5 shadow-[0_12px_34px_rgba(15,23,42,0.065)] backdrop-blur-md sm:rounded-2xl sm:px-4 sm:py-3 lg:col-span-2">
       <span className={`pointer-events-none absolute inset-y-0 left-0 w-1 bg-gradient-to-b ${accent.split(" ")[0]} to-transparent`} />
-      <span className={`absolute right-2 top-1.5 text-[8px] font-black tabular-nums opacity-55 sm:right-3 sm:top-2 ${accent.split(" ")[1]}`}>{index}</span>
-      <h2 className={`pr-5 text-[10px] font-black uppercase leading-tight tracking-[0.08em] sm:text-sm ${accent.split(" ")[1]}`}>
+      <h2 className={`text-[10px] font-black uppercase leading-tight tracking-[0.08em] sm:text-sm ${accent.split(" ")[1]}`}>
         <span className="sm:hidden">{mobileTitle}</span><span className="hidden sm:inline">{title}</span>
       </h2>
       <p className="mt-1 text-[9px] font-semibold leading-3.5 text-slate-500 sm:text-xs sm:leading-4">

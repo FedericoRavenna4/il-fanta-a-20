@@ -59,16 +59,16 @@ export default function SocietaClient({ societa }: { societa: Societa[] }) {
           <p className="mb-2 text-center text-[9px] font-black uppercase tracking-[0.22em] text-slate-400 sm:hidden">
             Leghe
           </p>
-          <div className="flex flex-wrap justify-center gap-3 max-sm:flex-nowrap max-sm:gap-1.5">
+          <div className="flex flex-wrap justify-center gap-3 max-sm:mx-auto max-sm:w-fit max-sm:max-w-full max-sm:flex-nowrap max-sm:gap-0.5 max-sm:overflow-x-auto max-sm:rounded-full max-sm:border max-sm:border-blue-950/10 max-sm:bg-white/70 max-sm:p-1 max-sm:shadow-[0_10px_28px_rgba(15,23,42,0.08)] max-sm:backdrop-blur-md max-sm:[scrollbar-width:none] max-sm:[&::-webkit-scrollbar]:hidden">
             {filters.map((item) => (
               <button
                 key={item.value}
                 onClick={() => setFilter(item.value)}
                 aria-pressed={filter === item.value}
-                className={`min-h-11 rounded-full px-4 py-2.5 text-xs font-bold transition-all duration-300 max-sm:min-h-9 max-sm:min-w-0 max-sm:px-2.5 max-sm:py-1.5 max-sm:text-[10px] max-sm:shadow-sm sm:px-5 sm:py-3 sm:text-sm ${
+                className={`min-h-11 rounded-full px-4 py-2.5 text-xs font-bold transition-all duration-300 max-sm:min-h-8 max-sm:min-w-0 max-sm:px-2.5 max-sm:py-1 max-sm:text-[9px] max-sm:font-black max-sm:uppercase max-sm:tracking-[0.08em] sm:px-5 sm:py-3 sm:text-sm ${
                   filter === item.value
-                    ? "bg-blue-950 text-white shadow-lg shadow-blue-950/20 max-sm:border max-sm:border-blue-950 max-sm:ring-2 max-sm:ring-blue-950/10 max-sm:ring-offset-1"
-                    : "border border-slate-200 bg-white text-slate-600 hover:-translate-y-0.5 hover:border-blue-900 hover:text-blue-900 hover:shadow-md max-sm:border-slate-300 max-sm:bg-white/90"
+                    ? "bg-blue-950 text-white shadow-lg shadow-blue-950/20 max-sm:shadow-[0_5px_14px_rgba(7,31,69,0.2)]"
+                    : "border border-slate-200 bg-white text-slate-600 hover:-translate-y-0.5 hover:border-blue-900 hover:text-blue-900 hover:shadow-md max-sm:border-transparent max-sm:bg-transparent max-sm:text-slate-500 max-sm:shadow-none"
                 }`}
               >
                 <span className="sm:hidden">{item.mobileLabel}</span>

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { getWaitlistCount } from "@/lib/waitlist/server";
 import WaitlistForm from "./WaitlistForm";
 
 export const metadata: Metadata = {
@@ -7,11 +6,7 @@ export const metadata: Metadata = {
   description: "Invia la tua candidatura ed entra nella lista d’attesa ufficiale del Fanta a 20.",
 };
 
-export const dynamic = "force-dynamic";
-
-export default async function WaitlistPage() {
-  const waitlistCount = await safeWaitlistCount();
-
+export default function WaitlistPage() {
   return (
     <main className="relative isolate overflow-hidden bg-[linear-gradient(180deg,#f5f9fd_0%,#ffffff_48%,#eef5fb_100%)] text-blue-950">
       <div className="pointer-events-none absolute -left-52 top-12 -z-10 h-80 w-80 rounded-full bg-sky-200/30 blur-[105px]" />
@@ -29,13 +24,8 @@ export default async function WaitlistPage() {
             <blockquote className="max-w-3xl text-[17px] font-black leading-[1.18] tracking-[-.02em] sm:text-2xl lg:text-3xl">
               Non scegliamo i più forti. Scegliamo chi renderà migliore la community.
             </blockquote>
-            <div className="grid grid-cols-2 border-t border-white/10 pt-2.5 sm:flex sm:flex-wrap sm:gap-2 sm:border-t-0 sm:pt-0 lg:justify-end">
-              <StatusPill label="Società occupate" value="100/100" tone="text-amber-300" mobileDivider />
-              <StatusPill
-                label={waitlistCount === 1 ? "Candidato in attesa" : "Candidati in attesa"}
-                value={waitlistCount === null ? "—" : waitlistCount.toLocaleString("it-IT")}
-                tone="text-sky-300"
-              />
+            <div className="flex justify-start border-t border-white/10 pt-2.5 sm:border-t-0 sm:pt-0 lg:justify-end">
+              <StatusPill label="Società occupate" value="100/100" tone="text-amber-300" />
             </div>
           </div>
         </section>
@@ -55,17 +45,9 @@ export default async function WaitlistPage() {
   );
 }
 
-async function safeWaitlistCount() {
-  try {
-    return await getWaitlistCount();
-  } catch {
-    return null;
-  }
-}
-
-function StatusPill({ label, value, tone, mobileDivider = false }: { label: string; value: string; tone: string; mobileDivider?: boolean }) {
+function StatusPill({ label, value, tone }: { label: string; value: string; tone: string }) {
   return (
-    <div className={`flex min-h-0 items-center gap-2 px-2 py-1 sm:min-h-12 sm:rounded-full sm:border sm:border-white/10 sm:bg-white/[.06] sm:px-4 sm:py-0 sm:backdrop-blur ${mobileDivider ? "border-r border-white/10" : ""}`}>
+    <div className="flex min-h-0 items-center gap-2 py-1 sm:min-h-12 sm:rounded-full sm:border sm:border-white/10 sm:bg-white/[.06] sm:px-4 sm:py-0 sm:backdrop-blur">
       <strong className={`text-xl font-black leading-none tabular-nums sm:text-2xl ${tone}`}>{value}</strong>
       <span className="max-w-20 text-[7px] font-black uppercase leading-tight tracking-[.08em] text-white/55 sm:max-w-24 sm:text-[9px] sm:tracking-[.09em]">{label}</span>
     </div>
