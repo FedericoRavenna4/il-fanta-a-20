@@ -52,6 +52,10 @@ export function CampionatiContent({ embedded = false }: { embedded?: boolean }) 
 
       <div className="grid gap-5 sm:gap-8">
         {leghe.map((lega) => {
+          const hoverClass =
+            lega.nome === "Serie A"
+              ? "hover:bg-sky-500 hover:ring-sky-300"
+              : "hover:bg-emerald-500 hover:ring-emerald-300";
           const squadreLega = societa.filter(
             (team) => team.legaAttuale === lega.nome
           );
@@ -196,7 +200,7 @@ export function CampionatiContent({ embedded = false }: { embedded?: boolean }) 
   href={`/societa/${team.slug}`}
   title={team.nome}
   aria-label={team.nome}
-  className="group relative flex h-16 items-center justify-center overflow-hidden rounded-xl bg-slate-50 p-1.5 ring-1 ring-slate-100 transition hover:shadow-lg sm:h-28 sm:rounded-2xl sm:p-3"
+  className={`group relative flex h-16 items-center justify-center overflow-hidden rounded-xl bg-slate-50 p-1.5 ring-1 ring-slate-100 transition hover:shadow-lg sm:h-28 sm:rounded-2xl sm:p-3 ${hoverClass}`}
 >
   <Image
     src={team.logo}
@@ -274,7 +278,7 @@ export function CampionatiContent({ embedded = false }: { embedded?: boolean }) 
   href={`/societa/${team.slug}`}
   title={team.nome}
   aria-label={team.nome}
-  className="group relative flex h-14 items-center justify-center overflow-hidden rounded-lg bg-white p-1 shadow-sm ring-1 ring-violet-100 transition hover:shadow-lg hover:ring-violet-200 sm:h-24 sm:rounded-2xl sm:p-2"
+  className="group relative flex h-14 items-center justify-center overflow-hidden rounded-lg bg-white p-1 shadow-sm ring-1 ring-violet-100 transition hover:bg-violet-500 hover:shadow-lg hover:ring-violet-300 sm:h-24 sm:rounded-2xl sm:p-2"
 >
   <Image
     src={team.logo}

@@ -209,7 +209,7 @@ export default async function Home() {
         <div className="relative grid grid-cols-[minmax(0,1fr)_76px] items-center gap-x-3 gap-y-4 sm:grid-cols-1 sm:gap-12 lg:grid-cols-[1.15fr_0.85fr]">
           <div className="contents sm:block">
             <p className="order-1 col-span-2 text-[10px] font-black uppercase tracking-[0.28em] text-amber-500 sm:text-xs sm:tracking-[0.36em]">Il portale ufficiale</p>
-            <h1 className="font-onder-hero order-2 mt-0 flex w-fit max-w-[82%] flex-col items-start gap-[0.3em] text-[clamp(.68rem,2.1vw,1.65rem)] text-blue-950 sm:mt-6 sm:max-w-[75%] lg:max-w-[38rem]">
+            <h1 className="font-onder-hero order-2 mt-0 flex w-fit max-w-[82%] flex-col items-start gap-[0.3em] text-[clamp(.76rem,2.3vw,1.8rem)] text-blue-950 sm:mt-6 sm:max-w-[75%] lg:max-w-[38rem]">
               <span className="block whitespace-nowrap">NON E&apos; SOLO</span>
               <span className="block whitespace-nowrap">FANTACALCIO.</span>
               <span className="block whitespace-nowrap text-blue-700">E&apos; IL FANTA A 20</span>
@@ -241,7 +241,7 @@ export default async function Home() {
           <span className="pointer-events-none absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 rounded-full border border-blue-950/10 bg-white/90 px-6 py-3 text-xs font-black uppercase tracking-[0.16em] text-blue-950 opacity-0 shadow-xl backdrop-blur transition duration-300 group-hover:opacity-100">Esplora tutte le società</span>
         </Link>
         <div className="mb-6 flex items-center gap-4">
-          <h3 className="text-xl font-black uppercase tracking-tight text-blue-950 sm:text-2xl">Società in evidenza</h3>
+          <h3 className="text-xl font-black uppercase tracking-tight text-sky-800 sm:text-2xl">Società in evidenza</h3>
           <span className="h-px flex-1 bg-slate-200" />
         </div>
         <div className="grid gap-3 sm:gap-5 lg:grid-cols-3">
@@ -282,8 +282,8 @@ export default async function Home() {
           <span className="pointer-events-none absolute right-0 top-1/2 h-40 w-40 -translate-y-1/2 rounded-full bg-sky-300/20 blur-3xl transition duration-700 group-hover:bg-sky-300/30" />
 
           <span className="relative min-w-0">
-            <span className="block text-[8px] font-black uppercase tracking-[0.23em] text-amber-600 sm:text-[9px]">Sala Giochi · Arcade</span>
-            <span className="mt-1 block text-lg font-black uppercase tracking-tight sm:text-2xl">Quanto lontano riesci ad arrivare?</span>
+            <span className="block text-[8px] font-black uppercase tracking-[0.23em] text-amber-600 sm:text-[9px]">Arcade room</span>
+            <span className="font-onder-title mt-2 block text-blue-950">La Sala Giochi</span>
             <span className="mt-1 block text-xs font-semibold text-slate-500 sm:text-sm">Scegli una società e scendi in campo.</span>
           </span>
 
@@ -306,7 +306,8 @@ export default async function Home() {
         <Link href="/emblemi" className="group relative grid border-y border-blue-950/10 py-5 text-blue-950 transition duration-500 hover:border-blue-950/25 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-200 sm:grid-cols-[minmax(0,.92fr)_minmax(360px,1.08fr)] sm:items-center sm:gap-8 sm:px-3 sm:py-7">
           <div className="pointer-events-none absolute -right-24 -top-28 h-72 w-72 rounded-full bg-sky-300/20 blur-[85px]" />
           <div className="relative min-w-0">
-            <h2 className="text-2xl font-black uppercase tracking-tight sm:text-3xl">Archivio degli emblemi</h2>
+            <p className="text-[9px] font-black uppercase tracking-[0.22em] text-amber-600">Archivio degli emblemi</p>
+            <h2 className="font-onder-title mt-2 text-blue-950">La collezione ufficiale</h2>
             <p className="mt-2 max-w-xl text-xs font-semibold leading-5 text-slate-500 sm:text-sm sm:leading-6">Scopri rarità, traguardi e record da sbloccare nel mondo Fanta a 20</p>
             <span className="mt-4 inline-flex min-h-11 items-center rounded-xl border border-blue-950/15 bg-white/55 px-4 text-[9px] font-black uppercase tracking-[0.13em] text-blue-950 shadow-sm backdrop-blur transition duration-300 group-hover:border-blue-950/30 group-hover:bg-white sm:px-5 sm:text-[10px]">
               Visualizza tutta la collezione ufficiale →

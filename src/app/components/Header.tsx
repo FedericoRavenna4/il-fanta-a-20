@@ -115,7 +115,7 @@ export default function Header() {
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-2 text-sm font-bold text-slate-600 lg:flex">
+        <nav className="hidden items-center gap-1 text-sm font-bold text-slate-600 lg:flex">
           <Link
             href="/"
             onClick={closeMenu}
@@ -231,6 +231,22 @@ export default function Header() {
           </Link>
 
           <Link
+            href="/emblemi"
+            onClick={closeMenu}
+            className="rounded-full px-3 py-2 transition hover:bg-blue-950 hover:text-white"
+          >
+            Emblemi
+          </Link>
+
+          <Link
+            href="/lista-attesa"
+            onClick={closeMenu}
+            className="rounded-full px-3 py-2 transition hover:bg-blue-950 hover:text-white"
+          >
+            Lista di Attesa
+          </Link>
+
+          <Link
             href="/regolamento"
             onClick={closeMenu}
             className="rounded-full px-4 py-2 transition hover:bg-blue-950 hover:text-white"
@@ -264,6 +280,8 @@ export default function Header() {
             { href: "/competizioni", title: "Competizioni", text: "Campionati, coppe e promozioni" },
             { href: "/statistiche", title: "Statistiche", text: "Ranking e Hall of Fame" },
             { href: "/gioca", title: "Gioca", text: "Il runner arcade del Fanta a 20" },
+            { href: "/emblemi", title: "Emblemi", text: "La collezione ufficiale" },
+            { href: "/lista-attesa", title: "Lista di Attesa", text: "Entra nella community" },
             { href: "/regolamento", title: "Regolamento", text: "Le regole ufficiali" },
           ].map((item) => (
             <Link key={item.href} href={item.href} onClick={closeMenu} className="flex min-h-14 flex-col justify-center rounded-[1.1rem] border border-slate-100 bg-slate-50/80 px-4 py-3 active:bg-sky-50">

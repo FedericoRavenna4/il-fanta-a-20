@@ -55,6 +55,16 @@ a {
   line-height: 1;
 }
 
+@media (max-width: 639px) {
+  .font-onder-title-mobile-compact {
+    font-size: 0.62rem;
+  }
+
+  .emblema-catalogo-card {
+    box-shadow: none !important;
+  }
+}
+
 @keyframes logo-name-scroll {
   0%,
   18% {
