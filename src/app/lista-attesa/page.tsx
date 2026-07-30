@@ -14,7 +14,7 @@ export default function WaitlistPage() {
 
       <div className="mx-auto w-full max-w-6xl px-4 pb-10 pt-5 sm:px-6 sm:pb-16 sm:pt-10 lg:pb-20 lg:pt-12">
         <header className="border-b border-blue-950/10 pb-4 sm:pb-6">
-          <p className="text-[9px] font-black uppercase tracking-[.24em] text-amber-600 sm:text-[10px]">Il prossimo capitolo</p>
+          <p className="section-eyebrow">La tua occasione</p>
           <h1 className="font-onder-title mt-2 text-blue-950">La lista di attesa</h1>
         </header>
 

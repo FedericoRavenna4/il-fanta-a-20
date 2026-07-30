@@ -220,14 +220,6 @@ export default function Header() {
           </div>
 
           <Link
-            href="/gioca"
-            onClick={closeMenu}
-            className="rounded-full px-4 py-2 transition hover:bg-blue-950 hover:text-white"
-          >
-            Gioca
-          </Link>
-
-          <Link
             href="/emblemi"
             onClick={closeMenu}
             className="rounded-full px-3 py-2 transition hover:bg-blue-950 hover:text-white"
@@ -236,19 +228,11 @@ export default function Header() {
           </Link>
 
           <Link
-            href="/lista-attesa"
-            onClick={closeMenu}
-            className="rounded-full px-3 py-2 transition hover:bg-blue-950 hover:text-white"
-          >
-            Lista di Attesa
-          </Link>
-
-          <Link
-            href="/regolamento"
+            href="/gioca"
             onClick={closeMenu}
             className="rounded-full px-4 py-2 transition hover:bg-blue-950 hover:text-white"
           >
-            Regolamento
+            Gioca
           </Link>
         </nav>
 
@@ -276,10 +260,8 @@ export default function Header() {
             { href: "/societa", title: "Società", text: "Le 100 protagoniste" },
             { href: "/competizioni", title: "Competizioni", text: "Campionati, coppe e promozioni" },
             { href: "/statistiche", title: "Statistiche", text: "Ranking e Hall of Fame" },
-            { href: "/gioca", title: "Gioca", text: "Il runner arcade del Fanta a 20" },
             { href: "/emblemi", title: "Emblemi", text: "La collezione ufficiale" },
-            { href: "/lista-attesa", title: "Lista di Attesa", text: "Entra nella community" },
-            { href: "/regolamento", title: "Regolamento", text: "Le regole ufficiali" },
+            { href: "/gioca", title: "Gioca", text: "Il runner arcade del Fanta a 20" },
           ].map((item) => (
             <Link key={item.href} href={item.href} onClick={closeMenu} className="flex min-h-14 flex-col justify-center rounded-[1.1rem] border border-slate-100 bg-slate-50/80 px-4 py-3 active:bg-sky-50">
               <p className="text-sm font-black uppercase text-blue-950">{item.title}</p>

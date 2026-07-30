@@ -5,6 +5,7 @@ import "./globals.css";
 
 import Header from "./components/Header";
 import Footer from "./components/Footer";
+import ScrollToTop from "./components/ScrollToTop";
 
 const manrope = Manrope({
   variable: "--font-manrope",
@@ -29,6 +30,7 @@ export default function RootLayout({
   return (
     <html lang="it" className={`${manrope.variable} ${outfit.variable}`}>
       <body className="min-h-screen flex flex-col font-[var(--font-outfit)]">
+        <ScrollToTop />
         <Header />
 
         <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top))] lg:pt-0">{children}</main>

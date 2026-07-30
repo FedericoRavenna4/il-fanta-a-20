@@ -55,7 +55,7 @@ export default function EmblemiCatalogo({
 }) {
   const [filtro, setFiltro] = useState<GruppoEmblema | "Tutti">("Tutti");
   const [selezionato, setSelezionato] = useState<EmblemaCatalogo | null>(null);
-  const [nascostoAperto, setNascostoAperto] = useState(false);
+  const [nascostoSelezionato, setNascostoSelezionato] = useState<EmblemaNascostoCatalogo | null>(null);
   const gruppiVisibili = useMemo(
     () => GRUPPI_EMBLEMI
       .filter((gruppo) => filtro === "Tutti" || filtro === gruppo)
@@ -75,11 +75,11 @@ export default function EmblemiCatalogo({
   );
 
   useEffect(() => {
-    if (!selezionato && !nascostoAperto) return;
+    if (!selezionato && !nascostoSelezionato) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setSelezionato(null);
-        setNascostoAperto(false);
+        setNascostoSelezionato(null);
       }
     };
     document.addEventListener("keydown", onKeyDown);
@@ -88,7 +88,7 @@ export default function EmblemiCatalogo({
       document.removeEventListener("keydown", onKeyDown);
       document.body.style.overflow = "";
     };
-  }, [selezionato, nascostoAperto]);
+  }, [selezionato, nascostoSelezionato]);
 
   return (
     <>
@@ -121,11 +121,11 @@ export default function EmblemiCatalogo({
 
       <div className="space-y-8 sm:space-y-10">
         {gruppiVisibili.filter((gruppo) => gruppo.nome !== "Da difendere").map((gruppo) => (
-          <CatalogoGruppo key={gruppo.nome} gruppo={gruppo.nome} emblemi={gruppo.emblemi} onSelect={setSelezionato} onHiddenSelect={() => setNascostoAperto(true)} />
+          <CatalogoGruppo key={gruppo.nome} gruppo={gruppo.nome} emblemi={gruppo.emblemi} onSelect={setSelezionato} onHiddenSelect={setNascostoSelezionato} />
         ))}
 
         {gruppiVisibili.filter((gruppo) => gruppo.nome === "Da difendere").map((gruppo) => (
-          <CatalogoGruppo key={gruppo.nome} gruppo={gruppo.nome} emblemi={gruppo.emblemi} onSelect={setSelezionato} onHiddenSelect={() => setNascostoAperto(true)} />
+          <CatalogoGruppo key={gruppo.nome} gruppo={gruppo.nome} emblemi={gruppo.emblemi} onSelect={setSelezionato} onHiddenSelect={setNascostoSelezionato} />
         ))}
       </div>
 
@@ -174,13 +174,13 @@ export default function EmblemiCatalogo({
         </div>
       )}
 
-      {nascostoAperto && (
+      {nascostoSelezionato && (
         <div
           role="dialog"
           aria-modal="true"
           aria-labelledby="emblema-nascosto-mobile"
           className="fixed inset-0 z-[170] flex items-center justify-center bg-slate-950/65 p-4 backdrop-blur-md sm:hidden"
-          onMouseDown={() => setNascostoAperto(false)}
+          onMouseDown={() => setNascostoSelezionato(null)}
         >
           <div
             className="relative w-full max-w-sm rounded-[1.75rem] border border-slate-200 bg-white p-6 text-center shadow-2xl"
@@ -188,13 +188,16 @@ export default function EmblemiCatalogo({
           >
             <button
               type="button"
-              onClick={() => setNascostoAperto(false)}
+              onClick={() => setNascostoSelezionato(null)}
               aria-label="Chiudi"
               className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-xl text-blue-950 shadow-sm"
             >
               <span aria-hidden="true">×</span>
             </button>
-            <span className="mx-auto block h-20 w-20 rounded-[42%_42%_48%_48%] bg-slate-800/85 shadow-[0_0_30px_rgba(15,23,42,.25)] [clip-path:polygon(50%_0,88%_18%,82%_72%,50%_100%,18%_72%,12%_18%)]" aria-hidden="true" />
+            <div className="relative mx-auto flex h-24 w-24 items-center justify-center">
+              <span className={`absolute h-20 w-20 rounded-full opacity-55 blur-2xl ${PALETTE_EMBLEMI[nascostoSelezionato.categoria].glow}`} />
+              <Image src={nascostoSelezionato.immagine} alt="" width={112} height={112} className="relative max-h-24 max-w-24 object-contain brightness-0 contrast-[2] drop-shadow-[0_12px_16px_rgba(15,23,42,.28)]" />
+            </div>
             <h2 id="emblema-nascosto-mobile" className="mt-5 text-lg font-black uppercase tracking-[0.08em] text-blue-950">
               Emblema nascosto
             </h2>
@@ -217,7 +220,7 @@ function CatalogoGruppo({
   gruppo: GruppoEmblema;
   emblemi: ElementoCatalogo[];
   onSelect: (emblema: EmblemaCatalogo) => void;
-  onHiddenSelect: () => void;
+  onHiddenSelect: (emblema: EmblemaNascostoCatalogo) => void;
 }) {
   const palette = PALETTE_EMBLEMI[gruppo];
   const colonne = colonneDesktop(emblemi.length);
@@ -262,7 +265,7 @@ function CatalogoGruppo({
   );
 }
 
-function EmblemaNascosto({ emblema, onSelect }: { emblema: EmblemaNascostoCatalogo; onSelect: () => void }) {
+function EmblemaNascosto({ emblema, onSelect }: { emblema: EmblemaNascostoCatalogo; onSelect: (emblema: EmblemaNascostoCatalogo) => void }) {
   const [source, setSource] = useState(emblema.immagine);
   const palette = PALETTE_EMBLEMI[emblema.categoria];
 
@@ -274,7 +277,7 @@ function EmblemaNascosto({ emblema, onSelect }: { emblema: EmblemaNascostoCatalo
     >
       <button
         type="button"
-        onClick={onSelect}
+        onClick={() => onSelect(emblema)}
         aria-label="Scopri come rivelare l’emblema nascosto"
         className="absolute inset-0 z-20 sm:hidden"
       />
