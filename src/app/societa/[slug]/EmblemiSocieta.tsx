@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { createPortal } from "react-dom";
 import { useEffect, useRef, useState } from "react";
-import type { CategoriaEmblema, Emblema, EmblemaPosseduto } from "@/lib/emblemi";
+import type { CategoriaEmblema, EmblemaPosseduto } from "@/lib/emblemi";
 import { GRUPPI_EMBLEMI, isEmblemaNascosto, PALETTE_EMBLEMI } from "@/lib/emblemi-ui";
 
 const ordinePrestigio = [...GRUPPI_EMBLEMI]
@@ -79,7 +79,7 @@ function EmblemaIcona({ emblema, vetrina = false }: { emblema: EmblemaPosseduto;
           }}
           className="pointer-events-none fixed z-[160] rounded-xl border border-white/10 bg-blue-950/97 px-3.5 py-3 text-left shadow-2xl backdrop-blur-xl"
         >
-          <p className="text-[8px] font-black uppercase tracking-[0.15em] text-white/45">{emblema.categoria}</p>
+          <p className={`text-[8px] font-black uppercase tracking-[0.15em] ${palette.labelText}`}>{emblema.categoria}</p>
           <p className="text-[11px] font-black uppercase leading-tight text-white">{emblema.nome}</p>
           <p className="mt-1.5 text-[10px] font-semibold leading-4">
             <TestoEmblema emblema={emblema} tooltip />
@@ -107,12 +107,11 @@ function EmblemaIcona({ emblema, vetrina = false }: { emblema: EmblemaPosseduto;
           }
         }}
         onKeyDown={(event) => event.key === "Escape" && setTooltip(null)}
-        className={`group relative flex min-w-0 items-center justify-center overflow-hidden border bg-[linear-gradient(145deg,rgba(255,255,255,.96),rgba(248,250,252,.82))] outline-none ring-1 ring-inset transition duration-300 hover:-translate-y-0.5 focus-visible:ring-2 ${palette.border} ${palette.ring} ${palette.glowStrong} ${
-          vetrina ? "aspect-square rounded-2xl p-3" : "aspect-square rounded-xl p-2"
+        className={`group relative flex min-w-0 items-center justify-center rounded-xl outline-none transition duration-300 hover:-translate-y-0.5 focus-visible:ring-2 ${palette.ring} ${
+          vetrina ? "h-14 p-1 sm:h-20 sm:p-2" : "h-20 p-1.5 sm:h-24 sm:p-2"
         }`}
       >
-        <span className={`pointer-events-none absolute inset-x-4 top-0 h-px bg-gradient-to-r from-transparent ${palette.line} to-transparent`} />
-        <span className={`pointer-events-none absolute h-2/3 w-2/3 rounded-full opacity-60 blur-2xl transition duration-500 group-hover:opacity-100 ${palette.glow}`} />
+        <span className={`pointer-events-none absolute h-3/4 w-3/4 rounded-full opacity-0 blur-2xl transition duration-500 group-hover:opacity-100 group-focus-visible:opacity-100 ${palette.glow}`} />
         <Image
           src={source}
           alt=""
@@ -120,7 +119,7 @@ function EmblemaIcona({ emblema, vetrina = false }: { emblema: EmblemaPosseduto;
           height={110}
           onError={() => setSource("/emblemi/placeholder.svg")}
           className={`relative object-contain drop-shadow-[0_11px_15px_rgba(15,23,42,.3)] transition duration-500 group-hover:scale-[1.05] ${
-            vetrina ? "max-h-[6.25rem] max-w-[6.25rem]" : "max-h-[5rem] max-w-[5rem]"
+            vetrina ? "max-h-12 max-w-12 sm:max-h-[4.5rem] sm:max-w-[4.5rem]" : "max-h-[4.5rem] max-w-[4.5rem] sm:max-h-[5.25rem] sm:max-w-[5.25rem]"
           }`}
         />
       </button>
@@ -129,26 +128,12 @@ function EmblemaIcona({ emblema, vetrina = false }: { emblema: EmblemaPosseduto;
   );
 }
 
-function EmblemaNascostoIcona() {
-  return (
-    <div
-      role="img"
-      aria-label="Emblema nascosto"
-      className="relative flex aspect-square min-w-0 items-center justify-center overflow-hidden rounded-xl border border-slate-300/70 bg-[radial-gradient(circle_at_50%_38%,rgba(51,65,85,.15),rgba(248,250,252,.92)_60%)] shadow-[0_10px_25px_rgba(15,23,42,.07)]"
-    >
-      <span className="h-11 w-11 rounded-[42%_42%_48%_48%] bg-slate-800/78 shadow-[0_0_20px_rgba(15,23,42,.24)] [clip-path:polygon(50%_0,88%_18%,82%_72%,50%_100%,18%_72%,12%_18%)]" aria-hidden="true" />
-    </div>
-  );
-}
-
 export default function EmblemiSocieta({
   sbloccati,
   daDifendere,
-  nascosti,
 }: {
   sbloccati: EmblemaPosseduto[];
   daDifendere: EmblemaPosseduto[];
-  nascosti: Emblema[];
 }) {
   const [open, setOpen] = useState(false);
   const ordinatiTutti = [...sbloccati].sort(
@@ -158,7 +143,6 @@ export default function EmblemiSocieta({
       a.id - b.id
   );
   const ordinati = ordinatiTutti.filter((emblema) => !isEmblemaNascosto(emblema));
-  const nascostiOrdinati = [...nascosti].sort((a, b) => a.id - b.id);
 
   useEffect(() => {
     if (!open) return;
@@ -177,7 +161,7 @@ export default function EmblemiSocieta({
     <>
       <section className="rounded-[2rem] border border-slate-200 bg-white/90 p-4 shadow-lg shadow-slate-200/40 backdrop-blur sm:p-5">
         <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-950">
-          Collezione della società <span className="text-slate-400">— {sbloccati.length}</span>
+          Collezione della società <span className="text-slate-400">— {ordinati.length}</span>
         </h2>
 
         <div className="mt-3 border-t border-slate-200/80 pt-3">
@@ -195,7 +179,7 @@ export default function EmblemiSocieta({
             <p className="mt-2 text-xs font-semibold text-slate-400">Nessun emblema sbloccato.</p>
           )}
 
-          {ordinatiTutti.length > 6 && (
+          {ordinati.length > 6 && (
             <button
               type="button"
               onClick={() => setOpen(true)}
@@ -204,18 +188,6 @@ export default function EmblemiSocieta({
               Vedi tutti
             </button>
           )}
-        </div>
-      </section>
-
-      <section className="rounded-[2rem] border border-slate-300/80 bg-[linear-gradient(145deg,rgba(241,245,249,.96),rgba(255,255,255,.94))] p-4 shadow-[0_16px_38px_rgba(15,23,42,.08)] sm:p-5">
-        <h2 className="text-base font-black uppercase tracking-tight text-blue-950">Emblemi nascosti</h2>
-        <div className="mt-3 grid grid-cols-4 gap-2">
-          {nascostiOrdinati.map((emblema) => {
-            const sbloccato = sbloccati.find((item) => item.id === emblema.id);
-            return sbloccato
-              ? <EmblemaIcona key={emblema.id} emblema={sbloccato} />
-              : <EmblemaNascostoIcona key={emblema.id} />;
-          })}
         </div>
       </section>
 
@@ -263,13 +235,13 @@ export default function EmblemiSocieta({
               <div className="min-w-0">
                 <h2 className="text-lg font-black uppercase tracking-tight text-blue-950 sm:text-2xl">Collezione della società</h2>
                 <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.13em] text-slate-400">
-                  Emblemi sbloccati — {ordinatiTutti.length}
+                  Emblemi sbloccati — {ordinati.length}
                 </p>
               </div>
             </div>
 
-            <div className="mt-4 grid grid-cols-4 gap-2 sm:grid-cols-5 sm:gap-3 md:grid-cols-6 lg:grid-cols-7">
-              {ordinatiTutti.map((emblema) => (
+            <div className="mt-4 grid grid-cols-5 gap-x-1 gap-y-2 sm:grid-cols-7 sm:gap-3 md:grid-cols-8 lg:grid-cols-10">
+              {ordinati.map((emblema) => (
                 <EmblemaIcona key={emblema.id} emblema={emblema} vetrina />
               ))}
             </div>

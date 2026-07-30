@@ -32,6 +32,7 @@ export const PALETTE_EMBLEMI: Record<GruppoEmblema, {
   glowStrong: string;
   line: string;
   ring: string;
+  labelText: string;
 }> = {
   Base: {
     label: "Base",
@@ -40,6 +41,7 @@ export const PALETTE_EMBLEMI: Record<GruppoEmblema, {
     glowStrong: "shadow-[0_18px_42px_rgba(14,165,233,.18)]",
     line: "from-sky-400/80",
     ring: "ring-sky-400/35",
+    labelText: "text-sky-500",
   },
   Comune: {
     label: "Comune",
@@ -48,6 +50,7 @@ export const PALETTE_EMBLEMI: Record<GruppoEmblema, {
     glowStrong: "shadow-[0_18px_42px_rgba(146,64,14,.18)]",
     line: "from-amber-700/80",
     ring: "ring-amber-700/35",
+    labelText: "text-amber-700",
   },
   Raro: {
     label: "Raro",
@@ -56,6 +59,7 @@ export const PALETTE_EMBLEMI: Record<GruppoEmblema, {
     glowStrong: "shadow-[0_18px_42px_rgba(100,116,139,.2)]",
     line: "from-slate-400/90",
     ring: "ring-slate-400/40",
+    labelText: "text-slate-500",
   },
   Epico: {
     label: "Epico",
@@ -64,6 +68,7 @@ export const PALETTE_EMBLEMI: Record<GruppoEmblema, {
     glowStrong: "shadow-[0_18px_42px_rgba(245,158,11,.2)]",
     line: "from-amber-400/90",
     ring: "ring-amber-400/40",
+    labelText: "text-amber-500",
   },
   Mitico: {
     label: "Mitico",
@@ -72,6 +77,7 @@ export const PALETTE_EMBLEMI: Record<GruppoEmblema, {
     glowStrong: "shadow-[0_18px_42px_rgba(225,29,72,.2)]",
     line: "from-rose-600/85",
     ring: "ring-rose-600/35",
+    labelText: "text-rose-600",
   },
   Leggendario: {
     label: "Leggendario",
@@ -80,6 +86,7 @@ export const PALETTE_EMBLEMI: Record<GruppoEmblema, {
     glowStrong: "shadow-[0_18px_42px_rgba(5,150,105,.2)]",
     line: "from-emerald-500/90",
     ring: "ring-emerald-500/35",
+    labelText: "text-emerald-600",
   },
   "Da difendere": {
     label: "Da difendere",
@@ -88,6 +95,7 @@ export const PALETTE_EMBLEMI: Record<GruppoEmblema, {
     glowStrong: "shadow-[0_18px_42px_rgba(124,58,237,.22)]",
     line: "from-violet-600/90",
     ring: "ring-violet-600/35",
+    labelText: "text-violet-600",
   },
 };
 

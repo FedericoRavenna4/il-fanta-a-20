@@ -4,8 +4,10 @@ import type { ReactNode } from "react";
 import { getPalmares } from "@/lib/palmares";
 import { getRanking } from "@/lib/ranking";
 import { getSocieta, type Societa } from "@/lib/societa";
-import { getCatalogoEmblemi } from "@/lib/emblemi";
-import { PALETTE_EMBLEMI } from "@/lib/emblemi-ui";
+import { CATEGORIE_EMBLEMA, getCatalogoEmblemi, getEmblemiSocieta, type CategoriaEmblema } from "@/lib/emblemi";
+import { isEmblemaNascosto, PALETTE_EMBLEMI } from "@/lib/emblemi-ui";
+import { getRisultati } from "@/lib/risultati";
+import { getStorieSocieta } from "@/lib/storieSocieta";
 
 const competizioni = [
   {
@@ -104,11 +106,26 @@ function SectionHeading({
   );
 }
 
+const STORIE_HOME: Record<number, string> = {
+  1: "Un solo anno per conquistare Campionato, Champions League e Coppa Fanta a 20: il primo Triplete della storia.",
+  2: "Presente dal giorno zero, nel 2025/26 ha firmato la consacrazione vincendo Campionato e Champions League.",
+  42: "Al debutto nel 2025/26 ha sovvertito ogni pronostico, conquistando il trofeo più prestigioso dell’ecosistema.",
+};
+
+function storiaBreve(descrizione: string | undefined) {
+  if (!descrizione) return "";
+  const primaFrase = descrizione.match(/^.*?[.!?](?:\s|$)/)?.[0]?.trim();
+  return primaFrase || descrizione;
+}
+
 export default async function Home() {
   const societa = getSocieta();
   const ranking = getRanking();
   const palmares = getPalmares();
   const catalogoEmblemi = getCatalogoEmblemi();
+  const assegnazioniEmblemi = getEmblemiSocieta();
+  const risultati = getRisultati();
+  const storie = getStorieSocieta();
 
   const podioRanking = ranking.slice(0, 3).flatMap((item) => {
     const team = societa.find((societaItem) => societaItem.id === item.squadraId);
@@ -116,11 +133,59 @@ export default async function Home() {
   });
   const piuTitolata = [...palmares].sort((a, b) => b.totaleTrofei - a.totaleTrofei)[0];
   const teamPiuTitolato = societa.find((team) => team.id === piuTitolata?.squadraId);
+  const primaRanking = [...ranking].sort((a, b) => a.posizione - b.posizione)[0];
+  const collezionista = [...assegnazioniEmblemi].sort((a, b) => {
+    const emblemiA = a.emblemi.filter(
+      (emblema) => emblema.stato === "Sbloccato" && !isEmblemaNascosto(emblema)
+    ).length;
+    const emblemiB = b.emblemi.filter(
+      (emblema) => emblema.stato === "Sbloccato" && !isEmblemaNascosto(emblema)
+    ).length;
+    return emblemiB - emblemiA || a.squadraId - b.squadraId;
+  })[0];
+  const ultimaCoppa = risultati
+    .filter(
+      (risultato) =>
+        risultato.competizione === "Coppa Fanta a 20" &&
+        risultato.risultatoTesto.trim().toLocaleLowerCase("it") === "vincitore"
+    )
+    .sort((a, b) => b.stagioneId - a.stagioneId)[0];
+  const teamCollezionista = societa.find((team) => team.id === collezionista?.squadraId);
+  const emblemiCollezionista = collezionista?.emblemi
+    .filter((emblema) => emblema.stato === "Sbloccato" && !isEmblemaNascosto(emblema))
+    .sort(
+      (a, b) =>
+        CATEGORIE_EMBLEMA.indexOf(b.categoria as CategoriaEmblema) -
+          CATEGORIE_EMBLEMA.indexOf(a.categoria as CategoriaEmblema) ||
+        a.id - b.id
+    )
+    .slice(0, 3) ?? [];
+  const storiaPerTeam = (id: number) =>
+    STORIE_HOME[id] ?? storiaBreve(storie.find((storia) => storia.squadraId === id)?.descrizione);
   const societaCampioni = [
-    { team: societa.find((item) => item.id === 1), label: "Leader del ranking", tone: "text-sky-300", storia: "Un solo anno per conquistare Campionato, Champions League e Coppa Fanta a 20: il primo Triplete della storia." },
-    { team: societa.find((item) => item.id === 2), label: "Campione in carica Serie A", tone: "text-amber-300", storia: "Presente dal giorno zero, nel 2025/26 ha firmato la consacrazione vincendo Campionato e Champions League." },
-    { team: societa.find((item) => item.id === 42), label: "Campione in carica Coppa Fanta a 20", tone: "text-emerald-300", storia: "Al debutto nel 2025/26 ha sovvertito ogni pronostico, conquistando il trofeo più prestigioso dell’ecosistema." },
-  ].filter((item): item is { team: Societa; label: string; tone: string; storia: string } => Boolean(item.team));
+    {
+      team: societa.find((item) => item.id === primaRanking?.squadraId),
+      label: "Prima del Ranking",
+      tone: "text-sky-300",
+      emblemi: [],
+    },
+    {
+      team: teamCollezionista,
+      label: "Collezionista Supremo",
+      tone: "text-amber-300",
+      emblemi: emblemiCollezionista,
+    },
+    {
+      team: societa.find((item) => item.id === ultimaCoppa?.squadraId),
+      label: "Ultima vincitrice della Coppa Fanta a 20",
+      tone: "text-emerald-300",
+      emblemi: [],
+    },
+  ].flatMap((item) => item.team ? [{
+    ...item,
+    team: item.team,
+    storia: storiaPerTeam(item.team.id),
+  }] : []);
   const societaMarquee = [...societa].sort((a, b) => a.id - b.id);
   const emblemiVetrina = [
     "bestia nera",
@@ -178,12 +243,25 @@ export default async function Home() {
           <span className="h-px flex-1 bg-slate-200" />
         </div>
         <div className="grid gap-3 sm:gap-5 lg:grid-cols-3">
-          {societaCampioni.map(({ team, label, tone, storia }) => (
+          {societaCampioni.map(({ team, label, tone, storia, emblemi }) => (
             <Link key={team.id} href={`/societa/${team.slug}`} className="group relative grid h-full grid-rows-[auto_auto_1fr_auto] gap-y-3 overflow-hidden rounded-[2rem] bg-blue-950 p-4 text-white shadow-xl shadow-blue-950/10 transition duration-300 hover:-translate-y-1 hover:shadow-2xl sm:gap-y-4 sm:p-7 lg:grid-rows-[2.25rem_10rem_1fr_auto] lg:gap-y-0">
               <div className="pointer-events-none absolute right-0 top-0 h-52 w-52 bg-sky-400/10 blur-3xl" />
               <p className={`relative self-start text-[10px] font-black uppercase leading-5 tracking-[0.22em] ${tone}`}>{label}</p>
               <div className="relative flex min-w-0 flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
-                <div className="min-w-0"><h3 className="break-words text-lg font-black uppercase leading-tight sm:max-w-48 sm:text-2xl">{team.nome}</h3><p className="mt-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-white/45 sm:mt-3 sm:text-xs">{team.legaAttuale}</p></div>
+                <div className="min-w-0">
+                  <h3 className="break-words text-lg font-black uppercase leading-tight sm:max-w-48 sm:text-2xl">{team.nome}</h3>
+                  <p className="mt-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-white/45 sm:mt-3 sm:text-xs">{team.legaAttuale}</p>
+                  {emblemi.length > 0 && (
+                    <div className="mt-2 flex items-center gap-1.5 sm:mt-3">
+                      {emblemi.map((emblema) => (
+                        <span key={emblema.id} className="relative flex h-8 w-8 items-center justify-center sm:h-10 sm:w-10">
+                          <span className={`pointer-events-none absolute h-7 w-7 rounded-full blur-lg ${PALETTE_EMBLEMI[emblema.categoria].glow}`} />
+                          <Image src={emblema.immagine} alt={emblema.nome} width={42} height={42} className="relative max-h-full max-w-full object-contain drop-shadow-[0_7px_9px_rgba(0,0,0,.35)]" />
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 <div className="flex h-20 w-20 shrink-0 self-center items-center justify-center p-1 sm:h-32 sm:w-32 sm:p-2"><TeamLogo team={team} size={118} /></div>
               </div>
               <p className="relative border-t border-white/10 pt-3 text-xs font-semibold leading-5 text-white/60 sm:pt-5 sm:text-sm sm:leading-6">{storia}</p>
@@ -193,7 +271,8 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 pb-8 sm:px-6 sm:pb-16 lg:pb-20">
+      <div className="flex flex-col">
+      <section className="order-2 mx-auto w-full max-w-7xl px-4 pb-8 sm:px-6 sm:pb-16 lg:pb-20">
         <Link
           href="/gioca"
           className="group relative grid overflow-hidden rounded-[1.5rem] border border-blue-900/10 bg-[linear-gradient(120deg,#071a36_0%,#0b315b_62%,#145486_100%)] px-4 py-4 text-white shadow-[0_18px_48px_rgba(15,23,42,0.16)] transition duration-500 hover:-translate-y-0.5 hover:shadow-[0_24px_65px_rgba(15,23,42,0.22)] sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center sm:gap-7 sm:rounded-[1.8rem] sm:px-7 sm:py-5"
@@ -222,19 +301,16 @@ export default async function Home() {
         </Link>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 pb-8 sm:px-6 sm:pb-16 lg:pb-20">
-        <div className="group relative grid overflow-hidden rounded-[1.6rem] border border-white/10 bg-[linear-gradient(125deg,#071a34_0%,#0a284d_58%,#102e54_100%)] p-4 text-white shadow-[0_22px_58px_rgba(7,26,52,.2)] sm:grid-cols-[minmax(0,.92fr)_minmax(360px,1.08fr)] sm:items-center sm:gap-8 sm:rounded-[2rem] sm:p-7 lg:px-9">
+      <section className="order-1 mx-auto w-full max-w-7xl px-4 pb-8 sm:px-6 sm:pb-16 lg:pb-20">
+        <Link href="/emblemi" className="group relative grid overflow-hidden rounded-[1.6rem] border border-white/10 bg-[linear-gradient(125deg,#071a34_0%,#0a284d_58%,#102e54_100%)] p-4 text-white shadow-[0_22px_58px_rgba(7,26,52,.2)] transition duration-500 hover:-translate-y-0.5 hover:border-white/20 hover:shadow-[0_28px_70px_rgba(7,26,52,.27)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-200 sm:grid-cols-[minmax(0,.92fr)_minmax(360px,1.08fr)] sm:items-center sm:gap-8 sm:rounded-[2rem] sm:p-7 lg:px-9">
           <div className="pointer-events-none absolute -right-24 -top-28 h-72 w-72 rounded-full bg-sky-300/[0.08] blur-[85px]" />
           <div className="pointer-events-none absolute inset-x-16 top-0 h-px bg-gradient-to-r from-transparent via-white/35 to-transparent" />
           <div className="relative min-w-0">
             <h2 className="text-2xl font-black uppercase tracking-tight sm:text-3xl">Archivio degli emblemi</h2>
             <p className="mt-2 max-w-xl text-xs font-semibold leading-5 text-white/58 sm:text-sm sm:leading-6">Scopri rarità, traguardi e record da sbloccare nel mondo Fanta a 20</p>
-            <Link
-              href="/emblemi"
-              className="mt-4 inline-flex min-h-11 items-center rounded-xl border border-white/20 bg-white/[0.06] px-4 text-[9px] font-black uppercase tracking-[0.13em] text-white shadow-[inset_0_1px_0_rgba(255,255,255,.08)] backdrop-blur transition duration-300 hover:-translate-y-0.5 hover:border-white/45 hover:bg-white/[0.11] hover:shadow-[0_10px_28px_rgba(0,0,0,.18)] sm:px-5 sm:text-[10px]"
-            >
+            <span className="mt-4 inline-flex min-h-11 items-center rounded-xl border border-white/20 bg-white/[0.06] px-4 text-[9px] font-black uppercase tracking-[0.13em] text-white shadow-[inset_0_1px_0_rgba(255,255,255,.08)] backdrop-blur transition duration-300 group-hover:border-white/45 group-hover:bg-white/[0.11] group-hover:shadow-[0_10px_28px_rgba(0,0,0,.18)] sm:px-5 sm:text-[10px]">
               Visualizza tutta la collezione ufficiale →
-            </Link>
+            </span>
           </div>
 
           <div className="relative mt-4 grid grid-cols-5 items-center gap-2 border-t border-white/10 pt-4 sm:mt-0 sm:gap-4 sm:border-l sm:border-t-0 sm:pl-8 sm:pt-0">
@@ -248,8 +324,9 @@ export default async function Home() {
               );
             })}
           </div>
-        </div>
+        </Link>
       </section>
+      </div>
 
       <div className="flex flex-col">
       <section className="order-2 border-y border-slate-200/80 bg-white/65 py-8 sm:py-16 lg:py-20">

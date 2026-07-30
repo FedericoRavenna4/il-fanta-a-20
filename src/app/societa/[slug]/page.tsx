@@ -9,8 +9,7 @@ import { getStatisticheGiocatori } from "@/lib/statisticheGiocatori";
 import { getStorieSocieta } from "@/lib/storieSocieta";
 import RosaSocieta from "./RosaSocieta";
 import StoriaSocieta from "./StoriaSocieta";
-import { getCatalogoEmblemi, getEmblemiSocieta } from "@/lib/emblemi";
-import { isEmblemaNascosto } from "@/lib/emblemi-ui";
+import { getEmblemiSocieta } from "@/lib/emblemi";
 import EmblemiSocieta from "./EmblemiSocieta";
 import PalmaresSocieta from "./PalmaresSocieta";
 
@@ -34,7 +33,6 @@ export default async function SchedaSocietaPage({
   const storieSocieta = getStorieSocieta();
   const statisticheGiocatori = getStatisticheGiocatori();
   const emblemi = getEmblemiSocieta();
-  const catalogoEmblemi = getCatalogoEmblemi();
   const team = societa.find((item) => item.slug === slug);
 
   if (!team) {
@@ -281,7 +279,6 @@ export default async function SchedaSocietaPage({
           <EmblemiSocieta
             sbloccati={emblemiSbloccatiVisuali}
             daDifendere={emblemiDaDifendereVisuali}
-            nascosti={catalogoEmblemi.filter(isEmblemaNascosto)}
           />
         </aside>
       </div>

@@ -14,7 +14,11 @@ export default function EmblemiPage() {
   const assegnazioni = getEmblemiSocieta();
   const societa = getSocieta();
 
-  const numeroNascosti = catalogo.filter(isEmblemaNascosto).length;
+  const nascosti = catalogo.filter(isEmblemaNascosto).map((emblema) => ({
+    id: emblema.id,
+    categoria: emblema.categoria,
+    immagine: emblema.immagine,
+  }));
   const emblemi = catalogo.filter((emblema) => !isEmblemaNascosto(emblema)).map((emblema) => {
     const detentori = assegnazioni
       .filter((team) =>
@@ -46,7 +50,7 @@ export default function EmblemiPage() {
             Scopri rarità, traguardi e record da sbloccare nel mondo Fanta a 20
           </p>
         </header>
-        <EmblemiCatalogo emblemi={emblemi} numeroNascosti={numeroNascosti} />
+        <EmblemiCatalogo emblemi={emblemi} nascosti={nascosti} />
       </div>
     </section>
   );

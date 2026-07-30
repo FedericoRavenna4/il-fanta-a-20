@@ -37,10 +37,22 @@ function isSi(value: string | undefined) {
   return normalized === "si";
 }
 
+function resolveLogo(nomeFile: string, id: number, files: string[]) {
+  const esatto = files.find(
+    (file) => file.toLocaleLowerCase("it") === nomeFile.toLocaleLowerCase("it")
+  );
+  if (esatto) return `/societa/${esatto}`;
+
+  const prefisso = `${String(id).padStart(3, "0")}_`;
+  const perId = files.find((file) => file.startsWith(prefisso));
+  return perId ? `/societa/${perId}` : "/logos/logo.png";
+}
+
 export function getSocieta(): Societa[] {
   const filePath = path.join(process.cwd(), "data", "societa.csv");
   const fileContent = fs.readFileSync(filePath, "utf-8");
   const ranking = getRanking();
+  const loghi = fs.readdirSync(path.join(process.cwd(), "public", "societa"));
 
   const lines = fileContent.trim().split(/\r?\n/);
   const headers = parseCsvLine(lines[0]).map((header) =>
@@ -82,7 +94,7 @@ export function getSocieta(): Societa[] {
       stagioneIngresso: row.Stagione_Ingresso,
       legaAttuale: lega,
       girone,
-      logo: `/societa/${row.Logo}`,
+      logo: resolveLogo(row.Logo, id, loghi),
       ranking: rankingItem?.posizione ?? 999,
       puntiRanking: rankingItem?.puntiRanking ?? 0,
       leader: rankingItem?.posizione === 1,
