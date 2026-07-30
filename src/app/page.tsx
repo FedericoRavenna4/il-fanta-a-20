@@ -209,7 +209,7 @@ export default async function Home() {
         <div className="relative grid grid-cols-1 items-center gap-y-4 sm:gap-12">
           <div className="contents sm:block">
             <p className="section-eyebrow order-1 col-span-2">Il portale ufficiale</p>
-            <h1 className="font-onder-hero order-2 mt-0 flex w-fit max-w-full flex-col items-start gap-[0.3em] text-[clamp(1.2rem,3.8vw,3rem)] text-blue-950 sm:mt-6">
+            <h1 className="font-onder-hero order-2 mt-0 flex w-fit max-w-full flex-col items-start gap-[0.3em] text-[1.1rem] text-blue-950 sm:mt-6 sm:text-[clamp(1.2rem,3.8vw,3rem)]">
               <span className="block whitespace-nowrap">NON E&apos; SOLO</span>
               <span className="block whitespace-nowrap">FANTACALCIO.</span>
               <span className="block whitespace-nowrap text-blue-700">E&apos; IL FANTA A 20</span>
@@ -244,9 +244,9 @@ export default async function Home() {
                   <h3 className="break-words text-lg font-black uppercase leading-tight sm:max-w-48 sm:text-2xl">{team.nome}</h3>
                   <p className="mt-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-white/45 sm:mt-3 sm:text-xs">{team.legaAttuale}</p>
                   {emblemi.length > 0 && (
-                    <div className="mt-2 flex items-center gap-1 sm:mt-3">
-                      {emblemi.map((emblema, index) => (
-                        <span key={emblema.id} className={`relative flex h-9 w-9 items-center justify-center sm:h-10 sm:w-10 ${index >= 3 ? "sm:hidden" : ""}`}>
+                    <div className="mt-2 grid w-full grid-cols-6 justify-items-center sm:mt-3 sm:w-[13.5rem]">
+                      {emblemi.map((emblema) => (
+                        <span key={emblema.id} className="relative flex h-9 w-9 items-center justify-center sm:h-8 sm:w-8">
                           <span className={`pointer-events-none absolute h-8 w-8 rounded-full blur-lg sm:h-7 sm:w-7 ${PALETTE_EMBLEMI[emblema.categoria].glow}`} />
                           <Image src={emblema.immagine} alt={emblema.nome} width={42} height={42} className="relative max-h-full max-w-full object-contain drop-shadow-[0_7px_9px_rgba(0,0,0,.35)]" />
                         </span>
@@ -297,14 +297,14 @@ export default async function Home() {
           <div className="pointer-events-none absolute -right-24 -top-28 h-72 w-72 rounded-full bg-sky-300/20 blur-[85px]" />
           <div className="relative min-w-0">
             <p className="section-eyebrow">Archivio degli emblemi</p>
-            <h2 className="font-onder-title mt-2 text-blue-950"><span className="block sm:inline">La collezione</span><span className="block sm:ml-1 sm:inline">ufficiale</span></h2>
+            <h2 className="font-onder-title mt-2 flex flex-col gap-[0.18em] text-blue-950 sm:block"><span className="block sm:inline">La collezione</span><span className="block sm:ml-2 sm:inline">ufficiale</span></h2>
             <p className="mt-2 max-w-xl text-xs font-semibold leading-5 text-slate-500 sm:text-sm sm:leading-6">Scopri rarità, traguardi e record da sbloccare nel mondo Fanta a 20</p>
             <span className="mt-4 hidden min-h-11 items-center rounded-xl border border-blue-950/15 bg-white/55 px-4 text-[9px] font-black uppercase tracking-[0.13em] text-blue-950 shadow-sm backdrop-blur transition duration-300 group-hover:border-blue-950/30 group-hover:bg-white sm:inline-flex sm:px-5 sm:text-[10px]">
               Visualizza tutta la collezione ufficiale →
             </span>
           </div>
 
-          <div className="relative mt-4 grid grid-cols-5 items-center gap-2 border-t border-blue-950/10 pt-4 sm:mt-0 sm:gap-4 sm:border-l sm:border-t-0 sm:pl-8 sm:pt-0 lg:mt-6 lg:border-l-0 lg:pl-0 lg:pt-4">
+          <div className="relative mt-4 grid grid-cols-5 items-center gap-2 border-t border-blue-950/10 pt-4 sm:mt-0 sm:gap-4 sm:border-l sm:border-t-0 sm:pl-8 sm:pt-0 lg:mt-10 lg:border-l-0 lg:pl-0 lg:pt-4">
             {emblemiVetrina.map((emblema) => {
               const palette = PALETTE_EMBLEMI[emblema.categoria];
               return (
@@ -398,7 +398,7 @@ export default async function Home() {
           <div className="absolute right-0 top-1/2 h-80 w-80 -translate-y-1/2 rounded-full bg-sky-400/15 blur-3xl" />
           <div className="relative flex flex-col gap-9 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-3xl"><p className="section-eyebrow">Le regole del gioco</p><h2 className="font-onder-title mt-2 text-3xl uppercase sm:mt-3 sm:text-5xl">Il regolamento</h2><p className="mt-3 text-sm font-semibold leading-5 text-slate-500 sm:mt-5 sm:text-lg sm:leading-7">Ogni grande competizione vive di regole all’altezza delle sue ambizioni. Scopri il sistema che governa aste, rose, mercato e tornei e rende ogni scelta decisiva.</p></div>
-            <span className="relative inline-flex w-fit shrink-0 items-center overflow-hidden rounded-full border border-blue-950/15 bg-white/60 px-6 py-3 text-xs font-black uppercase tracking-[0.16em] shadow-sm transition duration-300 group-hover:border-blue-950/30 group-hover:bg-white"><span className="relative">Consulta il regolamento</span></span>
+            <span className="relative inline-flex w-fit shrink-0 items-center overflow-hidden rounded-full border border-blue-950/15 bg-white/60 px-6 py-3 text-xs font-black uppercase tracking-[0.16em] shadow-sm transition duration-300 group-hover:border-blue-950/30 group-hover:bg-white max-sm:mx-auto"><span className="relative">Consulta il regolamento</span></span>
           </div>
         </Link>
       </section>

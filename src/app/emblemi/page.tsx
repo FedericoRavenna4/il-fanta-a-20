@@ -46,7 +46,7 @@ export default function EmblemiPage() {
       <div className="relative mx-auto max-w-[90rem] px-4 pb-12 pt-7 sm:px-5 sm:pb-16 sm:pt-10 lg:px-8 lg:pb-20 lg:pt-12">
         <header className="mb-6 max-w-4xl border-b border-slate-300/70 pb-5 sm:mb-8 sm:pb-6">
           <p className="section-eyebrow">Archivio degli emblemi</p>
-          <h1 className="font-onder-title font-onder-title-mobile-compact mt-2 text-blue-950">
+          <h1 className="font-onder-title font-onder-title-mobile-compact mt-2 flex flex-col gap-[0.18em] text-blue-950 sm:block">
             <span className="block sm:inline">La collezione</span><span className="block sm:ml-1 sm:inline">ufficiale</span>
           </h1>
           <p className="mt-3 text-[13px] font-semibold leading-5 text-slate-500 sm:text-base sm:leading-7">

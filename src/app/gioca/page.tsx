@@ -39,7 +39,7 @@ export default async function GiocaPage({
           <div className="relative">
             <div>
               <p className="section-eyebrow">
-                Il Fanta a 20 · Arcade Room
+                Arcade Room
               </p>
               <h1 className="font-onder-title mt-2.5 break-words text-3xl uppercase text-blue-950 sm:mt-4 sm:text-5xl lg:text-7xl">
                 La Sala Giochi
