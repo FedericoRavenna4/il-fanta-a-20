@@ -34,18 +34,17 @@ export default async function GiocaPage({
       <div className="pointer-events-none absolute -right-48 top-[32rem] -z-10 h-[32rem] w-[32rem] rounded-full bg-indigo-200/20 blur-[130px]" />
 
       <div className="mx-auto w-full max-w-7xl px-4 pb-12 pt-6 sm:px-5 sm:pb-16 sm:pt-10 lg:px-6 lg:pt-12">
-        <header className="relative mb-5 overflow-hidden rounded-[1.6rem] border border-white/15 bg-[linear-gradient(125deg,#051329_0%,#0b2d57_56%,#164878_100%)] px-5 py-6 text-white shadow-[0_30px_90px_rgba(15,23,42,0.22),inset_0_1px_0_rgba(255,255,255,0.1)] sm:mb-7 sm:rounded-[2rem] sm:px-8 sm:py-8 lg:px-10">
-          <div className="pointer-events-none absolute -right-16 -top-24 h-72 w-72 rounded-full bg-sky-300/20 blur-[70px]" />
-          <div className="pointer-events-none absolute bottom-0 left-0 h-px w-full bg-gradient-to-r from-transparent via-sky-200/55 to-transparent" />
+        <header className="relative mb-7 overflow-hidden border-b border-slate-200/80 pb-5 pt-1 sm:mb-12 sm:pb-10 lg:mb-16 lg:pb-14 lg:pt-2">
+          <div className="pointer-events-none absolute -left-16 top-0 h-40 w-72 bg-sky-200/25 blur-[70px]" />
           <div className="relative">
             <div>
-              <p className="text-[9px] font-black uppercase tracking-[0.28em] text-amber-300 sm:text-[10px]">
+              <p className="text-[10px] font-black uppercase tracking-[0.24em] text-amber-500 sm:text-xs sm:tracking-[0.32em]">
                 Il Fanta a 20 · Arcade Room
               </p>
-              <h1 className="mt-2 text-3xl font-black uppercase leading-[0.94] tracking-[-0.04em] sm:text-5xl lg:text-6xl">
-                Sala Giochi
+              <h1 className="font-onder-title mt-2.5 break-words text-3xl uppercase text-blue-950 sm:mt-4 sm:text-5xl lg:text-7xl">
+                La Sala Giochi
               </h1>
-              <p className="mt-3 max-w-2xl text-sm font-semibold leading-5 text-white/62 sm:text-base sm:leading-7">
+              <p className="mt-3 max-w-2xl text-[13px] font-semibold leading-5 text-slate-500 sm:mt-6 sm:text-base sm:leading-8">
                 Scegli il tuo stemma, entra in campo e trasforma ogni corsa in un nuovo record.
               </p>
             </div>

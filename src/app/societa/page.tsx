@@ -11,7 +11,8 @@ export default function SocietaPage() {
     <div className="mx-auto max-w-7xl px-4 py-7 sm:px-5 sm:py-12 lg:px-6 lg:py-16">
       <PageHeader
         eyebrow="Archivio ufficiale"
-        title="Le Società"
+        title="Le Societa'"
+        onderTitle
         description="Le 100 società del Fanta a 20: identità, protagonisti e storie che hanno costruito la competizione stagione dopo stagione."
         descriptionClassName="lg:max-w-none xl:whitespace-nowrap"
       />

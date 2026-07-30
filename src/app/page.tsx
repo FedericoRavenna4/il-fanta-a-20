@@ -80,12 +80,14 @@ function SectionHeading({
   text,
   href,
   linkLabel,
+  onderTitle = false,
 }: {
   eyebrow: ReactNode;
   title: string;
   text: string;
   href?: string;
   linkLabel?: string;
+  onderTitle?: boolean;
 }) {
   const isProtagoniste = eyebrow === "Le protagoniste";
 
@@ -93,7 +95,7 @@ function SectionHeading({
     <div className={`mb-6 flex flex-col gap-3 sm:mb-10 sm:gap-6 lg:flex-row lg:items-end lg:justify-between ${isProtagoniste ? "relative z-20 isolate opacity-100 [filter:none] [mask-image:none]" : ""}`}>
       <div className="max-w-3xl lg:max-w-none">
         <p className={`text-[10px] font-black uppercase tracking-[0.24em] opacity-100 sm:text-xs sm:tracking-[0.3em] ${isProtagoniste ? "text-amber-600 sm:text-amber-500" : "text-amber-500"}`}>{eyebrow}</p>
-        <h2 className={`mt-2 text-3xl font-black uppercase tracking-tight opacity-100 sm:mt-3 sm:text-5xl ${isProtagoniste ? "bg-none text-blue-950 [background-clip:border-box] [background-image:none]" : "text-blue-950"}`}>{title}</h2>
+        <h2 className={`mt-2 text-3xl font-black uppercase tracking-tight opacity-100 sm:mt-3 sm:text-5xl ${onderTitle ? "font-onder-title" : ""} ${isProtagoniste ? "bg-none text-blue-950 [background-clip:border-box] [background-image:none]" : "text-blue-950"}`}>{title}</h2>
         <p className={`mt-2 text-sm font-semibold leading-5 opacity-100 sm:mt-4 sm:text-lg sm:leading-7 ${isProtagoniste ? "text-slate-600 sm:text-slate-500" : "text-slate-500"}`}>{text}</p>
       </div>
       {href && linkLabel && (
@@ -207,8 +209,10 @@ export default async function Home() {
         <div className="relative grid grid-cols-[minmax(0,1fr)_76px] items-center gap-x-3 gap-y-4 sm:grid-cols-1 sm:gap-12 lg:grid-cols-[1.15fr_0.85fr]">
           <div className="contents sm:block">
             <p className="order-1 col-span-2 text-[10px] font-black uppercase tracking-[0.28em] text-amber-500 sm:text-xs sm:tracking-[0.36em]">Il portale ufficiale</p>
-            <h1 className="order-2 mt-0 max-w-4xl text-3xl font-black uppercase leading-[0.96] tracking-[-0.035em] text-blue-950 sm:mt-6 sm:text-6xl sm:leading-[0.94] sm:tracking-[-0.045em] lg:text-[5.25rem] lg:leading-[0.91] lg:tracking-[-0.055em]">
-              Non è solo<br />Fantacalcio.<span className="mt-3 block">È <span className="text-blue-700">il Fanta a 20.</span></span>
+            <h1 className="font-onder-hero order-2 mt-0 flex w-fit max-w-[82%] flex-col items-start gap-[0.3em] text-[clamp(.68rem,2.1vw,1.65rem)] text-blue-950 sm:mt-6 sm:max-w-[75%] lg:max-w-[38rem]">
+              <span className="block whitespace-nowrap">NON E&apos; SOLO</span>
+              <span className="block whitespace-nowrap">FANTACALCIO.</span>
+              <span className="block whitespace-nowrap text-blue-700">E&apos; IL FANTA A 20</span>
             </h1>
             <p className="order-4 col-span-2 mt-0 max-w-2xl border-l-2 border-amber-400 pl-3 text-sm font-semibold leading-6 text-slate-600 sm:mt-8 sm:pl-6 sm:text-lg sm:leading-8">
               Venti partecipanti per lega, nessun giocatore doppione: ogni rosa è davvero unica. Nato nel 2023 come un gioco tra amici, oggi è un ecosistema di cinque leghe e cento società, con promozioni, retrocessioni, coppe e una memoria che cresce stagione dopo stagione.
@@ -218,10 +222,8 @@ export default async function Home() {
 
           <div className="relative order-3 mx-auto flex min-h-0 w-full max-w-lg items-center justify-center sm:min-h-[330px]">
             <div className="pointer-events-none absolute left-1/2 top-1/2 h-52 w-20 -translate-x-1/2 -translate-y-1/2 rotate-12 bg-sky-300/30 blur-[48px]" />
-            <div className="pointer-events-none absolute left-[24%] top-[26%] hidden h-px w-56 -rotate-12 bg-gradient-to-r from-transparent via-sky-300/70 to-transparent sm:block" />
-            <div className="pointer-events-none absolute bottom-[26%] right-[18%] hidden h-px w-48 rotate-12 bg-gradient-to-r from-transparent via-amber-300/60 to-transparent sm:block" />
             <div className="relative z-10">
-              <Image src="/logos/logo.png" alt="Logo Il Fanta a 20" width={310} height={310} priority className="h-auto w-16 drop-shadow-[0_18px_24px_rgba(15,23,42,0.22)] sm:w-72 sm:drop-shadow-[0_30px_38px_rgba(15,23,42,0.24)]" />
+              <Image src="/logos/logo.png?v=20260730-1606" alt="Logo Il Fanta a 20" width={310} height={310} priority unoptimized className="h-auto w-16 drop-shadow-[0_18px_24px_rgba(15,23,42,0.22)] sm:w-72 sm:drop-shadow-[0_30px_38px_rgba(15,23,42,0.24)]" />
             </div>
           </div>
         </div>
@@ -229,7 +231,7 @@ export default async function Home() {
       </section>
 
       <section className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:pb-14 sm:pt-10 lg:pb-16 lg:pt-12">
-        <SectionHeading eyebrow="Le protagoniste" title="Le società" text="Cento identità, cento storie: il cuore del Fanta a 20." />
+        <SectionHeading eyebrow="Le protagoniste" title="Le societa'" text="Cento identità, cento storie: il cuore del Fanta a 20." onderTitle />
         <Link href="/societa" aria-label="Esplora tutte le società" className="group relative left-1/2 mb-5 -mt-2 block w-screen -translate-x-1/2 overflow-hidden py-4 [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)] sm:mb-8 sm:-mt-4 sm:py-7">
           <div className="home-club-marquee flex w-max items-center gap-6 pr-6 transition duration-300 group-hover:opacity-35 sm:gap-10 sm:pr-10">
             {[...societaMarquee, ...societaMarquee].map((team, index) => (
@@ -254,8 +256,8 @@ export default async function Home() {
                   {emblemi.length > 0 && (
                     <div className="mt-2 flex items-center gap-1.5 sm:mt-3">
                       {emblemi.map((emblema) => (
-                        <span key={emblema.id} className="relative flex h-8 w-8 items-center justify-center sm:h-10 sm:w-10">
-                          <span className={`pointer-events-none absolute h-7 w-7 rounded-full blur-lg ${PALETTE_EMBLEMI[emblema.categoria].glow}`} />
+                        <span key={emblema.id} className="relative flex h-10 w-10 items-center justify-center sm:h-10 sm:w-10">
+                          <span className={`pointer-events-none absolute h-8 w-8 rounded-full blur-lg sm:h-7 sm:w-7 ${PALETTE_EMBLEMI[emblema.categoria].glow}`} />
                           <Image src={emblema.immagine} alt={emblema.nome} width={42} height={42} className="relative max-h-full max-w-full object-contain drop-shadow-[0_7px_9px_rgba(0,0,0,.35)]" />
                         </span>
                       ))}
@@ -275,15 +277,14 @@ export default async function Home() {
       <section className="order-2 mx-auto w-full max-w-7xl px-4 pb-8 sm:px-6 sm:pb-16 lg:pb-20">
         <Link
           href="/gioca"
-          className="group relative grid overflow-hidden rounded-[1.5rem] border border-blue-900/10 bg-[linear-gradient(120deg,#071a36_0%,#0b315b_62%,#145486_100%)] px-4 py-4 text-white shadow-[0_18px_48px_rgba(15,23,42,0.16)] transition duration-500 hover:-translate-y-0.5 hover:shadow-[0_24px_65px_rgba(15,23,42,0.22)] sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center sm:gap-7 sm:rounded-[1.8rem] sm:px-7 sm:py-5"
+          className="group relative grid border-y border-blue-950/10 px-1 py-5 text-blue-950 transition duration-500 hover:border-blue-950/25 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center sm:gap-7 sm:px-3 sm:py-7"
         >
-          <span className="pointer-events-none absolute -right-10 -top-20 h-48 w-48 rounded-full bg-sky-300/20 blur-3xl transition duration-700 group-hover:bg-sky-300/30" />
-          <span className="pointer-events-none absolute inset-x-16 top-0 h-px bg-gradient-to-r from-transparent via-sky-200/70 to-transparent" />
+          <span className="pointer-events-none absolute right-0 top-1/2 h-40 w-40 -translate-y-1/2 rounded-full bg-sky-300/20 blur-3xl transition duration-700 group-hover:bg-sky-300/30" />
 
           <span className="relative min-w-0">
-            <span className="block text-[8px] font-black uppercase tracking-[0.23em] text-amber-300 sm:text-[9px]">Sala Giochi · Arcade</span>
+            <span className="block text-[8px] font-black uppercase tracking-[0.23em] text-amber-600 sm:text-[9px]">Sala Giochi · Arcade</span>
             <span className="mt-1 block text-lg font-black uppercase tracking-tight sm:text-2xl">Quanto lontano riesci ad arrivare?</span>
-            <span className="mt-1 block text-xs font-semibold text-white/55 sm:text-sm">Scegli una società e scendi in campo.</span>
+            <span className="mt-1 block text-xs font-semibold text-slate-500 sm:text-sm">Scegli una società e scendi in campo.</span>
           </span>
 
           <span className="relative mt-3 flex h-12 items-center pl-3 sm:mt-0 sm:h-14">
@@ -295,31 +296,30 @@ export default async function Home() {
             <span className="ml-2 h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-300 shadow-[0_0_12px_rgba(110,231,183,0.9)]" />
           </span>
 
-          <span className="relative mt-3 inline-flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/[0.08] px-4 py-2 text-[9px] font-black uppercase tracking-[0.15em] backdrop-blur transition group-hover:bg-white group-hover:text-blue-950 sm:mt-0">
+          <span className="relative mt-3 inline-flex w-fit items-center gap-2 rounded-full border border-blue-950/15 bg-white/55 px-4 py-2 text-[9px] font-black uppercase tracking-[0.15em] shadow-sm backdrop-blur transition group-hover:border-blue-950/30 group-hover:bg-white sm:mt-0">
             Gioca ora <span aria-hidden="true">→</span>
           </span>
         </Link>
       </section>
 
       <section className="order-1 mx-auto w-full max-w-7xl px-4 pb-8 sm:px-6 sm:pb-16 lg:pb-20">
-        <Link href="/emblemi" className="group relative grid overflow-hidden rounded-[1.6rem] border border-white/10 bg-[linear-gradient(125deg,#071a34_0%,#0a284d_58%,#102e54_100%)] p-4 text-white shadow-[0_22px_58px_rgba(7,26,52,.2)] transition duration-500 hover:-translate-y-0.5 hover:border-white/20 hover:shadow-[0_28px_70px_rgba(7,26,52,.27)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-200 sm:grid-cols-[minmax(0,.92fr)_minmax(360px,1.08fr)] sm:items-center sm:gap-8 sm:rounded-[2rem] sm:p-7 lg:px-9">
-          <div className="pointer-events-none absolute -right-24 -top-28 h-72 w-72 rounded-full bg-sky-300/[0.08] blur-[85px]" />
-          <div className="pointer-events-none absolute inset-x-16 top-0 h-px bg-gradient-to-r from-transparent via-white/35 to-transparent" />
+        <Link href="/emblemi" className="group relative grid border-y border-blue-950/10 py-5 text-blue-950 transition duration-500 hover:border-blue-950/25 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-200 sm:grid-cols-[minmax(0,.92fr)_minmax(360px,1.08fr)] sm:items-center sm:gap-8 sm:px-3 sm:py-7">
+          <div className="pointer-events-none absolute -right-24 -top-28 h-72 w-72 rounded-full bg-sky-300/20 blur-[85px]" />
           <div className="relative min-w-0">
             <h2 className="text-2xl font-black uppercase tracking-tight sm:text-3xl">Archivio degli emblemi</h2>
-            <p className="mt-2 max-w-xl text-xs font-semibold leading-5 text-white/58 sm:text-sm sm:leading-6">Scopri rarità, traguardi e record da sbloccare nel mondo Fanta a 20</p>
-            <span className="mt-4 inline-flex min-h-11 items-center rounded-xl border border-white/20 bg-white/[0.06] px-4 text-[9px] font-black uppercase tracking-[0.13em] text-white shadow-[inset_0_1px_0_rgba(255,255,255,.08)] backdrop-blur transition duration-300 group-hover:border-white/45 group-hover:bg-white/[0.11] group-hover:shadow-[0_10px_28px_rgba(0,0,0,.18)] sm:px-5 sm:text-[10px]">
+            <p className="mt-2 max-w-xl text-xs font-semibold leading-5 text-slate-500 sm:text-sm sm:leading-6">Scopri rarità, traguardi e record da sbloccare nel mondo Fanta a 20</p>
+            <span className="mt-4 inline-flex min-h-11 items-center rounded-xl border border-blue-950/15 bg-white/55 px-4 text-[9px] font-black uppercase tracking-[0.13em] text-blue-950 shadow-sm backdrop-blur transition duration-300 group-hover:border-blue-950/30 group-hover:bg-white sm:px-5 sm:text-[10px]">
               Visualizza tutta la collezione ufficiale →
             </span>
           </div>
 
-          <div className="relative mt-4 grid grid-cols-5 items-center gap-2 border-t border-white/10 pt-4 sm:mt-0 sm:gap-4 sm:border-l sm:border-t-0 sm:pl-8 sm:pt-0">
+          <div className="relative mt-4 grid grid-cols-5 items-center gap-2 border-t border-blue-950/10 pt-4 sm:mt-0 sm:gap-4 sm:border-l sm:border-t-0 sm:pl-8 sm:pt-0">
             {emblemiVetrina.map((emblema) => {
               const palette = PALETTE_EMBLEMI[emblema.categoria];
               return (
                 <div key={emblema.id} className="relative flex min-w-0 items-center justify-center">
                   <span className={`pointer-events-none absolute h-14 w-14 rounded-full opacity-75 blur-2xl ${palette.glow}`} />
-                  <Image src={emblema.immagine} alt={emblema.nome} width={92} height={92} className="relative h-11 w-11 object-contain drop-shadow-[0_11px_15px_rgba(0,0,0,.44)] transition duration-500 group-hover:-translate-y-0.5 group-hover:scale-[1.04] sm:h-[4.5rem] sm:w-[4.5rem] lg:h-20 lg:w-20" />
+                  <Image src={emblema.immagine} alt={emblema.nome} width={92} height={92} className="relative h-11 w-11 object-contain drop-shadow-[0_11px_15px_rgba(15,23,42,.3)] transition duration-500 group-hover:-translate-y-0.5 group-hover:scale-[1.04] sm:h-[4.5rem] sm:w-[4.5rem] lg:h-20 lg:w-20" />
                 </div>
               );
             })}
@@ -331,7 +331,7 @@ export default async function Home() {
       <div className="flex flex-col">
       <section className="order-2 border-y border-slate-200/80 bg-white/65 py-8 sm:py-16 lg:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <SectionHeading eyebrow={<><span className="sm:hidden">Numeri e storia</span><span className="hidden sm:inline">Numeri e storia</span></>} title="Le statistiche" text="Il valore delle società prende forma attraverso ranking, record e trofei conquistati nel tempo." />
+          <SectionHeading eyebrow={<><span className="sm:hidden">Numeri e storia</span><span className="hidden sm:inline">Numeri e storia</span></>} title="Le statistiche" text="Il valore delle società prende forma attraverso ranking, record e trofei conquistati nel tempo." onderTitle />
           <div className="grid gap-3 sm:gap-5 lg:grid-cols-[1.45fr_0.75fr]">
             <div className="relative flex flex-col overflow-hidden rounded-[2rem] bg-blue-950 p-4 text-white shadow-xl shadow-blue-950/15 sm:p-9">
               <div className="pointer-events-none absolute left-1/3 top-0 h-72 w-72 bg-sky-400/10 blur-[90px]" />
@@ -371,7 +371,7 @@ export default async function Home() {
         <div className="mb-6 grid items-center gap-4 max-sm:mb-4 sm:mb-11 sm:gap-8 md:grid-cols-[1fr_290px] lg:grid-cols-[1fr_380px]">
             <div className="max-w-3xl lg:max-w-none">
               <p className="text-xs font-black uppercase tracking-[0.3em] text-amber-500">Il sistema sportivo</p>
-              <h2 className="mt-2 text-3xl font-black uppercase tracking-tight text-blue-950 sm:mt-3 sm:text-5xl">Le competizioni</h2>
+              <h2 className="font-onder-title mt-2 text-3xl uppercase text-blue-950 sm:mt-3 sm:text-5xl">Le competizioni</h2>
               <p className="mt-3 text-sm font-semibold leading-5 text-slate-500 sm:mt-5 sm:text-lg sm:leading-7">Campionati e coppe: strade diverse per conquistare un posto nella storia.</p>
             </div>
             <div className="hidden h-36 md:block" aria-hidden="true" />
@@ -400,23 +400,21 @@ export default async function Home() {
       </div>
 
       <section className="mx-auto max-w-7xl px-4 pb-14 pt-2 sm:px-6 sm:pb-20 sm:pt-4">
-        <Link href="/regolamento" className="group relative block overflow-hidden rounded-[2rem] bg-blue-950 px-6 py-9 text-white shadow-2xl shadow-blue-950/20 sm:rounded-[2.25rem] sm:px-12 sm:py-14">
-          <div className="absolute right-0 top-1/2 h-80 w-80 -translate-y-1/2 rounded-full bg-sky-400/10 blur-3xl" />
+        <Link href="/regolamento" className="group relative block border-y border-blue-950/10 px-1 py-9 text-blue-950 transition hover:border-blue-950/25 sm:px-3 sm:py-12">
+          <div className="absolute right-0 top-1/2 h-80 w-80 -translate-y-1/2 rounded-full bg-sky-400/15 blur-3xl" />
           <div className="relative flex flex-col gap-9 lg:flex-row lg:items-center lg:justify-between">
-            <div className="max-w-3xl"><p className="text-[10px] font-black uppercase tracking-[0.24em] text-amber-300 sm:text-xs sm:tracking-[0.3em]">Le regole del gioco</p><h2 className="mt-2 text-3xl font-black uppercase tracking-tight sm:mt-3 sm:text-5xl">Il regolamento ufficiale</h2><p className="mt-3 text-sm font-semibold leading-5 text-white/65 sm:mt-5 sm:text-lg sm:leading-7">Ogni grande competizione vive di regole all’altezza delle sue ambizioni. Scopri il sistema che governa aste, rose, mercato e tornei e rende ogni scelta decisiva.</p></div>
-            <span className="relative inline-flex w-fit shrink-0 items-center overflow-hidden rounded-full border border-white/20 bg-white/10 px-6 py-3 text-xs font-black uppercase tracking-[0.16em] transition duration-300 before:absolute before:inset-0 before:origin-left before:scale-x-0 before:bg-white before:transition-transform before:duration-300 group-hover:before:scale-x-100 group-hover:text-blue-950"><span className="relative">Consulta il regolamento</span></span>
+            <div className="max-w-3xl"><p className="text-[10px] font-black uppercase tracking-[0.24em] text-amber-600 sm:text-xs sm:tracking-[0.3em]">Le regole del gioco</p><h2 className="font-onder-title mt-2 text-3xl uppercase sm:mt-3 sm:text-5xl">Il regolamento</h2><p className="mt-3 text-sm font-semibold leading-5 text-slate-500 sm:mt-5 sm:text-lg sm:leading-7">Ogni grande competizione vive di regole all’altezza delle sue ambizioni. Scopri il sistema che governa aste, rose, mercato e tornei e rende ogni scelta decisiva.</p></div>
+            <span className="relative inline-flex w-fit shrink-0 items-center overflow-hidden rounded-full border border-blue-950/15 bg-white/60 px-6 py-3 text-xs font-black uppercase tracking-[0.16em] shadow-sm transition duration-300 group-hover:border-blue-950/30 group-hover:bg-white"><span className="relative">Consulta il regolamento</span></span>
           </div>
         </Link>
       </section>
 
       <section className="mx-auto max-w-7xl px-4 pb-10 sm:px-6 sm:pb-20 lg:pb-24">
-        <div className="relative overflow-hidden rounded-[1.6rem] border border-blue-900/10 bg-[linear-gradient(125deg,#ffffff_0%,#f3f8fd_58%,#e9f3fb_100%)] px-4 py-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] sm:rounded-[2rem] sm:px-9 sm:py-9 lg:px-11">
-          <div className="pointer-events-none absolute -right-16 -top-24 h-64 w-64 rounded-full bg-sky-300/30 blur-[75px]" />
-          <div className="pointer-events-none absolute bottom-0 left-10 h-px w-2/3 bg-gradient-to-r from-transparent via-amber-300/55 to-transparent" />
+        <div className="relative py-2 sm:py-4">
           <div className="relative grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-10">
             <div className="max-w-4xl">
-              <p className="text-[9px] font-black uppercase tracking-[.24em] text-amber-600 sm:text-[10px]">Il prossimo capitolo</p>
-              <h2 className="mt-2 text-[1.65rem] font-black uppercase leading-none tracking-[-.03em] text-blue-950 sm:text-4xl lg:text-5xl">La tua occasione!</h2>
+              <p className="font-onder-title text-amber-600">La tua occasione!</p>
+              <h2 className="font-onder-title mt-2 text-blue-950">La lista di attesa</h2>
               <p className="mt-3 max-w-3xl text-[13px] font-semibold leading-5 text-slate-500 sm:text-base sm:leading-7">
                 Le 100 società del Fanta a 20 sono già state assegnate. Ogni stagione, però, alcuni posti tornano disponibili. Entra nella lista d’attesa e potresti essere il prossimo.
               </p>

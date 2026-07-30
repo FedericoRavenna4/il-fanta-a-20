@@ -125,11 +125,12 @@ export default function RankingClient({ rows, embedded = false, initialLimit }: 
       {leader?.team && (
         <Link
           href={`/societa/${leader.team.slug}`}
-          className="group mb-8 block overflow-hidden rounded-[2rem] border border-blue-900 bg-[linear-gradient(145deg,#102c5f,#071f45)] text-white shadow-2xl shadow-blue-950/20 transition hover:-translate-y-1"
+          className="group relative mb-8 block overflow-hidden rounded-[2rem] border border-amber-300/70 bg-[linear-gradient(135deg,#6f4b0d_0%,#c99a34_34%,#f4dda0_57%,#9a6815_100%)] text-white shadow-[0_24px_65px_rgba(120,78,12,.24)] transition hover:-translate-y-1"
         >
+          <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,transparent_18%,rgba(255,255,255,.22)_42%,transparent_62%)] opacity-75" />
           <div className="grid items-center gap-6 p-5 sm:gap-8 sm:p-8 lg:grid-cols-[1fr_340px] lg:p-10">
             <div>
-              <p className="mb-4 text-xs font-black uppercase tracking-[0.28em] text-amber-300">
+              <p className="mb-4 text-xs font-black uppercase tracking-[0.28em] text-amber-50">
   ⭐ Ranking Leader
 </p>
 
@@ -183,18 +184,19 @@ height={300}
           <Link
             key={row.posizione}
             href={row.team ? `/societa/${row.team.slug}` : "#"}
-            className={`group relative flex h-[270px] flex-col overflow-hidden rounded-[1.75rem] border bg-white/85 p-6 text-center shadow-sm transition hover:-translate-y-1 hover:shadow-xl ${
+            className={`group relative flex h-[270px] flex-col overflow-hidden rounded-[1.75rem] border p-6 text-center transition hover:-translate-y-1 hover:shadow-xl ${
              row.posizione === 2
-  ? "border-slate-300 shadow-slate-200"
-                : "border-amber-200 shadow-amber-100"
+  ? "border-slate-300 bg-[linear-gradient(145deg,#f8fafc_0%,#cbd5e1_38%,#ffffff_62%,#aeb9c7_100%)] shadow-[0_18px_45px_rgba(100,116,139,.18)]"
+                : "border-orange-300/70 bg-[linear-gradient(145deg,#fff7ed_0%,#c98248_35%,#f6d0aa_58%,#9a542f_100%)] shadow-[0_18px_45px_rgba(154,82,47,.18)]"
             }`}
           >
-            <div className="mx-auto mb-2 text-3xl font-black tracking-[-0.05em] text-slate-300">
+            <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,transparent_20%,rgba(255,255,255,.32)_46%,transparent_68%)] opacity-70" />
+            <div className={`relative mx-auto mb-2 text-3xl font-black tracking-[-0.05em] ${row.posizione === 2 ? "text-slate-500" : "text-orange-950/65"}`}>
               {String(row.posizione).padStart(2, "0")}
             </div>
 
             {row.team && (
-              <div className="flex h-[112px] items-center justify-center">
+              <div className="relative flex h-[112px] items-center justify-center">
                 <Image
                   src={row.team.logo}
                   alt={row.team.nome}
@@ -205,13 +207,13 @@ height={300}
               </div>
             )}
 
-            <div className="mt-4 flex min-h-[50px] items-center justify-center">
+            <div className="relative mt-4 flex min-h-[50px] items-center justify-center">
               <h3 className="line-clamp-2 text-balance text-[21px] font-extrabold uppercase leading-tight text-blue-950">
                 {row.team?.nome ?? row.nomeRanking}
               </h3>
             </div>
 
-            <div className="mt-auto flex justify-center gap-2">
+            <div className="relative mt-auto flex justify-center gap-2">
               <span className="rounded-full bg-white/75 px-3 py-1.5 text-xs font-black text-slate-700 ring-1 ring-slate-200">
                 {posizioneLabel(row.posizione)}
               </span>

@@ -15,7 +15,7 @@ export default function WaitlistPage() {
       <div className="mx-auto w-full max-w-6xl px-4 pb-10 pt-5 sm:px-6 sm:pb-16 sm:pt-10 lg:pb-20 lg:pt-12">
         <header className="border-b border-blue-950/10 pb-4 sm:pb-6">
           <p className="text-[9px] font-black uppercase tracking-[.24em] text-amber-600 sm:text-[10px]">Il prossimo capitolo</p>
-          <h1 className="mt-2 text-3xl font-black uppercase leading-none tracking-[-.035em] text-blue-950 sm:text-5xl lg:text-6xl">Lista d’attesa</h1>
+          <h1 className="font-onder-title mt-2 text-blue-950">La lista di attesa</h1>
         </header>
 
         <section className="relative mt-4 overflow-hidden rounded-[1.4rem] border border-white/10 bg-[linear-gradient(130deg,#06152e_0%,#0a2f5c_62%,#155284_100%)] px-3.5 py-3 text-white shadow-[0_22px_65px_rgba(7,31,69,.18)] sm:mt-6 sm:rounded-[1.75rem] sm:px-7 sm:py-6">

@@ -102,10 +102,11 @@ export default function Header() {
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:h-20 sm:px-6">
         <Link href="/" onClick={closeMenu} className="group flex items-center gap-3">
           <Image
-            src="/logos/logo.png"
+            src="/logos/logo.png?v=20260730-1606"
             alt="Fanta a 20"
             width={48}
             height={48}
+            unoptimized
             className="h-9 w-auto drop-shadow-sm transition duration-300 group-hover:scale-105 group-hover:drop-shadow-md sm:h-11"
           />
 

@@ -1,10 +1,19 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "Onder";
+  src: url("/fonts/ONDER-REGULAR.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
 :root {
   --background: #f3f7fb;
   --foreground: #071f45;
   --default-transition-duration: 260ms;
   --default-transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  --font-onder: "Onder";
 }
 
 html {
@@ -25,6 +34,25 @@ body {
 
 a {
   text-decoration: none;
+}
+
+.font-onder-hero {
+  font-family: var(--font-onder), var(--font-outfit), sans-serif;
+  font-weight: 400;
+  font-synthesis: none;
+  letter-spacing: 0;
+  line-height: 1.06;
+}
+
+.font-onder-title {
+  max-width: 100%;
+  white-space: nowrap;
+  font-family: var(--font-onder), var(--font-outfit), sans-serif;
+  font-size: clamp(0.72rem, 2.4vw, 1.75rem);
+  font-weight: 400;
+  font-synthesis: none;
+  letter-spacing: 0;
+  line-height: 1;
 }
 
 @keyframes logo-name-scroll {

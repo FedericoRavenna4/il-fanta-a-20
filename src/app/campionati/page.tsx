@@ -52,10 +52,6 @@ export function CampionatiContent({ embedded = false }: { embedded?: boolean }) 
 
       <div className="grid gap-5 sm:gap-8">
         {leghe.map((lega) => {
-          const hoverClass =
-  lega.nome === "Serie A"
-    ? "hover:bg-sky-500 hover:ring-sky-300"
-    : "hover:bg-emerald-500 hover:ring-emerald-300";
           const squadreLega = societa.filter(
             (team) => team.legaAttuale === lega.nome
           );
@@ -200,23 +196,15 @@ export function CampionatiContent({ embedded = false }: { embedded?: boolean }) 
   href={`/societa/${team.slug}`}
   title={team.nome}
   aria-label={team.nome}
-  className={`group relative flex h-16 items-center justify-center overflow-hidden rounded-xl bg-slate-50 p-1.5 ring-1 ring-slate-100 transition hover:-translate-y-1 hover:scale-[1.03] hover:shadow-lg sm:h-28 sm:rounded-2xl sm:p-3 ${hoverClass}`}
+  className="group relative flex h-16 items-center justify-center overflow-hidden rounded-xl bg-slate-50 p-1.5 ring-1 ring-slate-100 transition hover:shadow-lg sm:h-28 sm:rounded-2xl sm:p-3"
 >
-  <div className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-br from-white/35 via-white/10 to-transparent transition duration-500 group-hover:translate-x-0" />
-
   <Image
     src={team.logo}
     alt={team.nome}
-    width={64}
-    height={64}
-    className="relative z-10 max-h-11 max-w-11 object-contain transition duration-300 group-hover:scale-105 group-hover:drop-shadow-[0_0_14px_rgba(255,255,255,0.95)] sm:max-h-14 sm:max-w-14 sm:group-hover:-translate-y-5"
+    width={78}
+    height={78}
+    className="relative z-10 max-h-12 max-w-12 object-contain transition duration-300 group-hover:scale-110 sm:max-h-20 sm:max-w-20"
   />
-
-  <div className="pointer-events-none absolute bottom-2 left-1 right-1 z-10 hidden h-8 items-center justify-center overflow-hidden rounded-lg bg-slate-950/65 px-1 opacity-100 transition duration-300 sm:flex lg:bottom-3 lg:left-2 lg:right-2 lg:h-9 lg:bg-transparent lg:opacity-0 lg:group-hover:opacity-100">
-  <p className="line-clamp-2 text-center text-[10px] font-black uppercase leading-tight text-white">
-    {team.nome}
-  </p>
-</div>
 </Link>
                   ))}
                 </div>
@@ -286,23 +274,15 @@ export function CampionatiContent({ embedded = false }: { embedded?: boolean }) 
   href={`/societa/${team.slug}`}
   title={team.nome}
   aria-label={team.nome}
-  className="group relative flex h-14 items-center justify-center overflow-hidden rounded-lg bg-white p-1 shadow-sm ring-1 ring-violet-100 transition hover:-translate-y-1 hover:scale-[1.03] hover:bg-violet-500 hover:shadow-lg hover:ring-violet-300 sm:h-24 sm:rounded-2xl sm:p-2"
+  className="group relative flex h-14 items-center justify-center overflow-hidden rounded-lg bg-white p-1 shadow-sm ring-1 ring-violet-100 transition hover:shadow-lg hover:ring-violet-200 sm:h-24 sm:rounded-2xl sm:p-2"
 >
-  <div className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-br from-white/35 via-white/10 to-transparent transition duration-500 group-hover:translate-x-0" />
-
   <Image
     src={team.logo}
     alt={team.nome}
-    width={52}
-    height={52}
-    className="relative z-10 max-h-9 max-w-9 object-contain transition duration-300 group-hover:scale-105 group-hover:drop-shadow-[0_0_14px_rgba(255,255,255,0.95)] sm:max-h-12 sm:max-w-12 sm:group-hover:-translate-y-5"
+    width={68}
+    height={68}
+    className="relative z-10 max-h-10 max-w-10 object-contain transition duration-300 group-hover:scale-110 sm:max-h-16 sm:max-w-16"
   />
-
-  <div className="pointer-events-none absolute bottom-2 left-1 right-1 z-10 hidden h-8 items-center justify-center overflow-hidden rounded-lg bg-slate-950/65 px-1 opacity-100 transition duration-300 sm:flex lg:bottom-3 lg:left-1.5 lg:right-1.5 lg:h-9 lg:bg-transparent lg:opacity-0 lg:group-hover:opacity-100">
-  <p className="overflow-hidden text-ellipsis text-center text-[9px] font-black uppercase leading-tight text-white">
-  {team.nome}
-</p>
-</div>
 </Link>
                     ))}
                   </div>

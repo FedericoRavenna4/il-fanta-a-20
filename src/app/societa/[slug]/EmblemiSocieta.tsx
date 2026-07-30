@@ -159,7 +159,7 @@ export default function EmblemiSocieta({
 
   return (
     <>
-      <section className="rounded-[2rem] border border-slate-200 bg-white/90 p-4 shadow-lg shadow-slate-200/40 backdrop-blur sm:p-5">
+      <section className="relative rounded-[2rem] border border-slate-200 bg-white/90 p-4 pb-12 shadow-lg shadow-slate-200/40 backdrop-blur sm:p-5 sm:pb-12">
         <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-950">
           Collezione della società <span className="text-slate-400">— {ordinati.length}</span>
         </h2>
@@ -183,9 +183,9 @@ export default function EmblemiSocieta({
             <button
               type="button"
               onClick={() => setOpen(true)}
-              className="mt-3 min-h-9 w-full border-t border-slate-200 pt-3 text-left text-[10px] font-black uppercase tracking-[0.14em] text-blue-950 transition hover:text-blue-700"
+              className="absolute bottom-4 right-5 inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-[0.12em] text-blue-950 transition hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900"
             >
-              Vedi tutti
+              Vedi tutti <span aria-hidden="true">→</span>
             </button>
           )}
         </div>

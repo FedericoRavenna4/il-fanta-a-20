@@ -35,6 +35,7 @@ export default function RegolamentoPage() {
       <PageHeader
         eyebrow="Documentazione ufficiale"
         title="Il Regolamento"
+        onderTitle
         description="Il Regolamento 3.0 raccoglie aste, mercato, competizioni e calcolo dei risultati, definendo il funzionamento completo della stagione."
       />
 

@@ -41,11 +41,15 @@ function resolveLogo(nomeFile: string, id: number, files: string[]) {
   const esatto = files.find(
     (file) => file.toLocaleLowerCase("it") === nomeFile.toLocaleLowerCase("it")
   );
-  if (esatto) return `/societa/${esatto}`;
-
   const prefisso = `${String(id).padStart(3, "0")}_`;
   const perId = files.find((file) => file.startsWith(prefisso));
-  return perId ? `/societa/${perId}` : "/logos/logo.png";
+  const file = esatto ?? perId;
+  if (!file) return "/logos/logo.png?v=20260730";
+
+  const versione = Math.trunc(
+    fs.statSync(path.join(process.cwd(), "public", "societa", file)).mtimeMs
+  );
+  return `/societa/${file}?v=${versione}`;
 }
 
 export function getSocieta(): Societa[] {

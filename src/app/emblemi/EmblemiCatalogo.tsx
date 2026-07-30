@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Emblema, GruppoEmblema } from "@/lib/emblemi";
 import { GRUPPI_EMBLEMI, PALETTE_EMBLEMI } from "@/lib/emblemi-ui";
 
@@ -51,6 +51,7 @@ export default function EmblemiCatalogo({
   nascosti: EmblemaNascostoCatalogo[];
 }) {
   const [filtro, setFiltro] = useState<GruppoEmblema | "Tutti">("Tutti");
+  const [selezionato, setSelezionato] = useState<EmblemaCatalogo | null>(null);
   const gruppiVisibili = useMemo(
     () => GRUPPI_EMBLEMI
       .filter((gruppo) => filtro === "Tutti" || filtro === gruppo)
@@ -66,6 +67,19 @@ export default function EmblemiCatalogo({
       .filter((gruppo) => gruppo.emblemi.length > 0),
     [emblemi, filtro]
   );
+
+  useEffect(() => {
+    if (!selezionato) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setSelezionato(null);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = "";
+    };
+  }, [selezionato]);
 
   return (
     <>
@@ -92,9 +106,13 @@ export default function EmblemiCatalogo({
         </div>
       </nav>
 
+      <p className="mb-5 text-center text-[9px] font-bold uppercase tracking-[0.12em] text-slate-400 sm:hidden">
+        Tocca un emblema per scoprire i dettagli
+      </p>
+
       <div className="space-y-8 sm:space-y-10">
         {gruppiVisibili.filter((gruppo) => gruppo.nome !== "Da difendere").map((gruppo) => (
-          <CatalogoGruppo key={gruppo.nome} gruppo={gruppo.nome} emblemi={gruppo.emblemi} />
+          <CatalogoGruppo key={gruppo.nome} gruppo={gruppo.nome} emblemi={gruppo.emblemi} onSelect={setSelezionato} />
         ))}
 
         {filtro === "Tutti" && nascosti.length > 0 && (
@@ -113,9 +131,54 @@ export default function EmblemiCatalogo({
         )}
 
         {gruppiVisibili.filter((gruppo) => gruppo.nome === "Da difendere").map((gruppo) => (
-          <CatalogoGruppo key={gruppo.nome} gruppo={gruppo.nome} emblemi={gruppo.emblemi} />
+          <CatalogoGruppo key={gruppo.nome} gruppo={gruppo.nome} emblemi={gruppo.emblemi} onSelect={setSelezionato} />
         ))}
       </div>
+
+      {selezionato && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="dettaglio-emblema-mobile"
+          className="fixed inset-0 z-[170] flex items-end bg-slate-950/65 p-3 backdrop-blur-md sm:hidden"
+          onMouseDown={() => setSelezionato(null)}
+        >
+          <div
+            className={`relative w-full overflow-hidden rounded-[1.75rem] border bg-white p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-2xl ${PALETTE_EMBLEMI[selezionato.categoria].border}`}
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setSelezionato(null)}
+              aria-label="Chiudi il dettaglio dell’emblema"
+              className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-xl text-blue-950 shadow-sm"
+            >
+              <span aria-hidden="true">×</span>
+            </button>
+            <div className="flex justify-center">
+              <span className={`absolute mt-5 h-24 w-24 rounded-full opacity-60 blur-3xl ${PALETTE_EMBLEMI[selezionato.categoria].glow}`} />
+              <Image src={selezionato.immagine} alt="" width={150} height={150} className="relative h-28 w-28 object-contain drop-shadow-[0_14px_20px_rgba(15,23,42,.3)]" />
+            </div>
+            <p className={`mt-4 text-center text-[9px] font-black uppercase tracking-[0.16em] ${PALETTE_EMBLEMI[selezionato.categoria].labelText}`}>
+              {selezionato.categoria}
+            </p>
+            <h2 id="dettaglio-emblema-mobile" className="mt-1 text-center text-xl font-black uppercase leading-tight text-blue-950">
+              {selezionato.nome}
+            </h2>
+            <p className="mt-4 text-sm font-semibold leading-6 text-slate-600">
+              {selezionato.descrizione || "Nessuna descrizione disponibile."}
+            </p>
+            {selezionato.tipo === "Difendibile" && (
+              <div className="mt-4 border-t border-violet-200 pt-3">
+                <p className="text-[9px] font-black uppercase tracking-[0.12em] text-slate-400">Record attuale</p>
+                <p className="mt-1 text-base font-black text-violet-700">
+                  {!selezionato.record?.trim() || selezionato.record.toUpperCase() === "ND" ? "N/D" : selezionato.record}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </>
   );
 }
@@ -123,9 +186,11 @@ export default function EmblemiCatalogo({
 function CatalogoGruppo({
   gruppo,
   emblemi,
+  onSelect,
 }: {
   gruppo: GruppoEmblema;
   emblemi: EmblemaCatalogo[];
+  onSelect: (emblema: EmblemaCatalogo) => void;
 }) {
   const palette = PALETTE_EMBLEMI[gruppo];
   const colonne = colonneDesktop(emblemi.length);
@@ -148,7 +213,7 @@ function CatalogoGruppo({
       </div>
 
       <div className="grid grid-cols-3 gap-2 sm:gap-3 md:grid-cols-4 lg:hidden">
-        {emblemi.map((emblema) => <EmblemaCard key={emblema.id} emblema={emblema} />)}
+        {emblemi.map((emblema) => <EmblemaCard key={emblema.id} emblema={emblema} onSelect={onSelect} />)}
       </div>
       <div className="hidden space-y-3 lg:block">
         {righe.map((riga, index) => (
@@ -156,7 +221,7 @@ function CatalogoGruppo({
             key={`${gruppo}-${index}`}
             className={`mx-auto grid gap-3 ${classiGriglia(riga.length)} ${larghezzaRiga(riga.length, colonne)}`}
           >
-            {riga.map((emblema) => <EmblemaCard key={emblema.id} emblema={emblema} />)}
+            {riga.map((emblema) => <EmblemaCard key={emblema.id} emblema={emblema} onSelect={onSelect} />)}
           </div>
         ))}
       </div>
@@ -189,7 +254,13 @@ function EmblemaNascosto({ emblema }: { emblema: EmblemaNascostoCatalogo }) {
   );
 }
 
-function EmblemaCard({ emblema }: { emblema: EmblemaCatalogo }) {
+function EmblemaCard({
+  emblema,
+  onSelect,
+}: {
+  emblema: EmblemaCatalogo;
+  onSelect: (emblema: EmblemaCatalogo) => void;
+}) {
   const [source, setSource] = useState(emblema.immagine);
   const palette = PALETTE_EMBLEMI[emblema.categoria];
   const record = emblema.record?.trim();
@@ -198,7 +269,7 @@ function EmblemaCard({ emblema }: { emblema: EmblemaCatalogo }) {
   const difendibile = emblema.tipo === "Difendibile";
 
   const immagine = (
-    <span className="group/image relative flex h-16 items-center justify-center sm:h-24">
+    <span className="group/image relative flex h-[5.5rem] items-center justify-center sm:h-24">
       <span className={`pointer-events-none absolute h-16 w-16 rounded-full opacity-65 blur-2xl transition duration-500 group-hover:opacity-100 ${palette.glow}`} />
       <Image
         src={source}
@@ -206,7 +277,7 @@ function EmblemaCard({ emblema }: { emblema: EmblemaCatalogo }) {
         width={112}
         height={112}
         onError={() => setSource("/emblemi/placeholder.svg")}
-        className={`relative max-h-14 max-w-14 object-contain drop-shadow-[0_12px_17px_rgba(15,23,42,.3)] transition duration-500 sm:max-h-[5.5rem] sm:max-w-[5.5rem] ${
+        className={`relative max-h-[4.5rem] max-w-[4.5rem] object-contain drop-shadow-[0_12px_17px_rgba(15,23,42,.3)] transition duration-500 sm:max-h-[5.5rem] sm:max-w-[5.5rem] ${
           detentore ? "group-hover/image:-translate-y-0.5 group-hover/image:scale-[1.05]" : ""
         }`}
       />
@@ -214,8 +285,14 @@ function EmblemaCard({ emblema }: { emblema: EmblemaCatalogo }) {
   );
 
   return (
-    <article className={`group relative grid h-full min-h-[11rem] min-w-0 grid-rows-[4.75rem_2rem_1fr] overflow-hidden rounded-[1.15rem] border bg-[linear-gradient(145deg,rgba(255,255,255,.96),rgba(248,250,252,.88))] p-2 text-center ring-1 ring-inset transition duration-500 hover:-translate-y-0.5 ${palette.border} ${palette.ring} ${palette.glowStrong} sm:min-h-[13.5rem] sm:grid-rows-[6.5rem_2.5rem_1fr] sm:p-3.5 ${difendibile ? "lg:min-h-[15rem] lg:grid-rows-[6.5rem_2.5rem_1fr_auto]" : ""}`}>
+    <article className={`group relative grid h-full min-h-[10rem] min-w-0 grid-rows-[5.5rem_2.5rem_auto] overflow-hidden rounded-[1.15rem] border bg-[linear-gradient(145deg,rgba(255,255,255,.96),rgba(248,250,252,.88))] p-2 text-center ring-1 ring-inset transition duration-500 hover:-translate-y-0.5 ${palette.border} ${palette.ring} ${palette.glowStrong} sm:min-h-[13.5rem] sm:grid-rows-[6.5rem_2.5rem_1fr] sm:p-3.5 ${difendibile ? "lg:min-h-[15rem] lg:grid-rows-[6.5rem_2.5rem_1fr_auto]" : ""}`}>
       <span className={`pointer-events-none absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent ${palette.line} to-transparent`} />
+      <button
+        type="button"
+        onClick={() => onSelect(emblema)}
+        aria-label={`Apri i dettagli di ${emblema.nome}`}
+        className="absolute inset-0 z-20 rounded-[1.15rem] sm:hidden"
+      />
 
       {detentore?.slug ? (
         <Link
@@ -230,11 +307,11 @@ function EmblemaCard({ emblema }: { emblema: EmblemaCatalogo }) {
       <h3 className="flex items-start justify-center break-words text-[10px] font-black uppercase leading-[1.2] tracking-[0.025em] text-blue-950 sm:text-[11px]">
         {emblema.nome}
       </h3>
-      <p className={`break-words text-[8px] font-semibold leading-[1.35] text-slate-500 sm:text-[10px] sm:leading-[1.4] ${difendibile ? "" : "line-clamp-4"}`} title={emblema.descrizione ?? ""}>
+      <p className={`hidden break-words text-[8px] font-semibold leading-[1.35] text-slate-500 sm:block sm:text-[10px] sm:leading-[1.4] ${difendibile ? "" : "line-clamp-4"}`} title={emblema.descrizione ?? ""}>
         {emblema.descrizione}
       </p>
       {difendibile && (
-        <div className="mt-2 border-t border-violet-200/70 pt-2 text-left">
+        <div className="mt-2 hidden border-t border-violet-200/70 pt-2 text-left sm:block">
           <p className="text-[7px] font-black uppercase tracking-[0.1em] text-slate-400 sm:text-[8px]">Record attuale:</p>
           <p className="mt-0.5 text-[11px] font-black text-violet-700 sm:text-sm">{valoreRecord}</p>
         </div>

@@ -35,6 +35,7 @@ export default function CompetizioniPage() {
       <PageHeader
         eyebrow="Il sistema sportivo"
         title="Le Competizioni"
+        onderTitle
         description="Campionati, coppe e percorsi speciali compongono una stagione in cui ogni società può inseguire il proprio posto nella storia."
       />
 
@@ -52,17 +53,17 @@ export default function CompetizioniPage() {
 
       <div className="space-y-10 sm:space-y-20">
         <section>
-          <div className="mb-5 sm:mb-8"><p className="text-[10px] font-black uppercase tracking-[0.22em] text-amber-500 sm:text-xs sm:tracking-[0.28em]">La piramide sportiva</p><h2 className="mt-2 text-3xl font-black uppercase tracking-tight text-blue-950 sm:text-5xl">I Campionati</h2></div>
+          <div className="mb-5 sm:mb-8"><p className="text-[10px] font-black uppercase tracking-[0.22em] text-amber-500 sm:text-xs sm:tracking-[0.28em]">La piramide sportiva</p><h2 className="font-onder-title mt-2 text-3xl uppercase text-blue-950 sm:text-5xl">I Campionati</h2></div>
           <CampionatiContent embedded />
         </section>
 
         <section className="border-t border-slate-200 pt-10 sm:pt-20">
-          <div className="mb-5 sm:mb-8"><p className="text-[10px] font-black uppercase tracking-[0.22em] text-amber-500 sm:text-xs sm:tracking-[0.28em]">Trofei e grandi notti</p><h2 className="mt-2 text-3xl font-black uppercase tracking-tight text-blue-950 sm:text-5xl">Le Coppe</h2></div>
+          <div className="mb-5 sm:mb-8"><p className="text-[10px] font-black uppercase tracking-[0.22em] text-amber-500 sm:text-xs sm:tracking-[0.28em]">Trofei e grandi notti</p><h2 className="font-onder-title mt-2 text-3xl uppercase text-blue-950 sm:text-5xl">Le Coppe</h2></div>
           <CoppeContent embedded />
         </section>
 
         <section className="border-t border-slate-200 pt-10 sm:pt-20">
-          <div className="mb-5 sm:mb-8"><p className="text-[10px] font-black uppercase tracking-[0.22em] text-amber-500 sm:text-xs sm:tracking-[0.28em]">La corsa finale</p><h2 className="mt-2 text-3xl font-black uppercase tracking-tight text-blue-950 sm:text-5xl">Lo Scatto Promozione</h2></div>
+          <div className="mb-5 sm:mb-8"><p className="text-[10px] font-black uppercase tracking-[0.22em] text-amber-500 sm:text-xs sm:tracking-[0.28em]">La corsa finale</p><h2 className="font-onder-title mt-2 text-3xl uppercase text-blue-950 sm:text-5xl">Lo Scatto Promozione</h2></div>
           <ScattoPromozioneContent embedded />
         </section>
 
