@@ -94,7 +94,7 @@ function SectionHeading({
   return (
     <div className={`mb-6 flex flex-col gap-3 sm:mb-10 sm:gap-6 lg:flex-row lg:items-end lg:justify-between ${isProtagoniste ? "relative z-20 isolate opacity-100 [filter:none] [mask-image:none]" : ""}`}>
       <div className="max-w-3xl lg:max-w-none">
-        <p className={`text-[10px] font-black uppercase tracking-[0.24em] opacity-100 sm:text-xs sm:tracking-[0.3em] ${isProtagoniste ? "text-amber-600 sm:text-amber-500" : "text-amber-500"}`}>{eyebrow}</p>
+        <p className="section-eyebrow opacity-100">{eyebrow}</p>
         <h2 className={`mt-2 text-3xl font-black uppercase tracking-tight opacity-100 sm:mt-3 sm:text-5xl ${onderTitle ? "font-onder-title" : ""} ${isProtagoniste ? "bg-none text-blue-950 [background-clip:border-box] [background-image:none]" : "text-blue-950"}`}>{title}</h2>
         <p className={`mt-2 text-sm font-semibold leading-5 opacity-100 sm:mt-4 sm:text-lg sm:leading-7 ${isProtagoniste ? "text-slate-600 sm:text-slate-500" : "text-slate-500"}`}>{text}</p>
       </div>
@@ -206,10 +206,10 @@ export default async function Home() {
     <div className="overflow-hidden bg-[linear-gradient(180deg,#f8fbff_0%,#eef5fb_36%,#f8fafc_100%)]">
       <section className="relative mx-auto max-w-7xl px-4 pb-6 pt-8 sm:px-6 sm:pb-14 sm:pt-16 lg:pb-16 lg:pt-24">
         <div className="pointer-events-none absolute left-1/2 top-0 hidden h-[34rem] w-[50rem] -translate-x-1/2 rounded-full bg-sky-200/35 blur-3xl sm:block" />
-        <div className="relative grid grid-cols-[minmax(0,1fr)_76px] items-center gap-x-3 gap-y-4 sm:grid-cols-1 sm:gap-12 lg:grid-cols-[1.15fr_0.85fr]">
+        <div className="relative grid grid-cols-1 items-center gap-y-4 sm:gap-12">
           <div className="contents sm:block">
-            <p className="order-1 col-span-2 text-[10px] font-black uppercase tracking-[0.28em] text-amber-500 sm:text-xs sm:tracking-[0.36em]">Il portale ufficiale</p>
-            <h1 className="font-onder-hero order-2 mt-0 flex w-fit max-w-[82%] flex-col items-start gap-[0.3em] text-[clamp(.76rem,2.3vw,1.8rem)] text-blue-950 sm:mt-6 sm:max-w-[75%] lg:max-w-[38rem]">
+            <p className="section-eyebrow order-1 col-span-2">Il portale ufficiale</p>
+            <h1 className="font-onder-hero order-2 mt-0 flex w-fit max-w-full flex-col items-start gap-[0.3em] text-[clamp(1.6rem,5vw,4rem)] text-blue-950 sm:mt-6">
               <span className="block whitespace-nowrap">NON E&apos; SOLO</span>
               <span className="block whitespace-nowrap">FANTACALCIO.</span>
               <span className="block whitespace-nowrap text-blue-700">E&apos; IL FANTA A 20</span>
@@ -220,12 +220,6 @@ export default async function Home() {
             </p>
           </div>
 
-          <div className="relative order-3 mx-auto flex min-h-0 w-full max-w-lg items-center justify-center sm:min-h-[330px]">
-            <div className="pointer-events-none absolute left-1/2 top-1/2 h-52 w-20 -translate-x-1/2 -translate-y-1/2 rotate-12 bg-sky-300/30 blur-[48px]" />
-            <div className="relative z-10">
-              <Image src="/logos/logo.png?v=20260730-1606" alt="Logo Il Fanta a 20" width={310} height={310} priority unoptimized className="h-auto w-16 drop-shadow-[0_18px_24px_rgba(15,23,42,0.22)] sm:w-72 sm:drop-shadow-[0_30px_38px_rgba(15,23,42,0.24)]" />
-            </div>
-          </div>
         </div>
 
       </section>
@@ -282,7 +276,7 @@ export default async function Home() {
           <span className="pointer-events-none absolute right-0 top-1/2 h-40 w-40 -translate-y-1/2 rounded-full bg-sky-300/20 blur-3xl transition duration-700 group-hover:bg-sky-300/30" />
 
           <span className="relative min-w-0">
-            <span className="block text-[8px] font-black uppercase tracking-[0.23em] text-amber-600 sm:text-[9px]">Arcade room</span>
+            <span className="section-eyebrow block">Arcade room</span>
             <span className="font-onder-title mt-2 block text-blue-950">La Sala Giochi</span>
             <span className="mt-1 block text-xs font-semibold text-slate-500 sm:text-sm">Scegli una società e scendi in campo.</span>
           </span>
@@ -306,7 +300,7 @@ export default async function Home() {
         <Link href="/emblemi" className="group relative grid border-y border-blue-950/10 py-5 text-blue-950 transition duration-500 hover:border-blue-950/25 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-200 sm:grid-cols-[minmax(0,.92fr)_minmax(360px,1.08fr)] sm:items-center sm:gap-8 sm:px-3 sm:py-7">
           <div className="pointer-events-none absolute -right-24 -top-28 h-72 w-72 rounded-full bg-sky-300/20 blur-[85px]" />
           <div className="relative min-w-0">
-            <p className="text-[9px] font-black uppercase tracking-[0.22em] text-amber-600">Archivio degli emblemi</p>
+            <p className="section-eyebrow">Archivio degli emblemi</p>
             <h2 className="font-onder-title mt-2 text-blue-950">La collezione ufficiale</h2>
             <p className="mt-2 max-w-xl text-xs font-semibold leading-5 text-slate-500 sm:text-sm sm:leading-6">Scopri rarità, traguardi e record da sbloccare nel mondo Fanta a 20</p>
             <span className="mt-4 inline-flex min-h-11 items-center rounded-xl border border-blue-950/15 bg-white/55 px-4 text-[9px] font-black uppercase tracking-[0.13em] text-blue-950 shadow-sm backdrop-blur transition duration-300 group-hover:border-blue-950/30 group-hover:bg-white sm:px-5 sm:text-[10px]">
@@ -314,7 +308,7 @@ export default async function Home() {
             </span>
           </div>
 
-          <div className="relative mt-4 grid grid-cols-5 items-center gap-2 border-t border-blue-950/10 pt-4 sm:mt-0 sm:gap-4 sm:border-l sm:border-t-0 sm:pl-8 sm:pt-0">
+          <div className="relative mt-4 grid grid-cols-5 items-center gap-2 border-t border-blue-950/10 pt-4 sm:mt-0 sm:gap-4 sm:border-l sm:border-t-0 sm:pl-8 sm:pt-0 lg:mt-6 lg:border-l-0 lg:pl-0 lg:pt-4">
             {emblemiVetrina.map((emblema) => {
               const palette = PALETTE_EMBLEMI[emblema.categoria];
               return (
@@ -371,7 +365,7 @@ export default async function Home() {
       <section className="order-1 mx-auto w-full max-w-7xl px-4 py-8 max-sm:py-6 sm:px-6 sm:py-16 lg:py-20">
         <div className="mb-6 grid items-center gap-4 max-sm:mb-4 sm:mb-11 sm:gap-8 md:grid-cols-[1fr_290px] lg:grid-cols-[1fr_380px]">
             <div className="max-w-3xl lg:max-w-none">
-              <p className="text-xs font-black uppercase tracking-[0.3em] text-amber-500">Il sistema sportivo</p>
+              <p className="section-eyebrow">Il sistema sportivo</p>
               <h2 className="font-onder-title mt-2 text-3xl uppercase text-blue-950 sm:mt-3 sm:text-5xl">Le competizioni</h2>
               <p className="mt-3 text-sm font-semibold leading-5 text-slate-500 sm:mt-5 sm:text-lg sm:leading-7">Campionati e coppe: strade diverse per conquistare un posto nella storia.</p>
             </div>
@@ -404,7 +398,7 @@ export default async function Home() {
         <Link href="/regolamento" className="group relative block border-y border-blue-950/10 px-1 py-9 text-blue-950 transition hover:border-blue-950/25 sm:px-3 sm:py-12">
           <div className="absolute right-0 top-1/2 h-80 w-80 -translate-y-1/2 rounded-full bg-sky-400/15 blur-3xl" />
           <div className="relative flex flex-col gap-9 lg:flex-row lg:items-center lg:justify-between">
-            <div className="max-w-3xl"><p className="text-[10px] font-black uppercase tracking-[0.24em] text-amber-600 sm:text-xs sm:tracking-[0.3em]">Le regole del gioco</p><h2 className="font-onder-title mt-2 text-3xl uppercase sm:mt-3 sm:text-5xl">Il regolamento</h2><p className="mt-3 text-sm font-semibold leading-5 text-slate-500 sm:mt-5 sm:text-lg sm:leading-7">Ogni grande competizione vive di regole all’altezza delle sue ambizioni. Scopri il sistema che governa aste, rose, mercato e tornei e rende ogni scelta decisiva.</p></div>
+            <div className="max-w-3xl"><p className="section-eyebrow">Le regole del gioco</p><h2 className="font-onder-title mt-2 text-3xl uppercase sm:mt-3 sm:text-5xl">Il regolamento</h2><p className="mt-3 text-sm font-semibold leading-5 text-slate-500 sm:mt-5 sm:text-lg sm:leading-7">Ogni grande competizione vive di regole all’altezza delle sue ambizioni. Scopri il sistema che governa aste, rose, mercato e tornei e rende ogni scelta decisiva.</p></div>
             <span className="relative inline-flex w-fit shrink-0 items-center overflow-hidden rounded-full border border-blue-950/15 bg-white/60 px-6 py-3 text-xs font-black uppercase tracking-[0.16em] shadow-sm transition duration-300 group-hover:border-blue-950/30 group-hover:bg-white"><span className="relative">Consulta il regolamento</span></span>
           </div>
         </Link>
@@ -414,7 +408,7 @@ export default async function Home() {
         <div className="relative py-2 sm:py-4">
           <div className="relative grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-10">
             <div className="max-w-4xl">
-              <p className="font-onder-title text-amber-600">La tua occasione!</p>
+              <p className="section-eyebrow">La tua occasione!</p>
               <h2 className="font-onder-title mt-2 text-blue-950">La lista di attesa</h2>
               <p className="mt-3 max-w-3xl text-[13px] font-semibold leading-5 text-slate-500 sm:text-base sm:leading-7">
                 Le 100 società del Fanta a 20 sono già state assegnate. Ogni stagione, però, alcuni posti tornano disponibili. Entra nella lista d’attesa e potresti essere il prossimo.

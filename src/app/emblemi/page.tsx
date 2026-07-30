@@ -45,7 +45,7 @@ export default function EmblemiPage() {
       <div className="pointer-events-none absolute left-1/2 top-0 h-64 w-[50rem] -translate-x-1/2 rounded-full bg-blue-900/[0.045] blur-[100px]" />
       <div className="relative mx-auto max-w-[90rem] px-4 pb-12 pt-7 sm:px-5 sm:pb-16 sm:pt-10 lg:px-8 lg:pb-20 lg:pt-12">
         <header className="mb-6 max-w-4xl border-b border-slate-300/70 pb-5 sm:mb-8 sm:pb-6">
-          <p className="text-[9px] font-black uppercase tracking-[0.22em] text-amber-600">Archivio degli emblemi</p>
+          <p className="section-eyebrow">Archivio degli emblemi</p>
           <h1 className="font-onder-title font-onder-title-mobile-compact mt-2 text-blue-950">La collezione ufficiale</h1>
           <p className="mt-3 text-[13px] font-semibold leading-5 text-slate-500 sm:text-base sm:leading-7">
             Scopri rarità, traguardi e record da sbloccare nel mondo Fanta a 20

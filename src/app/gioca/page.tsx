@@ -38,7 +38,7 @@ export default async function GiocaPage({
           <div className="pointer-events-none absolute -left-16 top-0 h-40 w-72 bg-sky-200/25 blur-[70px]" />
           <div className="relative">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.24em] text-amber-500 sm:text-xs sm:tracking-[0.32em]">
+              <p className="section-eyebrow">
                 Il Fanta a 20 · Arcade Room
               </p>
               <h1 className="font-onder-title mt-2.5 break-words text-3xl uppercase text-blue-950 sm:mt-4 sm:text-5xl lg:text-7xl">

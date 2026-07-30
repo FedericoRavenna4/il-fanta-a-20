@@ -110,9 +110,6 @@ export default function Header() {
             className="h-9 w-auto drop-shadow-sm transition duration-300 group-hover:scale-105 group-hover:drop-shadow-md sm:h-11"
           />
 
-          <span className="text-base font-black uppercase tracking-tight text-blue-950 sm:text-lg">
-            Il Fanta a 20
-          </span>
         </Link>
 
         <nav className="hidden items-center gap-1 text-sm font-bold text-slate-600 lg:flex">

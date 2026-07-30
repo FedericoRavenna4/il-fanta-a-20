@@ -49,11 +49,11 @@ export default function StatistichePage() {
 
       <div className="space-y-10 sm:space-y-20">
         <section id="ranking" className="scroll-mt-28">
-          <div className="mb-5 sm:mb-8"><p className="text-[10px] font-black uppercase tracking-[0.22em] text-amber-500 sm:text-xs sm:tracking-[0.28em]">Il Ranking</p><h2 className="font-onder-title mt-2 text-3xl uppercase text-blue-950 sm:text-5xl">Il Podio</h2></div>
+          <div className="mb-5 sm:mb-8"><p className="section-eyebrow">Il Ranking</p><h2 className="font-onder-title mt-2 text-3xl uppercase text-blue-950 sm:text-5xl">Il Podio</h2></div>
           <RankingSmart rows={rows} />
         </section>
         <div className="border-t border-slate-200 pt-10 sm:pt-20">
-          <div className="mb-5 sm:mb-8"><p className="text-[10px] font-black uppercase tracking-[0.22em] text-amber-500 sm:text-xs sm:tracking-[0.28em]">Trofei e memoria</p><h2 className="font-onder-title mt-2 text-3xl uppercase text-blue-950 sm:text-5xl">L&apos;Hall of Fame</h2></div>
+          <div className="mb-5 sm:mb-8"><p className="section-eyebrow">Trofei e memoria</p><h2 className="font-onder-title mt-2 text-3xl uppercase text-blue-950 sm:text-5xl">L&apos;Hall of Fame</h2></div>
           <HallOfFameContent embedded />
         </div>
       </div>
