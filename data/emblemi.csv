@@ -1,101 +1,63 @@
-ID_Squadra,Nome_Società,Stagione_Ingresso,un_anno,due_anni,tre_anni,promozione,retrocessione,triplete,ventesimo,vinci_champions,vinci_conference,vinci_coppa_fanta_a_20,vinci_europa,vinci_serie_a,vinci_serie_b,vinci_serie_c,acquisto_piu_costoso,miglior_punteggio,peggior_punteggio,piu_scambi
-1,KUNG FU PARMA CALCIO,2024/25,No,Sì,No,Sì,No,Sì,No,Sì,No,Sì,No,No,Sì,No,No,No,No,No
-2,Coolinese FC,2023/24,No,No,Sì,No,No,No,No,Sì,No,No,No,Sì,No,No,No,No,No,No
-3,Analanta,2023/24,No,No,Sì,No,No,No,No,No,No,No,Sì,Sì,No,No,No,No,No,No
-4,Cagliarithanos,2023/24,No,No,Sì,No,No,No,No,Sì,No,No,No,No,No,No,No,No,No,No
-5,IRoman,2023/24,No,No,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,Difendi,No
-6,I Leccendari,2023/24,No,No,Sì,No,No,No,No,No,Sì,No,Sì,No,No,No,No,No,No,No
-7,Interapia Intensiva,2023/24,No,No,Sì,No,No,No,No,Sì,Sì,No,No,No,No,No,No,No,No,No
-8,Pisa and Love,2024/25,No,Sì,No,Sì,No,No,Sì,No,No,No,No,No,No,No,No,No,No,No
-9,Brodena,2023/24,No,No,Sì,Sì,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No
-10,Bolagna,2023/24,No,No,Sì,No,No,No,No,No,No,No,No,No,No,No,No,Difendi,No,No
-11,Why Always Milan,2023/24,No,No,Sì,No,No,No,Sì,No,No,No,No,No,No,No,No,No,No,No
-12,PREDATORINO,2024/25,No,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-13,Como Habilis,2023/24,No,No,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-14,Hellas Terronia,2024/25,No,Sì,No,No,No,No,No,No,No,No,Sì,No,No,No,No,No,No,No
-15,MATERASSUOLO,2024/25,No,Sì,No,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-16,Cremonelle,2024/25,No,Sì,No,No,No,No,No,No,No,No,Sì,No,No,No,No,No,No,No
-17,Napoleoni,2023/24,No,No,Sì,No,No,No,No,No,Sì,No,No,No,No,No,No,No,No,No
-18,FiorenToni Pepperoni,2024/25,No,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-19,VenEzio Greggio Fc,2024/25,No,Sì,No,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-20,SCOREGGIANA,2025/26,Sì,No,No,Sì,No,No,No,Sì,No,No,No,No,Sì,No,No,No,No,No
-21,u sole u mare Uventus,2023/24,No,No,Sì,No,Sì,No,Sì,No,No,No,No,No,No,No,No,No,No,No
-22,Fel-Lazio,2023/24,No,No,Sì,No,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No
-23,Genoasis,2023/24,No,No,Sì,No,Sì,No,No,No,No,No,No,Sì,No,No,No,No,No,No
-24,Barisa,2026/27,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-25,Licorto Muso FC,2025/26,Sì,No,No,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-26,PalerMavai Ma vieni Ma chi sono,2023/24,No,No,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-27,Andrea e Giugliano,2025/26,Sì,No,No,Sì,No,No,No,No,No,No,No,No,No,Sì,No,No,No,No
-28,Ospitaletto,2025/26,Sì,No,No,Sì,No,No,No,No,No,No,No,No,No,Sì,No,No,No,No
-29,PESCARAMUCCIA,2024/25,No,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-30,Bacarpi Schitz,2025/26,Sì,No,No,Sì,No,No,No,No,No,No,No,No,No,Sì,No,No,No,No
-31,Mantovai,2026/27,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-32,FROSILVIONE,2024/25,No,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-33,Monzarella e Pomodoro,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-34,Juve Scabbia,2024/25,No,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-35,PadoVainCul,2024/25,No,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-36,Spezial One,2024/25,No,Sì,No,No,No,No,No,No,Sì,No,No,No,No,No,No,No,No,No
-37,EMPOLIZIA MUNICIPALE,2024/25,No,Sì,No,No,No,No,No,No,Sì,No,No,No,No,No,No,No,No,No
-38,CARTAnzaro,2024/25,No,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-39,FC CESENARTICO,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-40,Virtus Entella,2026/27,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-41,Fc TiramiSudtirol,2025/26,Sì,No,No,No,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No
-42,LanaRhoades Vicenza,2025/26,Sì,No,No,No,No,No,No,No,No,Sì,No,No,No,No,No,No,No,No
-43,SCARENATE L INFERNO,2025/26,Sì,No,No,No,No,No,No,Sì,No,No,No,No,No,No,No,No,No,No
-44,Ciolone Milano,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-45,El Dolomitazo,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-46,CITTASNELLA,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-47,Virtus Corona,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-48,Albanoleffe,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-49,AS Pizza Erminio,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-50,Lecco,2026/27,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-51,Communion Brescia,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,Difendi
-52,Aurora Pro Patriarcato,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-53,next Gengis Khan,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-54,Pro Tarzanelli,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-55,Triest-In Peace,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-56,FC Arzignano VAcchiappo,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-57,Lumezzane,2026/27,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-58,Novara,2026/27,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-59,PergoleTette,2025/26,Sì,No,No,No,No,No,No,No,Sì,No,No,No,No,No,No,No,No,No
-60,Trento,2026/27,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-61,AGNELLINO,2025/26,Sì,No,No,No,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No
-62,FORLIPPO INZAGHI,2025/26,Sì,No,No,No,No,No,No,Sì,No,No,No,No,No,No,Difendi,No,No,No
-63,Campobasta,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-64,PONTEDERA,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-65,Gubbio di Fango,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-66,Ravengers FC,2025/26,Sì,No,No,No,No,No,No,No,No,No,Sì,No,No,No,No,No,No,No
-67,Ascoli,2026/27,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-68,AREZZENAL,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-69,Guidonia Montecelio,2026/27,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-70,PineTonic,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-71,Ac Bra,2026/27,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-72,PEsaROTTI,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-73,Rimiccoli,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-74,Ternani,2025/26,Sì,No,No,No,No,No,No,No,Sì,No,No,No,No,No,No,No,No,No
-75,Perugia,2026/27,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-76,Torres,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,Difendi,No,No,No
-77,Pianese,2026/27,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-78,InterUn 23,2026/27,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-79,NasPicerno,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-80,SiracUSA,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-81,Sampdodoria,2024/25,No,Sì,No,No,Sì,No,Sì,No,No,No,No,No,No,No,No,No,No,No
-82,Sambenedetta Domenica,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-83,Cassarano,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-84,Monopoly,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-85,Croton Fioc,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-86,Kakasertana,2025/26,Sì,No,No,No,No,No,No,No,No,No,Sì,No,No,No,No,No,No,No
-87,Carrarese,2026/27,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-88,BIANCAVESE,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-89,Benevengo,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-90,acCattania,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-91,US LATTINA CALCIO 1932,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-92,Audace Cerignola,2026/27,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-93,SorrEnd,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-94,Trapani,2026/27,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-95,Vosenza,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-96,PATATA-LANTA UN23,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-97,ALTAMOURINHO,2025/26,Sì,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-98,Foggia,2026/27,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-99,Salernitana,2026/27,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No,No
-100,Con mollica o senza,2025/26,Sì,No,No,No,No,No,Sì,No,No,No,No,No,No,No,No,No,No,No
+ID,Nome,Categoria,Tipo,Descrizione,Record
+1,prima inviolata,base,Sbloccabile,Concludi una partita ufficiale senza subire gol.,
+2,filotto iniziale,base,Sbloccabile,Ottieni 3 vittorie consecutive in partite ufficiali.,
+3,prima goleada,base,Sbloccabile,Segna almeno 4 gol in una singola partita ufficiale.,
+4,finalista di conference,base,Sbloccabile,Accedi alla finale di Conference League.,
+5,primi passi,base,Sbloccabile,Ottieni la prima vittoria in una competizione ufficiale.,
+6,primo punto,base,Sbloccabile,Ottieni il primo pareggio in una competizione ufficiale.,
+7,primo scambio,base,Sbloccabile,Concludi almeno uno scambio,
+8,biglietto per la conference,base,Sbloccabile,Concludi il girone di andata tra il 15° e il 20° posto e accedi alla Conference League.,
+9,salvezza raggiunta,base,Sbloccabile,Mantieni la categoria al termine della stagione.,
+10,top 10,base,Sbloccabile,Concludi un campionato tra le prime 10 posizioni della tua lega.,
+11,coppa f20 fase finale,base,Sbloccabile,Concludi la qualificazione della Coppa Fanta a 20 tra le prime 64 squadre.,
+12,veterano 1,base,Sbloccabile,Disputa 3 stagioni complete ,
+13,senza paura,base,Sbloccabile,Vinci per la prima volta una sfida a eliminazione diretta.,
+14,cinque su cinque,comune,Sbloccabile,Ottieni 5 vittorie consecutive in partite ufficiali.,
+15,ammazzagrandi,comune,Sbloccabile,"Batti la squadra che, prima della giornata, occupa il primo posto del tuo campionato.",
+16,bestia nera,comune,Sbloccabile,Batti la stessa squadra sia all’andata sia al ritorno del campionato.,
+17,re di conference,comune,Sbloccabile,Vinci la finale secca di Conference League.,
+18,finalista di europa league,comune,Sbloccabile,Accedi alla finale di Europa League.,
+19,manita,comune,Sbloccabile,Segna almeno 5 gol in una singola partita ufficiale.,
+20,biglietto per l'europa leage,comune,Sbloccabile,Concludi il girone di andata tra il 9° e il 14° posto e accedi all’Europa League.,
+21,schiacciasassi,comune,Sbloccabile,Vinci una partita ufficiale con almeno 4 gol di scarto.,
+22,top 5,comune,Sbloccabile,Concludi un campionato tra le prime 5 posizioni della tua lega.,
+23,coppa f20 trentaduesimi ,comune,Sbloccabile,Raggiungi i Trentaduesimi di finale della Coppa Fanta a 20.,
+24,veterano 2,comune,Sbloccabile,Disputa 5 stagioni complete con la stessa società.,
+25,re di europa leage,raro,Sbloccabile,Vinci la finale secca di Europa League.,
+26,eroico,raro,Sbloccabile,Vinci una partita in inferiorita' numerica,
+27,finalista di champions,raro,Sbloccabile,"Vinci la semifinale di Champions League, disputata tra andata e ritorno, e raggiungi la finale.",
+28,fortino,raro,Sbloccabile,Concludi il campionato con il minor numero di gol subiti nella tua lega.,
+29,promozione,raro,Sbloccabile,Ottieni una promozione in una categoria superiore.,
+30,talent scout,raro,Sbloccabile,Acquista un giocatore che aumenta il proprio Fantavalore di almeno 20 FM nel corso della stagione.,
+31,goleador,raro,Sbloccabile,Concludi il campionato con il maggior numero di gol segnati nella tua lega.,
+32,biglietto per la champions,raro,Sbloccabile,Concludi il girone di andata tra il 1° e l’8° posto e accedi alla Champions League.,
+33,miracolo,raro,Sbloccabile,Concludi il campionato all'ultima posizione utile per la salvezza,
+34,coppa f20 ottavi,raro,Sbloccabile,Raggiungi gli Ottavi di finale della Coppa Fanta a 20.,
+35,coppa f20 sedicesimi,raro,Sbloccabile,Raggiungi i Sedicesimi di finale della Coppa Fanta a 20.,
+36,podio,raro,Sbloccabile,Concludi il campionato tra le prime 3 posizioni della tua lega.,
+37,dieci e lode,epico,Sbloccabile,Ottieni 10 vittorie consecutive in partite ufficiali.,
+38,re di champions,epico,Sbloccabile,Vinci la finale secca di Champions League.,
+39,fenice,epico,Sbloccabile,Ottieni la promozione nella stagione immediatamente successiva a una retrocessione.,
+40,finalista di coppa f20,epico,Sbloccabile,Raggiungi la finale della Coppa Fanta a 20.,
+41,olimpo,epico,Sbloccabile,Concludi la qualificazione della Coppa Fanta a 20 tra il 1° e l’8° posto.,
+42,veterano 3,epico,Sbloccabile,Disputa 10 stagioni complete con la stessa società.,
+43,campione di serie a,mitico,Sbloccabile,Concludi al 1° posto il campionato di Serie A.,
+44,campione di serie b,mitico,Sbloccabile,Concludi al 1° posto il campionato di Serie B.,
+45,campione di serie c,mitico,Sbloccabile,Concludi al 1° posto uno dei tre gironi di Serie C e ottieni la promozione diretta in Serie B.,
+46,re della coppa f20,mitico,Sbloccabile,Vinci la Coppa Fanta a 20.,
+47,double,mitico,Sbloccabile,Vinci nella stessa stagione il campionato della tua lega e un'altra competizione,
+48,rosa perfetta,mitico,Sbloccabile,Tutti i giocatori di movimento della tua rosa prendono voto in una singola giornata,
+49,bis nazionale,leggenda,Sbloccabile,Vinci la serie A per due stagioni consecutive.,
+50,grand slam,leggenda,Sbloccabile,"Vinci nel corso della carriera Serie A, Champions League, Europa League, Conference League e Coppa Fanta a 20.",
+51,triplete,leggenda,Sbloccabile,"Vinci nella stessa stagione il campionato della tua lega, una competizione europea e la Coppa Fanta a 20.",
+52,tutta europa,leggenda,Sbloccabile,"Vinci almeno una volta Champions League, Europa League e Conference League.",
+53,Custode,da difendere,Difendibile,Detenuto dalla squadra che ha subito meno gol in una singola stagione di campionato.,ND
+54,Dannato,da difendere,Difendibile,Detenuto dalla squadra che ha totalizzato meno punti in una singola stagione di campionato.,ND
+55,Titano,da difendere,Difendibile,Detenuto dalla squadra che ha realizzato il fantapunteggio più alto di sempre in una singola giornata ufficiale.,94
+56,Trafitto,da difendere,Difendibile,Detenuto dalla squadra che ha subito più gol in una singola stagione di campionato.,ND
+57,Abisso,da difendere,Difendibile,Detenuto dall'ultima squadra che ha realizzato il fantapunteggio più basso di sempre in una singola giornata ufficiale.,31
+58,Mecenate,da difendere,Difendibile,Detenuto dalla squadra che effettua l'acquisto più oneroso di sempre,220
+59,Devastatore,da difendere,Difendibile,Detenuto dalla squadra che ha segnato più gol in una singola stagione di campionato.,ND
+60,Dominatore,da difendere,Difendibile,Detenuto dalla squadra che ha totalizzato più punti in una singola stagione di campionato.,ND
+61,Mercante,da difendere,Difendibile,Detenuto dalla squadra che ha totalizzato il maggior numero di scambi in una singola stagione,21
+62,Sovrano,da difendere,Difendibile,Detenuto dalla squadra con il maggior numero di titoli ufficiali conquistati.,3

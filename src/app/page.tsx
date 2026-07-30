@@ -4,6 +4,8 @@ import type { ReactNode } from "react";
 import { getPalmares } from "@/lib/palmares";
 import { getRanking } from "@/lib/ranking";
 import { getSocieta, type Societa } from "@/lib/societa";
+import { getCatalogoEmblemi } from "@/lib/emblemi";
+import { PALETTE_EMBLEMI } from "@/lib/emblemi-ui";
 
 const competizioni = [
   {
@@ -106,6 +108,7 @@ export default async function Home() {
   const societa = getSocieta();
   const ranking = getRanking();
   const palmares = getPalmares();
+  const catalogoEmblemi = getCatalogoEmblemi();
 
   const podioRanking = ranking.slice(0, 3).flatMap((item) => {
     const team = societa.find((societaItem) => societaItem.id === item.squadraId);
@@ -119,6 +122,18 @@ export default async function Home() {
     { team: societa.find((item) => item.id === 42), label: "Campione in carica Coppa Fanta a 20", tone: "text-emerald-300", storia: "Al debutto nel 2025/26 ha sovvertito ogni pronostico, conquistando il trofeo più prestigioso dell’ecosistema." },
   ].filter((item): item is { team: Societa; label: string; tone: string; storia: string } => Boolean(item.team));
   const societaMarquee = [...societa].sort((a, b) => a.id - b.id);
+  const emblemiVetrina = [
+    "bestia nera",
+    "talent scout",
+    "fenice",
+    "triplete",
+    "mercante",
+  ].flatMap((nome) => {
+    const emblema = catalogoEmblemi.find(
+      (item) => item.nome.trim().toLocaleLowerCase("it") === nome
+    );
+    return emblema ? [emblema] : [];
+  });
 
   return (
     <div className="overflow-hidden bg-[linear-gradient(180deg,#f8fbff_0%,#eef5fb_36%,#f8fafc_100%)]">
@@ -205,6 +220,35 @@ export default async function Home() {
             Gioca ora <span aria-hidden="true">→</span>
           </span>
         </Link>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 pb-8 sm:px-6 sm:pb-16 lg:pb-20">
+        <div className="group relative grid overflow-hidden rounded-[1.6rem] border border-white/10 bg-[linear-gradient(125deg,#071a34_0%,#0a284d_58%,#102e54_100%)] p-4 text-white shadow-[0_22px_58px_rgba(7,26,52,.2)] sm:grid-cols-[minmax(0,.92fr)_minmax(360px,1.08fr)] sm:items-center sm:gap-8 sm:rounded-[2rem] sm:p-7 lg:px-9">
+          <div className="pointer-events-none absolute -right-24 -top-28 h-72 w-72 rounded-full bg-sky-300/[0.08] blur-[85px]" />
+          <div className="pointer-events-none absolute inset-x-16 top-0 h-px bg-gradient-to-r from-transparent via-white/35 to-transparent" />
+          <div className="relative min-w-0">
+            <h2 className="text-2xl font-black uppercase tracking-tight sm:text-3xl">Archivio degli emblemi</h2>
+            <p className="mt-2 max-w-xl text-xs font-semibold leading-5 text-white/58 sm:text-sm sm:leading-6">Scopri rarità, traguardi e record da sbloccare nel mondo Fanta a 20</p>
+            <Link
+              href="/emblemi"
+              className="mt-4 inline-flex min-h-11 items-center rounded-xl border border-white/20 bg-white/[0.06] px-4 text-[9px] font-black uppercase tracking-[0.13em] text-white shadow-[inset_0_1px_0_rgba(255,255,255,.08)] backdrop-blur transition duration-300 hover:-translate-y-0.5 hover:border-white/45 hover:bg-white/[0.11] hover:shadow-[0_10px_28px_rgba(0,0,0,.18)] sm:px-5 sm:text-[10px]"
+            >
+              Visualizza tutta la collezione ufficiale →
+            </Link>
+          </div>
+
+          <div className="relative mt-4 grid grid-cols-5 items-center gap-2 border-t border-white/10 pt-4 sm:mt-0 sm:gap-4 sm:border-l sm:border-t-0 sm:pl-8 sm:pt-0">
+            {emblemiVetrina.map((emblema) => {
+              const palette = PALETTE_EMBLEMI[emblema.categoria];
+              return (
+                <div key={emblema.id} className="relative flex min-w-0 items-center justify-center">
+                  <span className={`pointer-events-none absolute h-14 w-14 rounded-full opacity-75 blur-2xl ${palette.glow}`} />
+                  <Image src={emblema.immagine} alt={emblema.nome} width={92} height={92} className="relative h-11 w-11 object-contain drop-shadow-[0_11px_15px_rgba(0,0,0,.44)] transition duration-500 group-hover:-translate-y-0.5 group-hover:scale-[1.04] sm:h-[4.5rem] sm:w-[4.5rem] lg:h-20 lg:w-20" />
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </section>
 
       <div className="flex flex-col">

@@ -1,45 +1,142 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import Link from "next/link";
+import { createPortal } from "react-dom";
+import { useEffect, useRef, useState } from "react";
+import type { CategoriaEmblema, Emblema, EmblemaPosseduto } from "@/lib/emblemi";
+import { GRUPPI_EMBLEMI, isEmblemaNascosto, PALETTE_EMBLEMI } from "@/lib/emblemi-ui";
 
-export type EmblemaVisuale = {
-  chiave: string;
-  titolo: string;
-  descrizione: string;
-  rarita: "Base" | "Comune" | "Raro" | "Leggendario";
+const ordinePrestigio = [...GRUPPI_EMBLEMI]
+  .filter((gruppo): gruppo is CategoriaEmblema => gruppo !== "Da difendere")
+  .reverse();
+
+type TooltipPosition = {
+  left: number;
+  top: number;
+  width: number;
+  sopra: boolean;
 };
 
-const ordineRarita: EmblemaVisuale["rarita"][] = [
-  "Leggendario",
-  "Raro",
-  "Comune",
-  "Base",
-];
+function TestoEmblema({ emblema, tooltip = false }: { emblema: EmblemaPosseduto; tooltip?: boolean }) {
+  const record = emblema.record?.trim();
+  const valoreRecord = !record || record.toUpperCase() === "ND" ? "N/D" : record;
 
-function raritaClass(rarita: EmblemaVisuale["rarita"]) {
-  if (rarita === "Leggendario") return "text-amber-300";
-  if (rarita === "Raro") return "text-sky-300";
-  if (rarita === "Comune") return "text-emerald-300";
-  return "text-slate-300";
+  return (
+    <>
+      {emblema.descrizione && (
+        <span className={tooltip ? "text-white/68" : "text-slate-500"}>{emblema.descrizione}</span>
+      )}
+      {emblema.tipo === "Difendibile" && (
+        <span className={`font-black ${tooltip ? "text-violet-300" : "text-violet-700"}`}>
+          {emblema.descrizione ? " " : ""}RECORD: {valoreRecord}
+        </span>
+      )}
+    </>
+  );
 }
 
-function Emblema({ emblema, grande = false }: { emblema: EmblemaVisuale; grande?: boolean }) {
+function EmblemaIcona({ emblema, vetrina = false }: { emblema: EmblemaPosseduto; vetrina?: boolean }) {
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const [source, setSource] = useState(emblema.immagine);
+  const [tooltip, setTooltip] = useState<TooltipPosition | null>(null);
+  const palette = PALETTE_EMBLEMI[emblema.categoria];
+
+  function mostraTooltip() {
+    const trigger = triggerRef.current;
+    if (!trigger || typeof window === "undefined") return;
+    const rect = trigger.getBoundingClientRect();
+    const margin = 12;
+    const width = Math.min(260, window.innerWidth - margin * 2);
+    const left = Math.min(
+      Math.max(rect.left + rect.width / 2 - width / 2, margin),
+      window.innerWidth - width - margin
+    );
+    const sopra = rect.top > 175;
+    setTooltip({ left, top: sopra ? rect.top - 9 : rect.bottom + 9, width, sopra });
+  }
+
+  useEffect(() => {
+    if (!tooltip) return;
+    const chiudi = () => setTooltip(null);
+    window.addEventListener("scroll", chiudi, true);
+    window.addEventListener("resize", chiudi);
+    return () => {
+      window.removeEventListener("scroll", chiudi, true);
+      window.removeEventListener("resize", chiudi);
+    };
+  }, [tooltip]);
+
+  const tooltipNode = tooltip && typeof document !== "undefined"
+    ? createPortal(
+        <div
+          role="tooltip"
+          style={{
+            left: tooltip.left,
+            top: tooltip.top,
+            width: tooltip.width,
+            transform: tooltip.sopra ? "translateY(-100%)" : undefined,
+          }}
+          className="pointer-events-none fixed z-[160] rounded-xl border border-white/10 bg-blue-950/97 px-3.5 py-3 text-left shadow-2xl backdrop-blur-xl"
+        >
+          <p className="text-[8px] font-black uppercase tracking-[0.15em] text-white/45">{emblema.categoria}</p>
+          <p className="text-[11px] font-black uppercase leading-tight text-white">{emblema.nome}</p>
+          <p className="mt-1.5 text-[10px] font-semibold leading-4">
+            <TestoEmblema emblema={emblema} tooltip />
+          </p>
+        </div>,
+        document.body
+      )
+    : null;
+
   return (
-    <div tabIndex={0} className={`group relative flex shrink-0 items-center justify-center outline-none ${grande ? "h-28 w-28" : "h-24 w-full"}`}>
-      <div className="pointer-events-none absolute h-16 w-16 bg-amber-300/0 blur-2xl transition duration-300 group-hover:bg-amber-300/35 group-focus:bg-amber-300/35" />
-      <Image
-        src={`/emblemi/${emblema.chiave}.png`}
-        alt={emblema.titolo}
-        width={grande ? 100 : 86}
-        height={grande ? 100 : 86}
-        className={`relative object-contain drop-shadow-[0_12px_17px_rgba(15,23,42,0.26)] transition duration-300 group-hover:-translate-y-1 group-hover:scale-105 ${grande ? "max-h-24 max-w-24" : "max-h-20 max-w-20"}`}
-      />
-      <div className="pointer-events-none fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-4 right-4 z-[120] w-auto translate-y-2 rounded-[1.1rem] border border-white/15 bg-blue-950/95 p-4 text-left text-white opacity-0 shadow-2xl backdrop-blur-xl transition duration-200 group-hover:translate-y-0 group-hover:opacity-100 group-focus:translate-y-0 group-focus:opacity-100 sm:absolute sm:bottom-full sm:left-1/2 sm:right-auto sm:mb-2 sm:w-56 sm:-translate-x-1/2">
-        <p className={`text-[9px] font-black uppercase tracking-[0.2em] ${raritaClass(emblema.rarita)}`}>{emblema.rarita}</p>
-        <p className="mt-1 text-xs font-black uppercase">{emblema.titolo}</p>
-        <p className="mt-2 text-[11px] font-semibold leading-4 text-white/60">{emblema.descrizione}</p>
-      </div>
+    <>
+      <button
+        type="button"
+        ref={triggerRef}
+        aria-label={`${emblema.nome}. ${emblema.categoria}. ${emblema.descrizione ?? ""}`}
+        aria-expanded={Boolean(tooltip)}
+        onMouseEnter={mostraTooltip}
+        onMouseLeave={() => setTooltip(null)}
+        onFocus={mostraTooltip}
+        onBlur={() => setTooltip(null)}
+        onPointerUp={(event) => {
+          if (event.pointerType !== "mouse") {
+            if (tooltip) setTooltip(null);
+            else mostraTooltip();
+          }
+        }}
+        onKeyDown={(event) => event.key === "Escape" && setTooltip(null)}
+        className={`group relative flex min-w-0 items-center justify-center overflow-hidden border bg-[linear-gradient(145deg,rgba(255,255,255,.96),rgba(248,250,252,.82))] outline-none ring-1 ring-inset transition duration-300 hover:-translate-y-0.5 focus-visible:ring-2 ${palette.border} ${palette.ring} ${palette.glowStrong} ${
+          vetrina ? "aspect-square rounded-2xl p-3" : "aspect-square rounded-xl p-2"
+        }`}
+      >
+        <span className={`pointer-events-none absolute inset-x-4 top-0 h-px bg-gradient-to-r from-transparent ${palette.line} to-transparent`} />
+        <span className={`pointer-events-none absolute h-2/3 w-2/3 rounded-full opacity-60 blur-2xl transition duration-500 group-hover:opacity-100 ${palette.glow}`} />
+        <Image
+          src={source}
+          alt=""
+          width={110}
+          height={110}
+          onError={() => setSource("/emblemi/placeholder.svg")}
+          className={`relative object-contain drop-shadow-[0_11px_15px_rgba(15,23,42,.3)] transition duration-500 group-hover:scale-[1.05] ${
+            vetrina ? "max-h-[6.25rem] max-w-[6.25rem]" : "max-h-[5rem] max-w-[5rem]"
+          }`}
+        />
+      </button>
+      {tooltipNode}
+    </>
+  );
+}
+
+function EmblemaNascostoIcona() {
+  return (
+    <div
+      role="img"
+      aria-label="Emblema nascosto"
+      className="relative flex aspect-square min-w-0 items-center justify-center overflow-hidden rounded-xl border border-slate-300/70 bg-[radial-gradient(circle_at_50%_38%,rgba(51,65,85,.15),rgba(248,250,252,.92)_60%)] shadow-[0_10px_25px_rgba(15,23,42,.07)]"
+    >
+      <span className="h-11 w-11 rounded-[42%_42%_48%_48%] bg-slate-800/78 shadow-[0_0_20px_rgba(15,23,42,.24)] [clip-path:polygon(50%_0,88%_18%,82%_72%,50%_100%,18%_72%,12%_18%)]" aria-hidden="true" />
     </div>
   );
 }
@@ -47,16 +144,21 @@ function Emblema({ emblema, grande = false }: { emblema: EmblemaVisuale; grande?
 export default function EmblemiSocieta({
   sbloccati,
   daDifendere,
+  nascosti,
 }: {
-  sbloccati: EmblemaVisuale[];
-  daDifendere: EmblemaVisuale[];
+  sbloccati: EmblemaPosseduto[];
+  daDifendere: EmblemaPosseduto[];
+  nascosti: Emblema[];
 }) {
   const [open, setOpen] = useState(false);
-  const [expanded, setExpanded] = useState(false);
-  const [defenceExpanded, setDefenceExpanded] = useState(false);
-  const ordinati = [...sbloccati].sort(
-    (a, b) => ordineRarita.indexOf(a.rarita) - ordineRarita.indexOf(b.rarita)
+  const ordinatiTutti = [...sbloccati].sort(
+    (a, b) =>
+      ordinePrestigio.indexOf(a.categoria as CategoriaEmblema) -
+        ordinePrestigio.indexOf(b.categoria as CategoriaEmblema) ||
+      a.id - b.id
   );
+  const ordinati = ordinatiTutti.filter((emblema) => !isEmblemaNascosto(emblema));
+  const nascostiOrdinati = [...nascosti].sort((a, b) => a.id - b.id);
 
   useEffect(() => {
     if (!open) return;
@@ -73,71 +175,104 @@ export default function EmblemiSocieta({
 
   return (
     <>
-      <div className="rounded-[2rem] border border-slate-200 bg-white/90 p-4 shadow-lg shadow-slate-200/40 backdrop-blur sm:p-6">
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <p className="text-[9px] font-black uppercase tracking-[0.22em] text-amber-500">Collezione ufficiale</p>
-            <h2 className="mt-1 text-xl font-black uppercase tracking-tight text-blue-950">Emblemi</h2>
-          </div>
-          {ordinati.length > 6 && (
-            <button type="button" onClick={() => setOpen(true)} className="hidden text-[10px] font-black uppercase tracking-[0.15em] text-blue-950 transition hover:text-blue-700 sm:block">Vedi tutti</button>
+      <section className="rounded-[2rem] border border-slate-200 bg-white/90 p-4 shadow-lg shadow-slate-200/40 backdrop-blur sm:p-5">
+        <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-950">
+          Collezione della società <span className="text-slate-400">— {sbloccati.length}</span>
+        </h2>
+
+        <div className="mt-3 border-t border-slate-200/80 pt-3">
+          <h3 className="text-base font-black uppercase tracking-tight text-blue-950">
+            Emblemi sbloccati <span className="font-semibold text-slate-400">— {ordinati.length}</span>
+          </h3>
+
+          {ordinati.length > 0 ? (
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              {ordinati.slice(0, 6).map((emblema) => (
+                <EmblemaIcona key={emblema.id} emblema={emblema} />
+              ))}
+            </div>
+          ) : (
+            <p className="mt-2 text-xs font-semibold text-slate-400">Nessun emblema sbloccato.</p>
+          )}
+
+          {ordinatiTutti.length > 6 && (
+            <button
+              type="button"
+              onClick={() => setOpen(true)}
+              className="mt-3 min-h-9 w-full border-t border-slate-200 pt-3 text-left text-[10px] font-black uppercase tracking-[0.14em] text-blue-950 transition hover:text-blue-700"
+            >
+              Vedi tutti
+            </button>
           )}
         </div>
+      </section>
 
-        {ordinati.length > 0 ? (
-          <div className="mt-3 grid grid-cols-3 gap-x-2 gap-y-1 sm:mt-4">
-            {ordinati.map((emblema, index) => (
-              <div key={emblema.chiave} className={index < 3 || expanded ? (index < 6 ? "block" : "block sm:hidden") : index < 6 ? "hidden sm:block" : "hidden"}>
-                <Emblema emblema={emblema} />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="mt-4 text-sm font-semibold text-slate-400">Nessun emblema sbloccato.</p>
-        )}
-        {ordinati.length > 3 && (
-          <button type="button" onClick={() => setExpanded((value) => !value)} aria-expanded={expanded} className="mt-2 min-h-11 w-full rounded-full border border-slate-200 bg-white px-4 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-blue-950 shadow-sm sm:hidden">
-            {expanded ? "Mostra meno" : "Visualizza tutti"}
-          </button>
-        )}
-      </div>
+      <section className="rounded-[2rem] border border-slate-300/80 bg-[linear-gradient(145deg,rgba(241,245,249,.96),rgba(255,255,255,.94))] p-4 shadow-[0_16px_38px_rgba(15,23,42,.08)] sm:p-5">
+        <h2 className="text-base font-black uppercase tracking-tight text-blue-950">Emblemi nascosti</h2>
+        <div className="mt-3 grid grid-cols-4 gap-2">
+          {nascostiOrdinati.map((emblema) => {
+            const sbloccato = sbloccati.find((item) => item.id === emblema.id);
+            return sbloccato
+              ? <EmblemaIcona key={emblema.id} emblema={sbloccato} />
+              : <EmblemaNascostoIcona key={emblema.id} />;
+          })}
+        </div>
+      </section>
 
-      <div className="rounded-[2rem] border border-amber-200/70 bg-[linear-gradient(145deg,#fffdf7,#ffffff)] p-4 shadow-lg shadow-amber-100/40 sm:p-6">
-        <p className="text-[9px] font-black uppercase tracking-[0.22em] text-amber-600">Collezione Ufficiale</p>
-        <h2 className="mt-1 text-xl font-black uppercase tracking-tight text-blue-950">Emblemi Da difendere</h2>
+      <section className="rounded-[2rem] border border-violet-300/60 bg-[linear-gradient(145deg,rgba(250,248,255,.96),rgba(255,255,255,.94))] p-4 shadow-[0_16px_40px_rgba(109,40,217,.1)] sm:p-5">
+        <h2 className="text-base font-black uppercase tracking-tight text-blue-950">
+          Emblemi da difendere <span className="font-semibold text-slate-400">— {daDifendere.length}</span>
+        </h2>
         {daDifendere.length > 0 ? (
-          <div className="mt-3 grid grid-cols-3 gap-x-2 gap-y-1 sm:mt-4">
-            {daDifendere.map((emblema, index) => (
-              <div key={emblema.chiave} className={index < 3 || defenceExpanded ? "block" : "hidden sm:block"}>
-                <Emblema emblema={emblema} />
-              </div>
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            {daDifendere.map((emblema) => (
+              <EmblemaIcona key={emblema.id} emblema={emblema} />
             ))}
           </div>
         ) : (
-          <p className="mt-4 rounded-2xl bg-white/70 px-4 py-4 text-sm font-semibold leading-6 text-slate-500 shadow-sm">
-            Nessun emblema da difendere conquistato.
-          </p>
+          <p className="mt-2 text-xs font-semibold text-slate-400">Nessun emblema da difendere.</p>
         )}
-        {daDifendere.length > 3 && (
-          <button type="button" onClick={() => setDefenceExpanded((value) => !value)} aria-expanded={defenceExpanded} className="mt-2 min-h-11 w-full rounded-full border border-amber-200 bg-white px-4 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-blue-950 shadow-sm sm:hidden">
-            {defenceExpanded ? "Mostra meno" : "Visualizza tutti"}
-          </button>
-        )}
-      </div>
+      </section>
+
+      <Link
+        href="/emblemi"
+        className="flex min-h-12 w-full items-center justify-center whitespace-nowrap rounded-xl border border-blue-950/15 bg-white/75 px-3 text-[9px] font-black uppercase tracking-[0.09em] text-blue-950 shadow-[inset_0_1px_0_rgba(255,255,255,.9)] transition duration-300 hover:-translate-y-0.5 hover:border-blue-950/35 hover:bg-white hover:shadow-[0_10px_28px_rgba(15,23,42,.09)] sm:text-[10px] sm:tracking-[0.12em]"
+      >
+        Visualizza tutta la collezione ufficiale →
+      </Link>
 
       {open && (
-        <div role="dialog" aria-modal="true" aria-label="Tutti gli emblemi" className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 p-2 backdrop-blur-md sm:p-5" onMouseDown={() => setOpen(false)}>
-          <div className="max-h-[calc(100dvh-1rem)] w-full max-w-3xl overflow-y-auto overscroll-contain rounded-[1.5rem] border border-white/15 bg-[#f8fbff] p-4 shadow-2xl sm:max-h-[85dvh] sm:rounded-[2rem] sm:p-9" onMouseDown={(event) => event.stopPropagation()}>
-            <div className="flex items-start justify-between gap-3 border-b border-slate-200 pb-5 sm:gap-6 sm:pb-6">
-              <div className="min-w-0"><p className="text-[9px] font-black uppercase tracking-[0.18em] text-amber-500 sm:text-[10px] sm:tracking-[0.24em]">Collezione completa</p><h2 className="mt-2 text-xl font-black uppercase text-blue-950 sm:text-3xl">Tutti gli emblemi</h2></div>
-              <button type="button" onClick={() => setOpen(false)} className="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-black uppercase tracking-wider text-blue-950 shadow-sm transition hover:border-blue-300">Chiudi</button>
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Collezione della società"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/70 p-2 backdrop-blur-md sm:p-5"
+          onMouseDown={() => setOpen(false)}
+        >
+          <div className="relative mt-10 w-full max-w-5xl sm:mt-0" onMouseDown={(event) => event.stopPropagation()}>
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              aria-label="Chiudi la collezione della società"
+              className="absolute right-1 top-[-2.75rem] z-10 flex h-9 w-9 items-center justify-center rounded-full border border-white/25 bg-white/95 text-xl font-light leading-none text-blue-950 shadow-[0_10px_30px_rgba(2,8,23,.24)] backdrop-blur-md transition hover:-translate-y-0.5 hover:bg-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-200 sm:-right-12 sm:top-2"
+            >
+              <span aria-hidden="true">×</span>
+            </button>
+            <div className="max-h-[calc(100dvh-4rem)] w-full overflow-y-auto overscroll-contain rounded-[1.5rem] border border-white/15 bg-[#f4f7fa] p-4 shadow-2xl sm:max-h-[86dvh] sm:rounded-[2rem] sm:p-6">
+            <div className="flex items-center justify-between gap-3 border-b border-slate-300/70 pb-4">
+              <div className="min-w-0">
+                <h2 className="text-lg font-black uppercase tracking-tight text-blue-950 sm:text-2xl">Collezione della società</h2>
+                <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.13em] text-slate-400">
+                  Emblemi sbloccati — {ordinatiTutti.length}
+                </p>
+              </div>
             </div>
-            <div className="mt-7 space-y-8">
-              {ordineRarita.map((rarita) => {
-                const gruppo = ordinati.filter((emblema) => emblema.rarita === rarita);
-                if (gruppo.length === 0) return null;
-                return <section key={rarita}><div className="mb-3 flex items-center gap-3"><p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{rarita}</p><span className="h-px flex-1 bg-slate-200" /></div><div className="flex flex-wrap gap-3">{gruppo.map((emblema) => <Emblema key={emblema.chiave} emblema={emblema} grande />)}</div></section>;
-              })}
+
+            <div className="mt-4 grid grid-cols-4 gap-2 sm:grid-cols-5 sm:gap-3 md:grid-cols-6 lg:grid-cols-7">
+              {ordinatiTutti.map((emblema) => (
+                <EmblemaIcona key={emblema.id} emblema={emblema} vetrina />
+              ))}
+            </div>
             </div>
           </div>
         </div>

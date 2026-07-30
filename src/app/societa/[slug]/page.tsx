@@ -9,7 +9,8 @@ import { getStatisticheGiocatori } from "@/lib/statisticheGiocatori";
 import { getStorieSocieta } from "@/lib/storieSocieta";
 import RosaSocieta from "./RosaSocieta";
 import StoriaSocieta from "./StoriaSocieta";
-import { getEmblemi } from "@/lib/emblemi";
+import { getCatalogoEmblemi, getEmblemiSocieta } from "@/lib/emblemi";
+import { isEmblemaNascosto } from "@/lib/emblemi-ui";
 import EmblemiSocieta from "./EmblemiSocieta";
 import PalmaresSocieta from "./PalmaresSocieta";
 
@@ -19,116 +20,6 @@ function getLegaGradient(lega: string) {
   if (lega.startsWith("Serie C")) return "from-violet-500 via-violet-600 to-blue-900";
   return "from-blue-950 via-blue-900 to-blue-800";
 }
-type EmblemaInfo = {
-  titolo: string;
-  descrizione: string;
-  rarita: "Base" | "Comune" | "Raro" | "Leggendario";
-};
-
-const infoEmblemi: Record<string, EmblemaInfo> = {
-  un_anno: {
-    titolo: "Primo anno",
-    descrizione: "Partecipa al Fanta a 20 per una stagione.",
-    rarita: "Base",
-  },
-  due_anni: {
-    titolo: "Due stagioni",
-    descrizione: "Partecipa al Fanta a 20 per due stagioni.",
-    rarita: "Base",
-  },
-  tre_anni: {
-    titolo: "Tre stagioni",
-    descrizione: "Partecipa al Fanta a 20 per tre stagioni.",
-    rarita: "Comune",
-  },
-  promozione: {
-    titolo: "Promozione",
-    descrizione: "Vieni promosso almeno una volta.",
-    rarita: "Comune",
-  },
-  retrocessione: {
-    titolo: "Retrocessione",
-    descrizione: "Retrocedi almeno una volta.",
-    rarita: "Base",
-  },
-  triplete: {
-    titolo: "Triplete",
-    descrizione:
-      "Conquista campionato, Champions League e Coppa Fanta a 20 nella stessa stagione.",
-    rarita: "Leggendario",
-  },
-  ventesimo: {
-    titolo: "Fanalino di coda",
-    descrizione: "Concludi un campionato al 20° posto.",
-    rarita: "Base",
-  },
-  vinci_champions: {
-    titolo: "Campione Champions League",
-    descrizione: "Conquista la Champions League almeno una volta.",
-    rarita: "Raro",
-  },
-  vinci_conference: {
-    titolo: "Campione Conference League",
-    descrizione: "Conquista la Conference League almeno una volta.",
-    rarita: "Comune",
-  },
-  vinci_coppa_fanta_a_20: {
-    titolo: "Campione Coppa Fanta a 20",
-    descrizione: "Conquista la Coppa Fanta a 20 almeno una volta.",
-    rarita: "Leggendario",
-  },
-  vinci_europa: {
-    titolo: "Campione Europa League",
-    descrizione: "Conquista l’Europa League almeno una volta.",
-    rarita: "Comune",
-  },
-  vinci_serie_a: {
-    titolo: "Campione Serie A",
-    descrizione: "Vinci il campionato di Serie A.",
-    rarita: "Raro",
-  },
-  vinci_serie_b: {
-    titolo: "Campione Serie B",
-    descrizione: "Vinci il campionato di Serie B.",
-    rarita: "Comune",
-  },
-  vinci_serie_c: {
-    titolo: "Campione Serie C",
-    descrizione: "Vinci il proprio girone di Serie C.",
-    rarita: "Comune",
-  },
-  acquisto_piu_costoso: {
-    titolo: "Colpo da record",
-    descrizione: "Realizza l’acquisto più costoso di sempre.",
-    rarita: "Raro",
-  },
-  miglior_punteggio: {
-    titolo: "Punteggio record",
-    descrizione: "Ottieni il fantapunteggio più alto di sempre in una giornata.",
-    rarita: "Raro",
-  },
-  peggior_punteggio: {
-    titolo: "Giornata da dimenticare",
-    descrizione: "Registra il fantapunteggio più basso di sempre in una giornata.",
-    rarita: "Raro",
-  },
-  piu_scambi: {
-    titolo: "Re del mercato",
-    descrizione: "Effettua il maggior numero di scambi di sempre in una stagione.",
-    rarita: "Raro",
-  },
-};
-
-function getInfoEmblema(chiave: string): EmblemaInfo {
-  return (
-    infoEmblemi[chiave] ?? {
-      titolo: chiave.replace(/_/g, " "),
-      descrizione: "Emblema ufficiale conquistato dalla società.",
-      rarita: "Base",
-    }
-  );
-}
-
 export default async function SchedaSocietaPage({
   params,
 }: {
@@ -141,8 +32,9 @@ export default async function SchedaSocietaPage({
   const rose = getRose();
   const risultati = getRisultati();
   const storieSocieta = getStorieSocieta();
-const statisticheGiocatori = getStatisticheGiocatori();
-const emblemi = getEmblemi();
+  const statisticheGiocatori = getStatisticheGiocatori();
+  const emblemi = getEmblemiSocieta();
+  const catalogoEmblemi = getCatalogoEmblemi();
   const team = societa.find((item) => item.slug === slug);
 
   if (!team) {
@@ -152,8 +44,8 @@ const emblemi = getEmblemi();
   const trofei = palmares.find((item) => item.squadraId === team.id);
   const rosaTeam = rose.filter((item) => item.squadraId === team.id);
   const emblemiTeam = emblemi.find(
-  (item) => item.squadraId === team.id
-);
+    (item) => item.squadraId === team.id
+  );
   const risultatiTeam = risultati.filter((item) => item.squadraId === team.id);
   const storiaEditoriale = storieSocieta.find(
     (item) => item.squadraId === team.id
@@ -221,23 +113,12 @@ const emblemi = getEmblemi();
       glow: "drop-shadow-[0_0_34px_rgba(251,191,36,1)]",
     },
   ].filter((item) => item.value > 0);
-const emblemiSbloccati = emblemiTeam
-  ? Object.entries(emblemiTeam.emblemi).filter(
-      ([, stato]) => stato === "Sì"
-    )
-  : [];
-
-const emblemiDaDifendere = emblemiTeam
-  ? Object.entries(emblemiTeam.emblemi).filter(
-      ([, stato]) => stato === "Difendi"
-    )
-  : [];
-const toEmblemaVisuale = ([chiave]: [string, string]) => ({
-  chiave,
-  ...getInfoEmblema(chiave),
-});
-const emblemiSbloccatiVisuali = emblemiSbloccati.map(toEmblemaVisuale);
-const emblemiDaDifendereVisuali = emblemiDaDifendere.map(toEmblemaVisuale);
+  const emblemiSbloccatiVisuali = emblemiTeam?.emblemi.filter(
+    (emblema) => emblema.stato === "Sbloccato"
+  ) ?? [];
+  const emblemiDaDifendereVisuali = emblemiTeam?.emblemi.filter(
+    (emblema) => emblema.stato === "Da difendere"
+  ) ?? [];
   return (
     <section className="mx-auto max-w-7xl px-4 py-7 sm:px-5 sm:py-12 lg:px-6 lg:py-16">
       <div className="grid gap-5 sm:gap-8 lg:grid-cols-[1fr_360px] lg:items-start">
@@ -400,6 +281,7 @@ const emblemiDaDifendereVisuali = emblemiDaDifendere.map(toEmblemaVisuale);
           <EmblemiSocieta
             sbloccati={emblemiSbloccatiVisuali}
             daDifendere={emblemiDaDifendereVisuali}
+            nascosti={catalogoEmblemi.filter(isEmblemaNascosto)}
           />
         </aside>
       </div>
