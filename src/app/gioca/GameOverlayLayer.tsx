@@ -12,10 +12,15 @@ const PRESENTATION_ASSETS = [
   GAME_ASSETS.powerups.nicoPazBanner,
   GAME_ASSETS.powerups.gimenezBanner,
   GAME_ASSETS.events.bossBanner,
-  GAME_ASSETS.events.bossWarning,
   GAME_ASSETS.events.bonusBurst,
   GAME_ASSETS.events.malusBurst,
 ] as const;
+
+const EVENT_BANNER_ASSETS = new Set<string>([
+  GAME_ASSETS.events.bossBanner,
+  GAME_ASSETS.events.bonusBurst,
+  GAME_ASSETS.events.malusBurst,
+]);
 
 export default function GameOverlayLayer({
   presentation,
@@ -24,6 +29,10 @@ export default function GameOverlayLayer({
   presentation: SpecialPresentation | null;
   snapshot: GameSnapshot;
 }) {
+  const isEventBanner = presentation
+    ? EVENT_BANNER_ASSETS.has(presentation.asset)
+    : false;
+
   return (
     <div className="pointer-events-none absolute inset-0 z-[8] overflow-hidden" aria-live="polite">
       <div
@@ -44,12 +53,16 @@ export default function GameOverlayLayer({
                 />
               ))}
             </div>
-            <h3 className="-mt-6 max-w-[92vw] text-center text-[13px] font-black uppercase leading-tight tracking-[.08em] text-amber-200 [text-shadow:0_2px_8px_rgba(2,8,23,1)] sm:-mt-9 sm:text-[15px]">
-              {presentation?.title}
-            </h3>
-            <p className="mt-0.5 max-w-[92vw] text-balance text-center text-[13px] font-bold leading-[1.35] text-white/92 [text-shadow:0_2px_9px_rgba(2,8,23,1),0_0_4px_rgba(2,8,23,1)] max-sm:max-w-[320px] max-sm:[text-shadow:0_2px_6px_rgba(2,8,23,.92)] sm:whitespace-nowrap sm:text-[15px]">
-              {presentation?.subtitle}
-            </p>
+            {!isEventBanner && (
+              <>
+                <h3 className="-mt-6 max-w-[92vw] text-center text-[13px] font-black uppercase leading-tight tracking-[.08em] text-amber-200 [text-shadow:0_2px_8px_rgba(2,8,23,1)] sm:-mt-9 sm:text-[15px]">
+                  {presentation?.title}
+                </h3>
+                <p className="mt-0.5 max-w-[92vw] text-balance text-center text-[13px] font-bold leading-[1.35] text-white/92 [text-shadow:0_2px_9px_rgba(2,8,23,1),0_0_4px_rgba(2,8,23,1)] max-sm:max-w-[320px] max-sm:[text-shadow:0_2px_6px_rgba(2,8,23,.92)] sm:whitespace-nowrap sm:text-[15px]">
+                  {presentation?.subtitle}
+                </p>
+              </>
+            )}
           </div>
         </div>
 

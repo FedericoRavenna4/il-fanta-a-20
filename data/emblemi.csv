@@ -5,12 +5,12 @@ ID,Nome,Categoria,Tipo,Descrizione,Record
 4,finalista di conference,base,Sbloccabile,Accedi alla finale di Conference League.,
 5,primi passi,base,Sbloccabile,Ottieni la prima vittoria in una competizione ufficiale.,
 6,primo punto,base,Sbloccabile,Ottieni il primo pareggio in una competizione ufficiale.,
-7,primo scambio,base,Sbloccabile,Concludi almeno uno scambio,
+7,primo scambio,base,Sbloccabile,Concludi almeno uno scambio.,
 8,biglietto per la conference,base,Sbloccabile,Concludi il girone di andata tra il 15° e il 20° posto e accedi alla Conference League.,
 9,salvezza raggiunta,base,Sbloccabile,Mantieni la categoria al termine della stagione.,
 10,top 10,base,Sbloccabile,Concludi un campionato tra le prime 10 posizioni della tua lega.,
 11,coppa f20 fase finale,base,Sbloccabile,Concludi la qualificazione della Coppa Fanta a 20 tra le prime 64 squadre.,
-12,veterano 1,base,Sbloccabile,Disputa 3 stagioni complete ,
+12,veterano 1,base,Sbloccabile,Disputa 3 stagioni complete.,
 13,senza paura,base,Sbloccabile,Vinci per la prima volta una sfida a eliminazione diretta.,
 14,cinque su cinque,comune,Sbloccabile,Ottieni 5 vittorie consecutive in partite ufficiali.,
 15,ammazzagrandi,comune,Sbloccabile,"Batti la squadra che, prima della giornata, occupa il primo posto del tuo campionato.",
@@ -18,20 +18,20 @@ ID,Nome,Categoria,Tipo,Descrizione,Record
 17,re di conference,comune,Sbloccabile,Vinci la finale secca di Conference League.,
 18,finalista di europa league,comune,Sbloccabile,Accedi alla finale di Europa League.,
 19,manita,comune,Sbloccabile,Segna almeno 5 gol in una singola partita ufficiale.,
-20,biglietto per l'europa leage,comune,Sbloccabile,Concludi il girone di andata tra il 9° e il 14° posto e accedi all’Europa League.,
+20,biglietto per l'europa league,comune,Sbloccabile,Concludi il girone di andata tra il 9° e il 14° posto e accedi all’Europa League.,
 21,schiacciasassi,comune,Sbloccabile,Vinci una partita ufficiale con almeno 4 gol di scarto.,
 22,top 5,comune,Sbloccabile,Concludi un campionato tra le prime 5 posizioni della tua lega.,
-23,coppa f20 trentaduesimi ,comune,Sbloccabile,Raggiungi i Trentaduesimi di finale della Coppa Fanta a 20.,
+23,coppa f20 trentaduesimi,comune,Sbloccabile,Raggiungi i Trentaduesimi di finale della Coppa Fanta a 20.,
 24,veterano 2,comune,Sbloccabile,Disputa 5 stagioni complete con la stessa società.,
-25,re di europa leage,raro,Sbloccabile,Vinci la finale secca di Europa League.,
-26,eroico,raro,Sbloccabile,Vinci una partita in inferiorita' numerica,
+25,re di europa league,raro,Sbloccabile,Vinci la finale secca di Europa League.,
+26,eroico,raro,Sbloccabile,Vinci una partita in inferiorità numerica.,
 27,finalista di champions,raro,Sbloccabile,"Vinci la semifinale di Champions League, disputata tra andata e ritorno, e raggiungi la finale.",
 28,fortino,raro,Sbloccabile,Concludi il campionato con il minor numero di gol subiti nella tua lega.,
 29,promozione,raro,Sbloccabile,Ottieni una promozione in una categoria superiore.,
 30,talent scout,raro,Sbloccabile,Acquista un giocatore che aumenta il proprio Fantavalore di almeno 20 FM nel corso della stagione.,
 31,goleador,raro,Sbloccabile,Concludi il campionato con il maggior numero di gol segnati nella tua lega.,
 32,biglietto per la champions,raro,Sbloccabile,Concludi il girone di andata tra il 1° e l’8° posto e accedi alla Champions League.,
-33,miracolo,raro,Sbloccabile,Concludi il campionato all'ultima posizione utile per la salvezza,
+33,miracolo,raro,Sbloccabile,Concludi il campionato all'ultima posizione utile per la salvezza.,
 34,coppa f20 ottavi,raro,Sbloccabile,Raggiungi gli Ottavi di finale della Coppa Fanta a 20.,
 35,coppa f20 sedicesimi,raro,Sbloccabile,Raggiungi i Sedicesimi di finale della Coppa Fanta a 20.,
 36,podio,raro,Sbloccabile,Concludi il campionato tra le prime 3 posizioni della tua lega.,
@@ -45,9 +45,9 @@ ID,Nome,Categoria,Tipo,Descrizione,Record
 44,campione di serie b,mitico,Sbloccabile,Concludi al 1° posto il campionato di Serie B.,
 45,campione di serie c,mitico,Sbloccabile,Concludi al 1° posto uno dei tre gironi di Serie C e ottieni la promozione diretta in Serie B.,
 46,re della coppa f20,mitico,Sbloccabile,Vinci la Coppa Fanta a 20.,
-47,double,mitico,Sbloccabile,Vinci nella stessa stagione il campionato della tua lega e un'altra competizione,
-48,rosa perfetta,mitico,Sbloccabile,Tutti i giocatori di movimento della tua rosa prendono voto in una singola giornata,
-49,bis nazionale,leggenda,Sbloccabile,Vinci la serie A per due stagioni consecutive.,
+47,double,mitico,Sbloccabile,Vinci nella stessa stagione il campionato della tua lega e un'altra competizione.,
+48,rosa perfetta,mitico,Sbloccabile,Tutti i giocatori di movimento della tua rosa prendono voto in una singola giornata.,
+49,bis nazionale,leggenda,Sbloccabile,Vinci la Serie A per due stagioni consecutive.,
 50,grand slam,leggenda,Sbloccabile,"Vinci nel corso della carriera Serie A, Champions League, Europa League, Conference League e Coppa Fanta a 20.",
 51,triplete,leggenda,Sbloccabile,"Vinci nella stessa stagione il campionato della tua lega, una competizione europea e la Coppa Fanta a 20.",
 52,tutta europa,leggenda,Sbloccabile,"Vinci almeno una volta Champions League, Europa League e Conference League.",
@@ -56,8 +56,8 @@ ID,Nome,Categoria,Tipo,Descrizione,Record
 55,Titano,da difendere,Difendibile,Detenuto dalla squadra che ha realizzato il fantapunteggio più alto di sempre in una singola giornata ufficiale.,94
 56,Trafitto,da difendere,Difendibile,Detenuto dalla squadra che ha subito più gol in una singola stagione di campionato.,ND
 57,Abisso,da difendere,Difendibile,Detenuto dall'ultima squadra che ha realizzato il fantapunteggio più basso di sempre in una singola giornata ufficiale.,31
-58,Mecenate,da difendere,Difendibile,Detenuto dalla squadra che effettua l'acquisto più oneroso di sempre,220
+58,Mecenate,da difendere,Difendibile,Detenuto dalla squadra che effettua l'acquisto più oneroso di sempre.,220
 59,Devastatore,da difendere,Difendibile,Detenuto dalla squadra che ha segnato più gol in una singola stagione di campionato.,ND
 60,Dominatore,da difendere,Difendibile,Detenuto dalla squadra che ha totalizzato più punti in una singola stagione di campionato.,ND
-61,Mercante,da difendere,Difendibile,Detenuto dalla squadra che ha totalizzato il maggior numero di scambi in una singola stagione,21
+61,Mercante,da difendere,Difendibile,Detenuto dalla squadra che ha totalizzato il maggior numero di scambi in una singola stagione.,21
 62,Sovrano,da difendere,Difendibile,Detenuto dalla squadra con il maggior numero di titoli ufficiali conquistati.,3

@@ -169,7 +169,6 @@ function preloadOverlayAssets() {
     GAME_ASSETS.powerups.nicoPazBanner,
     GAME_ASSETS.powerups.gimenezBanner,
     GAME_ASSETS.events.bossBanner,
-    GAME_ASSETS.events.bossWarning,
     GAME_ASSETS.events.bonusBurst,
     GAME_ASSETS.events.malusBurst,
   ];

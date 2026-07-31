@@ -4,7 +4,7 @@ export const BOSS_CONFIG = {
   distanceWindowMeters: { minimum: 450, maximum: 550 },
   itemIntervalSeconds: { minimum: 0.48, maximum: 0.88 },
   rewardRating: 3,
-  warningAsset: "/game/eventi/boss-20-warning.png",
+  warningAsset: "/game/eventi/boss-20-banner.png",
   bannerAsset: "/game/eventi/boss-20-banner.png",
   bossAsset: "/game/eventi/boss-20.png",
 } as const;

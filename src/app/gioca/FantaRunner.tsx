@@ -3014,7 +3014,7 @@ function prewarmRenderVariants(images: GameImageMap) {
     const definition = POWER_UP_CONFIG[kind];
     const image = images.get(definition.assetKey);
     if (!image) continue;
-    const source = { x: 0, y: 0, width: image.naturalWidth, height: image.naturalHeight };
+    const source = definition.source;
     if (!MOBILE_POWER_UP_RENDER_CACHE.has(kind)) {
       MOBILE_POWER_UP_RENDER_CACHE.set(kind, createCroppedRenderVariant(
         image,
@@ -3037,16 +3037,16 @@ function prewarmRenderVariants(images: GameImageMap) {
     mobileBossRenderCache = createCroppedRenderVariant(
       boss,
       { x: 0, y: 0, width: boss.naturalWidth, height: boss.naturalHeight },
-      200,
-      300
+      212,
+      318
     );
   }
   if (boss && !desktopBossRenderCache) {
     desktopBossRenderCache = createCroppedRenderVariant(
       boss,
       { x: 0, y: 0, width: boss.naturalWidth, height: boss.naturalHeight },
-      250,
-      375
+      265,
+      398
     );
   }
 }
@@ -3641,8 +3641,8 @@ function drawBoss(
 
 function getBossRect(runtime: Runtime) {
   const bossScale = runtime.mobileLayout ? 0.8 : runtime.mobileVisualScale;
-  const width = 250 * bossScale;
-  const height = 375 * bossScale;
+  const width = 265 * bossScale;
+  const height = 398 * bossScale;
   const shotProgress = runtime.boss
     ? Math.max(0, 1 - (runtime.elapsed - runtime.boss.lastShotAt) / 0.32)
     : 0;

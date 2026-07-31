@@ -4,10 +4,17 @@ import type { ReactNode } from "react";
 import { getPalmares } from "@/lib/palmares";
 import { getRanking } from "@/lib/ranking";
 import { getSocieta, type Societa } from "@/lib/societa";
-import { CATEGORIE_EMBLEMA, getCatalogoEmblemi, getEmblemiSocieta, type CategoriaEmblema } from "@/lib/emblemi";
-import { isEmblemaNascosto, PALETTE_EMBLEMI } from "@/lib/emblemi-ui";
+import { getCatalogoEmblemi, getEmblemiSocieta } from "@/lib/emblemi";
+import { isEmblemaNascosto } from "@/lib/emblemi-ui";
 import { getRisultati } from "@/lib/risultati";
-import { getStorieSocieta } from "@/lib/storieSocieta";
+
+const HOME_CTA_CLASS = "inline-flex min-h-12 items-center justify-center rounded-full border border-amber-300 bg-amber-300 px-6 text-center text-[10px] font-black uppercase tracking-[0.15em] text-blue-950 shadow-[0_14px_34px_rgba(245,184,45,.22)] transition duration-300 hover:-translate-y-0.5 hover:border-blue-950 hover:bg-blue-950 hover:text-white";
+
+function emblemOrder(id: number) {
+  let value = Math.imul(id ^ 0x45d9f3b, 0x45d9f3b);
+  value = Math.imul(value ^ (value >>> 16), 0x45d9f3b);
+  return (value ^ (value >>> 16)) >>> 0;
+}
 
 const competizioni = [
   {
@@ -108,12 +115,6 @@ function SectionHeading({
   );
 }
 
-function storiaBreve(descrizione: string | undefined) {
-  if (!descrizione) return "";
-  const primaFrase = descrizione.match(/^.*?[.!?](?:\s|$)/)?.[0]?.trim();
-  return primaFrase || descrizione;
-}
-
 export default async function Home() {
   const societa = getSocieta();
   const ranking = getRanking();
@@ -121,7 +122,6 @@ export default async function Home() {
   const catalogoEmblemi = getCatalogoEmblemi();
   const assegnazioniEmblemi = getEmblemiSocieta();
   const risultati = getRisultati();
-  const storie = getStorieSocieta();
 
   const podioRanking = ranking.slice(0, 3).flatMap((item) => {
     const team = societa.find((societaItem) => societaItem.id === item.squadraId);
@@ -147,54 +147,33 @@ export default async function Home() {
     )
     .sort((a, b) => b.stagioneId - a.stagioneId)[0];
   const teamCollezionista = societa.find((team) => team.id === collezionista?.squadraId);
-  const emblemiCollezionista = collezionista?.emblemi
-    .filter((emblema) => emblema.stato === "Sbloccato" && !isEmblemaNascosto(emblema))
-    .sort(
-      (a, b) =>
-        CATEGORIE_EMBLEMA.indexOf(b.categoria as CategoriaEmblema) -
-          CATEGORIE_EMBLEMA.indexOf(a.categoria as CategoriaEmblema) ||
-        a.id - b.id
-    )
-    .slice(0, 6) ?? [];
-  const storiaPerTeam = (id: number) =>
-    storiaBreve(storie.find((storia) => storia.squadraId === id)?.descrizione);
   const societaCampioni = [
     {
       team: societa.find((item) => item.id === primaRanking?.squadraId),
       label: "Ranking Leader",
       tone: "text-sky-300",
-      emblemi: [],
+      descrizione: "Protagonista fin dalla prima edizione, conquista la vetta del Ranking Storico grazie allo storico double.",
     },
     {
       team: teamCollezionista,
       label: "Il Collezionista",
       tone: "text-amber-300",
-      emblemi: emblemiCollezionista,
+      descrizione: "In appena due stagioni conquista uno storico triplete e costruisce una delle collezioni di emblemi più prestigiose.",
     },
     {
       team: societa.find((item) => item.id === ultimaCoppa?.squadraId),
       label: "Campione in carica · Coppa Fanta a 20",
       tone: "text-emerald-300",
-      emblemi: [],
+      descrizione: "All’esordio conquista la Coppa Fanta a 20, scrivendo subito il proprio nome nella storia della competizione.",
     },
   ].flatMap((item) => item.team ? [{
     ...item,
     team: item.team,
-    storia: storiaPerTeam(item.team.id),
   }] : []);
   const societaMarquee = [...societa].sort((a, b) => a.id - b.id);
-  const emblemiVetrina = [
-    "bestia nera",
-    "talent scout",
-    "fenice",
-    "triplete",
-    "mercante",
-  ].flatMap((nome) => {
-    const emblema = catalogoEmblemi.find(
-      (item) => item.nome.trim().toLocaleLowerCase("it") === nome
-    );
-    return emblema ? [emblema] : [];
-  });
+  const emblemiVetrina = catalogoEmblemi
+    .filter((emblema) => !isEmblemaNascosto(emblema))
+    .sort((a, b) => emblemOrder(a.id) - emblemOrder(b.id));
 
   return (
     <div className="overflow-hidden bg-[linear-gradient(180deg,#f8fbff_0%,#eef5fb_36%,#f8fafc_100%)]">
@@ -229,92 +208,44 @@ export default async function Home() {
           <span className="pointer-events-none absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 rounded-full border border-blue-950/10 bg-white/90 px-6 py-3 text-xs font-black uppercase tracking-[0.16em] text-blue-950 opacity-0 shadow-xl backdrop-blur transition duration-300 group-hover:opacity-100">Esplora tutte le società</span>
         </Link>
         <div className="grid gap-3 sm:gap-5 lg:grid-cols-3">
-          {societaCampioni.map(({ team, label, tone, storia, emblemi }) => (
-            <Link key={team.id} href={`/societa/${team.slug}`} className="group relative grid h-full grid-rows-[auto_auto_1fr_auto] gap-y-2 overflow-hidden rounded-[1.6rem] bg-blue-950 p-3 text-white shadow-xl shadow-blue-950/10 transition duration-300 hover:-translate-y-1 hover:shadow-2xl sm:gap-y-3 sm:rounded-[1.75rem] sm:p-5 lg:grid-rows-[2rem_8.5rem_1fr_auto] lg:gap-y-0">
+          {societaCampioni.map(({ team, label, tone, descrizione }) => (
+            <Link key={team.id} href={`/societa/${team.slug}`} className="group relative grid h-full grid-rows-[auto_auto_1fr_auto] gap-y-2 overflow-hidden rounded-[1.6rem] bg-blue-950 p-3 text-white shadow-xl shadow-blue-950/10 transition duration-300 hover:-translate-y-1 hover:shadow-2xl sm:gap-y-2.5 sm:rounded-[1.75rem] sm:p-4 lg:grid-rows-[1.75rem_7rem_1fr_auto] lg:gap-y-0">
               <div className="pointer-events-none absolute right-0 top-0 h-52 w-52 bg-sky-400/10 blur-3xl" />
               <p className={`relative self-start text-[10px] font-black uppercase leading-5 tracking-[0.22em] ${tone}`}>{label}</p>
               <div className="relative grid min-w-0 grid-cols-[minmax(0,1fr)_4.5rem] items-start gap-2 sm:flex sm:items-center sm:justify-between sm:gap-4">
                 <div className="min-w-0">
                   <h3 className="break-words text-lg font-black uppercase leading-tight sm:max-w-48 sm:text-2xl">{team.nome}</h3>
                   <p className="mt-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-white/45 sm:mt-3 sm:text-xs">{team.legaAttuale}</p>
-                  {emblemi.length > 0 && (
-                    <div className="mt-2 grid w-full grid-cols-6 justify-items-center sm:mt-3 sm:w-[13.5rem]">
-                      {emblemi.map((emblema) => (
-                        <span key={emblema.id} className="relative flex h-9 w-9 items-center justify-center sm:h-8 sm:w-8">
-                          <span className={`pointer-events-none absolute h-8 w-8 rounded-full blur-lg sm:h-7 sm:w-7 ${PALETTE_EMBLEMI[emblema.categoria].glow}`} />
-                          <Image src={emblema.immagine} alt={emblema.nome} width={42} height={42} className="relative max-h-full max-w-full object-contain drop-shadow-[0_7px_9px_rgba(0,0,0,.35)]" />
-                        </span>
-                      ))}
-                    </div>
-                  )}
                 </div>
-                <div className="flex h-16 w-16 shrink-0 items-center justify-center justify-self-end p-1 sm:h-24 sm:w-24 sm:self-center sm:p-2"><TeamLogo team={team} size={100} /></div>
+                <div className="flex h-[4.5rem] w-[4.5rem] shrink-0 items-center justify-center justify-self-end p-0.5 sm:h-28 sm:w-28 sm:self-center sm:p-1"><TeamLogo team={team} size={112} /></div>
               </div>
-              <p className="relative border-t border-white/10 pt-3 text-xs font-semibold leading-5 text-white/60 sm:pt-5 sm:text-sm sm:leading-6">{storia}</p>
-              <p className="relative pt-3 text-[9px] font-black uppercase tracking-[0.14em] text-white/85 sm:pt-6 sm:text-[10px] sm:tracking-[0.17em]">Visualizza la scheda completa <span className="ml-1 inline-block transition-transform group-hover:translate-x-1">→</span></p>
+              <p className="relative line-clamp-2 border-t border-white/10 pt-2.5 text-xs font-semibold leading-5 text-white/60 sm:pt-3 sm:text-[13px]">{descrizione}</p>
+              <p className="relative pt-2 text-[9px] font-black uppercase tracking-[0.14em] text-white/85 sm:pt-3 sm:text-[10px] sm:tracking-[0.17em]">Visualizza la scheda completa <span className="ml-1 inline-block transition-transform group-hover:translate-x-1">→</span></p>
             </Link>
           ))}
         </div>
       </section>
 
-      <div className="flex flex-col">
-      <section className="order-2 mx-auto w-full max-w-7xl px-4 pb-8 sm:px-6 sm:pb-16 lg:pb-20">
-        <Link
-          href="/gioca"
-          className="group relative grid grid-cols-[minmax(0,1fr)_auto] border-y border-blue-950/10 px-1 py-5 text-blue-950 transition duration-500 hover:border-blue-950/25 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center sm:gap-7 sm:px-3 sm:py-7"
-        >
-          <span className="pointer-events-none absolute right-0 top-1/2 h-40 w-40 -translate-y-1/2 rounded-full bg-sky-300/20 blur-3xl transition duration-700 group-hover:bg-sky-300/30" />
-
-          <span className="relative col-span-2 min-w-0 sm:col-span-1">
-            <span className="section-eyebrow block">Arcade room</span>
-            <span className="font-onder-title mt-2 block text-blue-950">La Sala Giochi</span>
-            <span className="mt-1 block text-xs font-semibold text-slate-500 sm:text-sm">Scegli una società e scendi in campo.</span>
-          </span>
-
-          <span className="relative mt-3 flex h-12 items-center pl-3 sm:mt-0 sm:h-14">
-            {societaMarquee.slice(0, 3).map((team, index) => (
-              <span key={team.id} className="-ml-3 flex h-11 w-11 items-center justify-center transition duration-500 group-hover:-translate-y-1 sm:h-14 sm:w-14" style={{ transitionDelay: `${index * 55}ms` }}>
-                <TeamLogo team={team} size={52} />
-              </span>
-            ))}
-            <span className="ml-2 h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-300 shadow-[0_0_12px_rgba(110,231,183,0.9)]" />
-          </span>
-
-          <span className="relative mt-3 inline-flex w-fit items-center gap-2 self-center rounded-full border border-blue-950/15 bg-white/55 px-4 py-2 text-[9px] font-black uppercase tracking-[0.15em] shadow-sm backdrop-blur transition group-hover:border-blue-950/30 group-hover:bg-white sm:mt-0">
-            Gioca ora <span aria-hidden="true">→</span>
-          </span>
-        </Link>
-      </section>
-
-      <section className="order-1 mx-auto w-full max-w-7xl px-4 pb-8 sm:px-6 sm:pb-16 lg:pb-20">
-        <Link href="/emblemi" className="group relative grid border-y border-blue-950/10 py-5 text-blue-950 transition duration-500 hover:border-blue-950/25 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-200 sm:grid-cols-[minmax(0,.92fr)_minmax(360px,1.08fr)] sm:items-center sm:gap-8 sm:px-3 sm:py-7">
-          <div className="pointer-events-none absolute -right-24 -top-28 h-72 w-72 rounded-full bg-sky-300/20 blur-[85px]" />
-          <div className="relative min-w-0">
-            <p className="section-eyebrow">Archivio degli emblemi</p>
-            <h2 className="font-onder-title mt-2 flex flex-col gap-[0.28em] text-blue-950 sm:block"><span className="block sm:inline">La collezione</span><span className="block sm:ml-2 sm:inline">ufficiale</span></h2>
-            <p className="mt-2 max-w-xl text-xs font-semibold leading-5 text-slate-500 sm:text-sm sm:leading-6">Scopri rarità, traguardi e record da sbloccare nel mondo Fanta a 20</p>
-            <span className="mt-4 hidden min-h-11 items-center rounded-xl border border-blue-950/15 bg-white/55 px-4 text-[9px] font-black uppercase tracking-[0.13em] text-blue-950 shadow-sm backdrop-blur transition duration-300 group-hover:border-blue-950/30 group-hover:bg-white sm:inline-flex sm:px-5 sm:text-[10px]">
-              Visualizza tutta la collezione ufficiale →
-            </span>
-          </div>
-
-          <div className="relative mt-4 grid grid-cols-5 items-center gap-2 border-t border-blue-950/10 pt-4 sm:mt-0 sm:gap-4 sm:border-l sm:border-t-0 sm:pl-8 sm:pt-0 lg:translate-y-6 lg:border-l-0 lg:pl-0 lg:pt-4">
-            {emblemiVetrina.map((emblema) => {
-              const palette = PALETTE_EMBLEMI[emblema.categoria];
-              return (
-                <div key={emblema.id} className="relative flex min-w-0 items-center justify-center">
-                  <span className={`pointer-events-none absolute h-14 w-14 rounded-full opacity-75 blur-2xl ${palette.glow}`} />
-                  <Image src={emblema.immagine} alt={emblema.nome} width={92} height={92} className="relative h-11 w-11 object-contain drop-shadow-[0_11px_15px_rgba(15,23,42,.3)] transition duration-500 group-hover:-translate-y-0.5 group-hover:scale-[1.04] sm:h-[4.5rem] sm:w-[4.5rem] lg:h-20 lg:w-20" />
+      <section className="w-full pb-8 sm:pb-16 lg:pb-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+          <p className="section-eyebrow">Archivio degli emblemi</p>
+          <h2 className="font-onder-title mt-2 text-blue-950">La collezione ufficiale</h2>
+        </div>
+        <div className="group relative mt-6 overflow-hidden py-2 [mask-image:linear-gradient(to_right,transparent,black_5%,black_95%,transparent)] sm:mt-9 sm:py-4">
+            <div className="home-emblem-marquee flex w-max transition duration-300 group-hover:opacity-40">
+              {[0, 1].map((copy) => (
+                <div key={copy} aria-hidden={copy === 1} className="flex shrink-0 items-center gap-4 pr-4 sm:gap-7 sm:pr-7">
+                  {emblemiVetrina.map((emblema) => (
+                    <span key={`${copy}-${emblema.id}`} className="flex h-14 w-14 shrink-0 items-center justify-center sm:h-20 sm:w-20">
+                      <Image src={emblema.immagine} alt="" width={86} height={86} className="max-h-full max-w-full object-contain drop-shadow-[0_10px_14px_rgba(2,8,23,.38)]" />
+                    </span>
+                  ))}
                 </div>
-              );
-            })}
-          </div>
-          <span className="mt-4 inline-flex min-h-11 items-center justify-center rounded-xl border border-blue-950/15 bg-white/55 px-4 text-[9px] font-black uppercase tracking-[0.13em] text-blue-950 shadow-sm backdrop-blur sm:hidden">
-            Visualizza tutta la collezione ufficiale →
-          </span>
-        </Link>
+              ))}
+            </div>
+            <Link href="/emblemi" className={`${HOME_CTA_CLASS} home-emblem-cta z-10 whitespace-nowrap`}>Esplora tutti gli emblemi</Link>
+        </div>
       </section>
-      </div>
 
       <div className="flex flex-col">
       <section className="order-2 border-y border-slate-200/80 bg-white/65 py-8 sm:py-16 lg:py-20">
@@ -385,32 +316,22 @@ export default async function Home() {
       </section>
       </div>
 
-      <section className="mx-auto max-w-7xl px-4 pb-14 pt-2 sm:px-6 sm:pb-20 sm:pt-4">
-        <Link href="/regolamento" className="group relative block border-y border-blue-950/10 px-1 py-9 text-blue-950 transition hover:border-blue-950/25 sm:px-3 sm:py-12">
-          <div className="absolute right-0 top-1/2 h-80 w-80 -translate-y-1/2 rounded-full bg-sky-400/15 blur-3xl" />
-          <div className="relative flex flex-col gap-9 lg:flex-row lg:items-center lg:justify-between">
-            <div className="max-w-3xl"><p className="section-eyebrow">Le regole del gioco</p><h2 className="font-onder-title mt-2 text-3xl uppercase sm:mt-3 sm:text-5xl">Il regolamento</h2><p className="mt-3 text-sm font-semibold leading-5 text-slate-500 sm:mt-5 sm:text-lg sm:leading-7">Ogni grande competizione vive di regole all’altezza delle sue ambizioni. Scopri il sistema che governa aste, rose, mercato e tornei e rende ogni scelta decisiva.</p></div>
-            <span className="relative inline-flex min-h-12 w-full shrink-0 items-center justify-center overflow-hidden rounded-full border border-amber-300 bg-amber-300 px-6 text-center text-[10px] font-black uppercase tracking-[0.15em] text-blue-950 shadow-[0_14px_34px_rgba(245,184,45,.22)] transition duration-300 group-hover:border-blue-950 group-hover:bg-blue-950 group-hover:text-white max-sm:mx-auto sm:w-[17rem]"><span className="relative">Consulta il regolamento</span></span>
-          </div>
-        </Link>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-4 pb-10 sm:px-6 sm:pb-20 lg:pb-24">
-        <div className="relative py-2 sm:py-4">
-          <div className="relative grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-10">
-            <div className="max-w-4xl">
-              <p className="section-eyebrow">La tua occasione</p>
-              <h2 className="font-onder-title mt-2 text-blue-950">La lista di attesa</h2>
-              <p className="mt-3 max-w-3xl text-[13px] font-semibold leading-5 text-slate-500 sm:text-base sm:leading-7">
-                Le 100 società del Fanta a 20 sono già state assegnate. Ogni stagione, però, alcuni posti tornano disponibili. Entra nella lista d’attesa e potresti essere il prossimo.
-              </p>
-            </div>
-            <div className="flex items-center justify-center lg:justify-end">
-              <Link href="/lista-attesa" className="inline-flex min-h-12 w-full items-center justify-center rounded-full border border-amber-300 bg-amber-300 px-6 text-center text-[10px] font-black uppercase tracking-[.15em] text-blue-950 shadow-[0_14px_34px_rgba(245,184,45,.22)] transition duration-300 hover:-translate-y-0.5 hover:border-blue-950 hover:bg-blue-950 hover:text-white sm:w-[17rem]">
-                Entra nella lista d’attesa
-              </Link>
-            </div>
-          </div>
+      <section className="mx-auto w-full max-w-7xl px-4 pb-10 sm:px-6 sm:pb-20 lg:pb-24">
+        <div className="grid gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
+          {[
+            { title: "La Sala Giochi", description: "Metti alla prova riflessi e strategia nell’arcade ufficiale del Fanta a 20.", href: "/gioca", cta: "Gioca ora" },
+            { title: "Il Regolamento", description: "Scopri tutte le regole che governano la competizione.", href: "/regolamento", cta: "Consulta il regolamento" },
+            { title: "La Lista di Attesa", description: "Candidati per entrare nella prossima stagione del Fanta a 20.", href: "/lista-attesa", cta: "Entra nella lista di attesa" },
+          ].map((item) => (
+            <article key={item.href} className="relative flex aspect-square flex-col overflow-hidden rounded-[2rem] border border-blue-950/10 bg-white/75 p-6 text-blue-950 shadow-xl shadow-blue-950/8 sm:p-8">
+              <span className="pointer-events-none absolute -right-16 -top-16 h-52 w-52 rounded-full bg-sky-300/20 blur-3xl" />
+              <div className="relative flex h-full flex-col">
+                <h2 className="font-onder-title text-blue-950">{item.title}</h2>
+                <p className="mt-4 line-clamp-2 text-sm font-semibold leading-6 text-slate-500 sm:text-base">{item.description}</p>
+                <Link href={item.href} className={`${HOME_CTA_CLASS} mt-auto w-full`}>{item.cta}</Link>
+              </div>
+            </article>
+          ))}
         </div>
       </section>
     </div>

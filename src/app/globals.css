@@ -108,6 +108,35 @@ a {
   animation: home-club-marquee 150s linear infinite;
 }
 
+.home-emblem-marquee {
+  animation: home-club-marquee 95s linear infinite;
+}
+
+.home-emblem-cta {
+  position: relative;
+  display: flex;
+  width: min(17rem, calc(100% - 2rem));
+  margin: 1rem auto 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .home-emblem-cta {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: auto;
+    margin: 0;
+    opacity: 0;
+    transform: translate(-50%, -50%);
+  }
+
+  .group:hover > .home-emblem-cta,
+  .home-emblem-cta:focus-visible {
+    opacity: 1;
+    transform: translate(-50%, calc(-50% - 2px));
+  }
+}
+
 @media (max-width: 1023px) {
   body {
     background-attachment: scroll;
@@ -119,7 +148,8 @@ a {
     scroll-behavior: auto;
   }
 
-  .home-club-marquee {
+  .home-club-marquee,
+  .home-emblem-marquee {
     animation-play-state: paused;
   }
 

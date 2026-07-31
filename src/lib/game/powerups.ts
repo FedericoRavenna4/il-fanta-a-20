@@ -14,6 +14,7 @@ export type PowerUpDefinition = {
   weight: number;
   width: number;
   height: number;
+  source: { x: number; y: number; width: number; height: number };
   hitbox: { x: number; y: number; width: number; height: number };
   hudColor: string;
   activation: "shield" | "scale" | "slowdown" | "magnet" | "repel";
@@ -24,36 +25,36 @@ export const POWER_UP_CONFIG: Record<PowerUpKind, PowerUpDefinition> = {
   luperto: {
     kind: "luperto", name: "Luperto", effect: POWER_UP_COPY.luperto.description,
     asset: "/game/powerups/luperto.png", banner: "/game/powerups/luperto-banner.png", assetKey: "powerup.luperto", bannerAssetKey: "powerup.lupertoBanner",
-    durationSeconds: 15, weight: 1, width: 88, height: 132,
-    hitbox: { x: 11, y: 13, width: 66, height: 106 }, hudColor: "#7dd3fc",
+    durationSeconds: 15, weight: 1, width: 105, height: 158, source: { x: 45, y: 58, width: 947, height: 1478 },
+    hitbox: { x: 18, y: 35, width: 69, height: 113 }, hudColor: "#7dd3fc",
     activation: "shield", deactivation: "expire",
   },
   lukaku: {
     kind: "lukaku", name: "Lukaku", effect: POWER_UP_COPY.lukaku.description,
     asset: "/game/powerups/lukaku.png", banner: "/game/powerups/lukaku-banner.png", assetKey: "powerup.lukaku", bannerAssetKey: "powerup.lukakuBanner",
-    durationSeconds: 15, weight: 1, width: 94, height: 141,
-    hitbox: { x: 12, y: 14, width: 70, height: 113 }, hudColor: "#fbbf24",
+    durationSeconds: 15, weight: 1, width: 105, height: 158, source: { x: 72, y: 36, width: 895, height: 1382 },
+    hitbox: { x: 18, y: 35, width: 69, height: 113 }, hudColor: "#fbbf24",
     activation: "scale", deactivation: "restore-scale",
   },
   dybala: {
     kind: "dybala", name: "Dybala", effect: POWER_UP_COPY.dybala.description,
     asset: "/game/powerups/dybala.png", banner: "/game/powerups/dybala-banner.png", assetKey: "powerup.dybala", bannerAssetKey: "powerup.dybalaBanner",
-    durationSeconds: 15, weight: 1, width: 88, height: 132,
-    hitbox: { x: 11, y: 13, width: 66, height: 106 }, hudColor: "#c4b5fd",
+    durationSeconds: 15, weight: 1, width: 105, height: 158, source: { x: 50, y: 0, width: 955, height: 720 },
+    hitbox: { x: 18, y: 35, width: 69, height: 113 }, hudColor: "#c4b5fd",
     activation: "slowdown", deactivation: "restore-speed",
   },
   "nico-paz": {
     kind: "nico-paz", name: "Nico Paz", effect: POWER_UP_COPY["nico-paz"].description,
     asset: "/game/powerups/nico-paz.png", banner: "/game/powerups/nico-paz-banner.png", assetKey: "powerup.nicoPaz", bannerAssetKey: "powerup.nicoPazBanner",
-    durationSeconds: 15, weight: 1, width: 91, height: 137,
-    hitbox: { x: 11, y: 14, width: 69, height: 109 }, hudColor: "#67e8f9",
+    durationSeconds: 15, weight: 1, width: 105, height: 158, source: { x: 238, y: 4, width: 645, height: 716 },
+    hitbox: { x: 18, y: 35, width: 69, height: 113 }, hudColor: "#67e8f9",
     activation: "magnet", deactivation: "release-force",
   },
   gimenez: {
     kind: "gimenez", name: "Gimenez", effect: POWER_UP_COPY.gimenez.description,
     asset: "/game/powerups/gimenez.png", banner: "/game/powerups/gimenez-banner.png", assetKey: "powerup.gimenez", bannerAssetKey: "powerup.gimenezBanner",
-    durationSeconds: 15, weight: 1, width: 88, height: 132,
-    hitbox: { x: 11, y: 13, width: 66, height: 106 }, hudColor: "#fb7185",
+    durationSeconds: 15, weight: 1, width: 105, height: 158, source: { x: 50, y: 100, width: 907, height: 1263 },
+    hitbox: { x: 18, y: 35, width: 69, height: 113 }, hudColor: "#fb7185",
     activation: "repel", deactivation: "release-force",
   },
 };

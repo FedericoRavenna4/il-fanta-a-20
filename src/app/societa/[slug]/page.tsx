@@ -39,6 +39,11 @@ export default async function SchedaSocietaPage({
     notFound();
   }
 
+  const fantallenatori = team.fantallenatore
+    .split(/\s+-\s+/)
+    .map((nome) => nome.trim())
+    .filter(Boolean);
+
   const trofei = palmares.find((item) => item.squadraId === team.id);
   const rosaTeam = rose.filter((item) => item.squadraId === team.id);
   const emblemiTeam = emblemi.find(
@@ -228,26 +233,19 @@ export default async function SchedaSocietaPage({
 
             <dl className="divide-y divide-slate-100 px-5 sm:px-7">
               {[
-                ["Fantallenatore", team.fantallenatore],
+                [fantallenatori.length > 1 ? "Fantallenatori" : "Fantallenatore", team.fantallenatore],
                 ["Lega attuale", team.legaAttuale],
                 ["Presente dal", team.stagioneIngresso],
               ].map(([label, value]) => (
                 <div key={label} className="flex min-w-0 items-start justify-between gap-3 py-4 sm:items-center sm:gap-5">
                   <dt className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-400">
-                    {label === "Fantallenatore" ? (
-                      <><span className="sm:hidden">{team.fantallenatore.includes(" - ") ? "Fantallenatori" : label}</span><span className="hidden sm:inline">{label}</span></>
-                    ) : label}
+                    {label}
                   </dt>
                   <dd className="min-w-0 break-words text-right text-sm font-black text-blue-950">
-                    {label === "Fantallenatore" && team.fantallenatore.includes(" - ") ? (
-                      <>
-                        <span className="hidden sm:inline">{value}</span>
-                        <span className="flex flex-col items-end gap-1 sm:hidden">
-                          {team.fantallenatore.split(" - ").map((nome, index) => (
-                            <span key={nome} className={index > 0 ? "border-t border-slate-100 pt-1" : ""}>{nome}</span>
-                          ))}
-                        </span>
-                      </>
+                    {label === "Fantallenatori" ? (
+                      <span className="flex flex-col items-end">
+                        {fantallenatori.map((nome) => <span key={nome}>{nome}</span>)}
+                      </span>
                     ) : value}
                   </dd>
                 </div>
