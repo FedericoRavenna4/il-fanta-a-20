@@ -14,7 +14,7 @@ import {
   pickLoadingGuide,
 } from "@/lib/game/content";
 import type { GameSnapshot, GameStatus, GameTeam } from "@/lib/game/types";
-import type { ArcadeLeaderboardEntry } from "@/lib/arcade/types";
+import type { ArcadeLeaderboardEntry, ArcadeSaveResult } from "@/lib/arcade/types";
 import {
   readPersonalDistanceRecord,
   writePersonalDistanceRecord,
@@ -39,7 +39,7 @@ import GameOverlayLayer from "./GameOverlayLayer";
 import TeamSelector from "./TeamSelector";
 import VarCheck from "./VarCheck";
 import ArcadeLeaderboard from "./ArcadeLeaderboard";
-import { beginArcadeRun, loadMoreArcadeRecords } from "./actions";
+import { beginArcadeRun, loadMoreArcadeRecords, submitArcadeRecord } from "./actions";
 
 type PendingVarReview = {
   result: GameSnapshot;
@@ -107,6 +107,9 @@ export default function GameClient({
   const [finalResolution, setFinalResolution] = useState<LevelResolution | null>(null);
   const [pendingVarReview, setPendingVarReview] = useState<PendingVarReview | null>(null);
   const [runProof, setRunProof] = useState("");
+  const [playerName, setPlayerName] = useState("");
+  const [arcadeSaveResult, setArcadeSaveResult] = useState<ArcadeSaveResult | null>(null);
+  const [arcadeSavePending, setArcadeSavePending] = useState(false);
   const [leaderboard, setLeaderboard] = useState(initialLeaderboard);
   const [leaderboardHasMore, setLeaderboardHasMore] = useState(initialLeaderboardHasMore);
   const [leaderboardLoading, setLeaderboardLoading] = useState(false);
@@ -125,12 +128,13 @@ export default function GameClient({
     return () => window.cancelAnimationFrame(frame);
   }, []);
 
-  const selectTeam = useCallback((selectedTeam: GameTeam) => {
+  const selectTeam = useCallback((selectedTeam: GameTeam, selectedPlayerName: string) => {
     const savedBest = readBest(selectedTeam.id);
     const savedPersonalRecord = readPersonalDistanceRecord();
     const savedProgress = readArcadeProgress()[String(selectedTeam.id)] ??
       createDefaultClubProgress();
     setTeam(selectedTeam);
+    setPlayerName(selectedPlayerName);
     setClubProgress(savedProgress);
     setActiveLevel(savedProgress.currentLevel);
     setBest(savedBest);
@@ -139,6 +143,8 @@ export default function GameClient({
     setFinalResult(null);
     setFinalResolution(null);
     setPendingVarReview(null);
+    setArcadeSaveResult(null);
+    setArcadeSavePending(false);
     setSnapshot(createEmptySnapshot(savedBest, savedPersonalRecord));
     setAssetsReady(false);
     setLoadProgress(0);
@@ -156,6 +162,8 @@ export default function GameClient({
     }
     setIsNewRecord(false);
     setFinalResult(null);
+    setArcadeSaveResult(null);
+    setArcadeSavePending(false);
     setRunProof("");
     void beginArcadeRun(team.id, activeLevel).then((result) => {
       if (result.ok && result.proof) setRunProof(result.proof);
@@ -195,6 +203,26 @@ export default function GameClient({
     }
   }, [leaderboard.length, leaderboardHasMore, leaderboardLoading]);
 
+  const saveResultAutomatically = useCallback(async (result: GameSnapshot) => {
+    if (result.distance < 100) return;
+    if (!runProof || !playerName) {
+      setArcadeSaveResult({ ok: false, message: "La classifica non è momentaneamente disponibile. Riprova più tardi." });
+      return;
+    }
+    setArcadeSavePending(true);
+    setArcadeSaveResult(null);
+    try {
+      const response = await submitArcadeRecord({ nomeGiocatore: playerName, metri: result.distance, proof: runProof });
+      setArcadeSaveResult(response);
+      if (response.ok && response.leaderboard) {
+        setLeaderboardHasMore(response.leaderboardHasMore ?? false);
+        updateLeaderboard(response.leaderboard, response.highlightedId);
+      }
+    } finally {
+      setArcadeSavePending(false);
+    }
+  }, [playerName, runProof, updateLeaderboard]);
+
   const commitGameOver = useCallback((result: GameSnapshot, resolutionOverride?: LevelResolution) => {
     if (!team) return;
     const nextBest = Math.max(best, result.score);
@@ -228,7 +256,8 @@ export default function GameClient({
     triggerOutcomeHaptic(levelResult.resolution.outcome);
     setPendingVarReview(null);
     setStatus("gameOver");
-  }, [activeLevel, best, clubProgress, personalRecord, team]);
+    void saveResultAutomatically(completedResult);
+  }, [activeLevel, best, clubProgress, personalRecord, saveResultAutomatically, team]);
 
   const handleGameOver = useCallback((result: GameSnapshot) => {
     const outcome = resolveLevelOutcome(activeLevel, result.distance);
@@ -261,6 +290,8 @@ export default function GameClient({
     setFinalResult(null);
     setFinalResolution(null);
     setPendingVarReview(null);
+    setArcadeSaveResult(null);
+    setArcadeSavePending(false);
     setSnapshot(createEmptySnapshot(best, personalRecord));
     setRunId((current) => current + 1);
     setStatus("ready");
@@ -280,6 +311,7 @@ export default function GameClient({
 
     setStatus("selecting");
     setTeam(null);
+    setPlayerName("");
     setRunId((current) => current + 1);
     setBest(0);
     setPersonalRecord(0);
@@ -287,6 +319,8 @@ export default function GameClient({
     setFinalResult(null);
     setFinalResolution(null);
     setPendingVarReview(null);
+    setArcadeSaveResult(null);
+    setArcadeSavePending(false);
     setSnapshot(createEmptySnapshot());
     setAssetsReady(false);
     setLoadProgress(0);
@@ -471,11 +505,8 @@ export default function GameClient({
                   isNewRecord={isNewRecord}
                   playedLevel={activeLevel}
                   resolution={finalResolution}
-                  runProof={runProof}
-                  onLeaderboardUpdate={(entries, highlightedId, hasMore) => {
-                    setLeaderboardHasMore(hasMore);
-                    updateLeaderboard(entries, highlightedId);
-                  }}
+                  saveResult={arcadeSaveResult}
+                  savePending={arcadeSavePending}
                   onRetry={prepareNextRun}
                   onReturn={() => returnToGameHome(false)}
                 />

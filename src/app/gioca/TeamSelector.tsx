@@ -20,7 +20,7 @@ function TeamSelector({
   initialTeamSlug?: string;
   progressByClub: Record<string, ClubProgress>;
   keyboardEnabled?: boolean;
-  onSelect: (team: GameTeam) => void;
+  onSelect: (team: GameTeam, playerName: string) => void;
 }) {
   const initialTeam = teams.find((team) => team.slug === initialTeamSlug) ?? null;
   const [isMobileFlow, setIsMobileFlow] = useState(false);
@@ -31,6 +31,8 @@ function TeamSelector({
   const [confirmationTeam, setConfirmationTeam] = useState<GameTeam | null>(null);
   const [isRandomizing, setIsRandomizing] = useState(false);
   const [isLaunching, setIsLaunching] = useState(false);
+  const [playerName, setPlayerName] = useState("");
+  const [playerNameError, setPlayerNameError] = useState("");
   const buttonRefs = useRef(new Map<string, HTMLButtonElement>());
   const ribbonRef = useRef<HTMLDivElement>(null);
   const scrollTrackRef = useRef<HTMLDivElement>(null);
@@ -235,9 +237,16 @@ function TeamSelector({
 
   function confirmSelectedTeam() {
     if (!confirmationTeam || isLaunching) return;
+    const normalizedName = playerName.trim().replace(/\s+/g, " ");
+    if (normalizedName.length < 2 || normalizedName.length > 50) {
+      setPlayerNameError("Inserisci un nome da 2 a 50 caratteri.");
+      return;
+    }
+    setPlayerName(normalizedName);
+    setPlayerNameError("");
     setIsLaunching(true);
     window.clearTimeout(launchTimerRef.current);
-    launchTimerRef.current = window.setTimeout(() => onSelect(confirmationTeam), 260);
+    launchTimerRef.current = window.setTimeout(() => onSelect(confirmationTeam, normalizedName), 260);
   }
 
   function beginDrag(event: React.PointerEvent<HTMLDivElement>) {
@@ -643,6 +652,26 @@ function TeamSelector({
             <LevelJourney
               progress={progressByClub[String(confirmationTeam.id)] ?? createDefaultClubProgress()}
             />
+            <label className="relative mx-auto mt-2 block max-w-xs text-left sm:mt-3">
+              <span className="mb-1 block text-[7px] font-black uppercase tracking-[.14em] text-sky-200/70">Nome del giocatore</span>
+              <input
+                type="text"
+                required
+                minLength={2}
+                maxLength={50}
+                autoComplete="name"
+                value={playerName}
+                onChange={(event) => {
+                  setPlayerName(event.target.value);
+                  if (playerNameError) setPlayerNameError("");
+                }}
+                placeholder="Inserisci il tuo nome"
+                aria-invalid={Boolean(playerNameError)}
+                aria-describedby={playerNameError ? "player-name-error" : undefined}
+                className="min-h-10 w-full rounded-full border border-white/15 bg-slate-950/55 px-4 text-xs font-bold text-white outline-none placeholder:text-white/25 focus:border-sky-300 sm:min-h-11 sm:text-sm"
+              />
+              {playerNameError && <span id="player-name-error" className="mt-1 block text-[8px] font-bold text-rose-300">{playerNameError}</span>}
+            </label>
             <div className="relative mx-auto mt-2 grid max-w-xs gap-1 sm:mt-4 sm:gap-1.5">
               <button
                 ref={confirmButtonRef}

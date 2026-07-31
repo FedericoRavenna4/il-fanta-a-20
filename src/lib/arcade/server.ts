@@ -88,7 +88,6 @@ export async function saveArcadeRecord(input: {
       .from("classifica_arcade")
       .select("id,metri")
       .eq("nome_giocatore_normalizzato", normalizedName)
-      .eq("societa_id", payload.societaId)
       .maybeSingle();
 
     const { data, error } = await supabase.rpc("salva_record_arcade", {
@@ -104,7 +103,6 @@ export async function saveArcadeRecord(input: {
       .from("classifica_arcade")
       .select("id,metri")
       .eq("nome_giocatore_normalizzato", normalizedName)
-      .eq("societa_id", payload.societaId)
       .maybeSingle();
     if (savedError || !savedRow) return serviceUnavailable();
 

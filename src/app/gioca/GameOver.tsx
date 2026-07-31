@@ -1,15 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import { useState, type FormEvent } from "react";
-import type { ArcadeLeaderboardEntry, ArcadeSaveResult } from "@/lib/arcade/types";
+import type { ArcadeSaveResult } from "@/lib/arcade/types";
 import type { GameSnapshot, GameTeam } from "@/lib/game/types";
 import {
   resolveLevelOutcome,
   type GameLevel,
   type LevelResolution,
 } from "@/lib/game/progression";
-import { submitArcadeRecord } from "./actions";
 
 export default function GameOver({
   team,
@@ -17,8 +15,8 @@ export default function GameOver({
   isNewRecord,
   playedLevel,
   resolution,
-  runProof,
-  onLeaderboardUpdate,
+  saveResult,
+  savePending,
   onRetry,
   onReturn,
 }: {
@@ -27,47 +25,17 @@ export default function GameOver({
   isNewRecord: boolean;
   playedLevel: GameLevel;
   resolution: LevelResolution | null;
-  runProof: string;
-  onLeaderboardUpdate: (entries: ArcadeLeaderboardEntry[], highlightedId: string | undefined, hasMore: boolean) => void;
+  saveResult: ArcadeSaveResult | null;
+  savePending: boolean;
   onRetry: () => void;
   onReturn: () => void;
 }) {
-  const [playerName, setPlayerName] = useState("");
-  const [saveResult, setSaveResult] = useState<ArcadeSaveResult | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
-  const [hasSaved, setHasSaved] = useState(false);
   const outcome = resolution ?? resolveLevelOutcome(playedLevel, result.distance);
   const outcomeTone = outcome.outcome === "promoted" || outcome.outcome === "safe"
     ? "border-emerald-300/25 bg-emerald-300/[.08] text-emerald-200"
     : outcome.outcome === "relegated"
       ? "border-rose-300/25 bg-rose-300/[.08] text-rose-200"
       : "border-sky-300/20 bg-sky-300/[.07] text-sky-100";
-
-  async function handleSave(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (isSaving || hasSaved || result.distance < 100) return;
-    const normalizedName = playerName.trim().replace(/\s+/g, " ");
-    if (normalizedName.length < 2 || normalizedName.length > 50) {
-      setSaveResult({ ok: false, message: "Inserisci un nome valido.", fieldError: "Il nome deve contenere da 2 a 50 caratteri." });
-      return;
-    }
-    if (!runProof) {
-      setSaveResult({ ok: false, message: "La classifica non è momentaneamente disponibile. Riprova più tardi." });
-      return;
-    }
-    setIsSaving(true);
-    setSaveResult(null);
-    try {
-      const response = await submitArcadeRecord({ nomeGiocatore: normalizedName, metri: result.distance, proof: runProof });
-      setSaveResult(response);
-      if (response.ok) {
-        setHasSaved(true);
-        if (response.leaderboard) onLeaderboardUpdate(response.leaderboard, response.highlightedId, response.leaderboardHasMore ?? false);
-      }
-    } finally {
-      setIsSaving(false);
-    }
-  }
 
   return (
     <div className="absolute inset-0 z-20 flex items-center justify-center overflow-y-auto bg-[#020817]/82 p-3 backdrop-blur-md max-sm:overflow-hidden max-sm:p-2 sm:p-5">
@@ -96,33 +64,15 @@ export default function GameOver({
         </div>
 
         {result.distance >= 100 ? (
-          <form onSubmit={handleSave} className="mx-auto mt-3 max-w-sm text-left max-sm:mt-2">
-            <label htmlFor="arcade-player-name" className="text-[7px] font-black uppercase tracking-[.14em] text-amber-200">Nome del giocatore</label>
-            <div className="relative mt-1.5">
-              <input
-                id="arcade-player-name"
-                name="nome_giocatore"
-                type="text"
-                required
-                minLength={2}
-                maxLength={50}
-                autoComplete="name"
-                value={playerName}
-                onChange={(event) => setPlayerName(event.target.value)}
-                disabled={isSaving || hasSaved}
-                className="min-h-11 w-full rounded-full border border-white/15 bg-slate-950/55 py-2 pl-4 pr-12 text-sm font-bold text-white outline-none placeholder:text-white/25 focus:border-amber-300 disabled:opacity-60"
-                placeholder="Inserisci il tuo nome"
-              />
-              <button type="submit" disabled={isSaving || hasSaved || !runProof} aria-label="Salva nella classifica" className="absolute right-1 top-1 flex h-9 w-9 items-center justify-center rounded-full bg-amber-300 text-lg font-black text-blue-950 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-50">
-                {isSaving ? <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-blue-950/25 border-t-blue-950" aria-hidden="true" /> : hasSaved ? "✓" : ">"}
-              </button>
-            </div>
-            {saveResult && (
-              <p className={`mt-1.5 text-[9px] font-bold ${saveResult.ok ? "text-emerald-200" : "text-rose-200"}`} role="status">
-                {saveResult.message}{saveResult.ok && saveResult.position ? ` Posizione: ${saveResult.position}ª.` : ""}
-              </p>
+          <div className="mx-auto mt-3 max-w-sm rounded-lg border border-white/[.07] bg-white/[.035] px-3 py-2 text-[9px] font-bold max-sm:mt-2" role="status">
+            {savePending ? (
+              <span className="inline-flex items-center gap-2 text-white/60"><span className="h-3 w-3 animate-spin rounded-full border-2 border-white/20 border-t-amber-300" /> Salvataggio del record…</span>
+            ) : saveResult ? (
+              <span className={saveResult.ok ? "text-emerald-200" : "text-rose-200"}>{saveResult.message}{saveResult.ok && saveResult.position ? ` Posizione: ${saveResult.position}ª.` : ""}</span>
+            ) : (
+              <span className="text-white/50">Preparazione del salvataggio…</span>
             )}
-          </form>
+          </div>
         ) : (
           <p className="mt-2.5 rounded-lg border border-white/[.07] bg-white/[.035] px-3 py-2 text-[9px] font-bold text-white/60 max-sm:mt-1.5">Percorri almeno 100 metri per entrare in classifica.</p>
         )}

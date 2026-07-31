@@ -8,7 +8,7 @@ import { getCatalogoEmblemi, getEmblemiSocieta } from "@/lib/emblemi";
 import { isEmblemaNascosto } from "@/lib/emblemi-ui";
 import { getRisultati } from "@/lib/risultati";
 
-const HOME_CTA_CLASS = "inline-flex min-h-12 items-center justify-center rounded-full border border-amber-300 bg-amber-300 px-6 text-center text-[10px] font-black uppercase tracking-[0.15em] text-blue-950 shadow-[0_14px_34px_rgba(245,184,45,.22)] transition duration-300 hover:-translate-y-0.5 hover:border-blue-950 hover:bg-blue-950 hover:text-white";
+const HOME_CARD_CTA_CLASS = "inline-flex min-h-11 items-center justify-center rounded-full border border-slate-300/80 bg-white/65 px-5 text-center text-[9px] font-black uppercase tracking-[0.13em] text-blue-950 shadow-[0_8px_20px_rgba(15,23,42,.07),inset_0_1px_0_rgba(255,255,255,.9)] backdrop-blur-sm transition duration-300 hover:-translate-y-0.5 hover:border-sky-300/80 hover:bg-sky-50/90 hover:shadow-[0_10px_24px_rgba(15,23,42,.1)]";
 
 function emblemOrder(id: number) {
   let value = Math.imul(id ^ 0x45d9f3b, 0x45d9f3b);
@@ -329,7 +329,7 @@ export default async function Home() {
               <div className="relative flex flex-col">
                 <h2 className="text-xl font-black uppercase leading-tight tracking-tight text-blue-950 sm:text-2xl">{item.title}</h2>
                 <p className="mt-3 min-h-10 line-clamp-2 text-sm font-semibold leading-5 text-slate-500">{item.description}</p>
-                <Link href={item.href} className={`${HOME_CTA_CLASS} mt-5 w-full`}>{item.cta}</Link>
+                <Link href={item.href} className={`${HOME_CARD_CTA_CLASS} mt-5 w-full`}>{item.cta}</Link>
               </div>
             </article>
           ))}

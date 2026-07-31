@@ -37,7 +37,7 @@ export default async function GiocaPage({
       <div className="pointer-events-none absolute -right-48 top-[32rem] -z-10 h-[32rem] w-[32rem] rounded-full bg-indigo-200/20 blur-[130px]" />
 
       <div className="mx-auto w-full max-w-7xl px-4 pb-12 pt-6 sm:px-5 sm:pb-16 sm:pt-10 lg:px-6 lg:pt-12">
-        <header className="relative mb-7 overflow-hidden border-b border-slate-200/80 pb-5 pt-1 sm:mb-12 sm:pb-10 lg:mb-16 lg:pb-14 lg:pt-2">
+        <header className="relative mb-3 overflow-hidden border-b border-slate-200/80 pb-5 pt-1 sm:mb-5 sm:pb-7 lg:mb-6 lg:pb-8 lg:pt-2">
           <div className="pointer-events-none absolute -left-16 top-0 h-40 w-72 bg-sky-200/25 blur-[70px]" />
           <div className="relative">
             <div>
