@@ -8,18 +8,23 @@ export default function ArcadeLeaderboard({
   entries,
   teams,
   highlightedId,
+  hasMore,
+  loadingMore,
+  onLoadMore,
 }: {
   entries: ArcadeLeaderboardEntry[];
   teams: GameTeam[];
   highlightedId?: string | null;
+  hasMore: boolean;
+  loadingMore: boolean;
+  onLoadMore: () => void;
 }) {
   const teamsById = new Map(teams.map((team) => [team.id, team]));
 
   return (
     <section id="hall-of-fame-arcade" className="mt-10 border-t border-blue-950/10 pt-10 sm:mt-16 sm:pt-14">
       <p className="section-eyebrow">Classifica ufficiale</p>
-      <h2 className="font-onder-title mt-2 text-blue-950">Hall of Fame Arcade</h2>
-      <p className="mt-3 text-sm font-semibold text-slate-500 sm:text-base">Sono arrivati più lontano di tutti.</p>
+      <p className="mt-3 max-w-2xl text-sm font-bold leading-6 text-slate-600 sm:text-base">Solo chi resiste più a lungo lascia il proprio nome nella storia.</p>
 
       {entries.length === 0 ? (
         <div className="mt-7 rounded-[1.5rem] border border-blue-950/10 bg-white/75 px-5 py-10 text-center text-sm font-bold text-slate-500 shadow-lg shadow-blue-950/5">
@@ -48,19 +53,26 @@ export default function ArcadeLeaderboard({
                 const team = teamsById.get(entry.societaId);
                 const highlighted = entry.id === highlightedId;
                 return (
-                  <li key={entry.id} className={`grid grid-cols-[2rem_minmax(0,1fr)_2.6rem_auto] items-center gap-2 border-b border-blue-950/[.07] px-3 py-3 transition last:border-b-0 sm:grid-cols-[4rem_minmax(0,1fr)_7rem_7rem_9rem] sm:px-5 ${highlighted ? "bg-amber-100 ring-2 ring-inset ring-amber-300" : ""}`}>
-                    <span className="text-sm font-black tabular-nums text-blue-950/45">{index + 1}</span>
-                    <span className="min-w-0 truncate text-sm font-black text-blue-950 sm:text-base">{entry.nomeGiocatore}</span>
-                    <span className="flex h-8 items-center justify-center sm:h-10">
+                  <li key={entry.id} className={`grid grid-cols-[1.4rem_minmax(0,1fr)_1.7rem_2.8rem_4.5rem] items-center gap-1 border-b border-blue-950/[.07] px-2 py-2.5 transition last:border-b-0 sm:grid-cols-[4rem_minmax(0,1fr)_7rem_7rem_9rem] sm:gap-2 sm:px-5 sm:py-3 ${highlighted ? "bg-amber-100 ring-2 ring-inset ring-amber-300" : ""}`}>
+                    <span className="text-[10px] font-black tabular-nums text-blue-950/45 sm:text-sm">{index + 1}</span>
+                    <span className="min-w-0 truncate text-[10px] font-black text-blue-950 sm:text-base">{entry.nomeGiocatore}</span>
+                    <span className="flex h-6 items-center justify-center sm:h-10">
                       {team && <Image src={team.logo} alt={`Stemma ${team.nome}`} width={42} height={42} unoptimized className="max-h-full max-w-full object-contain" />}
                     </span>
-                    <span className="col-start-2 row-start-2 w-fit rounded-full bg-slate-100 px-2 py-1 text-[8px] font-black uppercase tracking-[.08em] text-slate-500 sm:col-start-4 sm:row-start-1 sm:justify-self-center">{levelLabel(entry.livello)}</span>
-                    <strong className="col-start-4 row-span-2 row-start-1 text-right text-base font-black tabular-nums text-blue-700 sm:col-start-5 sm:row-span-1 sm:text-xl">{entry.metri.toLocaleString("it-IT")} m</strong>
+                    <span className="justify-self-center whitespace-nowrap rounded-full bg-slate-100 px-1 py-1 text-[6px] font-black uppercase tracking-[.02em] text-slate-500 sm:px-2 sm:text-[8px] sm:tracking-[.08em]">{levelLabel(entry.livello)}</span>
+                    <strong className="whitespace-nowrap text-right text-[12px] font-black tabular-nums text-blue-700 sm:text-xl">{entry.metri.toLocaleString("it-IT")} m</strong>
                   </li>
                 );
               })}
             </ol>
           </div>
+          {hasMore && (
+            <div className="mt-5 flex justify-center">
+              <button type="button" onClick={onLoadMore} disabled={loadingMore} className="min-h-11 rounded-full border border-blue-950/15 bg-white px-6 text-[9px] font-black uppercase tracking-[.14em] text-blue-950 shadow-md transition hover:border-blue-950 hover:bg-blue-950 hover:text-white disabled:cursor-wait disabled:opacity-50">
+                {loadingMore ? "Caricamento…" : "Mostra altri"}
+              </button>
+            </div>
+          )}
         </>
       )}
     </section>

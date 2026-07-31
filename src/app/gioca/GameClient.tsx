@@ -39,7 +39,7 @@ import GameOverlayLayer from "./GameOverlayLayer";
 import TeamSelector from "./TeamSelector";
 import VarCheck from "./VarCheck";
 import ArcadeLeaderboard from "./ArcadeLeaderboard";
-import { beginArcadeRun } from "./actions";
+import { beginArcadeRun, loadMoreArcadeRecords } from "./actions";
 
 type PendingVarReview = {
   result: GameSnapshot;
@@ -80,10 +80,12 @@ export default function GameClient({
   teams,
   initialTeamSlug,
   initialLeaderboard,
+  initialLeaderboardHasMore,
 }: {
   teams: GameTeam[];
   initialTeamSlug?: string;
   initialLeaderboard: ArcadeLeaderboardEntry[];
+  initialLeaderboardHasMore: boolean;
 }) {
   const [selectorVersion, setSelectorVersion] = useState(0);
   const [team, setTeam] = useState<GameTeam | null>(null);
@@ -106,6 +108,8 @@ export default function GameClient({
   const [pendingVarReview, setPendingVarReview] = useState<PendingVarReview | null>(null);
   const [runProof, setRunProof] = useState("");
   const [leaderboard, setLeaderboard] = useState(initialLeaderboard);
+  const [leaderboardHasMore, setLeaderboardHasMore] = useState(initialLeaderboardHasMore);
+  const [leaderboardLoading, setLeaderboardLoading] = useState(false);
   const [highlightedRecordId, setHighlightedRecordId] = useState<string | null>(null);
   const dialogRef = useRef<HTMLElement>(null);
   const selectionRootRef = useRef<HTMLDivElement>(null);
@@ -178,6 +182,18 @@ export default function GameClient({
       }, 30000);
     }
   }, []);
+
+  const loadMoreLeaderboard = useCallback(async () => {
+    if (leaderboardLoading || !leaderboardHasMore) return;
+    setLeaderboardLoading(true);
+    try {
+      const page = await loadMoreArcadeRecords(leaderboard.length);
+      setLeaderboard((current) => [...current, ...page.entries.filter((entry) => !current.some((item) => item.id === entry.id))]);
+      setLeaderboardHasMore(page.hasMore);
+    } finally {
+      setLeaderboardLoading(false);
+    }
+  }, [leaderboard.length, leaderboardHasMore, leaderboardLoading]);
 
   const commitGameOver = useCallback((result: GameSnapshot, resolutionOverride?: LevelResolution) => {
     if (!team) return;
@@ -454,10 +470,12 @@ export default function GameClient({
                   result={finalResult}
                   isNewRecord={isNewRecord}
                   playedLevel={activeLevel}
-                  progress={clubProgress}
                   resolution={finalResolution}
                   runProof={runProof}
-                  onLeaderboardUpdate={updateLeaderboard}
+                  onLeaderboardUpdate={(entries, highlightedId, hasMore) => {
+                    setLeaderboardHasMore(hasMore);
+                    updateLeaderboard(entries, highlightedId);
+                  }}
                   onRetry={prepareNextRun}
                   onReturn={() => returnToGameHome(false)}
                 />
@@ -569,7 +587,7 @@ export default function GameClient({
           keyboardEnabled={!modalOpen}
           onSelect={selectTeam}
         />
-        <ArcadeLeaderboard entries={leaderboard} teams={teams} highlightedId={highlightedRecordId} />
+        <ArcadeLeaderboard entries={leaderboard} teams={teams} highlightedId={highlightedRecordId} hasMore={leaderboardHasMore} loadingMore={leaderboardLoading} onLoadMore={loadMoreLeaderboard} />
       </div>
       {gameModal}
     </>

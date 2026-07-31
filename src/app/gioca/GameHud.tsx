@@ -62,13 +62,8 @@ export default function GameHud({ team, snapshot, level }: {
         </div>
 
         <div className="space-y-1 border-l border-white/10 pl-1.5 text-center sm:pl-3">
-          <div>
-            <p className="text-[6px] font-black uppercase tracking-[.13em] text-amber-100/55 sm:text-[7px]">Punti</p>
-            <strong key={Math.floor(snapshot.score / 250)} className="score-value-pop block truncate text-[1.35rem] font-black leading-none tabular-nums text-amber-300 sm:text-2xl">
-              {formatNumber(snapshot.score)}
-            </strong>
-          </div>
-          <Metric label="Metri" value={`${formatNumber(snapshot.distance)} m`} />
+          <p className="text-[7px] font-black uppercase tracking-[.14em] text-sky-100/60 sm:text-[8px]">Metri</p>
+          <strong className="block whitespace-nowrap text-[1.65rem] font-black leading-none tracking-[-.04em] tabular-nums text-sky-200 sm:text-3xl">{formatNumber(snapshot.distance)} m</strong>
         </div>
       </div>
 
@@ -87,11 +82,9 @@ export default function GameHud({ team, snapshot, level }: {
       <style jsx global>{`
         @keyframes life-critical-pulse { 0%,100% { transform:scaleY(1); } 50% { transform:scaleY(1.08); } }
         @keyframes warning-icon-pulse { 0%,100% { opacity:.78; transform:scale(.96); } 50% { opacity:1; transform:scale(1.08); } }
-        @keyframes score-value-pop { 0% { opacity:.72; transform:translateY(2px) scale(.96); } 100% { opacity:1; transform:none; } }
         .life-bar-critical { animation:life-critical-pulse 1.8s ease-in-out infinite; will-change:transform; }
         .life-warning-icon { animation:warning-icon-pulse 1.8s ease-in-out infinite; }
-        .score-value-pop { animation:score-value-pop 260ms ease-out both; }
-        @media (prefers-reduced-motion:reduce) { .life-bar-critical,.life-warning-icon,.score-value-pop { animation:none; } }
+        @media (prefers-reduced-motion:reduce) { .life-bar-critical,.life-warning-icon { animation:none; } }
       `}</style>
     </div>
   );

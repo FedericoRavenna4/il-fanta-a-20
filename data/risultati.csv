@@ -5,14 +5,14 @@ Stagione_ID,Lega,Competizione,Nome_Storico,Squadra_ID,Risultato_Testo
 1,Serie A,Campionato,Coolinese FC,2,4
 1,Serie A,Campionato,Cagliarithanos,4,5
 1,Serie A,Campionato,I Leccendari,6,6
-1,Serie A,Campionato,IRoman,5,7
-1,Serie A,Campionato,u sole u mare Uventus,21,8
+1,Serie A,Campionato,Iroman,5,7
+1,Serie A,Campionato,Juventrap,21,8
 1,Serie A,Campionato,Genoasis,23,9
 1,Serie A,Campionato,Interapia Intensiva,7,10
 1,Serie A,Campionato,FiorenTeen,101,11
 1,Serie A,Campionato,Bolagna,10,12
 1,Serie A,Campionato,Maranza Calcio Monza,107,13
-1,Serie A,Campionato,Napoleoni,17,14
+1,Serie A,Campionato,Napolizia,17,14
 1,Serie A,Campionato,Mantova la gatta al lardo,31,15
 1,Serie A,Campionato,Fel-Lazio,22,16
 1,Serie A,Campionato,Como Habilis,13,17
@@ -24,7 +24,7 @@ Stagione_ID,Lega,Competizione,Nome_Storico,Squadra_ID,Risultato_Testo
 2,Tutte,Coppa Fanta a 20,Bolagna,10,Eliminato agli Ottavi
 2,Tutte,Coppa Fanta a 20,Hellas Terronia,14,Eliminato agli Ottavi
 2,Tutte,Coppa Fanta a 20,Cagliarithanos,4,Eliminato ai Sedicesimi
-2,Tutte,Coppa Fanta a 20,Napoleoni,17,Eliminato ai Sedicesimi
+2,Tutte,Coppa Fanta a 20,Napolizia,17,Eliminato ai Sedicesimi
 2,Tutte,Coppa Fanta a 20,Carrariise,87,Eliminato ai Gironi
 2,Tutte,Coppa Fanta a 20,CE-SENI,105,Eliminato ai Sedicesimi
 2,Tutte,Coppa Fanta a 20,VenEzio Greggio Fc,19,Eliminato ai Gironi
@@ -39,9 +39,9 @@ Stagione_ID,Lega,Competizione,Nome_Storico,Squadra_ID,Risultato_Testo
 2,Tutte,Coppa Fanta a 20,Brodena,9,Eliminato ai Sedicesimi
 2,Tutte,Coppa Fanta a 20,Il Lecce di Sabino Virgilio,102,Eliminato agli Ottavi
 2,Tutte,Coppa Fanta a 20,Genoasis,23,Eliminato ai Sedicesimi
-2,Tutte,Coppa Fanta a 20,IRoman,5,Eliminato in Semifinale
+2,Tutte,Coppa Fanta a 20,Iroman,5,Eliminato in Semifinale
 2,Tutte,Coppa Fanta a 20,Juve Scabbia,34,Eliminato ai Sedicesimi
-2,Tutte,Coppa Fanta a 20,u sole u mare Uventus,21,Eliminato ai Quarti
+2,Tutte,Coppa Fanta a 20,Juventrap,21,Eliminato ai Quarti
 2,Tutte,Coppa Fanta a 20,LA CRIMONESE,103,Eliminato agli Ottavi
 2,Tutte,Coppa Fanta a 20,MantoPa,109,Eliminato ai Sedicesimi
 2,Tutte,Coppa Fanta a 20,Maranza Monza,107,Eliminato ai Sedicesimi
@@ -64,15 +64,15 @@ Stagione_ID,Lega,Competizione,Nome_Storico,Squadra_ID,Risultato_Testo
 2,Serie A,Campionato,Bolagna,10,3
 2,Serie A,Campionato,Why Always Milan,11,4
 2,Serie A,Campionato,Interapia Intensiva,7,5
-2,Serie A,Campionato,IRoman,5,6
+2,Serie A,Campionato,Iroman,5,6
 2,Serie A,Campionato,Analanta,3,7
 2,Serie A,Campionato,Como Habilis,13,8
 2,Serie A,Campionato,Il Lecce di Sabino Virgilio,102,9
 2,Serie A,Campionato,Cagliarithanos,4,10
 2,Serie A,Campionato,Parmalosi,104,11
-2,Serie A,Campionato,u sole u mare Uventus,21,12
+2,Serie A,Campionato,Juventrap,21,12
 2,Serie A,Campionato,Fiorentonio Cartonio,101,13
-2,Serie A,Campionato,Napoleoni,17,14
+2,Serie A,Campionato,Napolizia,17,14
 2,Serie A,Campionato,Coolinese FC,2,15
 2,Serie A,Campionato,I Leccendari,6,16
 2,Serie A,Campionato,Fel-Lazio,22,17
@@ -131,7 +131,7 @@ Stagione_ID,Lega,Competizione,Nome_Storico,Squadra_ID,Risultato_Testo
 3,Tutte,Coppa Fanta a 20,Pisa and Love,8,Qualificazione 30
 3,Tutte,Coppa Fanta a 20,Mantova la gatta al lardo,31,Qualificazione 31
 3,Tutte,Coppa Fanta a 20,AREZZENAL,68,Qualificazione 32
-3,Tutte,Coppa Fanta a 20,IRoman,5,Qualificazione 33
+3,Tutte,Coppa Fanta a 20,Iroman,5,Qualificazione 33
 3,Tutte,Coppa Fanta a 20,PalerMavai Ma vieni Ma chi sono,26,Qualificazione 34
 3,Tutte,Coppa Fanta a 20,Monzarella e Pomodoro,33,Qualificazione 35
 3,Tutte,Coppa Fanta a 20,Monopoly,84,Qualificazione 36
@@ -150,7 +150,7 @@ Stagione_ID,Lega,Competizione,Nome_Storico,Squadra_ID,Risultato_Testo
 3,Tutte,Coppa Fanta a 20,FROSILVIONE,32,Qualificazione 49
 3,Tutte,Coppa Fanta a 20,Juve Scabbia,34,Qualificazione 50
 3,Tutte,Coppa Fanta a 20,Virtus Tavernello,40,Qualificazione 51
-3,Tutte,Coppa Fanta a 20,Napoleoni,17,Qualificazione 52
+3,Tutte,Coppa Fanta a 20,Napolizia,17,Qualificazione 52
 3,Tutte,Coppa Fanta a 20,Ravengers FC,66,Qualificazione 53
 3,Tutte,Coppa Fanta a 20,Vosenza,95,Qualificazione 54
 3,Tutte,Coppa Fanta a 20,Analanta,3,Qualificazione 55
@@ -188,7 +188,7 @@ Stagione_ID,Lega,Competizione,Nome_Storico,Squadra_ID,Risultato_Testo
 3,Tutte,Coppa Fanta a 20,Torres,76,Qualificazione 87
 3,Tutte,Coppa Fanta a 20,US LATTINA CALCIO 1932,91,Qualificazione 88
 3,Tutte,Coppa Fanta a 20,Ternani,74,Qualificazione 89
-3,Tutte,Coppa Fanta a 20,u sole u mare Uventus,21,Qualificazione 90
+3,Tutte,Coppa Fanta a 20,Juventrap,21,Qualificazione 90
 3,Tutte,Coppa Fanta a 20,VenEzio Greggio Fc,19,Qualificazione 91
 3,Tutte,Coppa Fanta a 20,InterUn23,78,Qualificazione 92
 3,Tutte,Coppa Fanta a 20,SCOREGGIANA,20,Qualificazione 93
@@ -234,7 +234,7 @@ Stagione_ID,Lega,Competizione,Nome_Storico,Squadra_ID,Risultato_Testo
 3,Tutte,Coppa Fanta a 20,GUIDONIA MONTECESARE,69,Eliminato ai Sedicesimi
 3,Tutte,Coppa Fanta a 20,Hellas Terronia,14,Eliminato ai Trentaduesimi
 3,Tutte,Coppa Fanta a 20,I Leccendari,6,Eliminato ai Quarti
-3,Tutte,Coppa Fanta a 20,IRoman,5,Eliminato 2 Turno Playoff
+3,Tutte,Coppa Fanta a 20,Iroman,5,Eliminato 2 Turno Playoff
 3,Tutte,Coppa Fanta a 20,Juve Scabbia,34,Eliminato 2 Turno Playoff
 3,Tutte,Coppa Fanta a 20,Kakasertana,86,Eliminato 2 Turno Playoff
 3,Tutte,Coppa Fanta a 20,KUNG FU PARMA CALCIO,1,Eliminato agli Ottavi
@@ -244,7 +244,7 @@ Stagione_ID,Lega,Competizione,Nome_Storico,Squadra_ID,Risultato_Testo
 3,Tutte,Coppa Fanta a 20,Mantova la gatta al lardo,31,Eliminato 1 Turno Playoff
 3,Tutte,Coppa Fanta a 20,Monopoly,84,Eliminato 3 Turno Playoff
 3,Tutte,Coppa Fanta a 20,Monzarella e Pomodoro,33,Eliminato 3 Turno Playoff
-3,Tutte,Coppa Fanta a 20,Napoleoni,17,Eliminato 1 Turno Playoff
+3,Tutte,Coppa Fanta a 20,Napolizia,17,Eliminato 1 Turno Playoff
 3,Tutte,Coppa Fanta a 20,NasPicerno,79,Eliminato ai Quarti
 3,Tutte,Coppa Fanta a 20,Ospitaletto,28,Eliminato ai Trentaduesimi
 3,Tutte,Coppa Fanta a 20,PalerMavai Ma vieni Ma chi sono,26,Eliminato 1 Turno Playoff
@@ -267,7 +267,7 @@ Stagione_ID,Lega,Competizione,Nome_Storico,Squadra_ID,Risultato_Testo
 3,Serie A,Campionato,I Leccendari,6,2
 3,Serie A,Campionato,Como Habilis,13,3
 3,Serie A,Campionato,Cremonelle,16,4
-3,Serie A,Campionato,IRoman,5,5
+3,Serie A,Campionato,Iroman,5,5
 3,Serie A,Campionato,Pisa and Love,8,6
 3,Serie A,Campionato,Hellas Terronia,14,7
 3,Serie A,Campionato,PREDATORINO,12,8
@@ -279,10 +279,10 @@ Stagione_ID,Lega,Competizione,Nome_Storico,Squadra_ID,Risultato_Testo
 3,Serie A,Campionato,Bolagna,10,14
 3,Serie A,Campionato,MATERASSUOLO,15,15
 3,Serie A,Campionato,Analanta,3,16
-3,Serie A,Campionato,Napoleoni,17,17
+3,Serie A,Campionato,Napolizia,17,17
 3,Serie A,Campionato,Genoasis,23,18
 3,Serie A,Campionato,Fel-Lazio,22,19
-3,Serie A,Campionato,u sole u mare Uventus,21,20
+3,Serie A,Campionato,Juventrap,21,20
 3,Serie B,Campionato,SCOREGGIANA,20,1
 3,Serie B,Campionato,Brodena,9,2
 3,Serie B,Campionato,VenEzio Greggio Fc,19,3
@@ -368,13 +368,13 @@ Stagione_ID,Lega,Competizione,Nome_Storico,Squadra_ID,Risultato_Testo
 1,Serie A,Champions League,Cagliarithanos,4,Vincitore
 1,Serie A,Champions League,Genoasis,23,Girone 3
 1,Serie A,Champions League,Maranza Calcio Monza,107,Girone 4
-1,Serie A,Champions League,Napoleoni,17,Semifinale
+1,Serie A,Champions League,Napolizia,17,Semifinale
 1,Serie A,Champions League,PalerMavai Ma vieni Ma chi sono,26,Finalista
-1,Serie A,Champions League,u sole u mare Uventus,21,Girone 3
+1,Serie A,Champions League,Juventrap,21,Girone 3
 1,Serie A,Conference League,Fel-Lazio,22,Girone 3
 1,Serie A,Conference League,Interapia Intensiva,7,Vincitore
 1,Serie A,Conference League,Leccester City FC,108,Finalista
-1,Serie A,Conference League,IRoman,5,Semifinale
+1,Serie A,Conference League,Iroman,5,Semifinale
 1,Serie A,Conference League,SalerniTotti AO,104,Semifinale
 1,Serie A,Conference League,Why Always Milan,11,Girone 3
 1,Serie A,Europa League,Analanta,3,Semifinale
@@ -388,14 +388,14 @@ Stagione_ID,Lega,Competizione,Nome_Storico,Squadra_ID,Risultato_Testo
 2,Serie A,Champions League,Genoasis,23,Semifinale
 2,Serie A,Champions League,Interapia Intensiva,7,Vincitore
 2,Serie A,Champions League,PREDATORINO,12,Finalista
-2,Serie A,Champions League,IRoman,5,Girone 3
-2,Serie A,Champions League,u sole u mare Uventus,21,Girone 4
+2,Serie A,Champions League,Iroman,5,Girone 3
+2,Serie A,Champions League,Juventrap,21,Girone 4
 2,Serie A,Champions League,Why Always Milan,11,Semifinale
 2,Serie A,Conference League,Brodena,9,Girone 3
 2,Serie A,Conference League,Fel-Lazio,22,Girone 3
 2,Serie A,Conference League,I Leccendari,6,Vincitore
 2,Serie A,Conference League,Maranza Monza,107,Semifinale
-2,Serie A,Conference League,Napoleoni,17,Finalista
+2,Serie A,Conference League,Napolizia,17,Finalista
 2,Serie A,Conference League,PalerMavai Ma vieni Ma chi sono,26,Semifinale
 2,Serie A,Europa League,Analanta,3,Vincitore
 2,Serie A,Europa League,Cagliarithanos,4,Finalista
@@ -428,14 +428,14 @@ Stagione_ID,Lega,Competizione,Nome_Storico,Squadra_ID,Risultato_Testo
 3,Serie A,Champions League,Coolinese FC,2,Vincitore
 3,Serie A,Champions League,I Leccendari,6,Girone 3
 3,Serie A,Champions League,Pisa and Love,8,Semifinale
-3,Serie A,Champions League,IRoman,5,Finalista
+3,Serie A,Champions League,Iroman,5,Finalista
 3,Serie A,Champions League,Why Always Milan,11,Girone 4
 3,Serie A,Conference League,Fel-Lazio,22,Semifinale
 3,Serie A,Conference League,FiorenToni Pepperoni,18,Girone 3
 3,Serie A,Conference League,Genoasis,23,Finalista
-3,Serie A,Conference League,Napoleoni,17,Vincitore
+3,Serie A,Conference League,Napolizia,17,Vincitore
 3,Serie A,Conference League,PREDATORINO,12,Semifinale
-3,Serie A,Conference League,u sole u mare Uventus,21,Girone 3
+3,Serie A,Conference League,Juventrap,21,Girone 3
 3,Serie A,Europa League,Bolagna,10,Girone 3
 3,Serie A,Europa League,Cremonelle,16,Vincitore
 3,Serie A,Europa League,Hellas Terronia,14,Semifinale

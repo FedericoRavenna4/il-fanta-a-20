@@ -14,7 +14,13 @@ export type ArcadeSaveResult = {
   position?: number;
   highlightedId?: string;
   leaderboard?: ArcadeLeaderboardEntry[];
+  leaderboardHasMore?: boolean;
   fieldError?: string;
+};
+
+export type ArcadeLeaderboardPage = {
+  entries: ArcadeLeaderboardEntry[];
+  hasMore: boolean;
 };
 
 export type ArcadeRunProofResult = {

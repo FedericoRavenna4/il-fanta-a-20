@@ -5,9 +5,7 @@ import { useState, type FormEvent } from "react";
 import type { ArcadeLeaderboardEntry, ArcadeSaveResult } from "@/lib/arcade/types";
 import type { GameSnapshot, GameTeam } from "@/lib/game/types";
 import {
-  LEVEL_RULES,
   resolveLevelOutcome,
-  type ClubProgress,
   type GameLevel,
   type LevelResolution,
 } from "@/lib/game/progression";
@@ -18,7 +16,6 @@ export default function GameOver({
   result,
   isNewRecord,
   playedLevel,
-  progress,
   resolution,
   runProof,
   onLeaderboardUpdate,
@@ -29,10 +26,9 @@ export default function GameOver({
   result: GameSnapshot;
   isNewRecord: boolean;
   playedLevel: GameLevel;
-  progress: ClubProgress;
   resolution: LevelResolution | null;
   runProof: string;
-  onLeaderboardUpdate: (entries: ArcadeLeaderboardEntry[], highlightedId?: string) => void;
+  onLeaderboardUpdate: (entries: ArcadeLeaderboardEntry[], highlightedId: string | undefined, hasMore: boolean) => void;
   onRetry: () => void;
   onReturn: () => void;
 }) {
@@ -41,8 +37,6 @@ export default function GameOver({
   const [isSaving, setIsSaving] = useState(false);
   const [hasSaved, setHasSaved] = useState(false);
   const outcome = resolution ?? resolveLevelOutcome(playedLevel, result.distance);
-  const playedRule = LEVEL_RULES[playedLevel];
-  const nextRule = LEVEL_RULES[outcome.newLevel];
   const outcomeTone = outcome.outcome === "promoted" || outcome.outcome === "safe"
     ? "border-emerald-300/25 bg-emerald-300/[.08] text-emerald-200"
     : outcome.outcome === "relegated"
@@ -68,7 +62,7 @@ export default function GameOver({
       setSaveResult(response);
       if (response.ok) {
         setHasSaved(true);
-        if (response.leaderboard) onLeaderboardUpdate(response.leaderboard, response.highlightedId);
+        if (response.leaderboard) onLeaderboardUpdate(response.leaderboard, response.highlightedId, response.leaderboardHasMore ?? false);
       }
     } finally {
       setIsSaving(false);
@@ -84,20 +78,15 @@ export default function GameOver({
         <p className="mt-2 text-[8px] font-black uppercase tracking-[0.2em] text-amber-300 max-sm:mt-0.5">
           {isNewRecord ? "Nuovo record personale" : "Corsa terminata"}
         </p>
-        <h2 className="mt-0.5 text-2xl font-black uppercase tracking-tight max-sm:text-lg sm:text-3xl">{outcome.title}</h2>
-        <p className="mt-0.5 text-[9px] font-bold text-white/55">
-          Livello {playedLevel} · {playedRule.name}
-        </p>
+        <h2 className="mt-0.5 text-2xl font-black uppercase tracking-tight max-sm:text-lg sm:text-3xl">Corsa terminata</h2>
 
-        <div className={`mx-auto mt-2.5 rounded-xl border px-3 py-2 max-sm:mt-1.5 max-sm:py-1.5 ${outcomeTone}`}>
-          <p className="text-[10px] font-black uppercase tracking-[.06em]">{outcome.message}</p>
-          <p className="mt-0.5 text-[8px] font-semibold text-white/52">
-            La nuova categoria sarà attiva dalla prossima partita.
-          </p>
-        </div>
+        {outcome.outcome !== "stayed" && (
+          <div className={`mx-auto mt-2.5 rounded-xl border px-3 py-2 max-sm:mt-1.5 max-sm:py-1.5 ${outcomeTone}`}>
+            <p className="text-[9px] font-black uppercase tracking-[.06em]">{outcome.title} · {outcome.message}</p>
+          </div>
+        )}
 
-        <div className="mt-3 grid grid-cols-3 gap-2 max-sm:mt-1.5 max-sm:gap-1.5">
-          <Score label="Punteggio" value={result.score.toLocaleString("it-IT")} highlight />
+        <div className="mx-auto mt-3 grid max-w-sm grid-cols-2 gap-2 max-sm:mt-1.5 max-sm:gap-1.5">
           <Score label="Distanza" value={`${result.distance} m`} />
           <Score
             label="Record personale"
@@ -106,27 +95,10 @@ export default function GameOver({
           />
         </div>
 
-        <div className="mt-2 flex items-center justify-between gap-3 rounded-lg border border-white/[.07] bg-white/[.035] px-3 py-2 text-left max-sm:mt-1.5 max-sm:py-1.5">
-          <div className="min-w-0">
-            <p className="text-[6px] font-black uppercase tracking-[.14em] text-white/35">Prossima corsa</p>
-            <p className="truncate text-[10px] font-black uppercase text-white">
-              Livello {outcome.newLevel} · {nextRule.name}
-            </p>
-          </div>
-          {playedLevel === 3 && (
-            <div className="shrink-0 text-right">
-              <p className="text-[6px] font-black uppercase tracking-[.12em] text-white/35">Salvezze</p>
-              <p className={`text-sm font-black tabular-nums ${outcome.badgeEarned ? "text-amber-300" : "text-white"}`}>
-                {progress.level3Saves}
-              </p>
-            </div>
-          )}
-        </div>
-
         {result.distance >= 100 ? (
-          <form onSubmit={handleSave} className="mt-2.5 rounded-xl border border-amber-300/20 bg-amber-300/[.06] p-2.5 text-left max-sm:mt-1.5 max-sm:p-2">
+          <form onSubmit={handleSave} className="mx-auto mt-3 max-w-sm text-left max-sm:mt-2">
             <label htmlFor="arcade-player-name" className="text-[7px] font-black uppercase tracking-[.14em] text-amber-200">Nome del giocatore</label>
-            <div className="mt-1.5 grid gap-1.5 sm:grid-cols-[1fr_auto]">
+            <div className="relative mt-1.5">
               <input
                 id="arcade-player-name"
                 name="nome_giocatore"
@@ -138,11 +110,11 @@ export default function GameOver({
                 value={playerName}
                 onChange={(event) => setPlayerName(event.target.value)}
                 disabled={isSaving || hasSaved}
-                className="min-h-10 min-w-0 rounded-lg border border-white/15 bg-slate-950/55 px-3 text-sm font-bold text-white outline-none placeholder:text-white/25 focus:border-amber-300 disabled:opacity-60"
-                placeholder="Il tuo nome"
+                className="min-h-11 w-full rounded-full border border-white/15 bg-slate-950/55 py-2 pl-4 pr-12 text-sm font-bold text-white outline-none placeholder:text-white/25 focus:border-amber-300 disabled:opacity-60"
+                placeholder="Inserisci il tuo nome"
               />
-              <button type="submit" disabled={isSaving || hasSaved || !runProof} className="min-h-10 rounded-lg bg-amber-300 px-4 text-[8px] font-black uppercase tracking-[.1em] text-blue-950 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-50">
-                {isSaving ? "Salvataggio…" : hasSaved ? "Record salvato" : "Salva nella classifica"}
+              <button type="submit" disabled={isSaving || hasSaved || !runProof} aria-label="Salva nella classifica" className="absolute right-1 top-1 flex h-9 w-9 items-center justify-center rounded-full bg-amber-300 text-lg font-black text-blue-950 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-50">
+                {isSaving ? <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-blue-950/25 border-t-blue-950" aria-hidden="true" /> : hasSaved ? "✓" : ">"}
               </button>
             </div>
             {saveResult && (
@@ -156,7 +128,7 @@ export default function GameOver({
         )}
 
         <div className="mt-3 grid gap-2 max-sm:mt-1.5 max-sm:gap-1.5 sm:grid-cols-2">
-          <button type="button" onClick={onRetry} className="min-h-11 rounded-full bg-amber-300 px-5 text-[9px] font-black uppercase tracking-[0.15em] text-blue-950 transition hover:bg-amber-200 max-sm:min-h-9">Gioca il livello {outcome.newLevel}</button>
+          <button type="button" onClick={onRetry} className="min-h-11 rounded-full bg-amber-300 px-5 text-[9px] font-black uppercase tracking-[0.15em] text-blue-950 transition hover:bg-amber-200 max-sm:min-h-9">Rigioca</button>
           <button type="button" onClick={onReturn} className="min-h-11 rounded-full border border-white/15 bg-white/[0.06] px-5 text-[9px] font-black uppercase tracking-[0.14em] text-white transition hover:bg-white/10 max-sm:min-h-10">Torna alla selezione</button>
         </div>
       </section>
