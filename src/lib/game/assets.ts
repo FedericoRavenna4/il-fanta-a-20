@@ -152,22 +152,22 @@ export const MALUS_WEIGHTS: Partial<Record<EventKind, number>> = {
 };
 
 export const EVENT_SPRITES: Partial<Record<EventKind, SpriteConfig>> = {
-  assist: sprite("bonus.assist", [0, 0, 720, 720], 47, 35, [7, 7, 33, 24]),
-  cleanSheet: sprite("bonus.cleanSheet", [0, 0, 720, 720], 36, 45, [6, 8, 25, 33]),
-  goal: sprite("bonus.goal", [0, 0, 720, 720], 54, 46, [9, 9, 37, 32]),
-  hatTrick: sprite("bonus.hatTrick", [0, 0, 1080, 720], 59, 48, [9, 10, 42, 32]),
-  yellowCard: sprite("malus.yellowCard", [0, 0, 720, 720], 34, 40, [7, 8, 21, 28]),
-  concededGoal: sprite("malus.concededGoal", [0, 0, 720, 720], 50, 45, [8, 9, 35, 31]),
-  redCard: sprite("malus.redCard", [0, 0, 720, 720], 34, 40, [7, 8, 21, 28]),
-  ownGoal: sprite("malus.ownGoal", [0, 0, 720, 720], 50, 46, [8, 9, 35, 32]),
-  missedPenalty: sprite("malus.missedPenalty", [0, 0, 1080, 720], 64, 40, [10, 9, 44, 26]),
+  assist: sprite("bonus.assist", [0, 0, 720, 720], 51, 38, [9, 10, 33, 24]),
+  cleanSheet: sprite("bonus.cleanSheet", [0, 0, 720, 720], 39, 49, [8, 12, 25, 33]),
+  goal: sprite("bonus.goal", [0, 0, 720, 720], 58, 50, [11, 13, 37, 32]),
+  hatTrick: sprite("bonus.hatTrick", [0, 0, 1080, 720], 64, 52, [12, 14, 42, 32]),
+  yellowCard: sprite("malus.yellowCard", [0, 0, 720, 720], 37, 43, [9, 11, 21, 28]),
+  concededGoal: sprite("malus.concededGoal", [0, 0, 720, 720], 54, 49, [10, 13, 35, 31]),
+  redCard: sprite("malus.redCard", [0, 0, 720, 720], 37, 43, [9, 11, 21, 28]),
+  ownGoal: sprite("malus.ownGoal", [0, 0, 720, 720], 54, 50, [10, 13, 35, 32]),
+  missedPenalty: sprite("malus.missedPenalty", [0, 0, 1080, 720], 69, 43, [13, 12, 44, 26]),
 };
 
 export const OBSTACLE_SPRITES: Record<PhysicalObstacleKind, SpriteConfig> = {
-  cornerFlag: sprite("obstacle.cornerFlag", [0, 0, 720, 720], 70, 155, [17, 30, 36, 120]),
-  stretcher: sprite("obstacle.stretcher", [0, 0, 1080, 720], 210, 93, [25, 42, 160, 46]),
-  slidingTackle: sprite("obstacle.slidingTackle", [0, 0, 1080, 720], 154, 79, [23, 35, 112, 41]),
-  var: sprite("obstacle.var", [0, 0, 720, 720], 74, 155, [17, 29, 40, 121]),
+  cornerFlag: sprite("obstacle.cornerFlag", [226, 20, 355, 667], 110, 205, [27, 8, 58, 192]),
+  stretcher: sprite("obstacle.stretcher", [0, 0, 1080, 720], 225, 100, [27, 45, 171, 50]),
+  slidingTackle: sprite("obstacle.slidingTackle", [0, 0, 1080, 720], 160, 82, [24, 36, 116, 43]),
+  var: sprite("obstacle.var", [214, 22, 357, 696], 105, 205, [7, 7, 91, 194]),
 };
 
 export const PRIORITY_GAME_ASSET_KEYS: GameAssetKey[] = [

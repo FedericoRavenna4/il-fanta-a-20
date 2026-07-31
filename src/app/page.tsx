@@ -177,7 +177,7 @@ export default async function Home() {
 
   return (
     <div className="overflow-hidden bg-[linear-gradient(180deg,#f8fbff_0%,#eef5fb_36%,#f8fafc_100%)]">
-      <section className="relative mx-auto max-w-7xl px-4 pb-6 pt-8 sm:px-6 sm:pb-14 sm:pt-16 lg:pb-16 lg:pt-24">
+      <section className="relative mx-auto max-w-7xl px-4 pb-4 pt-8 sm:px-6 sm:pb-10 sm:pt-14 lg:pb-12 lg:pt-20">
         <div className="pointer-events-none absolute left-1/2 top-0 hidden h-[34rem] w-[50rem] -translate-x-1/2 rounded-full bg-sky-200/35 blur-3xl sm:block" />
         <div className="relative grid grid-cols-1 items-center gap-y-4 sm:gap-12">
           <div className="contents sm:block">
@@ -197,7 +197,7 @@ export default async function Home() {
 
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:pb-14 sm:pt-10 lg:pb-16 lg:pt-12">
+      <section className="mx-auto max-w-7xl px-4 py-5 sm:px-6 sm:pb-10 sm:pt-8 lg:pb-12 lg:pt-9">
         <SectionHeading eyebrow="Le protagoniste" title="Le societa'" text="Cento identità, cento storie: il cuore del Fanta a 20." onderTitle />
         <Link href="/societa" aria-label="Esplora tutte le società" className="group relative left-1/2 mb-5 -mt-2 block w-screen -translate-x-1/2 overflow-hidden py-4 [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)] sm:mb-8 sm:-mt-4 sm:py-7">
           <div className="home-club-marquee flex w-max items-center gap-6 pr-6 transition duration-300 group-hover:opacity-35 sm:gap-10 sm:pr-10">
@@ -226,12 +226,13 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="w-full pb-8 sm:pb-16 lg:pb-20">
+      <section className="w-full pb-6 sm:pb-11 lg:pb-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <p className="section-eyebrow">Archivio degli emblemi</p>
-          <h2 className="font-onder-title mt-2 text-blue-950">La collezione ufficiale</h2>
+          <h2 className="font-onder-title mt-2 flex flex-col gap-[0.25em] text-blue-950 sm:block"><span>La collezione</span><span className="sm:ml-2">ufficiale</span></h2>
         </div>
         <div className="group relative mt-6 overflow-hidden py-2 [mask-image:linear-gradient(to_right,transparent,black_5%,black_95%,transparent)] sm:mt-9 sm:py-4">
+            <Link href="/emblemi" aria-label="Esplora tutti gli emblemi" className="absolute inset-0 z-[5] sm:hidden" />
             <div className="home-emblem-marquee flex w-max transition duration-300 group-hover:opacity-40">
               {[0, 1].map((copy) => (
                 <div key={copy} aria-hidden={copy === 1} className="flex shrink-0 items-center gap-4 pr-4 sm:gap-7 sm:pr-7">
@@ -248,7 +249,7 @@ export default async function Home() {
       </section>
 
       <div className="flex flex-col">
-      <section className="order-2 border-y border-slate-200/80 bg-white/65 py-8 sm:py-16 lg:py-20">
+      <section className="order-2 border-b border-slate-200/80 bg-white/65 py-7 sm:py-12 lg:py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <SectionHeading eyebrow={<><span className="sm:hidden">Numeri e storia</span><span className="hidden sm:inline">Numeri e storia</span></>} title="Le statistiche" text="Il valore delle società prende forma attraverso ranking, record e trofei conquistati nel tempo." onderTitle />
           <div className="grid gap-3 sm:gap-5 lg:grid-cols-[1.45fr_0.75fr]">
@@ -286,7 +287,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="order-1 mx-auto w-full max-w-7xl px-4 py-8 max-sm:py-6 sm:px-6 sm:py-16 lg:py-20">
+      <section className="order-1 mx-auto w-full max-w-7xl px-4 py-7 max-sm:py-5 sm:px-6 sm:py-12 lg:py-14">
         <div className="mb-6 grid items-center gap-4 max-sm:mb-4 sm:mb-11 sm:gap-8 md:grid-cols-[1fr_290px] lg:grid-cols-[1fr_380px]">
             <div className="max-w-3xl lg:max-w-none">
               <p className="section-eyebrow">Il sistema sportivo</p>
@@ -316,18 +317,18 @@ export default async function Home() {
       </section>
       </div>
 
-      <section className="mx-auto w-full max-w-7xl px-4 pb-10 sm:px-6 sm:pb-20 lg:pb-24">
-        <div className="grid gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
+      <section className="mx-auto w-full max-w-5xl px-4 pb-8 pt-2 sm:px-6 sm:pb-14 lg:pb-16">
+        <div className="grid gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
           {[
             { title: "La Sala Giochi", description: "Metti alla prova riflessi e strategia nell’arcade ufficiale del Fanta a 20.", href: "/gioca", cta: "Gioca ora" },
             { title: "Il Regolamento", description: "Scopri tutte le regole che governano la competizione.", href: "/regolamento", cta: "Consulta il regolamento" },
             { title: "La Lista di Attesa", description: "Candidati per entrare nella prossima stagione del Fanta a 20.", href: "/lista-attesa", cta: "Entra nella lista di attesa" },
           ].map((item) => (
-            <article key={item.href} className="relative flex aspect-square flex-col overflow-hidden rounded-[2rem] border border-blue-950/10 bg-white/75 p-6 text-blue-950 shadow-xl shadow-blue-950/8 sm:p-8">
+            <article key={item.href} className="relative flex aspect-square flex-col overflow-hidden rounded-[1.6rem] border border-blue-950/10 bg-white/75 p-5 text-blue-950 shadow-lg shadow-blue-950/8 sm:p-6">
               <span className="pointer-events-none absolute -right-16 -top-16 h-52 w-52 rounded-full bg-sky-300/20 blur-3xl" />
               <div className="relative flex h-full flex-col">
-                <h2 className="font-onder-title text-blue-950">{item.title}</h2>
-                <p className="mt-4 line-clamp-2 text-sm font-semibold leading-6 text-slate-500 sm:text-base">{item.description}</p>
+                <h2 className="text-xl font-black uppercase leading-tight tracking-tight text-blue-950 sm:text-2xl">{item.title}</h2>
+                <p className="mt-3 line-clamp-2 text-sm font-semibold leading-5 text-slate-500">{item.description}</p>
                 <Link href={item.href} className={`${HOME_CTA_CLASS} mt-auto w-full`}>{item.cta}</Link>
               </div>
             </article>

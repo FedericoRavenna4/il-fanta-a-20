@@ -114,13 +114,20 @@ a {
 
 .home-emblem-cta {
   position: relative;
-  display: flex;
+  display: none;
   width: min(17rem, calc(100% - 2rem));
   margin: 1rem auto 0;
 }
 
+@media (min-width: 640px) {
+  .home-emblem-cta {
+    display: flex;
+  }
+}
+
 @media (hover: hover) and (pointer: fine) {
   .home-emblem-cta {
+    display: flex;
     position: absolute;
     left: 50%;
     top: 50%;
