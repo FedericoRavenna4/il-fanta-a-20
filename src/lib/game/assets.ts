@@ -164,10 +164,10 @@ export const EVENT_SPRITES: Partial<Record<EventKind, SpriteConfig>> = {
 };
 
 export const OBSTACLE_SPRITES: Record<PhysicalObstacleKind, SpriteConfig> = {
-  cornerFlag: sprite("obstacle.cornerFlag", [226, 20, 355, 667], 110, 205, [27, 8, 58, 192]),
-  stretcher: sprite("obstacle.stretcher", [0, 0, 1080, 720], 225, 100, [27, 45, 171, 50]),
-  slidingTackle: sprite("obstacle.slidingTackle", [0, 0, 1080, 720], 160, 82, [24, 36, 116, 43]),
-  var: sprite("obstacle.var", [214, 22, 357, 696], 105, 205, [7, 7, 91, 194]),
+  cornerFlag: sprite("obstacle.cornerFlag", [226, 20, 355, 667], 60, 112, [15, 4, 32, 104]),
+  stretcher: sprite("obstacle.stretcher", [0, 0, 1080, 720], 235, 104, [28, 47, 179, 52]),
+  slidingTackle: sprite("obstacle.slidingTackle", [0, 0, 1080, 720], 166, 85, [25, 37, 120, 45]),
+  var: sprite("obstacle.var", [214, 22, 357, 696], 62, 120, [5, 4, 52, 112]),
 };
 
 export const PRIORITY_GAME_ASSET_KEYS: GameAssetKey[] = [

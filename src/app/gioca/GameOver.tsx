@@ -1,6 +1,8 @@
 "use client";
 
 import Image from "next/image";
+import { useState, type FormEvent } from "react";
+import type { ArcadeLeaderboardEntry, ArcadeSaveResult } from "@/lib/arcade/types";
 import type { GameSnapshot, GameTeam } from "@/lib/game/types";
 import {
   LEVEL_RULES,
@@ -9,6 +11,7 @@ import {
   type GameLevel,
   type LevelResolution,
 } from "@/lib/game/progression";
+import { submitArcadeRecord } from "./actions";
 
 export default function GameOver({
   team,
@@ -17,6 +20,8 @@ export default function GameOver({
   playedLevel,
   progress,
   resolution,
+  runProof,
+  onLeaderboardUpdate,
   onRetry,
   onReturn,
 }: {
@@ -26,9 +31,15 @@ export default function GameOver({
   playedLevel: GameLevel;
   progress: ClubProgress;
   resolution: LevelResolution | null;
+  runProof: string;
+  onLeaderboardUpdate: (entries: ArcadeLeaderboardEntry[], highlightedId?: string) => void;
   onRetry: () => void;
   onReturn: () => void;
 }) {
+  const [playerName, setPlayerName] = useState("");
+  const [saveResult, setSaveResult] = useState<ArcadeSaveResult | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasSaved, setHasSaved] = useState(false);
   const outcome = resolution ?? resolveLevelOutcome(playedLevel, result.distance);
   const playedRule = LEVEL_RULES[playedLevel];
   const nextRule = LEVEL_RULES[outcome.newLevel];
@@ -38,9 +49,35 @@ export default function GameOver({
       ? "border-rose-300/25 bg-rose-300/[.08] text-rose-200"
       : "border-sky-300/20 bg-sky-300/[.07] text-sky-100";
 
+  async function handleSave(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (isSaving || hasSaved || result.distance < 100) return;
+    const normalizedName = playerName.trim().replace(/\s+/g, " ");
+    if (normalizedName.length < 2 || normalizedName.length > 50) {
+      setSaveResult({ ok: false, message: "Inserisci un nome valido.", fieldError: "Il nome deve contenere da 2 a 50 caratteri." });
+      return;
+    }
+    if (!runProof) {
+      setSaveResult({ ok: false, message: "La classifica non è momentaneamente disponibile. Riprova più tardi." });
+      return;
+    }
+    setIsSaving(true);
+    setSaveResult(null);
+    try {
+      const response = await submitArcadeRecord({ nomeGiocatore: normalizedName, metri: result.distance, proof: runProof });
+      setSaveResult(response);
+      if (response.ok) {
+        setHasSaved(true);
+        if (response.leaderboard) onLeaderboardUpdate(response.leaderboard, response.highlightedId);
+      }
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
   return (
     <div className="absolute inset-0 z-20 flex items-center justify-center overflow-y-auto bg-[#020817]/82 p-3 backdrop-blur-md max-sm:overflow-hidden max-sm:p-2 sm:p-5">
-      <section aria-live="polite" className="my-auto w-full max-w-lg rounded-[1.5rem] border border-white/12 bg-[linear-gradient(145deg,rgba(7,26,56,0.98),rgba(4,17,39,0.98))] p-4 text-center text-white shadow-[0_28px_80px_rgba(0,0,0,0.5)] max-sm:max-h-full max-sm:rounded-xl max-sm:p-2.5 sm:p-6">
+      <section aria-live="polite" className="my-auto max-h-full w-full max-w-lg overflow-y-auto rounded-[1.5rem] border border-white/12 bg-[linear-gradient(145deg,rgba(7,26,56,0.98),rgba(4,17,39,0.98))] p-4 text-center text-white shadow-[0_28px_80px_rgba(0,0,0,0.5)] max-sm:rounded-xl max-sm:p-2.5 sm:p-6">
         <div className="mx-auto flex h-14 w-14 items-center justify-center max-sm:h-9 max-sm:w-9 sm:h-16 sm:w-16">
           <Image src={team.logo} alt={`Stemma ${team.nome}`} width={64} height={64} className="max-h-full max-w-full object-contain drop-shadow-[0_10px_18px_rgba(0,0,0,0.32)]" />
         </div>
@@ -85,6 +122,38 @@ export default function GameOver({
             </div>
           )}
         </div>
+
+        {result.distance >= 100 ? (
+          <form onSubmit={handleSave} className="mt-2.5 rounded-xl border border-amber-300/20 bg-amber-300/[.06] p-2.5 text-left max-sm:mt-1.5 max-sm:p-2">
+            <label htmlFor="arcade-player-name" className="text-[7px] font-black uppercase tracking-[.14em] text-amber-200">Nome del giocatore</label>
+            <div className="mt-1.5 grid gap-1.5 sm:grid-cols-[1fr_auto]">
+              <input
+                id="arcade-player-name"
+                name="nome_giocatore"
+                type="text"
+                required
+                minLength={2}
+                maxLength={50}
+                autoComplete="name"
+                value={playerName}
+                onChange={(event) => setPlayerName(event.target.value)}
+                disabled={isSaving || hasSaved}
+                className="min-h-10 min-w-0 rounded-lg border border-white/15 bg-slate-950/55 px-3 text-sm font-bold text-white outline-none placeholder:text-white/25 focus:border-amber-300 disabled:opacity-60"
+                placeholder="Il tuo nome"
+              />
+              <button type="submit" disabled={isSaving || hasSaved || !runProof} className="min-h-10 rounded-lg bg-amber-300 px-4 text-[8px] font-black uppercase tracking-[.1em] text-blue-950 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-50">
+                {isSaving ? "Salvataggio…" : hasSaved ? "Record salvato" : "Salva nella classifica"}
+              </button>
+            </div>
+            {saveResult && (
+              <p className={`mt-1.5 text-[9px] font-bold ${saveResult.ok ? "text-emerald-200" : "text-rose-200"}`} role="status">
+                {saveResult.message}{saveResult.ok && saveResult.position ? ` Posizione: ${saveResult.position}ª.` : ""}
+              </p>
+            )}
+          </form>
+        ) : (
+          <p className="mt-2.5 rounded-lg border border-white/[.07] bg-white/[.035] px-3 py-2 text-[9px] font-bold text-white/60 max-sm:mt-1.5">Percorri almeno 100 metri per entrare in classifica.</p>
+        )}
 
         <div className="mt-3 grid gap-2 max-sm:mt-1.5 max-sm:gap-1.5 sm:grid-cols-2">
           <button type="button" onClick={onRetry} className="min-h-11 rounded-full bg-amber-300 px-5 text-[9px] font-black uppercase tracking-[0.15em] text-blue-950 transition hover:bg-amber-200 max-sm:min-h-9">Gioca il livello {outcome.newLevel}</button>

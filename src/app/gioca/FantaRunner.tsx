@@ -178,6 +178,7 @@ type Runtime = {
   mixedPatternStreak: number;
   physicalFreePatternStreak: number;
   initialBonusSpawned: boolean;
+  initialBonusKind: EventKind;
   activePowerUps: Partial<Record<PowerUpKind, ActivePowerUp>>;
   powerUpCollectionEffect: { kind: PowerUpKind; until: number } | null;
   powerUpCooldown: number;
@@ -349,6 +350,7 @@ function createRuntime(level: GameLevel = 1): Runtime {
     mixedPatternStreak: 0,
     physicalFreePatternStreak: 0,
     initialBonusSpawned: false,
+    initialBonusKind: pickInitialBonus(),
     activePowerUps: {},
     powerUpCollectionEffect: null,
     powerUpCooldown: 0,
@@ -372,6 +374,14 @@ function createRuntime(level: GameLevel = 1): Runtime {
 
 function createEntityPool(size: number) {
   return Array.from({ length: size }, () => ({} as RunnerEntity));
+}
+
+function pickInitialBonus(random = Math.random): EventKind {
+  const roll = random() * 100;
+  if (roll < 47) return "assist";
+  if (roll < 94) return "cleanSheet";
+  if (roll < 99.5) return "goal";
+  return "hatTrick";
 }
 
 function startRuntimeJump(runtime: Runtime, time: number) {
@@ -1842,7 +1852,7 @@ function spawnNext(runtime: Runtime, speed: number, difficulty: number) {
   }
   const startX = runtime.worldWidth + Math.max(runtime.mobileLayout ? 70 : 40, speed * (runtime.mobileLayout ? 0.14 : 0.08));
   if (!runtime.initialBonusSpawned) {
-    const spawned = pushEvent(runtime, "assist", startX, 0, {
+    const spawned = pushEvent(runtime, runtime.initialBonusKind, startX, 0, {
       pattern: true,
       tight: true,
       motion: "ground",
@@ -1856,7 +1866,7 @@ function spawnNext(runtime: Runtime, speed: number, difficulty: number) {
     return 1.15;
   }
 
-  // Il primo Assist attraversa il campo da solo; poi il motore usa esclusivamente
+  // Il primo bonus attraversa il campo da solo; poi il motore usa esclusivamente
   // pattern dichiarati introSafe fino a 30 m ed earlyGame fino a 70 m.
   if (runtime.distance < 12) return 0.72;
 

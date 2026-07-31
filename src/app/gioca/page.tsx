@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getSocieta } from "@/lib/societa";
 import type { GameTeam } from "@/lib/game/types";
+import { getArcadeLeaderboard } from "@/lib/arcade/server";
 import GameClient from "./GameClient";
 
 export const metadata: Metadata = {
@@ -27,6 +28,7 @@ export default async function GiocaPage({
       accent: getLeagueAccent(team.legaAttuale),
     }))
     .sort((first, second) => first.nome.localeCompare(second.nome, "it"));
+  const initialLeaderboard = await getArcadeLeaderboard(100);
 
   return (
     <main className="relative isolate overflow-hidden bg-[linear-gradient(180deg,#eef3f9_0%,#ffffff_38%,#f8fafc_100%)] text-blue-950">
@@ -68,7 +70,7 @@ export default async function GiocaPage({
           />
         </section>
 
-        <GameClient teams={teams} initialTeamSlug={requestedTeam} />
+        <GameClient teams={teams} initialTeamSlug={requestedTeam} initialLeaderboard={initialLeaderboard} />
       </div>
     </main>
   );

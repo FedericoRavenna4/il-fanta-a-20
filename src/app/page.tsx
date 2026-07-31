@@ -226,7 +226,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="w-full pb-6 sm:pb-11 lg:pb-14">
+      <section className="w-full pb-6 pt-3 sm:pb-11 sm:pt-5 lg:pb-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <p className="section-eyebrow">Archivio degli emblemi</p>
           <h2 className="font-onder-title mt-2 flex flex-col gap-[0.25em] text-blue-950 sm:block"><span>La collezione</span><span className="sm:ml-2">ufficiale</span></h2>
@@ -238,13 +238,13 @@ export default async function Home() {
                 <div key={copy} aria-hidden={copy === 1} className="flex shrink-0 items-center gap-4 pr-4 sm:gap-7 sm:pr-7">
                   {emblemiVetrina.map((emblema) => (
                     <span key={`${copy}-${emblema.id}`} className="flex h-14 w-14 shrink-0 items-center justify-center sm:h-20 sm:w-20">
-                      <Image src={emblema.immagine} alt="" width={86} height={86} className="max-h-full max-w-full object-contain drop-shadow-[0_10px_14px_rgba(2,8,23,.38)]" />
+                      <Image src={emblema.immagine} alt="" width={86} height={86} className="max-h-[94%] max-w-[94%] object-contain saturate-[.94] drop-shadow-[0_3px_5px_rgba(30,64,175,.12)]" />
                     </span>
                   ))}
                 </div>
               ))}
             </div>
-            <Link href="/emblemi" className={`${HOME_CTA_CLASS} home-emblem-cta z-10 whitespace-nowrap`}>Esplora tutti gli emblemi</Link>
+            <Link href="/emblemi" className="home-emblem-cta z-10 whitespace-nowrap rounded-full border border-blue-950/10 bg-white/90 px-6 py-3 text-xs font-black uppercase tracking-[0.16em] text-blue-950 shadow-xl backdrop-blur transition duration-300 hover:border-blue-950/10 hover:bg-white/90 hover:text-blue-950">Esplora tutti gli emblemi</Link>
         </div>
       </section>
 
@@ -317,19 +317,19 @@ export default async function Home() {
       </section>
       </div>
 
-      <section className="mx-auto w-full max-w-5xl px-4 pb-8 pt-2 sm:px-6 sm:pb-14 lg:pb-16">
-        <div className="grid gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
+      <section className="mx-auto w-full max-w-7xl px-4 pb-8 pt-2 sm:px-6 sm:pb-14 lg:pb-16">
+        <div className="grid auto-rows-fr gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
           {[
             { title: "La Sala Giochi", description: "Metti alla prova riflessi e strategia nell’arcade ufficiale del Fanta a 20.", href: "/gioca", cta: "Gioca ora" },
             { title: "Il Regolamento", description: "Scopri tutte le regole che governano la competizione.", href: "/regolamento", cta: "Consulta il regolamento" },
             { title: "La Lista di Attesa", description: "Candidati per entrare nella prossima stagione del Fanta a 20.", href: "/lista-attesa", cta: "Entra nella lista di attesa" },
           ].map((item) => (
-            <article key={item.href} className="relative flex aspect-square flex-col overflow-hidden rounded-[1.6rem] border border-blue-950/10 bg-white/75 p-5 text-blue-950 shadow-lg shadow-blue-950/8 sm:p-6">
+            <article key={item.href} className="relative flex min-h-[12.5rem] flex-col overflow-hidden rounded-[1.6rem] border border-blue-950/10 bg-white/75 p-5 text-blue-950 shadow-lg shadow-blue-950/8 sm:min-h-[13rem] sm:p-6">
               <span className="pointer-events-none absolute -right-16 -top-16 h-52 w-52 rounded-full bg-sky-300/20 blur-3xl" />
-              <div className="relative flex h-full flex-col">
+              <div className="relative flex flex-col">
                 <h2 className="text-xl font-black uppercase leading-tight tracking-tight text-blue-950 sm:text-2xl">{item.title}</h2>
-                <p className="mt-3 line-clamp-2 text-sm font-semibold leading-5 text-slate-500">{item.description}</p>
-                <Link href={item.href} className={`${HOME_CTA_CLASS} mt-auto w-full`}>{item.cta}</Link>
+                <p className="mt-3 min-h-10 line-clamp-2 text-sm font-semibold leading-5 text-slate-500">{item.description}</p>
+                <Link href={item.href} className={`${HOME_CTA_CLASS} mt-5 w-full`}>{item.cta}</Link>
               </div>
             </article>
           ))}

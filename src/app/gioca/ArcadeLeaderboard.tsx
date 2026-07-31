@@ -1,0 +1,91 @@
+"use client";
+
+import Image from "next/image";
+import type { ArcadeLeaderboardEntry } from "@/lib/arcade/types";
+import type { GameTeam } from "@/lib/game/types";
+
+export default function ArcadeLeaderboard({
+  entries,
+  teams,
+  highlightedId,
+}: {
+  entries: ArcadeLeaderboardEntry[];
+  teams: GameTeam[];
+  highlightedId?: string | null;
+}) {
+  const teamsById = new Map(teams.map((team) => [team.id, team]));
+
+  return (
+    <section id="hall-of-fame-arcade" className="mt-10 border-t border-blue-950/10 pt-10 sm:mt-16 sm:pt-14">
+      <p className="section-eyebrow">Classifica ufficiale</p>
+      <h2 className="font-onder-title mt-2 text-blue-950">Hall of Fame Arcade</h2>
+      <p className="mt-3 text-sm font-semibold text-slate-500 sm:text-base">Sono arrivati più lontano di tutti.</p>
+
+      {entries.length === 0 ? (
+        <div className="mt-7 rounded-[1.5rem] border border-blue-950/10 bg-white/75 px-5 py-10 text-center text-sm font-bold text-slate-500 shadow-lg shadow-blue-950/5">
+          La Hall of Fame aspetta il suo primo record.
+        </div>
+      ) : (
+        <>
+          <div className="mt-7 grid items-end gap-3 sm:grid-cols-3 sm:gap-4">
+            {entries.slice(0, 3).map((entry, index) => (
+              <PodiumCard
+                key={entry.id}
+                entry={entry}
+                position={index + 1}
+                team={teamsById.get(entry.societaId)}
+                highlighted={entry.id === highlightedId}
+              />
+            ))}
+          </div>
+
+          <div className="mt-7 overflow-hidden rounded-[1.5rem] border border-blue-950/10 bg-white/80 shadow-xl shadow-blue-950/7">
+            <div className="hidden grid-cols-[4rem_minmax(0,1fr)_7rem_7rem_9rem] items-center gap-2 border-b border-blue-950/10 bg-blue-950 px-5 py-3 text-[9px] font-black uppercase tracking-[.16em] text-white/55 sm:grid">
+              <span>Posizione</span><span>Giocatore</span><span className="text-center">Società</span><span className="text-center">Livello</span><span className="text-right">Metri</span>
+            </div>
+            <ol>
+              {entries.map((entry, index) => {
+                const team = teamsById.get(entry.societaId);
+                const highlighted = entry.id === highlightedId;
+                return (
+                  <li key={entry.id} className={`grid grid-cols-[2rem_minmax(0,1fr)_2.6rem_auto] items-center gap-2 border-b border-blue-950/[.07] px-3 py-3 transition last:border-b-0 sm:grid-cols-[4rem_minmax(0,1fr)_7rem_7rem_9rem] sm:px-5 ${highlighted ? "bg-amber-100 ring-2 ring-inset ring-amber-300" : ""}`}>
+                    <span className="text-sm font-black tabular-nums text-blue-950/45">{index + 1}</span>
+                    <span className="min-w-0 truncate text-sm font-black text-blue-950 sm:text-base">{entry.nomeGiocatore}</span>
+                    <span className="flex h-8 items-center justify-center sm:h-10">
+                      {team && <Image src={team.logo} alt={`Stemma ${team.nome}`} width={42} height={42} unoptimized className="max-h-full max-w-full object-contain" />}
+                    </span>
+                    <span className="col-start-2 row-start-2 w-fit rounded-full bg-slate-100 px-2 py-1 text-[8px] font-black uppercase tracking-[.08em] text-slate-500 sm:col-start-4 sm:row-start-1 sm:justify-self-center">{levelLabel(entry.livello)}</span>
+                    <strong className="col-start-4 row-span-2 row-start-1 text-right text-base font-black tabular-nums text-blue-700 sm:col-start-5 sm:row-span-1 sm:text-xl">{entry.metri.toLocaleString("it-IT")} m</strong>
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
+        </>
+      )}
+    </section>
+  );
+}
+
+function PodiumCard({ entry, position, team, highlighted }: { entry: ArcadeLeaderboardEntry; position: number; team?: GameTeam; highlighted: boolean }) {
+  const tone = position === 1
+    ? "border-amber-300/60 bg-[linear-gradient(145deg,#fff8dc,#e8bd55)] shadow-amber-300/20 sm:min-h-72"
+    : position === 2
+      ? "border-slate-300/70 bg-[linear-gradient(145deg,#ffffff,#cbd5e1)] shadow-slate-400/15 sm:min-h-64"
+      : "border-orange-300/60 bg-[linear-gradient(145deg,#fff4e8,#c98249)] shadow-orange-400/15 sm:min-h-60";
+  return (
+    <article className={`relative flex min-h-44 flex-col items-center justify-center rounded-[1.5rem] border p-5 text-center shadow-xl ${tone} ${highlighted ? "ring-2 ring-blue-700 ring-offset-2" : ""}`}>
+      <span className="absolute left-4 top-3 text-xs font-black uppercase tracking-[.15em] text-blue-950/45">#{position}</span>
+      <div className={`flex items-center justify-center ${position === 1 ? "h-20 w-20" : "h-16 w-16"}`}>
+        {team && <Image src={team.logo} alt={`Stemma ${team.nome}`} width={82} height={82} unoptimized className="max-h-full max-w-full object-contain drop-shadow-[0_8px_12px_rgba(15,23,42,.18)]" />}
+      </div>
+      <h3 className="mt-3 line-clamp-2 text-base font-black text-blue-950 sm:text-lg">{entry.nomeGiocatore}</h3>
+      <span className="mt-2 rounded-full bg-blue-950/8 px-2.5 py-1 text-[8px] font-black uppercase tracking-[.1em] text-blue-950/55">{levelLabel(entry.livello)}</span>
+      <strong className={`mt-2 font-black tabular-nums text-blue-950 ${position === 1 ? "text-3xl" : "text-2xl"}`}>{entry.metri.toLocaleString("it-IT")} m</strong>
+    </article>
+  );
+}
+
+function levelLabel(level: number) {
+  return `Liv. ${level === 3 ? "III" : level === 2 ? "II" : "I"}`;
+}

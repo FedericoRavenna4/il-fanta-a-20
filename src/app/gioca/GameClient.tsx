@@ -14,6 +14,7 @@ import {
   pickLoadingGuide,
 } from "@/lib/game/content";
 import type { GameSnapshot, GameStatus, GameTeam } from "@/lib/game/types";
+import type { ArcadeLeaderboardEntry } from "@/lib/arcade/types";
 import {
   readPersonalDistanceRecord,
   writePersonalDistanceRecord,
@@ -37,6 +38,8 @@ import GameOver from "./GameOver";
 import GameOverlayLayer from "./GameOverlayLayer";
 import TeamSelector from "./TeamSelector";
 import VarCheck from "./VarCheck";
+import ArcadeLeaderboard from "./ArcadeLeaderboard";
+import { beginArcadeRun } from "./actions";
 
 type PendingVarReview = {
   result: GameSnapshot;
@@ -76,9 +79,11 @@ function createEmptySnapshot(best = 0, personalRecord = 0): GameSnapshot {
 export default function GameClient({
   teams,
   initialTeamSlug,
+  initialLeaderboard,
 }: {
   teams: GameTeam[];
   initialTeamSlug?: string;
+  initialLeaderboard: ArcadeLeaderboardEntry[];
 }) {
   const [selectorVersion, setSelectorVersion] = useState(0);
   const [team, setTeam] = useState<GameTeam | null>(null);
@@ -99,10 +104,14 @@ export default function GameClient({
   const [activeLevel, setActiveLevel] = useState<GameLevel>(1);
   const [finalResolution, setFinalResolution] = useState<LevelResolution | null>(null);
   const [pendingVarReview, setPendingVarReview] = useState<PendingVarReview | null>(null);
+  const [runProof, setRunProof] = useState("");
+  const [leaderboard, setLeaderboard] = useState(initialLeaderboard);
+  const [highlightedRecordId, setHighlightedRecordId] = useState<string | null>(null);
   const dialogRef = useRef<HTMLElement>(null);
   const selectionRootRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const startTransitionTimerRef = useRef<number | null>(null);
+  const highlightTimerRef = useRef<number | null>(null);
   const modalOpen = Boolean(team) && status !== "selecting";
 
   useEffect(() => {
@@ -137,12 +146,16 @@ export default function GameClient({
   }, []);
 
   const startGame = useCallback(() => {
-    if (!assetsReady) return;
+    if (!assetsReady || !team) return;
     if (startTransitionTimerRef.current !== null) {
       window.clearTimeout(startTransitionTimerRef.current);
     }
     setIsNewRecord(false);
     setFinalResult(null);
+    setRunProof("");
+    void beginArcadeRun(team.id, activeLevel).then((result) => {
+      if (result.ok && result.proof) setRunProof(result.proof);
+    });
     setSnapshot(createEmptySnapshot(best, personalRecord));
     setStatus("starting");
     const transitionDuration = window.matchMedia("(prefers-reduced-motion: reduce)").matches
@@ -152,7 +165,19 @@ export default function GameClient({
       startTransitionTimerRef.current = null;
       setStatus("running");
     }, transitionDuration);
-  }, [assetsReady, best, personalRecord]);
+  }, [activeLevel, assetsReady, best, personalRecord, team]);
+
+  const updateLeaderboard = useCallback((entries: ArcadeLeaderboardEntry[], highlightedId?: string) => {
+    setLeaderboard(entries);
+    setHighlightedRecordId(highlightedId ?? null);
+    if (highlightTimerRef.current !== null) window.clearTimeout(highlightTimerRef.current);
+    if (highlightedId) {
+      highlightTimerRef.current = window.setTimeout(() => {
+        setHighlightedRecordId(null);
+        highlightTimerRef.current = null;
+      }, 30000);
+    }
+  }, []);
 
   const commitGameOver = useCallback((result: GameSnapshot, resolutionOverride?: LevelResolution) => {
     if (!team) return;
@@ -256,6 +281,7 @@ export default function GameClient({
     if (startTransitionTimerRef.current !== null) {
       window.clearTimeout(startTransitionTimerRef.current);
     }
+    if (highlightTimerRef.current !== null) window.clearTimeout(highlightTimerRef.current);
   }, []);
 
   useEffect(() => {
@@ -430,6 +456,8 @@ export default function GameClient({
                   playedLevel={activeLevel}
                   progress={clubProgress}
                   resolution={finalResolution}
+                  runProof={runProof}
+                  onLeaderboardUpdate={updateLeaderboard}
                   onRetry={prepareNextRun}
                   onReturn={() => returnToGameHome(false)}
                 />
@@ -541,6 +569,7 @@ export default function GameClient({
           keyboardEnabled={!modalOpen}
           onSelect={selectTeam}
         />
+        <ArcadeLeaderboard entries={leaderboard} teams={teams} highlightedId={highlightedRecordId} />
       </div>
       {gameModal}
     </>
