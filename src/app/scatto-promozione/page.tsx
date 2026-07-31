@@ -36,7 +36,7 @@ export function ScattoPromozioneContent({ embedded = false }: { embedded?: boole
           ["15", "partecipanti"],
           ["9", "giornate"],
           ["1", "promozione"],
-          ["F1", "sistema punti"],
+          ["F1", "modalità"],
         ].map(([value, label]) => (
           <div
             key={label}

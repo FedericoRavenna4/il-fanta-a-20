@@ -68,7 +68,7 @@ export default function EmblemiCatalogo({
           ...nascosti
             .filter((emblema) => emblema.categoria === gruppo)
             .map((emblema): ElementoCatalogo => ({ nascosto: true, emblema })),
-        ].sort((a, b) => a.emblema.id - b.emblema.id),
+        ],
       }))
       .filter((gruppo) => gruppo.emblemi.length > 0),
     [emblemi, filtro, nascosti]
@@ -198,7 +198,10 @@ export default function EmblemiCatalogo({
               <span className={`absolute h-20 w-20 rounded-full opacity-55 blur-2xl ${PALETTE_EMBLEMI[nascostoSelezionato.categoria].glow}`} />
               <Image src={nascostoSelezionato.immagine} alt="" width={112} height={112} className="relative max-h-24 max-w-24 object-contain brightness-0 contrast-[2] drop-shadow-[0_12px_16px_rgba(15,23,42,.28)]" />
             </div>
-            <h2 id="emblema-nascosto-mobile" className="mt-5 text-lg font-black uppercase tracking-[0.08em] text-blue-950">
+            <p className={`mt-4 text-[9px] font-black uppercase tracking-[0.16em] ${PALETTE_EMBLEMI[nascostoSelezionato.categoria].labelText}`}>
+              {nascostoSelezionato.categoria}
+            </p>
+            <h2 id="emblema-nascosto-mobile" className="mt-1 text-lg font-black uppercase tracking-[0.08em] text-blue-950">
               Emblema nascosto
             </h2>
             <p className="mt-3 text-sm font-semibold leading-6 text-slate-500">
@@ -291,7 +294,7 @@ function EmblemaNascosto({ emblema, onSelect }: { emblema: EmblemaNascostoCatalo
         className="relative max-h-[4.4rem] max-w-[4.4rem] object-contain brightness-0 contrast-[2] drop-shadow-[0_12px_16px_rgba(15,23,42,.28)] sm:max-h-[5.5rem] sm:max-w-[5.5rem]"
       />
       <p className={`mt-3 hidden text-[8px] font-black uppercase tracking-[0.1em] sm:block sm:text-[9px] ${palette.labelText}`}>{emblema.categoria}</p>
-      <p className="mt-1 hidden text-[8px] font-black uppercase tracking-[0.08em] text-slate-500 sm:block sm:text-[10px] sm:tracking-[0.12em]">Emblema nascosto</p>
+      <p className="mt-1 text-[8px] font-black uppercase leading-tight tracking-[0.05em] text-slate-500 sm:text-[10px] sm:tracking-[0.12em]">Emblema nascosto</p>
     </article>
   );
 }
@@ -346,7 +349,7 @@ function EmblemaCard({
         </Link>
       ) : immagine}
 
-      <h3 className="hidden items-start justify-center break-words text-[10px] font-black uppercase leading-[1.2] tracking-[0.025em] text-blue-950 sm:flex sm:text-[11px]">
+      <h3 className="flex items-start justify-center break-words text-[8px] font-black uppercase leading-[1.2] tracking-[0.02em] text-blue-950 sm:text-[11px] sm:tracking-[0.025em]">
         {emblema.nome}
       </h3>
       <p className={`hidden break-words text-[8px] font-semibold leading-[1.35] text-slate-500 sm:block sm:text-[10px] sm:leading-[1.4] ${difendibile ? "" : "line-clamp-4"}`} title={emblema.descrizione ?? ""}>

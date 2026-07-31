@@ -108,12 +108,6 @@ function SectionHeading({
   );
 }
 
-const STORIE_HOME: Record<number, string> = {
-  1: "Un solo anno per conquistare Campionato, Champions League e Coppa Fanta a 20: il primo Triplete della storia.",
-  2: "Presente dal giorno zero, nel 2025/26 ha firmato la consacrazione vincendo Campionato e Champions League.",
-  42: "Al debutto nel 2025/26 ha sovvertito ogni pronostico, conquistando il trofeo più prestigioso dell’ecosistema.",
-};
-
 function storiaBreve(descrizione: string | undefined) {
   if (!descrizione) return "";
   const primaFrase = descrizione.match(/^.*?[.!?](?:\s|$)/)?.[0]?.trim();
@@ -163,23 +157,23 @@ export default async function Home() {
     )
     .slice(0, 6) ?? [];
   const storiaPerTeam = (id: number) =>
-    STORIE_HOME[id] ?? storiaBreve(storie.find((storia) => storia.squadraId === id)?.descrizione);
+    storiaBreve(storie.find((storia) => storia.squadraId === id)?.descrizione);
   const societaCampioni = [
     {
       team: societa.find((item) => item.id === primaRanking?.squadraId),
-      label: "Prima del Ranking",
+      label: "Ranking Leader",
       tone: "text-sky-300",
       emblemi: [],
     },
     {
       team: teamCollezionista,
-      label: "Collezionista Supremo",
+      label: "Il Collezionista",
       tone: "text-amber-300",
       emblemi: emblemiCollezionista,
     },
     {
       team: societa.find((item) => item.id === ultimaCoppa?.squadraId),
-      label: "Ultima vincitrice della Coppa Fanta a 20",
+      label: "Campione in carica · Coppa Fanta a 20",
       tone: "text-emerald-300",
       emblemi: [],
     },
@@ -209,7 +203,7 @@ export default async function Home() {
         <div className="relative grid grid-cols-1 items-center gap-y-4 sm:gap-12">
           <div className="contents sm:block">
             <p className="section-eyebrow order-1 col-span-2">Il portale ufficiale</p>
-            <h1 className="font-onder-hero order-2 mt-0 flex w-fit max-w-full flex-col items-start gap-[0.3em] text-[1.1rem] text-blue-950 sm:mt-6 sm:text-[clamp(1.2rem,3.8vw,3rem)]">
+            <h1 className="font-onder-hero order-2 mt-0 flex w-fit max-w-full flex-col items-start gap-[0.3em] text-[1.05rem] text-blue-950 sm:mt-6 sm:text-[clamp(1.2rem,3.8vw,3rem)]">
               <span className="block whitespace-nowrap">NON E&apos; SOLO</span>
               <span className="block whitespace-nowrap">FANTACALCIO.</span>
               <span className="block whitespace-nowrap text-blue-700">E&apos; IL FANTA A 20</span>
@@ -236,10 +230,10 @@ export default async function Home() {
         </Link>
         <div className="grid gap-3 sm:gap-5 lg:grid-cols-3">
           {societaCampioni.map(({ team, label, tone, storia, emblemi }) => (
-            <Link key={team.id} href={`/societa/${team.slug}`} className="group relative grid h-full grid-rows-[auto_auto_1fr_auto] gap-y-2.5 overflow-hidden rounded-[1.75rem] bg-blue-950 p-3.5 text-white shadow-xl shadow-blue-950/10 transition duration-300 hover:-translate-y-1 hover:shadow-2xl sm:gap-y-3 sm:p-6 lg:grid-rows-[2rem_9rem_1fr_auto] lg:gap-y-0">
+            <Link key={team.id} href={`/societa/${team.slug}`} className="group relative grid h-full grid-rows-[auto_auto_1fr_auto] gap-y-2 overflow-hidden rounded-[1.6rem] bg-blue-950 p-3 text-white shadow-xl shadow-blue-950/10 transition duration-300 hover:-translate-y-1 hover:shadow-2xl sm:gap-y-3 sm:rounded-[1.75rem] sm:p-5 lg:grid-rows-[2rem_8.5rem_1fr_auto] lg:gap-y-0">
               <div className="pointer-events-none absolute right-0 top-0 h-52 w-52 bg-sky-400/10 blur-3xl" />
               <p className={`relative self-start text-[10px] font-black uppercase leading-5 tracking-[0.22em] ${tone}`}>{label}</p>
-              <div className="relative flex min-w-0 flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
+              <div className="relative grid min-w-0 grid-cols-[minmax(0,1fr)_4.5rem] items-start gap-2 sm:flex sm:items-center sm:justify-between sm:gap-4">
                 <div className="min-w-0">
                   <h3 className="break-words text-lg font-black uppercase leading-tight sm:max-w-48 sm:text-2xl">{team.nome}</h3>
                   <p className="mt-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-white/45 sm:mt-3 sm:text-xs">{team.legaAttuale}</p>
@@ -254,7 +248,7 @@ export default async function Home() {
                     </div>
                   )}
                 </div>
-                <div className="flex h-18 w-18 shrink-0 self-center items-center justify-center p-1 sm:h-28 sm:w-28 sm:p-2"><TeamLogo team={team} size={108} /></div>
+                <div className="flex h-16 w-16 shrink-0 items-center justify-center justify-self-end p-1 sm:h-24 sm:w-24 sm:self-center sm:p-2"><TeamLogo team={team} size={100} /></div>
               </div>
               <p className="relative border-t border-white/10 pt-3 text-xs font-semibold leading-5 text-white/60 sm:pt-5 sm:text-sm sm:leading-6">{storia}</p>
               <p className="relative pt-3 text-[9px] font-black uppercase tracking-[0.14em] text-white/85 sm:pt-6 sm:text-[10px] sm:tracking-[0.17em]">Visualizza la scheda completa <span className="ml-1 inline-block transition-transform group-hover:translate-x-1">→</span></p>
@@ -297,14 +291,14 @@ export default async function Home() {
           <div className="pointer-events-none absolute -right-24 -top-28 h-72 w-72 rounded-full bg-sky-300/20 blur-[85px]" />
           <div className="relative min-w-0">
             <p className="section-eyebrow">Archivio degli emblemi</p>
-            <h2 className="font-onder-title mt-2 flex flex-col gap-[0.18em] text-blue-950 sm:block"><span className="block sm:inline">La collezione</span><span className="block sm:ml-2 sm:inline">ufficiale</span></h2>
+            <h2 className="font-onder-title mt-2 flex flex-col gap-[0.28em] text-blue-950 sm:block"><span className="block sm:inline">La collezione</span><span className="block sm:ml-2 sm:inline">ufficiale</span></h2>
             <p className="mt-2 max-w-xl text-xs font-semibold leading-5 text-slate-500 sm:text-sm sm:leading-6">Scopri rarità, traguardi e record da sbloccare nel mondo Fanta a 20</p>
             <span className="mt-4 hidden min-h-11 items-center rounded-xl border border-blue-950/15 bg-white/55 px-4 text-[9px] font-black uppercase tracking-[0.13em] text-blue-950 shadow-sm backdrop-blur transition duration-300 group-hover:border-blue-950/30 group-hover:bg-white sm:inline-flex sm:px-5 sm:text-[10px]">
               Visualizza tutta la collezione ufficiale →
             </span>
           </div>
 
-          <div className="relative mt-4 grid grid-cols-5 items-center gap-2 border-t border-blue-950/10 pt-4 sm:mt-0 sm:gap-4 sm:border-l sm:border-t-0 sm:pl-8 sm:pt-0 lg:mt-10 lg:border-l-0 lg:pl-0 lg:pt-4">
+          <div className="relative mt-4 grid grid-cols-5 items-center gap-2 border-t border-blue-950/10 pt-4 sm:mt-0 sm:gap-4 sm:border-l sm:border-t-0 sm:pl-8 sm:pt-0 lg:translate-y-6 lg:border-l-0 lg:pl-0 lg:pt-4">
             {emblemiVetrina.map((emblema) => {
               const palette = PALETTE_EMBLEMI[emblema.categoria];
               return (
@@ -332,11 +326,11 @@ export default async function Home() {
               <p className="relative text-[10px] font-black uppercase tracking-[0.2em] text-sky-300 sm:text-xs sm:tracking-[0.24em]">Il podio del ranking</p>
               <div className="relative mt-3 grid grid-cols-3 items-end gap-1.5 sm:mt-8 sm:gap-3">
                 {podioRanking.map(({ team, ranking: rankingItem }, index) => (
-                  <Link key={team.id} href={`/societa/${team.slug}`} className={`group flex flex-col items-center rounded-xl border border-white/10 bg-white/[0.04] px-1.5 py-2 text-center transition hover:-translate-y-1 hover:bg-white/[0.08] sm:rounded-[1.5rem] sm:p-5 ${index === 0 ? "pb-3 sm:min-h-64 sm:justify-center" : "sm:min-h-56 sm:justify-center"}`}>
+                  <Link key={team.id} href={`/societa/${team.slug}`} className={`group flex flex-col items-center rounded-xl border px-1.5 py-2 text-center transition hover:-translate-y-1 sm:rounded-[1.5rem] sm:p-5 ${index === 0 ? "min-h-36 justify-center border-amber-300/55 bg-[linear-gradient(145deg,rgba(202,146,32,.34),rgba(255,255,255,.06))] shadow-[0_12px_30px_rgba(202,146,32,.14)] sm:min-h-64" : index === 1 ? "min-h-28 justify-center border-slate-300/40 bg-[linear-gradient(145deg,rgba(203,213,225,.2),rgba(255,255,255,.035))] sm:min-h-56" : "min-h-24 justify-center border-orange-400/35 bg-[linear-gradient(145deg,rgba(180,92,35,.2),rgba(255,255,255,.03))] sm:min-h-52"}`}>
                     <div className={`${index === 0 ? "h-12 w-12 sm:h-28 sm:w-28" : "h-10 w-10 sm:h-24 sm:w-24"} flex items-center justify-center p-0.5 sm:p-1`}><TeamLogo team={team} size={index === 0 ? 105 : 90} /></div>
                     <p className="mt-1 text-[8px] font-black uppercase tracking-[0.1em] text-white/45 sm:mt-4 sm:text-[10px] sm:tracking-[0.18em]">{rankingItem.posizione}° posto</p>
                     <h3 className="mt-1 line-clamp-2 text-[10px] font-black uppercase leading-tight sm:mt-2 sm:text-sm">{team.nome}</h3>
-                    <p className="mt-1 text-[9px] font-bold text-sky-300 sm:mt-2 sm:text-xs">{rankingItem.puntiRanking.toLocaleString("it-IT")} pt</p>
+                    <p className={`mt-1 text-[9px] font-bold sm:mt-2 sm:text-xs ${index === 0 ? "text-amber-300" : index === 1 ? "text-slate-200" : "text-orange-300"}`}>{rankingItem.puntiRanking.toLocaleString("it-IT")} pt</p>
                   </Link>
                 ))}
               </div>
@@ -371,12 +365,10 @@ export default async function Home() {
             <div className="hidden h-36 md:block" aria-hidden="true" />
           </div>
 
-        <div className="relative overflow-hidden rounded-[2.5rem] bg-[linear-gradient(145deg,#071f45,#102f64)] p-4 text-white shadow-2xl shadow-blue-950/20 max-sm:rounded-[1.5rem] max-sm:p-3 sm:p-10 lg:p-12">
-          <div className="pointer-events-none absolute -right-20 -top-28 h-96 w-96 bg-sky-400/10 blur-[100px]" />
-          <div className="pointer-events-none absolute -bottom-32 left-1/4 h-80 w-80 bg-amber-300/10 blur-[110px]" />
-          <div className="relative grid gap-4 max-sm:gap-2 md:grid-cols-2">
+        <div>
+          <div className="grid gap-4 max-sm:gap-2 md:grid-cols-2">
             {competizioni.map((item) => (
-              <Link key={item.nome} href={item.href} className="group relative min-h-0 overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.055] p-4 backdrop-blur-sm transition duration-300 hover:-translate-y-1 hover:border-white/25 hover:bg-white/[0.085] max-sm:rounded-[1.15rem] max-sm:p-3 sm:min-h-80 sm:p-7">
+              <Link key={item.nome} href={item.href} className="group relative min-h-0 overflow-hidden rounded-[2rem] border border-white/10 bg-blue-950 p-4 text-white shadow-xl shadow-blue-950/10 transition duration-300 hover:-translate-y-1 hover:border-white/25 hover:bg-blue-900 max-sm:rounded-[1.15rem] max-sm:p-3 sm:min-h-80 sm:p-7">
                 <div className="grid h-full min-h-0 grid-cols-1 items-stretch gap-3 max-sm:block sm:min-h-64 sm:grid-cols-[1fr_230px] sm:gap-4">
                   <div className="relative z-10 grid h-full grid-rows-[auto_auto_auto_auto] sm:grid-rows-[1.5rem_4.5rem_1fr_auto]">
                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-300">{item.nota}</p>
@@ -398,7 +390,7 @@ export default async function Home() {
           <div className="absolute right-0 top-1/2 h-80 w-80 -translate-y-1/2 rounded-full bg-sky-400/15 blur-3xl" />
           <div className="relative flex flex-col gap-9 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-3xl"><p className="section-eyebrow">Le regole del gioco</p><h2 className="font-onder-title mt-2 text-3xl uppercase sm:mt-3 sm:text-5xl">Il regolamento</h2><p className="mt-3 text-sm font-semibold leading-5 text-slate-500 sm:mt-5 sm:text-lg sm:leading-7">Ogni grande competizione vive di regole all’altezza delle sue ambizioni. Scopri il sistema che governa aste, rose, mercato e tornei e rende ogni scelta decisiva.</p></div>
-            <span className="relative inline-flex w-fit shrink-0 items-center overflow-hidden rounded-full border border-blue-950/15 bg-white/60 px-6 py-3 text-xs font-black uppercase tracking-[0.16em] shadow-sm transition duration-300 group-hover:border-blue-950/30 group-hover:bg-white max-sm:mx-auto"><span className="relative">Consulta il regolamento</span></span>
+            <span className="relative inline-flex min-h-12 w-full shrink-0 items-center justify-center overflow-hidden rounded-full border border-amber-300 bg-amber-300 px-6 text-center text-[10px] font-black uppercase tracking-[0.15em] text-blue-950 shadow-[0_14px_34px_rgba(245,184,45,.22)] transition duration-300 group-hover:border-blue-950 group-hover:bg-blue-950 group-hover:text-white max-sm:mx-auto sm:w-[17rem]"><span className="relative">Consulta il regolamento</span></span>
           </div>
         </Link>
       </section>
@@ -414,7 +406,7 @@ export default async function Home() {
               </p>
             </div>
             <div className="flex items-center justify-center lg:justify-end">
-              <Link href="/lista-attesa" className="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-amber-300 px-6 text-center text-[10px] font-black uppercase tracking-[.15em] text-blue-950 shadow-[0_14px_34px_rgba(245,184,45,.26)] transition hover:-translate-y-0.5 hover:bg-amber-200 sm:w-auto">
+              <Link href="/lista-attesa" className="inline-flex min-h-12 w-full items-center justify-center rounded-full border border-amber-300 bg-amber-300 px-6 text-center text-[10px] font-black uppercase tracking-[.15em] text-blue-950 shadow-[0_14px_34px_rgba(245,184,45,.22)] transition duration-300 hover:-translate-y-0.5 hover:border-blue-950 hover:bg-blue-950 hover:text-white sm:w-[17rem]">
                 Entra nella lista d’attesa
               </Link>
             </div>
