@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import PageHeader from "../components/PageHeader";
 import { PRIVACY_CONTACTS } from "@/lib/privacy";
+import { createPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Informativa Privacy | Il Fanta a 20",
+export const metadata: Metadata = createPageMetadata({
+  title: "Informativa Privacy",
   description: "Informativa sul trattamento dei dati raccolti attraverso la Lista di attesa del Fanta a 20.",
-};
+  path: "/privacy",
+});
 
 const sections = [
   {

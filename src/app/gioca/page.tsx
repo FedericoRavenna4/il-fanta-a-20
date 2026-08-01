@@ -4,11 +4,13 @@ import type { GameTeam } from "@/lib/game/types";
 import { getArcadeLeaderboard } from "@/lib/arcade/server";
 import ArcadeTopThree from "./ArcadeTopThree";
 import GameClient from "./GameClient";
+import { createPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Sala Giochi | Il Fanta a 20",
+export const metadata: Metadata = createPageMetadata({
+  title: "Sala Giochi",
   description: "Entra nella Sala Giochi ufficiale del Fanta a 20 e porta la tua società in corsa.",
-};
+  path: "/gioca",
+});
 
 export default async function GiocaPage({
   searchParams,

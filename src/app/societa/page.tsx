@@ -2,6 +2,13 @@ import SocietaClient from "./SocietaClient";
 import { getSocieta } from "@/lib/societa";
 import PageHeader from "../components/PageHeader";
 import Image from "next/image";
+import { createPageMetadata } from "@/lib/seo";
+
+export const metadata = createPageMetadata({
+  title: "Società",
+  description: "Consulta le 100 società del Fanta a 20, con identità, protagonisti e storie ufficiali.",
+  path: "/societa",
+});
 
 export default function SocietaPage() {
   const societa = getSocieta();

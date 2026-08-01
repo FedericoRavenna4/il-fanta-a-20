@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import WaitlistForm from "./WaitlistForm";
+import { createPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Lista d’attesa | Il Fanta a 20",
+export const metadata: Metadata = createPageMetadata({
+  title: "Lista d’attesa",
   description: "Invia la tua candidatura ed entra nella lista d’attesa ufficiale del Fanta a 20.",
-};
+  path: "/lista-attesa",
+});
 
 export default function WaitlistPage() {
   return (

@@ -3,11 +3,13 @@ import { getCatalogoEmblemi, getEmblemiSocieta } from "@/lib/emblemi";
 import { getSocieta } from "@/lib/societa";
 import { isEmblemaNascosto } from "@/lib/emblemi-ui";
 import EmblemiCatalogo from "./EmblemiCatalogo";
+import { createPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Collezione ufficiale | Il Fanta a 20",
-  description: "Scopri rarità, traguardi e record da sbloccare nel mondo Fanta a 20",
-};
+export const metadata: Metadata = createPageMetadata({
+  title: "Collezione ufficiale",
+  description: "Scopri rarità, traguardi e record da sbloccare nel mondo del Fanta a 20.",
+  path: "/emblemi",
+});
 
 export default function EmblemiPage() {
   const catalogo = getCatalogoEmblemi();

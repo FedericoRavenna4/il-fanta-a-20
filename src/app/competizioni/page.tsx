@@ -1,9 +1,16 @@
 import Image from "next/image";
 import Link from "next/link";
+import { createPageMetadata } from "@/lib/seo";
 import PageHeader from "../components/PageHeader";
 import { CampionatiContent } from "../campionati/page";
 import { CoppeContent } from "../coppe/page";
 import { ScattoPromozioneContent } from "../scatto-promozione/page";
+
+export const metadata = createPageMetadata({
+  title: "Competizioni",
+  description: "Scopri campionati, coppe e Scatto Promozione del Fanta a 20.",
+  path: "/competizioni",
+});
 
 const percorsi = [
   {

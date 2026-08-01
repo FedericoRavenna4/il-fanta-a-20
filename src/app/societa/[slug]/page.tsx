@@ -12,6 +12,24 @@ import StoriaSocieta from "./StoriaSocieta";
 import { getEmblemiSocieta } from "@/lib/emblemi";
 import EmblemiSocieta from "./EmblemiSocieta";
 import PalmaresSocieta from "./PalmaresSocieta";
+import type { Metadata } from "next";
+import { createPageMetadata } from "@/lib/seo";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const team = getSocieta().find((item) => item.slug === slug);
+
+  if (!team) return {};
+  return createPageMetadata({
+    title: team.nome,
+    description: `Scopri la scheda ufficiale di ${team.nome}: storia, rosa, palmarès, risultati ed emblemi nel Fanta a 20.`,
+    path: `/societa/${team.slug}`,
+  });
+}
 
 function getLegaGradient(lega: string) {
   if (lega === "Serie A") return "from-sky-500 via-sky-600 to-blue-900";

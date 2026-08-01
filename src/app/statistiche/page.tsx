@@ -1,9 +1,16 @@
 import Image from "next/image";
 import Link from "next/link";
+import { createPageMetadata } from "@/lib/seo";
 import PageHeader from "../components/PageHeader";
 import RankingSmart from "../ranking/RankingSmart";
 import { HallOfFameContent } from "../hall-of-fame/page";
 import { getRankingRows } from "@/lib/rankingRows";
+
+export const metadata = createPageMetadata({
+  title: "Statistiche",
+  description: "Ranking storico, Hall of Fame, record e protagonisti ufficiali del Fanta a 20.",
+  path: "/statistiche",
+});
 
 const percorsi = [
   {
