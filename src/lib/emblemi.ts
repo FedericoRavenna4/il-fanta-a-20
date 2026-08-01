@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { getSocieta } from "./societa";
 
 export const CATEGORIE_EMBLEMA = [
   "Base",
@@ -181,6 +182,7 @@ export function getEmblemiSocieta(): EmblemiSocieta[] {
   const mappaColonne = intestazioniEmblemi.map((header, index) =>
     trovaEmblemaDaIntestazione(header, index, catalogo)
   );
+  const newEntryIds = new Set(getSocieta().filter((team) => team.badgeNewEntry).map((team) => team.id));
 
   societaCache = lines.slice(1).map((line) => {
     const values = parseCsvLine(line);
@@ -197,7 +199,7 @@ export function getEmblemiSocieta(): EmblemiSocieta[] {
     return {
       nomeSocieta: values[0] ?? "",
       squadraId: Number(values[1]),
-      emblemi,
+      emblemi: newEntryIds.has(Number(values[1])) ? [] : emblemi,
     };
   }).filter((societa) => Number.isFinite(societa.squadraId));
 

@@ -164,9 +164,8 @@ export default function EmblemiCatalogo({
             </p>
             {selezionato.tipo === "Difendibile" && (
               <div className="mt-4 border-t border-violet-200 pt-3">
-                <p className="text-[9px] font-black uppercase tracking-[0.12em] text-slate-400">Record attuale</p>
-                <p className="mt-1 text-base font-black text-violet-700">
-                  {!selezionato.record?.trim() || selezionato.record.toUpperCase() === "ND" ? "N/D" : selezionato.record}
+                <p className="text-base font-black tracking-[.04em] text-violet-700">
+                  RECORD: {!selezionato.record?.trim() || selezionato.record.toUpperCase() === "ND" ? "N/D" : selezionato.record}
                 </p>
               </div>
             )}
@@ -357,8 +356,7 @@ function EmblemaCard({
       </p>
       {difendibile && (
         <div className="mt-2 hidden border-t border-violet-200/70 pt-2 text-left sm:block">
-          <p className="text-[7px] font-black uppercase tracking-[0.1em] text-slate-400 sm:text-[8px]">Record attuale:</p>
-          <p className="mt-0.5 text-[11px] font-black text-violet-700 sm:text-sm">{valoreRecord}</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.08em] text-violet-700 sm:text-xs">RECORD: {valoreRecord}</p>
         </div>
       )}
     </article>

@@ -158,7 +158,7 @@ export default async function Home() {
       team: teamCollezionista,
       label: "Il Collezionista",
       tone: "text-amber-300",
-      descrizione: "In appena due stagioni conquista uno storico triplete e costruisce una delle collezioni di emblemi più prestigiose.",
+      descrizione: "In appena due stagioni conquista uno storico triplete e costruisce la collezione di emblemi più prestigiosa.",
     },
     {
       team: societa.find((item) => item.id === ultimaCoppa?.squadraId),
@@ -189,7 +189,7 @@ export default async function Home() {
             </h1>
             <p className="order-4 col-span-2 mt-0 max-w-2xl border-l-2 border-amber-400 pl-3 text-sm font-semibold leading-6 text-slate-600 sm:mt-8 sm:pl-6 sm:text-lg sm:leading-8">
               Venti partecipanti per lega, nessun giocatore doppione: ogni rosa è davvero unica. Nato nel 2023 come un gioco tra amici, oggi è un ecosistema di cinque leghe e cento società, con promozioni, retrocessioni, coppe e una memoria che cresce stagione dopo stagione.
-              <span className="mt-2 block text-blue-950 sm:mt-4">Alcuni giocano. Altri cambiano il gioco.</span>
+              <span className="mt-2 block text-blue-950 sm:mt-4">Dove il gioco non finisce, la storia continua.</span>
             </p>
           </div>
 
@@ -231,7 +231,7 @@ export default async function Home() {
           <p className="section-eyebrow">Archivio degli emblemi</p>
           <h2 className="font-onder-title mt-2 flex flex-col gap-[0.25em] text-blue-950 sm:block"><span>La collezione</span><span className="sm:ml-2">ufficiale</span></h2>
         </div>
-        <div className="group relative mt-6 overflow-hidden py-2 [mask-image:linear-gradient(to_right,transparent,black_5%,black_95%,transparent)] sm:mt-9 sm:py-4">
+        <div className="group relative mt-6 overflow-hidden py-2 [mask-image:linear-gradient(to_right,transparent,black_5%,black_95%,transparent)] sm:mt-9 sm:py-4 lg:hidden">
             <Link href="/emblemi" aria-label="Esplora tutti gli emblemi" className="absolute inset-0 z-[5] sm:hidden" />
             <div className="home-emblem-marquee flex w-max transition duration-300 group-hover:opacity-40">
               {[0, 1].map((copy) => (
@@ -245,6 +245,16 @@ export default async function Home() {
               ))}
             </div>
             <Link href="/emblemi" className="home-emblem-cta z-10 whitespace-nowrap rounded-full border border-blue-950/10 bg-white/90 px-6 py-3 text-xs font-black uppercase tracking-[0.16em] text-blue-950 shadow-xl backdrop-blur transition duration-300 hover:border-blue-950/10 hover:bg-white/90 hover:text-blue-950">Esplora tutti gli emblemi</Link>
+        </div>
+        <div className="mx-auto mt-8 hidden max-w-6xl lg:block">
+          <div className="grid grid-cols-12 items-center gap-4">
+            {emblemiVetrina.slice(0, 12).map((emblema) => (
+              <span key={emblema.id} className="flex h-20 items-center justify-center">
+                <Image src={emblema.immagine} alt={emblema.nome} width={88} height={88} className="max-h-[88%] max-w-[88%] object-contain drop-shadow-[0_8px_13px_rgba(30,64,175,.14)]" />
+              </span>
+            ))}
+          </div>
+          <div className="mt-5 flex justify-center"><Link href="/emblemi" className="home-emblem-cta static translate-x-0 translate-y-0 rounded-full border border-blue-950/15 bg-white/90 px-6 py-3 text-xs font-black uppercase tracking-[0.16em] text-blue-950 shadow-lg transition hover:border-blue-950 hover:bg-blue-950 hover:text-white">Esplora tutti gli emblemi</Link></div>
         </div>
       </section>
 
@@ -292,7 +302,7 @@ export default async function Home() {
             <div className="max-w-3xl lg:max-w-none">
               <p className="section-eyebrow">Il sistema sportivo</p>
               <h2 className="font-onder-title mt-2 text-3xl uppercase text-blue-950 sm:mt-3 sm:text-5xl">Le competizioni</h2>
-              <p className="mt-3 text-sm font-semibold leading-5 text-slate-500 sm:mt-5 sm:text-lg sm:leading-7">Campionati e coppe: strade diverse per conquistare un posto nella storia.</p>
+              <p className="mt-3 text-sm font-semibold leading-5 text-slate-500 sm:mt-5 sm:text-lg sm:leading-7"><span className="sm:hidden">Le diverse strade per conquistare un posto nella storia.</span><span className="hidden sm:inline">Campionati e coppe: strade diverse per conquistare un posto nella storia.</span></p>
             </div>
             <div className="hidden h-36 md:block" aria-hidden="true" />
           </div>
@@ -324,8 +334,8 @@ export default async function Home() {
             { title: "Il Regolamento", description: "Scopri tutte le regole che governano la competizione.", href: "/regolamento", cta: "Consulta il regolamento" },
             { title: "La Lista di Attesa", description: "Candidati per entrare nella prossima stagione del Fanta a 20.", href: "/lista-attesa", cta: "Entra nella lista di attesa" },
           ].map((item) => (
-            <article key={item.href} className="relative flex min-h-[12.5rem] flex-col overflow-hidden rounded-[1.6rem] border border-blue-950/10 bg-white/75 p-5 text-blue-950 shadow-lg shadow-blue-950/8 sm:min-h-[13rem] sm:p-6">
-              <span className="pointer-events-none absolute -right-16 -top-16 h-52 w-52 rounded-full bg-sky-300/20 blur-3xl" />
+            <article key={item.href} className="relative flex min-h-[12.5rem] flex-col overflow-hidden rounded-[1.6rem] border border-sky-200/70 bg-[linear-gradient(145deg,rgba(255,255,255,.9),rgba(224,242,254,.76)_58%,rgba(219,234,254,.68))] p-5 text-blue-950 shadow-[0_16px_38px_rgba(30,64,175,.11),inset_0_1px_0_rgba(255,255,255,.9)] sm:min-h-[13rem] sm:p-6">
+              <span className="pointer-events-none absolute -right-16 -top-16 h-52 w-52 rounded-full bg-blue-400/20 blur-3xl" />
               <div className="relative flex flex-col">
                 <h2 className="text-xl font-black uppercase leading-tight tracking-tight text-blue-950 sm:text-2xl">{item.title}</h2>
                 <p className="mt-3 min-h-10 line-clamp-2 text-sm font-semibold leading-5 text-slate-500">{item.description}</p>

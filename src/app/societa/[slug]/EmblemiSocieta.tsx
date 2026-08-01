@@ -28,8 +28,8 @@ function TestoEmblema({ emblema, tooltip = false }: { emblema: EmblemaPosseduto;
         <span className={tooltip ? "text-white/68" : "text-slate-500"}>{emblema.descrizione}</span>
       )}
       {emblema.tipo === "Difendibile" && (
-        <span className={`font-black ${tooltip ? "text-violet-300" : "text-violet-700"}`}>
-          {emblema.descrizione ? " " : ""}RECORD: {valoreRecord}
+        <span className={`mt-1.5 block border-t pt-1.5 font-black tracking-[.04em] ${tooltip ? "border-violet-300/25 text-violet-300" : "border-violet-200 text-violet-700"}`}>
+          RECORD: {valoreRecord}
         </span>
       )}
     </>

@@ -1,7 +1,7 @@
 "use server";
 
-import { createArcadeRunProof, getArcadeLeaderboardPage, saveArcadeRecord } from "@/lib/arcade/server";
-import type { ArcadeLeaderboardPage, ArcadeRunProofResult, ArcadeSaveResult } from "@/lib/arcade/types";
+import { createArcadeRunProof, saveArcadeRecord } from "@/lib/arcade/server";
+import type { ArcadeRunProofResult, ArcadeSaveResult } from "@/lib/arcade/types";
 
 export async function beginArcadeRun(societaId: number, livello: number): Promise<ArcadeRunProofResult> {
   try {
@@ -18,8 +18,4 @@ export async function submitArcadeRecord(input: {
   proof: string;
 }): Promise<ArcadeSaveResult> {
   return saveArcadeRecord(input);
-}
-
-export async function loadMoreArcadeRecords(offset: number): Promise<ArcadeLeaderboardPage> {
-  return getArcadeLeaderboardPage(offset, 20);
 }

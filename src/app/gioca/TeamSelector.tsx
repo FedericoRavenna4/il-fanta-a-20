@@ -9,6 +9,12 @@ import {
 } from "@/lib/game/progression";
 import LevelJourney from "./LevelJourney";
 
+const LEAGUE_FILTERS = [
+  ["all", "Tutte"], ["serie-a", "Serie A"], ["serie-b", "Serie B"],
+  ["serie-c-a", "Serie C-A"], ["serie-c-b", "Serie C-B"], ["serie-c-c", "Serie C-C"],
+] as const;
+type LeagueFilter = (typeof LEAGUE_FILTERS)[number][0];
+
 function TeamSelector({
   teams,
   initialTeamSlug,
@@ -25,6 +31,7 @@ function TeamSelector({
   const initialTeam = teams.find((team) => team.slug === initialTeamSlug) ?? null;
   const [isMobileFlow, setIsMobileFlow] = useState(false);
   const [search, setSearch] = useState("");
+  const [leagueFilter, setLeagueFilter] = useState<LeagueFilter>("all");
   const [selectedTeam, setSelectedTeam] = useState<GameTeam | null>(
     initialTeam ?? teams[0] ?? null
   );
@@ -61,9 +68,11 @@ function TeamSelector({
 
   const filteredTeams = useMemo(() => {
     const query = normalizeTeamName(search);
-    if (!query) return teams;
-    return teams.filter((team) => normalizeTeamName(team.nome).includes(query));
-  }, [search, teams]);
+    return teams.filter((team) =>
+      (leagueFilter === "all" || getLeagueFilter(team.lega) === leagueFilter) &&
+      (!query || normalizeTeamName(team.nome).includes(query))
+    );
+  }, [leagueFilter, search, teams]);
 
   const activeTeam =
     filteredTeams.find((team) => team.id === selectedTeam?.id) ??
@@ -210,14 +219,13 @@ function TeamSelector({
   }
 
   function chooseRandomTeam() {
-    if (!teams.length || isRandomizing) return;
-    const alternatives = teams.length > 1
-      ? teams.filter((candidate) => candidate.id !== selectedTeam?.id)
-      : teams;
+    if (!filteredTeams.length || isRandomizing) return;
+    const alternatives = filteredTeams.length > 1
+      ? filteredTeams.filter((candidate) => candidate.id !== selectedTeam?.id)
+      : filteredTeams;
     const randomTeam = alternatives[Math.floor(Math.random() * alternatives.length)];
     setIsRandomizing(true);
     setConfirmationTeam(null);
-    setSearch("");
     setSelectedTeam(randomTeam);
     window.clearTimeout(randomTimerRef.current);
     requestAnimationFrame(() => {
@@ -478,6 +486,13 @@ function TeamSelector({
               className="min-h-10 w-full rounded-2xl border border-sky-200/20 bg-slate-950/55 px-5 text-center text-xs font-bold text-white shadow-[0_12px_35px_rgba(2,8,23,0.25),inset_0_1px_0_rgba(255,255,255,0.08)] outline-none transition placeholder:text-white/35 focus:border-sky-200/50 focus:bg-slate-900/75 focus:ring-4 focus:ring-sky-400/10 sm:min-h-14 sm:text-base"
             />
           </label>
+          <div className="mt-2 flex flex-wrap justify-center gap-1 sm:mt-3 sm:gap-1.5" aria-label="Filtra le società per lega">
+            {LEAGUE_FILTERS.map(([value, label]) => (
+              <button key={value} type="button" aria-pressed={leagueFilter === value} onClick={() => { setLeagueFilter(value); setConfirmationTeam(null); }} className={`min-h-8 rounded-full border px-2.5 text-[7px] font-black uppercase tracking-[.08em] transition sm:min-h-9 sm:px-3 sm:text-[8px] ${leagueFilter === value ? "border-sky-300 bg-sky-300 text-blue-950 shadow-[0_5px_18px_rgba(56,189,248,.22)]" : "border-white/15 bg-white/[.05] text-white/60 hover:border-white/35 hover:text-white"}`}>
+                {label}
+              </button>
+            ))}
+          </div>
           <button type="button" onClick={chooseRandomTeam} disabled={isRandomizing || !teams.length} className="group mt-2 min-h-10 rounded-full border border-amber-100/35 bg-[linear-gradient(135deg,rgba(251,191,36,0.2),rgba(245,158,11,0.09))] px-7 text-[8px] font-black uppercase tracking-[0.17em] text-amber-100 shadow-[0_12px_32px_rgba(180,83,9,0.14),inset_0_1px_0_rgba(255,255,255,0.12)] transition duration-300 hover:-translate-y-0.5 hover:border-amber-100/55 hover:bg-amber-300/[0.22] disabled:cursor-wait disabled:opacity-50 sm:mt-3 sm:min-h-13 sm:px-10 sm:text-[9px]">
             <span className="mr-2 inline-block text-amber-300 transition-transform duration-300 group-hover:rotate-12 group-hover:scale-125">✦</span>
             {isRandomizing ? "Estrazione…" : "Sorprendimi"}
@@ -715,6 +730,15 @@ function normalizeTeamName(value: string) {
     .toLocaleLowerCase("it")
     .trim()
     .replace(/\s+/g, " ");
+}
+
+function getLeagueFilter(league: string): LeagueFilter {
+  const value = normalizeTeamName(league);
+  if (value.startsWith("serie a")) return "serie-a";
+  if (value.startsWith("serie b")) return "serie-b";
+  if (value.includes("girone a")) return "serie-c-a";
+  if (value.includes("girone b")) return "serie-c-b";
+  return "serie-c-c";
 }
 
 export default memo(TeamSelector);

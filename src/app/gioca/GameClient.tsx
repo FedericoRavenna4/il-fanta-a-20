@@ -39,7 +39,7 @@ import GameOverlayLayer from "./GameOverlayLayer";
 import TeamSelector from "./TeamSelector";
 import VarCheck from "./VarCheck";
 import ArcadeLeaderboard from "./ArcadeLeaderboard";
-import { beginArcadeRun, loadMoreArcadeRecords, submitArcadeRecord } from "./actions";
+import { beginArcadeRun, submitArcadeRecord } from "./actions";
 
 type PendingVarReview = {
   result: GameSnapshot;
@@ -80,12 +80,10 @@ export default function GameClient({
   teams,
   initialTeamSlug,
   initialLeaderboard,
-  initialLeaderboardHasMore,
 }: {
   teams: GameTeam[];
   initialTeamSlug?: string;
   initialLeaderboard: ArcadeLeaderboardEntry[];
-  initialLeaderboardHasMore: boolean;
 }) {
   const [selectorVersion, setSelectorVersion] = useState(0);
   const [team, setTeam] = useState<GameTeam | null>(null);
@@ -111,8 +109,6 @@ export default function GameClient({
   const [arcadeSaveResult, setArcadeSaveResult] = useState<ArcadeSaveResult | null>(null);
   const [arcadeSavePending, setArcadeSavePending] = useState(false);
   const [leaderboard, setLeaderboard] = useState(initialLeaderboard);
-  const [leaderboardHasMore, setLeaderboardHasMore] = useState(initialLeaderboardHasMore);
-  const [leaderboardLoading, setLeaderboardLoading] = useState(false);
   const [highlightedRecordId, setHighlightedRecordId] = useState<string | null>(null);
   const dialogRef = useRef<HTMLElement>(null);
   const selectionRootRef = useRef<HTMLDivElement>(null);
@@ -191,18 +187,6 @@ export default function GameClient({
     }
   }, []);
 
-  const loadMoreLeaderboard = useCallback(async () => {
-    if (leaderboardLoading || !leaderboardHasMore) return;
-    setLeaderboardLoading(true);
-    try {
-      const page = await loadMoreArcadeRecords(leaderboard.length);
-      setLeaderboard((current) => [...current, ...page.entries.filter((entry) => !current.some((item) => item.id === entry.id))]);
-      setLeaderboardHasMore(page.hasMore);
-    } finally {
-      setLeaderboardLoading(false);
-    }
-  }, [leaderboard.length, leaderboardHasMore, leaderboardLoading]);
-
   const saveResultAutomatically = useCallback(async (result: GameSnapshot) => {
     if (result.distance < 100) return;
     if (!runProof || !playerName) {
@@ -215,7 +199,6 @@ export default function GameClient({
       const response = await submitArcadeRecord({ nomeGiocatore: playerName, metri: result.distance, proof: runProof });
       setArcadeSaveResult(response);
       if (response.ok && response.leaderboard) {
-        setLeaderboardHasMore(response.leaderboardHasMore ?? false);
         updateLeaderboard(response.leaderboard, response.highlightedId);
       }
     } finally {
@@ -618,7 +601,7 @@ export default function GameClient({
           keyboardEnabled={!modalOpen}
           onSelect={selectTeam}
         />
-        <ArcadeLeaderboard entries={leaderboard} teams={teams} highlightedId={highlightedRecordId} hasMore={leaderboardHasMore} loadingMore={leaderboardLoading} onLoadMore={loadMoreLeaderboard} />
+        <ArcadeLeaderboard entries={leaderboard} teams={teams} highlightedId={highlightedRecordId} />
       </div>
       {gameModal}
     </>

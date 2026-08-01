@@ -234,6 +234,9 @@ export default function Header() {
           >
             Gioca
           </Link>
+          <Link href="/regolamento" onClick={closeMenu} className="rounded-full px-3 py-2 transition hover:bg-blue-950 hover:text-white">
+            Regolamento
+          </Link>
         </nav>
 
         <button
@@ -262,6 +265,7 @@ export default function Header() {
             { href: "/statistiche", title: "Statistiche", text: "Ranking e Hall of Fame" },
             { href: "/emblemi", title: "Emblemi", text: "La collezione ufficiale" },
             { href: "/gioca", title: "Gioca", text: "Il runner arcade del Fanta a 20" },
+            { href: "/regolamento", title: "Regolamento", text: "Le regole ufficiali" },
           ].map((item) => (
             <Link key={item.href} href={item.href} onClick={closeMenu} className="flex min-h-14 flex-col justify-center rounded-[1.1rem] border border-slate-100 bg-slate-50/80 px-4 py-3 active:bg-sky-50">
               <p className="text-sm font-black uppercase text-blue-950">{item.title}</p>

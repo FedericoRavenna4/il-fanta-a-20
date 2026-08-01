@@ -10,9 +10,8 @@ export default function Footer() {
       <div className="mx-auto grid max-w-7xl grid-cols-[1fr_auto_1fr] items-start gap-2 px-3 py-3 text-slate-500 sm:items-center sm:gap-8 sm:px-6 sm:py-7">
         <div className="sm:justify-self-start">
           <p className="text-[8px] font-black uppercase tracking-[0.12em] text-amber-600 sm:text-[10px] sm:tracking-[0.18em]">Info utili</p>
-          <div className="mt-1.5 grid gap-0.5 text-[9px] font-semibold sm:mt-2 sm:gap-1 sm:text-xs">
-            <Link href="/regolamento" className="transition hover:text-blue-950">Regolamento</Link>
-            <Link href="/lista-attesa" className="transition hover:text-blue-950">Lista di attesa</Link>
+          <div className="mt-1.5 text-[9px] font-semibold sm:mt-2 sm:text-xs">
+            <Link href="/lista-attesa" className="inline-flex rounded-full border border-amber-300/60 bg-amber-50 px-2.5 py-1 font-black text-blue-950 transition hover:border-blue-950 hover:bg-blue-950 hover:text-white sm:px-4 sm:py-1.5">Lista di attesa</Link>
           </div>
         </div>
 

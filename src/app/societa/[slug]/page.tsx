@@ -149,30 +149,16 @@ export default async function SchedaSocietaPage({
               {team.legaAttuale}
             </p>
 
-            <div className="hidden flex-wrap justify-center sm:mb-8 sm:flex sm:gap-3">
+            <div className="mb-5 flex flex-wrap justify-center gap-2 sm:mb-8 sm:gap-3">
               {team.leader && (
                 <div className="rounded-full border border-red-200 bg-red-100 px-4 py-2 text-sm font-bold text-red-700">
                   ⭐ Ranking Leader
                 </div>
               )}
 
-              {team.badgeNewEntry && (
-                <div className="rounded-full border border-sky-200 bg-sky-100 px-4 py-2 text-sm font-bold text-sky-700">
-                  🆕 New Entry
-                </div>
-              )}
-
-              {team.badgeNeopromossa && (
-                <div className="rounded-full border border-emerald-200 bg-emerald-100 px-4 py-2 text-sm font-bold text-emerald-700">
-                  ⬆️ Neopromossa
-                </div>
-              )}
-
-              {team.badgeCampioneSerieA && (
-                <div className="rounded-full border border-amber-300 bg-amber-100 px-4 py-2 text-sm font-bold text-amber-700">
-                  🏆 Campione in carica
-                </div>
-              )}
+              {team.badgeNewEntry && <Image src="/badge-societa/new-entry.png" alt="New entry" width={132} height={48} className="h-9 w-auto object-contain sm:h-11" />}
+              {team.badgeNeopromossa && <Image src="/badge-societa/neo-promossa.png" alt="Neopromossa" width={132} height={48} className="h-9 w-auto object-contain sm:h-11" />}
+              {team.badgeCampioneSerieA && <Image src="/badge-societa/campione-in-carica.png" alt="Campione in carica" width={132} height={48} className="h-9 w-auto object-contain sm:h-11" />}
             </div>
 
             {storiaEditoriale?.descrizione && (

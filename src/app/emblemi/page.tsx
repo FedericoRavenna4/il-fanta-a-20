@@ -50,7 +50,8 @@ export default function EmblemiPage() {
             <span className="block sm:inline">La collezione</span><span className="block sm:ml-1 sm:inline">ufficiale</span>
           </h1>
           <p className="mt-3 text-[13px] font-semibold leading-5 text-slate-500 sm:text-base sm:leading-7">
-            Scopri rarità, traguardi e record da sbloccare nel mondo Fanta a 20
+            <span className="sm:hidden">Scopri rarità e record da sbloccare nel mondo Fanta a 20.</span>
+            <span className="hidden sm:inline">Scopri rarità, traguardi e record da sbloccare nel mondo Fanta a 20</span>
           </p>
         </header>
         <EmblemiCatalogo emblemi={emblemi} nascosti={nascosti} />

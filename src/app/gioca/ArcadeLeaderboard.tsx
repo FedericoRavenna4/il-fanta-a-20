@@ -8,16 +8,10 @@ export default function ArcadeLeaderboard({
   entries,
   teams,
   highlightedId,
-  hasMore,
-  loadingMore,
-  onLoadMore,
 }: {
   entries: ArcadeLeaderboardEntry[];
   teams: GameTeam[];
   highlightedId?: string | null;
-  hasMore: boolean;
-  loadingMore: boolean;
-  onLoadMore: () => void;
 }) {
   const teamsById = new Map(teams.map((team) => [team.id, team]));
 
@@ -66,13 +60,6 @@ export default function ArcadeLeaderboard({
               })}
             </ol>
           </div>
-          {hasMore && (
-            <div className="mt-5 flex justify-center">
-              <button type="button" onClick={onLoadMore} disabled={loadingMore} className="min-h-11 rounded-full border border-blue-950/15 bg-white px-6 text-[9px] font-black uppercase tracking-[.14em] text-blue-950 shadow-md transition hover:border-blue-950 hover:bg-blue-950 hover:text-white disabled:cursor-wait disabled:opacity-50">
-                {loadingMore ? "Caricamento…" : "Mostra altri"}
-              </button>
-            </div>
-          )}
         </>
       )}
     </section>
@@ -81,17 +68,17 @@ export default function ArcadeLeaderboard({
 
 function PodiumCard({ entry, position, team, highlighted }: { entry: ArcadeLeaderboardEntry; position: number; team?: GameTeam; highlighted: boolean }) {
   const tone = position === 1
-    ? "border-amber-300/60 bg-[linear-gradient(145deg,#fff8dc,#e8bd55)] shadow-amber-300/20 sm:min-h-72"
+    ? "border-amber-300/60 bg-[linear-gradient(145deg,#fff8dc,#e8bd55)] shadow-amber-300/20 sm:min-h-52"
     : position === 2
-      ? "border-slate-300/70 bg-[linear-gradient(145deg,#ffffff,#cbd5e1)] shadow-slate-400/15 sm:min-h-64"
-      : "border-orange-300/60 bg-[linear-gradient(145deg,#fff4e8,#c98249)] shadow-orange-400/15 sm:min-h-60";
+      ? "border-slate-300/70 bg-[linear-gradient(145deg,#ffffff,#cbd5e1)] shadow-slate-400/15 sm:min-h-48"
+      : "border-orange-300/60 bg-[linear-gradient(145deg,#fff4e8,#c98249)] shadow-orange-400/15 sm:min-h-44";
   return (
-    <article className={`relative flex min-h-44 flex-col items-center justify-center rounded-[1.5rem] border p-5 text-center shadow-xl ${tone} ${highlighted ? "ring-2 ring-blue-700 ring-offset-2" : ""}`}>
+    <article className={`relative flex min-h-36 flex-col items-center justify-center rounded-[1.5rem] border p-3 text-center shadow-xl sm:p-4 ${tone} ${highlighted ? "ring-2 ring-blue-700 ring-offset-2" : ""}`}>
       <span className="absolute left-4 top-3 text-xs font-black uppercase tracking-[.15em] text-blue-950/45">#{position}</span>
-      <div className={`flex items-center justify-center ${position === 1 ? "h-20 w-20" : "h-16 w-16"}`}>
+      <div className={`flex items-center justify-center ${position === 1 ? "h-16 w-16" : "h-14 w-14"}`}>
         {team && <Image src={team.logo} alt={`Stemma ${team.nome}`} width={82} height={82} unoptimized className="max-h-full max-w-full object-contain drop-shadow-[0_8px_12px_rgba(15,23,42,.18)]" />}
       </div>
-      <h3 className="mt-3 line-clamp-2 text-base font-black text-blue-950 sm:text-lg">{entry.nomeGiocatore}</h3>
+      <h3 className="mt-2 line-clamp-2 text-sm font-black text-blue-950 sm:text-base">{entry.nomeGiocatore}</h3>
       <span className="mt-2 rounded-full bg-blue-950/8 px-2.5 py-1 text-[8px] font-black uppercase tracking-[.1em] text-blue-950/55">{levelLabel(entry.livello)}</span>
       <strong className={`mt-2 font-black tabular-nums text-blue-950 ${position === 1 ? "text-3xl" : "text-2xl"}`}>{entry.metri.toLocaleString("it-IT")} m</strong>
     </article>
