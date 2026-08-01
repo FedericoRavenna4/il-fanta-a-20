@@ -4,7 +4,7 @@ export const SITE_URL = "https://ilfantaa20.it";
 export const SITE_NAME = "Il Fanta a 20";
 export const OPEN_GRAPH_SITE_NAME = "Fanta a 20";
 export const SITE_DESCRIPTION = "Il Fantacalcio Classic a 20 squadre: società, competizioni, statistiche, emblemi e Arcade ufficiale.";
-export const SITE_IMAGE = "/icon.png";
+export const SITE_IMAGE = `${SITE_URL}/og-image.png`;
 export const SITE_KEYWORDS = [
   "Il Fanta a 20",
   "fantacalcio",
@@ -22,7 +22,7 @@ export const STRUCTURED_DATA = {
       url: SITE_URL,
       logo: {
         "@type": "ImageObject",
-        url: `${SITE_URL}${SITE_IMAGE}`,
+        url: `${SITE_URL}/icon.png`,
         width: 520,
         height: 520,
       },
@@ -76,7 +76,7 @@ export function createPageMetadata({
       url: path,
       title,
       description,
-      images: [{ url: SITE_IMAGE, width: 520, height: 520, alt: SITE_NAME }],
+      images: [{ url: SITE_IMAGE, width: 1200, height: 630, alt: SITE_NAME }],
     },
     twitter: {
       card: "summary_large_image",

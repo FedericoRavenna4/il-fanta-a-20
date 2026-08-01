@@ -68,7 +68,7 @@ export const metadata: Metadata = {
     url: "/",
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
-    images: [{ url: SITE_IMAGE, width: 520, height: 520, alt: SITE_NAME }],
+    images: [{ url: SITE_IMAGE, width: 1200, height: 630, alt: SITE_NAME }],
   },
   twitter: {
     card: "summary_large_image",
