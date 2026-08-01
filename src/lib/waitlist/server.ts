@@ -1,6 +1,7 @@
 import "server-only";
 
 import { getSupabaseAdminClient } from "@/lib/supabase/server";
+import { consumeRateLimit } from "@/lib/rate-limit/server";
 import {
   WAITLIST_STATUS,
   type WaitlistActionResult,
@@ -15,9 +16,9 @@ const INSTAGRAM_PATTERN = /^[a-z0-9._]{1,30}$/;
 type ValidatedApplication = {
   nome: string;
   cognome: string;
-  dataNascita: string;
   instagram: string;
   motivazione: string;
+  maggiorenneDichiarato: true;
   privacyAccettata: true;
 };
 
@@ -32,6 +33,15 @@ export async function submitWaitlistApplication(
   if (!validation.ok) return validation.result;
 
   try {
+    const allowed = await consumeRateLimit({
+      scope: "waitlist_submission",
+      limit: 3,
+      windowSeconds: 60 * 60,
+    });
+    if (!allowed) {
+      return { ok: false, message: "Hai raggiunto il numero massimo di tentativi. Riprova più tardi." };
+    }
+
     const supabase = getSupabaseAdminClient();
     const instagram = validation.data.instagram;
 
@@ -59,10 +69,10 @@ export async function submitWaitlistApplication(
       .insert({
         nome: validation.data.nome,
         cognome: validation.data.cognome,
-        data_nascita: validation.data.dataNascita,
         instagram,
         motivazione: validation.data.motivazione,
         stato: WAITLIST_STATUS,
+        maggiorenne_dichiarato: validation.data.maggiorenneDichiarato,
         privacy_accettata: validation.data.privacyAccettata,
       })
       .select("created_at")
@@ -118,7 +128,6 @@ function validateWaitlistApplication(input: WaitlistApplicationInput):
   | { ok: false; result: WaitlistActionResult } {
   const nome = normalizeText(input.nome);
   const cognome = normalizeText(input.cognome);
-  const dataNascita = normalizeText(input.dataNascita);
   const instagram = normalizeInstagramNickname(input.instagram);
   const motivazione = normalizeText(input.motivazione);
   const fieldErrors: Partial<Record<WaitlistField, string>> = {};
@@ -129,11 +138,6 @@ function validateWaitlistApplication(input: WaitlistApplicationInput):
   if (!cognome) fieldErrors.cognome = "Inserisci il cognome.";
   else if (cognome.length > NAME_MAX_LENGTH) fieldErrors.cognome = "Il cognome è troppo lungo.";
 
-  if (!dataNascita) fieldErrors.data_nascita = "Inserisci la data di nascita.";
-  else if (!isValidBirthDate(dataNascita)) {
-    fieldErrors.data_nascita = "Inserisci una data di nascita valida.";
-  }
-
   if (!instagram) fieldErrors.instagram = "Inserisci il nickname Instagram.";
   else if (!INSTAGRAM_PATTERN.test(instagram)) {
     fieldErrors.instagram = "Il nickname Instagram può contenere solo lettere, numeri, punti e underscore.";
@@ -143,8 +147,12 @@ function validateWaitlistApplication(input: WaitlistApplicationInput):
     fieldErrors.motivazione = `La motivazione non può superare ${MOTIVATION_MAX_LENGTH} caratteri.`;
   }
 
+  if (input.maggiorenneDichiarato !== true) {
+    fieldErrors.maggiorenne_dichiarato = "Devi avere almeno 18 anni per candidarti.";
+  }
+
   if (input.privacyAccettata !== true) {
-    fieldErrors.privacy_accettata = "Devi accettare l'informativa privacy.";
+    fieldErrors.privacy_accettata = "Devi accettare l’Informativa Privacy.";
   }
 
   if (Object.keys(fieldErrors).length > 0) {
@@ -163,9 +171,9 @@ function validateWaitlistApplication(input: WaitlistApplicationInput):
     data: {
       nome,
       cognome,
-      dataNascita,
       instagram,
       motivazione,
+      maggiorenneDichiarato: true,
       privacyAccettata: true,
     },
   };
@@ -173,23 +181,6 @@ function validateWaitlistApplication(input: WaitlistApplicationInput):
 
 function normalizeText(value: string) {
   return String(value ?? "").trim().replace(/\s+/g, " ");
-}
-
-function isValidBirthDate(value: string) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
-  const [year, month, day] = value.split("-").map(Number);
-  const date = new Date(Date.UTC(year, month - 1, day));
-  const today = new Date();
-  const todayUtc = Date.UTC(
-    today.getUTCFullYear(),
-    today.getUTCMonth(),
-    today.getUTCDate()
-  );
-  return year >= 1900 &&
-    date.getUTCFullYear() === year &&
-    date.getUTCMonth() === month - 1 &&
-    date.getUTCDate() === day &&
-    date.getTime() <= todayUtc;
 }
 
 function duplicateInstagramResult(): WaitlistActionResult {

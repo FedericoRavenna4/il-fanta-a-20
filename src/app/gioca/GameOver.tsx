@@ -43,10 +43,12 @@ export default function GameOver({
         <div className="mx-auto flex h-14 w-14 items-center justify-center max-sm:h-9 max-sm:w-9 sm:h-16 sm:w-16">
           <Image src={team.logo} alt={`Stemma ${team.nome}`} width={64} height={64} className="max-h-full max-w-full object-contain drop-shadow-[0_10px_18px_rgba(0,0,0,0.32)]" />
         </div>
-        <p className="mt-2 text-[8px] font-black uppercase tracking-[0.2em] text-amber-300 max-sm:mt-0.5">
-          {isNewRecord ? "Nuovo record personale" : "Corsa terminata"}
-        </p>
-        <h2 className="mt-0.5 text-2xl font-black uppercase tracking-tight max-sm:text-lg sm:text-3xl">Corsa terminata</h2>
+        {isNewRecord && (
+          <p className="mt-2 text-[8px] font-black uppercase tracking-[0.2em] text-amber-300 max-sm:mt-0.5">
+            Nuovo record personale
+          </p>
+        )}
+        <h2 className={`${isNewRecord ? "mt-0.5" : "mt-2 max-sm:mt-0.5"} text-2xl font-black uppercase tracking-tight max-sm:text-lg sm:text-3xl`}>Corsa terminata</h2>
 
         {outcome.outcome !== "stayed" && (
           <div className={`mx-auto mt-2.5 rounded-xl border px-3 py-2 max-sm:mt-1.5 max-sm:py-1.5 ${outcomeTone}`}>
@@ -68,7 +70,7 @@ export default function GameOver({
             {savePending ? (
               <span className="inline-flex items-center gap-2 text-white/60"><span className="h-3 w-3 animate-spin rounded-full border-2 border-white/20 border-t-amber-300" /> Salvataggio del record…</span>
             ) : saveResult ? (
-              <span className={saveResult.ok ? "text-emerald-200" : "text-rose-200"}>{saveResult.message}{saveResult.ok && saveResult.position ? ` Posizione: ${saveResult.position}ª.` : ""}</span>
+              <span className={saveResult.ok ? "text-emerald-200" : "text-rose-200"}>{saveResult.message}</span>
             ) : (
               <span className="text-white/50">Preparazione del salvataggio…</span>
             )}

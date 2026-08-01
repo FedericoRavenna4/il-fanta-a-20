@@ -10,8 +10,8 @@ import {
 import LevelJourney from "./LevelJourney";
 
 const LEAGUE_FILTERS = [
-  ["all", "Tutte"], ["serie-a", "Serie A"], ["serie-b", "Serie B"],
-  ["serie-c-a", "Serie C-A"], ["serie-c-b", "Serie C-B"], ["serie-c-c", "Serie C-C"],
+  ["all", "Tutte", "Tutte"], ["serie-a", "Serie A", "A"], ["serie-b", "Serie B", "B"],
+  ["serie-c-a", "Serie C-A", "C-A"], ["serie-c-b", "Serie C-B", "C-B"], ["serie-c-c", "Serie C-C", "C-C"],
 ] as const;
 type LeagueFilter = (typeof LEAGUE_FILTERS)[number][0];
 
@@ -487,9 +487,9 @@ function TeamSelector({
             />
           </label>
           <div className="mt-2 flex flex-wrap justify-center gap-1 sm:mt-3 sm:gap-1.5" aria-label="Filtra le società per lega">
-            {LEAGUE_FILTERS.map(([value, label]) => (
-              <button key={value} type="button" aria-pressed={leagueFilter === value} onClick={() => { setLeagueFilter(value); setConfirmationTeam(null); }} className={`min-h-8 rounded-full border px-2.5 text-[7px] font-black uppercase tracking-[.08em] transition sm:min-h-9 sm:px-3 sm:text-[8px] ${leagueFilter === value ? "border-sky-300 bg-sky-300 text-blue-950 shadow-[0_5px_18px_rgba(56,189,248,.22)]" : "border-white/15 bg-white/[.05] text-white/60 hover:border-white/35 hover:text-white"}`}>
-                {label}
+            {LEAGUE_FILTERS.map(([value, label, mobileLabel]) => (
+              <button key={value} type="button" aria-label={label} aria-pressed={leagueFilter === value} onClick={() => { setLeagueFilter(value); setConfirmationTeam(null); }} className={`min-h-8 min-w-8 rounded-full border px-1.5 text-[7px] font-black uppercase tracking-[.06em] transition sm:min-h-9 sm:min-w-0 sm:px-3 sm:text-[8px] sm:tracking-[.08em] ${leagueFilter === value ? "border-sky-300 bg-sky-300 text-blue-950 shadow-[0_5px_18px_rgba(56,189,248,.22)]" : "border-white/15 bg-white/[.05] text-white/60 hover:border-white/35 hover:text-white"}`}>
+                <span className="sm:hidden">{mobileLabel}</span><span className="hidden sm:inline">{label}</span>
               </button>
             ))}
           </div>

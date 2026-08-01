@@ -4,17 +4,17 @@ export const WAITLIST_STATUS = "in_attesa" as const;
 export type WaitlistField =
   | "nome"
   | "cognome"
-  | "data_nascita"
   | "instagram"
   | "motivazione"
+  | "maggiorenne_dichiarato"
   | "privacy_accettata";
 
 export type WaitlistApplicationInput = {
   nome: string;
   cognome: string;
-  dataNascita: string;
   instagram: string;
   motivazione: string;
+  maggiorenneDichiarato: boolean;
   privacyAccettata: boolean;
   honeypot?: string;
 };

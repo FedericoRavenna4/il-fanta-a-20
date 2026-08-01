@@ -39,15 +39,15 @@ export default function CoppaFanta() {
 
         <div className="relative z-10 grid items-center gap-4 sm:gap-10 lg:grid-cols-[1fr_340px]">
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-amber-700 sm:text-sm sm:tracking-[0.35em]">
+            <p className="text-xs font-black uppercase tracking-[0.3em] text-amber-700">
               Coppa assoluta
             </p>
 
-            <h2 className="mt-2 text-2xl font-black uppercase tracking-tight text-blue-950 sm:mt-4 sm:text-4xl md:text-5xl lg:text-6xl">
+            <h2 className="mt-2 text-3xl font-black uppercase tracking-tight text-blue-950 sm:text-4xl md:text-5xl">
               La Coppa Fanta a 20
             </h2>
 
-            <p className="mt-2 max-w-5xl text-xs font-semibold leading-[1.15rem] text-blue-950/75 sm:mt-6 sm:text-lg sm:leading-8 lg:text-[20px] lg:leading-9">
+            <p className="mt-3 max-w-5xl text-sm font-normal leading-6 text-blue-950/75 sm:mt-4 sm:text-lg sm:leading-8">
               Il trofeo più prestigioso del Fanta a 20. Le 100 società partono
               dallo stesso punto, senza distinzioni di lega o categoria: solo 64
               entrano nel tabellone finale, dove ogni sfida può cambiare la

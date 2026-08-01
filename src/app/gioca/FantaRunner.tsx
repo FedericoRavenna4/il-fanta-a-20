@@ -305,8 +305,8 @@ function createRuntime(level: GameLevel = 1): Runtime {
     protectionAvailable: true,
     protectionEndNotified: false,
     flowProgress: 0,
-    confirmedGoals: 0,
-    maxGoalsReached: 0,
+    confirmedGoals: calculateGoals(TEAM_RATING_INITIAL),
+    maxGoalsReached: calculateGoals(TEAM_RATING_INITIAL),
     nextHatTrickAt: randomBetween(
       HAT_TRICK_SPAWN_CONFIG.firstWindow.minimum,
       HAT_TRICK_SPAWN_CONFIG.firstWindow.maximum
@@ -2642,14 +2642,12 @@ function isCrouching(runtime: Runtime, time: number) {
 }
 
 function calculateGoals(teamRating: number) {
-  return Math.max(
-    0,
-    Math.floor((teamRating - TEAM_RATING_THRESHOLD) / GOAL_RATING_STEP)
-  );
+  if (teamRating < TEAM_RATING_THRESHOLD) return 0;
+  return 1 + Math.floor((teamRating - TEAM_RATING_THRESHOLD) / GOAL_RATING_STEP);
 }
 
 function getGoalThreshold(goalNumber: number) {
-  return TEAM_RATING_THRESHOLD + goalNumber * GOAL_RATING_STEP;
+  return TEAM_RATING_THRESHOLD + Math.max(0, goalNumber - 1) * GOAL_RATING_STEP;
 }
 
 function intersects(

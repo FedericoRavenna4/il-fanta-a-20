@@ -8,7 +8,7 @@ import { getCatalogoEmblemi, getEmblemiSocieta } from "@/lib/emblemi";
 import { isEmblemaNascosto } from "@/lib/emblemi-ui";
 import { getRisultati } from "@/lib/risultati";
 
-const HOME_CARD_CTA_CLASS = "inline-flex min-h-11 items-center justify-center rounded-full border border-slate-300/80 bg-white/65 px-5 text-center text-[9px] font-black uppercase tracking-[0.13em] text-blue-950 shadow-[0_8px_20px_rgba(15,23,42,.07),inset_0_1px_0_rgba(255,255,255,.9)] backdrop-blur-sm transition duration-300 hover:-translate-y-0.5 hover:border-sky-300/80 hover:bg-sky-50/90 hover:shadow-[0_10px_24px_rgba(15,23,42,.1)]";
+const HOME_CARD_CTA_CLASS = "inline-flex min-h-11 items-center justify-center rounded-full border border-blue-800 bg-blue-950 px-5 text-center text-[9px] font-black uppercase tracking-[0.13em] text-white shadow-[0_9px_22px_rgba(15,23,42,.18)] transition duration-300 hover:-translate-y-0.5 hover:border-blue-700 hover:bg-blue-800 hover:text-white hover:shadow-[0_12px_28px_rgba(30,64,175,.24)]";
 
 function emblemOrder(id: number) {
   let value = Math.imul(id ^ 0x45d9f3b, 0x45d9f3b);
@@ -226,7 +226,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="w-full pb-6 pt-3 sm:pb-11 sm:pt-5 lg:pb-14">
+      <section className="w-full pb-6 pt-3 sm:pb-11 sm:pt-5 lg:pb-8">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <p className="section-eyebrow">Archivio degli emblemi</p>
           <h2 className="font-onder-title mt-2 flex flex-col gap-[0.25em] text-blue-950 sm:block"><span>La collezione</span><span className="sm:ml-2">ufficiale</span></h2>
@@ -246,16 +246,16 @@ export default async function Home() {
             </div>
             <Link href="/emblemi" className="home-emblem-cta z-10 whitespace-nowrap rounded-full border border-blue-950/10 bg-white/90 px-6 py-3 text-xs font-black uppercase tracking-[0.16em] text-blue-950 shadow-xl backdrop-blur transition duration-300 hover:border-blue-950/10 hover:bg-white/90 hover:text-blue-950">Esplora tutti gli emblemi</Link>
         </div>
-        <div className="mx-auto mt-8 hidden max-w-6xl lg:block">
-          <div className="grid grid-cols-12 items-center gap-4">
+        <Link href="/emblemi" aria-label="Esplora tutti gli emblemi" className="group relative mx-auto mt-8 hidden max-w-6xl overflow-hidden py-2 lg:block">
+          <div className="grid grid-cols-12 items-center gap-4 transition duration-300 group-hover:opacity-35">
             {emblemiVetrina.slice(0, 12).map((emblema) => (
               <span key={emblema.id} className="flex h-20 items-center justify-center">
                 <Image src={emblema.immagine} alt={emblema.nome} width={88} height={88} className="max-h-[88%] max-w-[88%] object-contain drop-shadow-[0_8px_13px_rgba(30,64,175,.14)]" />
               </span>
             ))}
           </div>
-          <div className="mt-5 flex justify-center"><Link href="/emblemi" className="home-emblem-cta static translate-x-0 translate-y-0 rounded-full border border-blue-950/15 bg-white/90 px-6 py-3 text-xs font-black uppercase tracking-[0.16em] text-blue-950 shadow-lg transition hover:border-blue-950 hover:bg-blue-950 hover:text-white">Esplora tutti gli emblemi</Link></div>
-        </div>
+          <span className="pointer-events-none absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-full border border-blue-950/10 bg-white/90 px-6 py-3 text-xs font-black uppercase tracking-[0.16em] text-blue-950 opacity-0 shadow-xl backdrop-blur transition duration-300 group-hover:opacity-100">Esplora tutti gli emblemi</span>
+        </Link>
       </section>
 
       <div className="flex flex-col">
@@ -297,7 +297,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="order-1 mx-auto w-full max-w-7xl px-4 py-7 max-sm:py-5 sm:px-6 sm:py-12 lg:py-14">
+      <section className="order-1 mx-auto w-full max-w-7xl px-4 py-7 max-sm:py-5 sm:px-6 sm:py-12 lg:pb-14 lg:pt-9">
         <div className="mb-6 grid items-center gap-4 max-sm:mb-4 sm:mb-11 sm:gap-8 md:grid-cols-[1fr_290px] lg:grid-cols-[1fr_380px]">
             <div className="max-w-3xl lg:max-w-none">
               <p className="section-eyebrow">Il sistema sportivo</p>
@@ -336,10 +336,10 @@ export default async function Home() {
           ].map((item) => (
             <article key={item.href} className="relative flex min-h-[12.5rem] flex-col overflow-hidden rounded-[1.6rem] border border-sky-200/70 bg-[linear-gradient(145deg,rgba(255,255,255,.9),rgba(224,242,254,.76)_58%,rgba(219,234,254,.68))] p-5 text-blue-950 shadow-[0_16px_38px_rgba(30,64,175,.11),inset_0_1px_0_rgba(255,255,255,.9)] sm:min-h-[13rem] sm:p-6">
               <span className="pointer-events-none absolute -right-16 -top-16 h-52 w-52 rounded-full bg-blue-400/20 blur-3xl" />
-              <div className="relative flex flex-col">
+              <div className="relative flex h-full flex-col">
                 <h2 className="text-xl font-black uppercase leading-tight tracking-tight text-blue-950 sm:text-2xl">{item.title}</h2>
                 <p className="mt-3 min-h-10 line-clamp-2 text-sm font-semibold leading-5 text-slate-500">{item.description}</p>
-                <Link href={item.href} className={`${HOME_CARD_CTA_CLASS} mt-5 w-full`}>{item.cta}</Link>
+                <Link href={item.href} className={`${HOME_CARD_CTA_CLASS} mt-auto w-full`}>{item.cta}</Link>
               </div>
             </article>
           ))}

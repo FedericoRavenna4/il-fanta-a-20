@@ -52,16 +52,7 @@ export default function WaitlistForm() {
         />
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 sm:gap-5">
-        <FormField
-          id="data_nascita"
-          name="data_nascita"
-          type="date"
-          label="Data di nascita"
-          error={errors?.data_nascita}
-          autoComplete="bday"
-          required
-        />
+      <div>
         <FormField
           id="instagram"
           name="instagram"
@@ -104,22 +95,45 @@ export default function WaitlistForm() {
         <FieldError id="motivazione-error" message={errors?.motivazione} />
       </div>
 
-      <div>
+      <div className="space-y-3">
+        <div>
+        <label className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-3 transition sm:p-4 ${errors?.maggiorenne_dichiarato ? "border-rose-300 bg-rose-50" : "border-slate-200 bg-slate-50/80 hover:border-blue-200"}`}>
+          <input
+            type="checkbox"
+            name="maggiorenne_dichiarato"
+            value="true"
+            required
+            onInvalid={(event) => event.currentTarget.setCustomValidity("Devi avere almeno 18 anni per candidarti.")}
+            onChange={(event) => event.currentTarget.setCustomValidity("")}
+            aria-invalid={Boolean(errors?.maggiorenne_dichiarato)}
+            aria-describedby={errors?.maggiorenne_dichiarato ? "maggiorenne-error" : undefined}
+            className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer accent-blue-800"
+          />
+          <span className="text-[11px] font-semibold leading-4 text-slate-600 sm:text-sm sm:leading-5">
+            Dichiaro di avere almeno 18 anni.
+          </span>
+        </label>
+        <FieldError id="maggiorenne-error" message={errors?.maggiorenne_dichiarato} />
+        </div>
+        <div>
         <label className={`flex cursor-pointer items-start gap-3 rounded-2xl border p-3 transition sm:p-4 ${errors?.privacy_accettata ? "border-rose-300 bg-rose-50" : "border-slate-200 bg-slate-50/80 hover:border-blue-200"}`}>
           <input
             type="checkbox"
             name="privacy_accettata"
             value="true"
             required
+            onInvalid={(event) => event.currentTarget.setCustomValidity("Devi accettare l’Informativa Privacy.")}
+            onChange={(event) => event.currentTarget.setCustomValidity("")}
             aria-invalid={Boolean(errors?.privacy_accettata)}
             aria-describedby={errors?.privacy_accettata ? "privacy-error" : undefined}
             className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer accent-blue-800"
           />
           <span className="text-[11px] font-semibold leading-4 text-slate-600 sm:text-sm sm:leading-5">
-            Accetto che i dati inseriti vengano utilizzati per valutare la candidatura e per essere ricontattato tramite Instagram.
+            Ho letto e accetto l’<Link href="/privacy" className="font-black text-blue-800 underline decoration-blue-300 underline-offset-2 transition hover:text-blue-950">Informativa Privacy</Link>.
           </span>
         </label>
         <FieldError id="privacy-error" message={errors?.privacy_accettata} />
+        </div>
       </div>
 
       {state && !state.ok && (

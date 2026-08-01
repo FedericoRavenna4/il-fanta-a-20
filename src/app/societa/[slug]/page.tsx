@@ -133,13 +133,20 @@ export default async function SchedaSocietaPage({
           </div>
 
           <div className="p-4 text-center sm:p-8 lg:p-10">
-            <Image
-              src={team.logo}
-              alt={team.nome}
-              width={280}
-              height={280}
-              className="mx-auto mb-4 max-h-36 w-auto object-contain drop-shadow-sm transition hover:scale-105 hover:drop-shadow-[0_22px_30px_rgba(14,116,144,0.35)] sm:mb-8 sm:max-h-72"
-            />
+            <div className="relative mb-4 min-h-36 sm:mb-8 sm:min-h-72">
+              <Image
+                src={team.logo}
+                alt={team.nome}
+                width={280}
+                height={280}
+                className="mx-auto max-h-36 w-auto object-contain drop-shadow-sm transition hover:scale-105 hover:drop-shadow-[0_22px_30px_rgba(14,116,144,0.35)] sm:max-h-72"
+              />
+              <div className="absolute right-0 top-0 flex max-w-[42%] flex-col items-end gap-1.5 sm:gap-2">
+                {team.badgeNewEntry && <Image src="/badge-societa/new-entry.png" alt="New entry" width={150} height={55} className="h-12 max-w-full object-contain object-right sm:h-16" />}
+                {team.badgeNeopromossa && <Image src="/badge-societa/neo-promossa.png" alt="Neopromossa" width={150} height={55} className="h-12 max-w-full object-contain object-right sm:h-16" />}
+                {team.badgeCampioneSerieA && <Image src="/badge-societa/campione-in-carica.png" alt="Campione in carica" width={150} height={55} className="h-12 max-w-full object-contain object-right sm:h-16" />}
+              </div>
+            </div>
 
             <h1 className="mb-2 break-words text-2xl font-black text-blue-950 sm:mb-4 sm:text-4xl lg:text-5xl">
               {team.nome}
@@ -148,18 +155,6 @@ export default async function SchedaSocietaPage({
             <p className="mb-4 text-sm font-semibold text-slate-500 sm:mb-6 sm:text-base">
               {team.legaAttuale}
             </p>
-
-            <div className="mb-5 flex flex-wrap justify-center gap-2 sm:mb-8 sm:gap-3">
-              {team.leader && (
-                <div className="rounded-full border border-red-200 bg-red-100 px-4 py-2 text-sm font-bold text-red-700">
-                  ⭐ Ranking Leader
-                </div>
-              )}
-
-              {team.badgeNewEntry && <Image src="/badge-societa/new-entry.png" alt="New entry" width={132} height={48} className="h-9 w-auto object-contain sm:h-11" />}
-              {team.badgeNeopromossa && <Image src="/badge-societa/neo-promossa.png" alt="Neopromossa" width={132} height={48} className="h-9 w-auto object-contain sm:h-11" />}
-              {team.badgeCampioneSerieA && <Image src="/badge-societa/campione-in-carica.png" alt="Campione in carica" width={132} height={48} className="h-9 w-auto object-contain sm:h-11" />}
-            </div>
 
             {storiaEditoriale?.descrizione && (
               <div className="mx-auto mb-9 max-w-4xl rounded-[1.75rem] border border-sky-100 bg-gradient-to-br from-sky-50/80 via-white to-white p-4 text-left shadow-md shadow-sky-100/70 sm:p-6">

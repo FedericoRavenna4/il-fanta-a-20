@@ -66,7 +66,7 @@ export default function CoppeEuropee() {
           Le coppe europee
         </h2>
 
-        <p className="mt-3 max-w-5xl text-sm leading-6 text-slate-600 sm:mt-4 sm:text-lg sm:leading-8">
+        <p className="mt-3 max-w-5xl text-sm font-normal leading-6 text-slate-600 sm:mt-4 sm:text-lg sm:leading-8">
           Le coppe europee sono i trofei interni di ogni lega: vi partecipano le
           squadre in base al piazzamento ottenuto al termine del girone di
           andata.

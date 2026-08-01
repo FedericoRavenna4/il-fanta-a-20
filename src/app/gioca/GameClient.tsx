@@ -56,7 +56,7 @@ function createEmptySnapshot(best = 0, personalRecord = 0): GameSnapshot {
     multiplier: 1,
     teamRating: TEAM_RATING_INITIAL,
     threshold: TEAM_RATING_THRESHOLD,
-    goals: 0,
+    goals: 1,
     nextGoalThreshold: 66,
     protectionActive: true,
     protectionRemaining: 5,
@@ -161,7 +161,7 @@ export default function GameClient({
     setArcadeSaveResult(null);
     setArcadeSavePending(false);
     setRunProof("");
-    void beginArcadeRun(team.id, activeLevel).then((result) => {
+    void beginArcadeRun(playerName, team.id, activeLevel).then((result) => {
       if (result.ok && result.proof) setRunProof(result.proof);
     });
     setSnapshot(createEmptySnapshot(best, personalRecord));
@@ -173,7 +173,7 @@ export default function GameClient({
       startTransitionTimerRef.current = null;
       setStatus("running");
     }, transitionDuration);
-  }, [activeLevel, assetsReady, best, personalRecord, team]);
+  }, [activeLevel, assetsReady, best, personalRecord, playerName, team]);
 
   const updateLeaderboard = useCallback((entries: ArcadeLeaderboardEntry[], highlightedId?: string) => {
     setLeaderboard(entries);
@@ -295,6 +295,7 @@ export default function GameClient({
     setStatus("selecting");
     setTeam(null);
     setPlayerName("");
+    setRunProof("");
     setRunId((current) => current + 1);
     setBest(0);
     setPersonalRecord(0);

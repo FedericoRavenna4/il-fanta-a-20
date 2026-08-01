@@ -31,7 +31,7 @@ export function ScattoPromozioneContent({ embedded = false }: { embedded?: boole
         description="Quindici squadre, nove giornate e un sistema ispirato alla Formula 1 per assegnare la quarta promozione in Serie B."
       />}
 
-      <section className="mt-8 grid gap-5 md:grid-cols-4">
+      <section className={`${embedded ? "mt-0" : "mt-8"} grid gap-5 md:grid-cols-4`}>
         {[
           ["15", "partecipanti"],
           ["9", "giornate"],
@@ -61,11 +61,11 @@ export function ScattoPromozioneContent({ embedded = false }: { embedded?: boole
           Formula
         </p>
 
-        <h2 className="mt-2 text-3xl font-black uppercase tracking-tight text-blue-950 sm:text-4xl">
+        <h2 className="mt-2 text-3xl font-black uppercase tracking-tight text-blue-950 sm:text-4xl md:text-5xl">
           La volata per la Serie B
         </h2>
 
-        <div className="mt-7 max-w-5xl space-y-4 text-[17px] leading-8 text-slate-600">
+        <div className="mt-3 max-w-5xl space-y-4 text-sm font-normal leading-6 text-slate-600 sm:mt-4 sm:text-lg sm:leading-8">
           <p>
   Al termine della 29ª giornata accedono allo Scatto Promozione le prime
   cinque classificate di ciascun girone di Serie C, ognuna con un bonus

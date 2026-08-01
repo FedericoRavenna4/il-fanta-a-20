@@ -18,7 +18,7 @@ export default function ArcadeLeaderboard({
   return (
     <section id="hall-of-fame-arcade" className="mt-10 border-t border-blue-950/10 pt-10 sm:mt-16 sm:pt-14">
       <p className="section-eyebrow">Classifica ufficiale</p>
-      <p className="mt-3 max-w-2xl text-sm font-bold leading-6 text-slate-600 sm:text-base">Solo chi resiste più a lungo lascia il proprio nome nella storia.</p>
+      <p className="mt-3 max-w-2xl text-sm font-bold leading-6 text-slate-600 sm:text-base"><span className="sm:hidden">Resisti più a lungo che puoi per entrare in classifica!</span><span className="hidden sm:inline">Solo chi resiste più a lungo lascia il proprio nome nella storia.</span></p>
 
       {entries.length === 0 ? (
         <div className="mt-7 rounded-[1.5rem] border border-blue-950/10 bg-white/75 px-5 py-10 text-center text-sm font-bold text-slate-500 shadow-lg shadow-blue-950/5">
@@ -49,7 +49,7 @@ export default function ArcadeLeaderboard({
                 return (
                   <li key={entry.id} className={`grid grid-cols-[1.4rem_minmax(0,1fr)_1.7rem_2.8rem_4.5rem] items-center gap-1 border-b border-blue-950/[.07] px-2 py-2.5 transition last:border-b-0 sm:grid-cols-[4rem_minmax(0,1fr)_7rem_7rem_9rem] sm:gap-2 sm:px-5 sm:py-3 ${highlighted ? "bg-amber-100 ring-2 ring-inset ring-amber-300" : ""}`}>
                     <span className="text-[10px] font-black tabular-nums text-blue-950/45 sm:text-sm">{index + 1}</span>
-                    <span className="min-w-0 truncate text-[10px] font-black text-blue-950 sm:text-base">{entry.nomeGiocatore}</span>
+                    <span className="min-w-0 truncate text-[10px] font-black text-blue-950 sm:text-base">{entry.nomeGiocatore.toLocaleUpperCase("it-IT")}</span>
                     <span className="flex h-6 items-center justify-center sm:h-10">
                       {team && <Image src={team.logo} alt={`Stemma ${team.nome}`} width={42} height={42} unoptimized className="max-h-full max-w-full object-contain" />}
                     </span>
@@ -78,7 +78,7 @@ function PodiumCard({ entry, position, team, highlighted }: { entry: ArcadeLeade
       <div className={`flex items-center justify-center ${position === 1 ? "h-16 w-16" : "h-14 w-14"}`}>
         {team && <Image src={team.logo} alt={`Stemma ${team.nome}`} width={82} height={82} unoptimized className="max-h-full max-w-full object-contain drop-shadow-[0_8px_12px_rgba(15,23,42,.18)]" />}
       </div>
-      <h3 className="mt-2 line-clamp-2 text-sm font-black text-blue-950 sm:text-base">{entry.nomeGiocatore}</h3>
+      <h3 className="mt-2 line-clamp-2 text-sm font-black text-blue-950 sm:text-base">{entry.nomeGiocatore.toLocaleUpperCase("it-IT")}</h3>
       <span className="mt-2 rounded-full bg-blue-950/8 px-2.5 py-1 text-[8px] font-black uppercase tracking-[.1em] text-blue-950/55">{levelLabel(entry.livello)}</span>
       <strong className={`mt-2 font-black tabular-nums text-blue-950 ${position === 1 ? "text-3xl" : "text-2xl"}`}>{entry.metri.toLocaleString("it-IT")} m</strong>
     </article>

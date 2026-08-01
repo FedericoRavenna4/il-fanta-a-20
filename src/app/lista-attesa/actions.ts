@@ -17,9 +17,9 @@ export async function submitWaitlistForm(
   const result = await submitWaitlistApplication({
     nome: formValue(formData, "nome"),
     cognome: formValue(formData, "cognome"),
-    dataNascita: formValue(formData, "data_nascita"),
     instagram: formValue(formData, "instagram"),
     motivazione: formValue(formData, "motivazione"),
+    maggiorenneDichiarato: parseCheckbox(formData.get("maggiorenne_dichiarato")),
     privacyAccettata: parseCheckbox(formData.get("privacy_accettata")),
     honeypot: formValue(formData, WAITLIST_HONEYPOT_FIELD),
   });
