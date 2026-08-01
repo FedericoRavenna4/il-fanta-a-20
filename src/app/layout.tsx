@@ -1,7 +1,15 @@
 import type { Metadata, Viewport } from "next";
 import { Manrope, Outfit } from "next/font/google";
 import Script from "next/script";
-import { SITE_DESCRIPTION, SITE_IMAGE, SITE_NAME, SITE_URL } from "@/lib/seo";
+import {
+  OPEN_GRAPH_SITE_NAME,
+  SITE_DESCRIPTION,
+  SITE_IMAGE,
+  SITE_KEYWORDS,
+  SITE_NAME,
+  SITE_URL,
+  STRUCTURED_DATA,
+} from "@/lib/seo";
 
 import "./globals.css";
 
@@ -29,10 +37,7 @@ export const metadata: Metadata = {
   },
   description: SITE_DESCRIPTION,
   keywords: [
-    "Il Fanta a 20",
-    "fantacalcio",
-    "fantacalcio classic",
-    "fantacalcio 20 squadre",
+    ...SITE_KEYWORDS,
     "competizioni fantacalcio",
     "ranking fantacalcio",
     "statistiche fantacalcio",
@@ -59,7 +64,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "it_IT",
-    siteName: SITE_NAME,
+    siteName: OPEN_GRAPH_SITE_NAME,
     url: "/",
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
@@ -81,6 +86,11 @@ export const metadata: Metadata = {
     email: false,
     address: false,
   },
+  icons: {
+    icon: [{ url: "/icon.png", type: "image/png", sizes: "520x520" }],
+    shortcut: ["/icon.png"],
+    apple: [{ url: "/icon.png", type: "image/png", sizes: "520x520" }],
+  },
   manifest: "/manifest.webmanifest",
 };
 
@@ -97,6 +107,12 @@ export default function RootLayout({
   return (
     <html lang="it" className={`${manrope.variable} ${outfit.variable}`}>
       <body className="min-h-screen flex flex-col font-[var(--font-outfit)]">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(STRUCTURED_DATA).replace(/</g, "\\u003c"),
+          }}
+        />
         <ScrollToTop />
         <Header />
 
