@@ -56,7 +56,8 @@ export default function GameOver({
           </div>
         )}
 
-        <div className="mx-auto mt-3 grid max-w-sm grid-cols-2 gap-2 max-sm:mt-1.5 max-sm:gap-1.5">
+        <div className="mx-auto mt-3 grid max-w-md grid-cols-3 gap-2 max-sm:mt-1.5 max-sm:gap-1.5">
+          <Score label="Livello" value={`${playedLevel}`} emphasize />
           <Score label="Distanza" value={`${result.distance} m`} />
           <Score
             label="Record personale"
@@ -88,11 +89,11 @@ export default function GameOver({
   );
 }
 
-function Score({ label, value, highlight = false }: { label: string; value: string; highlight?: boolean }) {
+function Score({ label, value, highlight = false, emphasize = false }: { label: string; value: string; highlight?: boolean; emphasize?: boolean }) {
   return (
     <div className="rounded-xl border border-white/[0.07] bg-white/[0.045] px-2 py-2.5 max-sm:py-2">
       <p className="text-[6px] font-black uppercase tracking-[0.13em] text-white/35">{label}</p>
-      <p className={`mt-1 truncate text-base font-black tabular-nums ${highlight ? "text-amber-300" : "text-white"}`}>{value}</p>
+      <p className={`mt-1 truncate font-black tabular-nums ${emphasize ? "text-lg text-sky-200" : "text-base"} ${highlight ? "text-amber-300" : emphasize ? "" : "text-white"}`}>{value}</p>
     </div>
   );
 }

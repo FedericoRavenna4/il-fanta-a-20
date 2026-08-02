@@ -52,7 +52,9 @@ function resolveLogo(nomeFile: string, id: number, files: string[]) {
   return `/societa/${file}?v=${versione}`;
 }
 
-export function getSocieta(): Societa[] {
+let cachedSocieta: readonly Societa[] | null = null;
+
+function loadSocieta(): readonly Societa[] {
   const filePath = path.join(process.cwd(), "data", "societa.csv");
   const fileContent = fs.readFileSync(filePath, "utf-8");
   const ranking = getRanking();
@@ -107,4 +109,9 @@ export function getSocieta(): Societa[] {
       badgeCampioneSerieA: isSi(row.Badge_Campione_Serie_A),
     };
   });
+}
+
+export function getSocieta(): Societa[] {
+  cachedSocieta ??= loadSocieta();
+  return cachedSocieta.map((societa) => ({ ...societa }));
 }

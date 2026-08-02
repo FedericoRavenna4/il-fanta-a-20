@@ -5,6 +5,12 @@ import { getSocieta } from "@/lib/societa";
 import { getSupabaseAdminClient } from "@/lib/supabase/server";
 import { consumeRateLimit } from "@/lib/rate-limit/server";
 import type { ArcadeLeaderboardEntry, ArcadeSaveResult } from "./types";
+import {
+  deduplicateArcadeLeaderboard,
+  normalizeArcadeLevel,
+  normalizeArcadePlayerName,
+  normalizeArcadePlayerNameForLookup,
+} from "./leaderboard";
 
 const MINIMUM_METERS = 100;
 const MAXIMUM_METERS = 2_147_483_647;
@@ -104,8 +110,9 @@ export async function saveArcadeRecord(input: {
       .from("classifica_arcade")
       .select("nome_giocatore,societa_id,metri,livello,updated_at")
       .eq("nome_giocatore_normalizzato", normalizedName)
+      .order("livello", { ascending: false })
       .order("metri", { ascending: false })
-      .order("updated_at", { ascending: false })
+      .order("updated_at", { ascending: true })
       .limit(1)
       .maybeSingle();
     if (savedError || !savedRow) {
@@ -141,20 +148,20 @@ export async function saveArcadeRecord(input: {
 async function loadDeduplicatedLeaderboard(): Promise<ArcadeLeaderboardEntry[]> {
   const { data, error } = await getSupabaseAdminClient()
     .from("classifica_arcade")
-    .select("nome_giocatore,societa_id,livello,metri,updated_at")
+    .select("nome_giocatore,societa_id,livello,metri,created_at,updated_at")
+    .order("livello", { ascending: false })
     .order("metri", { ascending: false })
-    .order("updated_at", { ascending: false })
+    .order("updated_at", { ascending: true })
     .limit(1000);
   if (error) throw error;
 
-  const bestByNickname = new Map<string, ArcadeLeaderboardEntry>();
+  const entries: ArcadeLeaderboardEntry[] = [];
   for (const row of data ?? []) {
     const normalizedName = normalizeArcadePlayerNameForLookup(row.nome_giocatore);
     if (
       !normalizedName ||
       !Number.isInteger(row.societa_id) ||
-      !Number.isFinite(row.metri) ||
-      !row.updated_at
+      !Number.isFinite(row.metri)
     ) {
       console.warn("[arcade] Record incompleto ignorato nella classifica");
       continue;
@@ -163,48 +170,18 @@ async function loadDeduplicatedLeaderboard(): Promise<ArcadeLeaderboardEntry[]> 
       id: leaderboardEntryId(row.nome_giocatore, row.societa_id),
       nomeGiocatore: normalizeArcadePlayerName(row.nome_giocatore),
       societaId: row.societa_id,
-      livello: normalizeLevel(row.livello),
+      livello: normalizeArcadeLevel(row.livello),
       metri: row.metri,
-      updatedAt: row.updated_at,
+      updatedAt: row.updated_at || row.created_at || "",
     };
-    const current = bestByNickname.get(normalizedName);
-    if (!current || isBetterNicknameRecord(candidate, current)) {
-      bestByNickname.set(normalizedName, candidate);
-    }
+    entries.push(candidate);
   }
 
-  return [...bestByNickname.values()].sort(compareLeaderboardEntries);
-}
-
-function isBetterNicknameRecord(
-  candidate: ArcadeLeaderboardEntry,
-  current: ArcadeLeaderboardEntry
-) {
-  if (candidate.metri !== current.metri) return candidate.metri > current.metri;
-  return new Date(candidate.updatedAt).getTime() > new Date(current.updatedAt).getTime();
-}
-
-function compareLeaderboardEntries(
-  first: ArcadeLeaderboardEntry,
-  second: ArcadeLeaderboardEntry
-) {
-  if (first.metri !== second.metri) return second.metri - first.metri;
-  if (first.livello !== second.livello) return second.livello - first.livello;
-  const timeDifference = new Date(first.updatedAt).getTime() - new Date(second.updatedAt).getTime();
-  if (timeDifference !== 0) return timeDifference;
-  return first.id.localeCompare(second.id, "it-IT");
+  return deduplicateArcadeLeaderboard(entries);
 }
 
 function leaderboardEntryId(nome: string, societaId: number) {
   return `${normalizeArcadePlayerNameForLookup(nome)}:${societaId}`;
-}
-
-export function normalizeArcadePlayerName(value: string) {
-  return String(value ?? "").trim().replace(/\s+/g, " ").toLocaleUpperCase("it-IT");
-}
-
-function normalizeArcadePlayerNameForLookup(value: string) {
-  return normalizeArcadePlayerName(value).toLocaleLowerCase("it-IT");
 }
 
 function verifyRunProof(proof: string): { ok: true; payload: RunProofPayload } | { ok: false; reason: "expired" | "invalid" } {
@@ -256,10 +233,6 @@ function isValidTeam(value: number) {
 
 function isValidLevel(value: number): value is 1 | 2 | 3 {
   return value === 1 || value === 2 || value === 3;
-}
-
-function normalizeLevel(value: number): 1 | 2 | 3 {
-  return value === 3 ? 3 : value === 2 ? 2 : 1;
 }
 
 function serviceUnavailable(): ArcadeSaveResult {

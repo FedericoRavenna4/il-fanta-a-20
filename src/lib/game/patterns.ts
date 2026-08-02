@@ -252,28 +252,28 @@ export const RAFFICA_PATTERN_LIBRARY: Record<RafficaType, readonly (readonly Raf
 
 export const MOBILE_MALUS_RAFFICA_PATTERNS: readonly (readonly RafficaBeat[])[] = [
   [
-    { kind:"yellowCard",count:3,line:0,mobileLine:0,spacing:12,intervalAfter:1.08 },
-    { kind:"concededGoal",count:2,line:2,mobileLine:2,spacing:16,intervalAfter:1.14 },
-    { kind:"redCard",count:3,line:2,mobileLine:2,spacing:13,intervalAfter:1.12 },
-    { kind:"missedPenalty",count:1,line:0,mobileLine:0,spacing:30,intervalAfter:1.28 },
+    { kind:"yellowCard",count:4,line:0,mobileLine:0,spacing:7,intervalAfter:.9 },
+    { kind:"concededGoal",count:3,line:2,mobileLine:2,spacing:8,intervalAfter:.68 },
+    { kind:"redCard",count:3,line:2,mobileLine:2,spacing:9,intervalAfter:.92 },
+    { kind:"missedPenalty",count:2,line:0,mobileLine:0,spacing:26,intervalAfter:1.02 },
   ],
   [
-    { kind:"concededGoal",count:2,line:2,mobileLine:2,spacing:17,intervalAfter:1.12 },
-    { kind:"yellowCard",count:3,line:0,mobileLine:0,spacing:12,intervalAfter:1.08 },
-    { kind:"ownGoal",count:1,line:2,mobileLine:2,spacing:30,intervalAfter:1.3 },
-    { kind:"redCard",count:3,line:0,mobileLine:0,spacing:13,intervalAfter:1.16 },
+    { kind:"concededGoal",count:3,line:2,mobileLine:2,spacing:8,intervalAfter:.88 },
+    { kind:"yellowCard",count:4,line:0,mobileLine:0,spacing:7,intervalAfter:.64 },
+    { kind:"redCard",count:3,line:0,mobileLine:0,spacing:9,intervalAfter:.9 },
+    { kind:"missedPenalty",count:2,line:2,mobileLine:2,spacing:28,intervalAfter:1.04 },
   ],
   [
-    { kind:"redCard",count:3,line:0,mobileLine:0,spacing:13,intervalAfter:1.1 },
-    { kind:"concededGoal",count:2,line:2,mobileLine:2,spacing:17,intervalAfter:1.16 },
-    { kind:"yellowCard",count:3,line:0,mobileLine:0,spacing:12,intervalAfter:1.14 },
-    { kind:"missedPenalty",count:1,line:2,mobileLine:2,spacing:30,intervalAfter:1.3 },
+    { kind:"redCard",count:3,line:0,mobileLine:0,spacing:9,intervalAfter:.62 },
+    { kind:"yellowCard",count:4,line:0,mobileLine:0,spacing:7,intervalAfter:.94 },
+    { kind:"concededGoal",count:3,line:2,mobileLine:2,spacing:8,intervalAfter:.66 },
+    { kind:"missedPenalty",count:2,line:2,mobileLine:2,spacing:28,intervalAfter:1.06 },
   ],
   [
-    { kind:"ownGoal",count:1,line:2,mobileLine:2,spacing:30,intervalAfter:1.3 },
-    { kind:"yellowCard",count:3,line:0,mobileLine:0,spacing:12,intervalAfter:1.12 },
-    { kind:"concededGoal",count:2,line:2,mobileLine:2,spacing:17,intervalAfter:1.18 },
-    { kind:"redCard",count:3,line:0,mobileLine:0,spacing:13,intervalAfter:1.16 },
+    { kind:"missedPenalty",count:2,line:2,mobileLine:2,spacing:28,intervalAfter:.9 },
+    { kind:"yellowCard",count:3,line:0,mobileLine:0,spacing:8,intervalAfter:.7 },
+    { kind:"concededGoal",count:3,line:0,mobileLine:0,spacing:9,intervalAfter:.92 },
+    { kind:"redCard",count:3,line:2,mobileLine:2,spacing:10,intervalAfter:1.08 },
   ],
 ];
 
@@ -390,7 +390,7 @@ export function validateMobileRafficaPattern(
     const line = beat.mobileLine ?? beat.line;
     if (
       line === 1 ||
-      beat.count > getMobileMalusVolleyLimit(beat.kind) ||
+      beat.count > 4 ||
       beat.count < 1 ||
       beat.spacing < 6
     ) return false;

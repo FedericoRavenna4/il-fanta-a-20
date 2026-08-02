@@ -40,25 +40,32 @@ export default function Header() {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const lastScroll = useRef(0);
+  const scrollFrame = useRef<number | null>(null);
 
   useEffect(() => {
     function onScroll() {
-      const current = window.scrollY;
-
-      if (current < 40) {
-        setHidden(false);
-      } else if (current > lastScroll.current && current > 120) {
-        setHidden(true);
-        setOpenMenu(null);
-      } else if (current < lastScroll.current) {
-        setHidden(false);
-      }
-
-      lastScroll.current = current;
+      if (scrollFrame.current !== null) return;
+      scrollFrame.current = window.requestAnimationFrame(() => {
+        const current = window.scrollY;
+        if (current < 40) {
+          setHidden(false);
+        } else if (current > lastScroll.current && current > 120) {
+          setHidden(true);
+          setOpenMenu(null);
+        } else if (current < lastScroll.current) {
+          setHidden(false);
+        }
+        lastScroll.current = current;
+        scrollFrame.current = null;
+      });
     }
 
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (scrollFrame.current !== null) window.cancelAnimationFrame(scrollFrame.current);
+      scrollFrame.current = null;
+    };
   }, []);
 
   useEffect(() => {

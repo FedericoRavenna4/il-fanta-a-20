@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ArcadeLeaderboardEntry } from "@/lib/arcade/types";
 import type { GameTeam } from "@/lib/game/types";
 
@@ -16,8 +16,8 @@ export default function ArcadeTopThree({ entries, teams }: { entries: ArcadeLead
     return () => window.removeEventListener("arcade-leaderboard-updated", handleUpdate);
   }, []);
 
+  const teamsById = useMemo(() => new Map(teams.map((team) => [team.id, team])), [teams]);
   if (liveEntries.length === 0) return null;
-  const teamsById = new Map(teams.map((team) => [team.id, team]));
   return (
     <section aria-label="Primi tre della classifica Arcade" className="mb-3 rounded-xl border border-sky-200/70 bg-gradient-to-r from-white/90 via-sky-50/80 to-white/90 p-2 shadow-lg shadow-blue-950/8 sm:mb-7 sm:p-4">
       <div className="grid grid-cols-3 gap-1 sm:gap-3">
@@ -32,11 +32,11 @@ export default function ArcadeTopThree({ entries, teams }: { entries: ArcadeLead
             <article key={entry.id} className={`grid min-w-0 grid-cols-[auto_1.15rem_minmax(0,1fr)] items-center gap-1 rounded-lg border border-white/40 px-1.5 py-1.5 text-white shadow-md [text-shadow:0_1px_3px_rgba(15,23,42,.58)] sm:grid-cols-[auto_auto_minmax(0,1fr)_auto] sm:gap-3 sm:rounded-xl sm:px-3 sm:py-3 ${tone}`}>
               <span className="text-[8px] font-black text-blue-950 [text-shadow:none] sm:text-xs">#{index + 1}</span>
               <span className="flex h-4 w-4 items-center justify-center sm:h-8 sm:w-8">
-                {team && <Image src={team.logo} alt={`Stemma ${team.nome}`} width={34} height={34} unoptimized className="max-h-full max-w-full object-contain" />}
+                {team && <Image src={team.logo} alt={`Stemma ${team.nome}`} width={34} height={34} sizes="(max-width: 639px) 16px, 32px" className="max-h-full max-w-full object-contain" />}
               </span>
               <span className="min-w-0">
                 <strong className="block truncate text-[8px] font-black text-blue-950 [text-shadow:none] sm:text-xs">{entry.nomeGiocatore.toLocaleUpperCase("it-IT")}</strong>
-                <span className="block truncate text-[5px] font-bold uppercase tracking-[.03em] text-blue-950/75 [text-shadow:none] sm:text-[8px] sm:tracking-[.06em]">Liv. {romanLevel(entry.livello)}</span>
+                <span className="mt-0.5 block truncate text-[7px] font-black uppercase tracking-[.04em] text-blue-950 [text-shadow:none] sm:text-[10px] sm:tracking-[.07em]">Livello {romanLevel(entry.livello)}</span>
               </span>
               <strong className="col-span-3 text-right text-[11px] font-black leading-none tabular-nums sm:col-span-1 sm:text-base">{entry.metri.toLocaleString("it-IT")} m</strong>
             </article>

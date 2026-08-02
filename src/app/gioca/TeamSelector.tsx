@@ -607,7 +607,6 @@ function TeamSelector({
                     width={320}
                     height={320}
                     sizes="(max-width: 639px) 136px, 200px"
-                    unoptimized
                     className={`h-[86%] w-[86%] object-contain [image-rendering:auto] sm:transition-[filter] sm:duration-500 ${selected ? "sm:drop-shadow-[0_24px_30px_rgba(0,0,0,0.5)]" : "sm:drop-shadow-[0_10px_16px_rgba(0,0,0,0.38)]"}`}
                   />
                 </button>
@@ -707,7 +706,6 @@ function TeamSelector({
                 width={220}
                 height={220}
                 sizes="(max-width: 639px) 112px, 128px"
-                unoptimized
                 priority
                 className="max-h-full max-w-full object-contain drop-shadow-[0_18px_28px_rgba(0,0,0,0.42)]"
               />

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { ArcadeLeaderboardEntry } from "@/lib/arcade/types";
 import type { GameTeam } from "@/lib/game/types";
 
@@ -15,7 +15,7 @@ export default function ArcadeLeaderboard({
   highlightedId?: string | null;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const teamsById = new Map(teams.map((team) => [team.id, team]));
+  const teamsById = useMemo(() => new Map(teams.map((team) => [team.id, team])), [teams]);
   const visibleEntries = entries.slice(0, expanded ? 100 : 10);
 
   return (
@@ -54,9 +54,9 @@ export default function ArcadeLeaderboard({
                     <span className="text-[10px] font-black tabular-nums text-blue-950/45 sm:text-sm">{index + 1}</span>
                     <span className="min-w-0 truncate text-[10px] font-black text-blue-950 sm:text-base">{entry.nomeGiocatore.toLocaleUpperCase("it-IT")}</span>
                     <span className="flex h-6 items-center justify-center sm:h-10">
-                      {team && <Image src={team.logo} alt={`Stemma ${team.nome}`} width={42} height={42} unoptimized className="max-h-full max-w-full object-contain" />}
+                      {team && <Image src={team.logo} alt={`Stemma ${team.nome}`} width={42} height={42} sizes="(max-width: 639px) 24px, 40px" className="max-h-full max-w-full object-contain" />}
                     </span>
-                    <span className="justify-self-center whitespace-nowrap rounded-full bg-slate-100 px-1 py-1 text-[6px] font-black uppercase tracking-[.02em] text-slate-500 sm:px-2 sm:text-[8px] sm:tracking-[.08em]">{levelLabel(entry.livello)}</span>
+                    <span className="justify-self-center whitespace-nowrap rounded-full bg-blue-950/8 px-1.5 py-1 text-[8px] font-black uppercase tracking-[.03em] text-blue-950 sm:px-2.5 sm:text-[10px] sm:tracking-[.08em]">{levelLabel(entry.livello)}</span>
                     <strong className="whitespace-nowrap text-right text-[12px] font-black tabular-nums text-blue-700 sm:text-xl">{entry.metri.toLocaleString("it-IT")} m</strong>
                   </li>
                 );
@@ -86,10 +86,10 @@ function PodiumCard({ entry, position, team, highlighted }: { entry: ArcadeLeade
     <article className={`relative flex min-h-36 flex-col items-center justify-center rounded-[1.5rem] border p-3 text-center shadow-xl sm:p-4 ${tone} ${highlighted ? "ring-2 ring-blue-700 ring-offset-2" : ""}`}>
       <span className="absolute left-4 top-3 text-xs font-black uppercase tracking-[.15em] text-blue-950/45">#{position}</span>
       <div className={`flex items-center justify-center ${position === 1 ? "h-16 w-16" : "h-14 w-14"}`}>
-        {team && <Image src={team.logo} alt={`Stemma ${team.nome}`} width={82} height={82} unoptimized className="max-h-full max-w-full object-contain drop-shadow-[0_8px_12px_rgba(15,23,42,.18)]" />}
+        {team && <Image src={team.logo} alt={`Stemma ${team.nome}`} width={82} height={82} sizes="(max-width: 639px) 56px, 64px" className="max-h-full max-w-full object-contain drop-shadow-[0_8px_12px_rgba(15,23,42,.18)]" />}
       </div>
       <h3 className="mt-2 line-clamp-2 text-sm font-black text-blue-950 sm:text-base">{entry.nomeGiocatore.toLocaleUpperCase("it-IT")}</h3>
-      <span className="mt-2 rounded-full bg-blue-950/8 px-2.5 py-1 text-[8px] font-black uppercase tracking-[.1em] text-blue-950/55">{levelLabel(entry.livello)}</span>
+      <span className="mt-2 rounded-full bg-blue-950/10 px-3 py-1 text-[9px] font-black uppercase tracking-[.1em] text-blue-950 sm:text-[10px]">{levelLabel(entry.livello)}</span>
       <strong className={`mt-2 font-black tabular-nums text-blue-950 ${position === 1 ? "text-3xl" : "text-2xl"}`}>{entry.metri.toLocaleString("it-IT")} m</strong>
     </article>
   );

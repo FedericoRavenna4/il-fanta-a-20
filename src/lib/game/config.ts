@@ -89,9 +89,9 @@ export const MOBILE_OBSTACLE_SPAWN_CONFIG = {
   slidingReactionSeconds: 1.22,
   slidingFollowUpSeconds: 1.34,
   slidingChance: {
-    before500Meters: 0.16,
-    at1500Meters: 0.42,
-    enduranceMaximum: 0.58,
+    before500Meters: 0.1664,
+    at1500Meters: 0.4368,
+    enduranceMaximum: 0.6032,
   },
 } as const;
 

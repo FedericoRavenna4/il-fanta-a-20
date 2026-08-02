@@ -1496,33 +1496,12 @@ function updateRaffica(
   }
 
   if (burst.timer > 0) return;
-  if (
-    runtime.mobileLayout &&
-    burst.type === "malus" &&
-    runtime.entities.some((entity) =>
-      entity.type === "event" && entity.horizontalSpeedFactor === 1.5
-    )
-  ) {
-    burst.timer = 0.12;
-    return;
-  }
   const beat = burst.pattern[burst.beatIndex];
   if (!beat) {
     burst.beatIndex = 0;
     burst.timer = 0.18;
     return;
   }
-  if (
-    runtime.mobileLayout &&
-    burst.type === "malus" &&
-    (runtime.activeEntityCounts.event + beat.count >
-      ENTITY_DENSITY_CONFIG.maximumActiveCollectiblesDuringBurst ||
-      runtime.entities.length + beat.count > getMaximumActiveEntities(runtime))
-  ) {
-    burst.timer = 0.12;
-    return;
-  }
-
   const dimensions = getEventDimensions(beat.kind);
   const scale = runtime.mobileLayout ? MOBILE_EVENT_SCALE : 1;
   const burstStartX = runtime.worldWidth + Math.max(38, speed * 0.045);
