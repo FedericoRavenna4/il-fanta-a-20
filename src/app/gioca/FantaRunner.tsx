@@ -119,6 +119,9 @@ type Runtime = {
   activeEntityCounts: Record<RunnerEntity["type"], number>;
   nextEntityId: number;
   spawnTimer: number;
+  lastGameplaySpawnAt: number;
+  spawnRecoveryStartedAt: number | null;
+  sessionInvalid: boolean;
   elapsed: number;
   score: number;
   peakScore: number;
@@ -184,6 +187,7 @@ type Runtime = {
   powerUpCollectionEffect: { kind: PowerUpKind; until: number } | null;
   powerUpCooldown: number;
   firstPowerUpSpawned: boolean;
+  lastPowerUpKind: PowerUpKind | null;
   presentation: PresentationState | null;
   boss: {
     phase: "warning" | "active" | "exiting";
@@ -293,6 +297,9 @@ function createRuntime(level: GameLevel = 1): Runtime {
     activeEntityCounts: { event: 0, physical: 0, powerup: 0 },
     nextEntityId: 1,
     spawnTimer: 1.05,
+    lastGameplaySpawnAt: 0,
+    spawnRecoveryStartedAt: null,
+    sessionInvalid: false,
     elapsed: 0,
     score: 0,
     peakScore: 0,
@@ -356,6 +363,7 @@ function createRuntime(level: GameLevel = 1): Runtime {
     powerUpCollectionEffect: null,
     powerUpCooldown: 0,
     firstPowerUpSpawned: false,
+    lastPowerUpKind: null,
     presentation: null,
     boss: null,
     lastBossPattern: null,
@@ -411,6 +419,7 @@ function FantaRunner({
   distanceRecord,
   onSnapshot,
   onGameOver,
+  onSessionError,
   onAssetsReady,
   onLoadProgress,
 }: {
@@ -422,6 +431,7 @@ function FantaRunner({
   distanceRecord: number;
   onSnapshot: (snapshot: GameSnapshot) => void;
   onGameOver: (snapshot: GameSnapshot) => void;
+  onSessionError: (message: string) => void;
   onAssetsReady: (ready: boolean) => void;
   onLoadProgress: (progress: number) => void;
 }) {
@@ -698,6 +708,10 @@ function FantaRunner({
       );
 
       if (runtime.finished) {
+        if (runtime.sessionInvalid) {
+          onSessionError("Si è verificato un problema durante l’avvio della partita. Riprova.");
+          return;
+        }
         advanceDisplayDistance(runtime);
         updatePersonalRecord(runtime, distanceRecordRef.current, time);
         const finalSnapshot = toSnapshot(runtime, best, distanceRecordRef.current, time);
@@ -716,7 +730,7 @@ function FantaRunner({
         activeGameLoopCount = Math.max(0, activeGameLoopCount - 1);
       }
     };
-  }, [best, onGameOver, onSnapshot, runId, status]);
+  }, [best, onGameOver, onSessionError, onSnapshot, runId, status]);
 
   useEffect(() => {
     if (status === "running") return;
@@ -1102,10 +1116,12 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
           difficultyBand.intervalMultiplier *
           getObstacleProgression(runtime.distance).intervalMultiplier *
           LEVEL_RULES[runtime.level].difficulty.spawnIntervalMultiplier *
-          openingIntervalMultiplier +
+          openingIntervalMultiplier * getEnduranceSpawnIntervalMultiplier(runtime.distance) +
         sequenceDelay;
     }
   }
+
+  monitorSpawnerHealth(runtime);
 
   const nicoStrength = getPowerUpStrength(runtime, "nico-paz");
   const gimenezStrength = getPowerUpStrength(runtime, "gimenez");
@@ -1556,7 +1572,9 @@ function trySpawnPowerUp(runtime: Runtime, guaranteed: boolean) {
   const definition = pickPowerUp(
     Math.random,
     () => 1,
-    (candidate) => isPowerUpEligible(candidate.kind, runtime.distance)
+    (candidate) =>
+      candidate.kind !== runtime.lastPowerUpKind &&
+      isPowerUpEligible(candidate.kind, runtime.distance)
   );
   const scale = runtime.mobileLayout ? MOBILE_POWER_UP_SCALE : 1;
   const width = definition.width * scale;
@@ -1578,6 +1596,7 @@ function trySpawnPowerUp(runtime: Runtime, guaranteed: boolean) {
   runtime.entities.push(entity);
   runtime.powerUpCooldown = POWER_UP_SPAWN_CONFIG.cooldownSeconds;
   runtime.firstPowerUpSpawned = true;
+  runtime.lastPowerUpKind = definition.kind;
   recordSpawnCategory(runtime, "space");
   return true;
 }
@@ -1776,7 +1795,8 @@ function updateBoss(
   runtime.nextBossAt = runtime.distance + randomBetween(
     BOSS_CONFIG.distanceWindowMeters.minimum,
     BOSS_CONFIG.distanceWindowMeters.maximum
-  ) + getLevelBossDistanceOffset(runtime.level);
+  ) * getEnduranceBossDistanceMultiplier(runtime.distance) +
+    getLevelBossDistanceOffset(runtime.level);
   changeTeamRating(runtime, BOSS_CONFIG.rewardRating, time, "boss-reward", "Boss 20 superato");
   runtime.presentation = null;
 }
@@ -1856,6 +1876,51 @@ function getObstacleProgression(distance: number) {
   };
 }
 
+function getEndurancePressure(distance: number) {
+  const endurance = DIFFICULTY_CONFIG.endurance;
+  const excessDistance = Math.max(0, distance - endurance.startsAtMeters);
+  return 1 - Math.exp(-excessDistance / endurance.curveDistanceMeters);
+}
+
+function getEnduranceSpawnIntervalMultiplier(distance: number) {
+  return 1 - getEndurancePressure(distance) *
+    DIFFICULTY_CONFIG.endurance.maximumSpawnIntervalReduction;
+}
+
+function getEnduranceBossDistanceMultiplier(distance: number) {
+  return 1 - getEndurancePressure(distance) *
+    DIFFICULTY_CONFIG.endurance.maximumBossDistanceReduction;
+}
+
+function monitorSpawnerHealth(runtime: Runtime) {
+  const watchdog = SPAWN_CONFIG.watchdog;
+  if (
+    runtime.sessionInvalid ||
+    runtime.elapsed < watchdog.startupGraceSeconds ||
+    runtime.entities.length > 0 ||
+    runtime.elapsed - runtime.lastGameplaySpawnAt <= watchdog.maximumSilenceSeconds
+  ) return;
+
+  if (runtime.spawnRecoveryStartedAt === null) {
+    runtime.spawnRecoveryStartedAt = runtime.elapsed;
+    runtime.activeEntityCounts = { event: 0, physical: 0, powerup: 0 };
+    runtime.burst = null;
+    runtime.boss = null;
+    runtime.presentation = null;
+    runtime.spawnTimer = 0;
+    return;
+  }
+
+  if (
+    runtime.elapsed - runtime.spawnRecoveryStartedAt >=
+    watchdog.recoveryWindowSeconds
+  ) {
+    runtime.sessionInvalid = true;
+    runtime.finished = true;
+    runtime.gameOverReason = "Sessione di gioco non valida";
+  }
+}
+
 function getBonusPatternWeight(
   teamRating: number,
   requestedWeight: number,
@@ -1877,6 +1942,7 @@ function spawnNext(runtime: Runtime, speed: number, difficulty: number) {
     const spawned = pushEvent(runtime, runtime.initialBonusKind, startX, 0, {
       pattern: true,
       tight: true,
+      opening: true,
       motion: "ground",
       horizontalSpeedFactor: 0.96,
     });
@@ -2064,9 +2130,10 @@ function pushEvent(
     spawnY?: number;
     velocityX?: number;
     velocityY?: number;
+    opening?: boolean;
   } = {}
 ) {
-  if (kind === "hatTrick") {
+  if (kind === "hatTrick" && !options.opening) {
     if (runtime.distance < 400 || runtime.distance < runtime.nextHatTrickAt) return false;
     if (runtime.entities.some((entity) => entity.kind === "hatTrick")) return false;
   }
@@ -2245,6 +2312,8 @@ function acquireEntity(
   entity.motionSpeed = undefined;
   entity.magnetCaptured = undefined;
   runtime.activeEntityCounts[type] += 1;
+  runtime.lastGameplaySpawnAt = runtime.elapsed;
+  runtime.spawnRecoveryStartedAt = null;
   return entity;
 }
 
@@ -3733,7 +3802,9 @@ function getBossRect(runtime: Runtime) {
       shotProgress * 15 +
       exitProgress * 95 +
       (1 - entranceProgress) * (width + 36),
-    y: GROUND_Y - height - 2 + Math.sin(runtime.elapsed * 0.82) * 11,
+    y: GROUND_Y - height - 2 +
+      (runtime.mobileLayout ? BOSS_CONFIG.mobile.verticalOffset : 0) +
+      Math.sin(runtime.elapsed * 0.82) * 11,
   };
 }
 

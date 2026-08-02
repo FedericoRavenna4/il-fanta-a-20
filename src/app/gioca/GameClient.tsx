@@ -108,6 +108,7 @@ export default function GameClient({
   const [playerName, setPlayerName] = useState("");
   const [arcadeSaveResult, setArcadeSaveResult] = useState<ArcadeSaveResult | null>(null);
   const [arcadeSavePending, setArcadeSavePending] = useState(false);
+  const [sessionError, setSessionError] = useState("");
   const [leaderboard, setLeaderboard] = useState(initialLeaderboard);
   const [highlightedRecordId, setHighlightedRecordId] = useState<string | null>(null);
   const dialogRef = useRef<HTMLElement>(null);
@@ -141,6 +142,7 @@ export default function GameClient({
     setPendingVarReview(null);
     setArcadeSaveResult(null);
     setArcadeSavePending(false);
+    setSessionError("");
     setSnapshot(createEmptySnapshot(savedBest, savedPersonalRecord));
     setAssetsReady(false);
     setLoadProgress(0);
@@ -160,6 +162,7 @@ export default function GameClient({
     setFinalResult(null);
     setArcadeSaveResult(null);
     setArcadeSavePending(false);
+    setSessionError("");
     setRunProof("");
     void beginArcadeRun(playerName, team.id, activeLevel).then((result) => {
       if (result.ok && result.proof) setRunProof(result.proof);
@@ -174,6 +177,14 @@ export default function GameClient({
       setStatus("running");
     }, transitionDuration);
   }, [activeLevel, assetsReady, best, personalRecord, playerName, team]);
+
+  const handleSessionError = useCallback((message: string) => {
+    setRunProof("");
+    setArcadeSavePending(false);
+    setArcadeSaveResult(null);
+    setSessionError(message);
+    setStatus("error");
+  }, []);
 
   const updateLeaderboard = useCallback((entries: ArcadeLeaderboardEntry[], highlightedId?: string) => {
     setLeaderboard(entries);
@@ -278,6 +289,7 @@ export default function GameClient({
     setPendingVarReview(null);
     setArcadeSaveResult(null);
     setArcadeSavePending(false);
+    setSessionError("");
     setSnapshot(createEmptySnapshot(best, personalRecord));
     setRunId((current) => current + 1);
     setStatus("ready");
@@ -467,6 +479,7 @@ export default function GameClient({
                 distanceRecord={personalRecord}
                 onSnapshot={setSnapshot}
                 onGameOver={handleGameOver}
+                onSessionError={handleSessionError}
                 onAssetsReady={setAssetsReady}
                 onLoadProgress={setLoadProgress}
               />
@@ -505,6 +518,17 @@ export default function GameClient({
                     verdict={pendingVarReview.verdict}
                     onComplete={completeVarReview}
                   />
+                )}
+
+                {status === "error" && sessionError && (
+                  <div className="absolute inset-0 z-30 flex items-center justify-center bg-[#020817]/92 p-5 text-center text-white backdrop-blur-md">
+                    <div className="max-w-sm">
+                      <p className="text-sm font-bold leading-6 text-white/85">{sessionError}</p>
+                      <button type="button" onClick={prepareNextRun} className="mt-5 min-h-11 rounded-full bg-white px-7 text-[10px] font-black uppercase tracking-[.14em] text-blue-950">
+                        Riprova
+                      </button>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>

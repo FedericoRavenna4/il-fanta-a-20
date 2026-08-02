@@ -50,6 +50,12 @@ export const DIFFICULTY_CONFIG = {
   bonusTrailBaseChance: 0.025,
   bonusTrailMaximumChance: 0.08,
   tacticalBonusChance: 0.12,
+  endurance: {
+    startsAtMeters: 1000,
+    curveDistanceMeters: 4200,
+    maximumSpawnIntervalReduction: 0.08,
+    maximumBossDistanceReduction: 0.12,
+  },
 } as const;
 
 export const DIFFICULTY_BANDS = [
@@ -149,6 +155,11 @@ export const SPAWN_CONFIG = {
   },
   hazardsEnabled: false,
   sequenceBaseChance: 0.06,
+  watchdog: {
+    startupGraceSeconds: 5,
+    maximumSilenceSeconds: 5,
+    recoveryWindowSeconds: 3,
+  },
   sequenceMaximumChance: 0.32,
 } as const;
 

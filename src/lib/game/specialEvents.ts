@@ -17,6 +17,7 @@ export const BOSS_CONFIG = {
     attackIntervalMultiplier: 1.08,
     recoveryBonusSeconds: 0.52,
     projectileHitboxScale: 0.84,
+    verticalOffset: -55,
   },
 } as const;
 

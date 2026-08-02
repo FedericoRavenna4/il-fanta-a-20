@@ -22,24 +22,9 @@ type RunProofPayload = {
 
 export async function getArcadeLeaderboard(): Promise<ArcadeLeaderboardEntry[]> {
   try {
-    const { data, error } = await getSupabaseAdminClient()
-      .from("classifica_arcade")
-      .select("nome_giocatore,societa_id,livello,metri,updated_at")
-      .order("metri", { ascending: false })
-      .order("livello", { ascending: false })
-      .order("updated_at", { ascending: true })
-      .limit(100);
-
-    if (error) throw error;
-    return (data ?? []).map((row) => ({
-      id: leaderboardEntryId(row.nome_giocatore, row.societa_id),
-      nomeGiocatore: normalizeArcadePlayerName(row.nome_giocatore),
-      societaId: row.societa_id,
-      livello: normalizeLevel(row.livello),
-      metri: row.metri,
-      updatedAt: row.updated_at,
-    }));
-  } catch {
+    return (await loadDeduplicatedLeaderboard()).slice(0, 100);
+  } catch (error) {
+    console.error("[arcade] Impossibile caricare la classifica", error);
     return [];
   }
 }
@@ -109,22 +94,33 @@ export async function saveArcadeRecord(input: {
       p_livello: payload.livello,
       p_metri: metri,
     });
-    if (error) return serviceUnavailable();
+    if (error) {
+      console.error("[arcade] RPC salva_record_arcade non riuscita", error);
+      return serviceUnavailable();
+    }
 
     const returnedRecord = extractRecordMeters(data);
     const { data: savedRow, error: savedError } = await supabase
       .from("classifica_arcade")
-      .select("metri,livello,updated_at")
+      .select("nome_giocatore,societa_id,metri,livello,updated_at")
       .eq("nome_giocatore_normalizzato", normalizedName)
+      .order("metri", { ascending: false })
+      .order("updated_at", { ascending: false })
+      .limit(1)
       .maybeSingle();
-    if (savedError || !savedRow) return serviceUnavailable();
+    if (savedError || !savedRow) {
+      console.error("[arcade] Record salvato non rileggibile", savedError);
+      return serviceUnavailable();
+    }
 
     const metriRecord = returnedRecord ?? savedRow.metri;
-    const [leaderboard, position] = await Promise.all([
-      getArcadeLeaderboard(),
-      getArcadePosition(savedRow.metri, normalizeLevel(savedRow.livello), savedRow.updated_at),
-    ]);
-    const highlightedId = leaderboardEntryId(nomeGiocatore, payload.societaId);
+    const completeLeaderboard = await loadDeduplicatedLeaderboard();
+    const positionIndex = completeLeaderboard.findIndex(
+      (entry) => normalizeArcadePlayerNameForLookup(entry.nomeGiocatore) === normalizedName
+    );
+    const position = positionIndex >= 0 ? positionIndex + 1 : completeLeaderboard.length + 1;
+    const leaderboard = completeLeaderboard.slice(0, 100);
+    const highlightedId = leaderboardEntryId(savedRow.nome_giocatore, savedRow.societa_id);
 
     return {
       ok: true,
@@ -136,20 +132,67 @@ export async function saveArcadeRecord(input: {
       highlightedId,
       leaderboard,
     };
-  } catch {
+  } catch (error) {
+    console.error("[arcade] Salvataggio o aggiornamento classifica non riuscito", error);
     return serviceUnavailable();
   }
 }
 
-async function getArcadePosition(metri: number, livello: 1 | 2 | 3, updatedAt: string) {
-  const table = () => getSupabaseAdminClient().from("classifica_arcade").select("metri", { count: "exact", head: true });
-  const [moreMeters, sameMetersHigherLevel, sameScoreEarlier] = await Promise.all([
-    table().gt("metri", metri),
-    table().eq("metri", metri).gt("livello", livello),
-    table().eq("metri", metri).eq("livello", livello).lt("updated_at", updatedAt),
-  ]);
-  if (moreMeters.error || sameMetersHigherLevel.error || sameScoreEarlier.error) throw new Error("Posizione non disponibile");
-  return (moreMeters.count ?? 0) + (sameMetersHigherLevel.count ?? 0) + (sameScoreEarlier.count ?? 0) + 1;
+async function loadDeduplicatedLeaderboard(): Promise<ArcadeLeaderboardEntry[]> {
+  const { data, error } = await getSupabaseAdminClient()
+    .from("classifica_arcade")
+    .select("nome_giocatore,societa_id,livello,metri,updated_at")
+    .order("metri", { ascending: false })
+    .order("updated_at", { ascending: false })
+    .limit(1000);
+  if (error) throw error;
+
+  const bestByNickname = new Map<string, ArcadeLeaderboardEntry>();
+  for (const row of data ?? []) {
+    const normalizedName = normalizeArcadePlayerNameForLookup(row.nome_giocatore);
+    if (
+      !normalizedName ||
+      !Number.isInteger(row.societa_id) ||
+      !Number.isFinite(row.metri) ||
+      !row.updated_at
+    ) {
+      console.warn("[arcade] Record incompleto ignorato nella classifica");
+      continue;
+    }
+    const candidate: ArcadeLeaderboardEntry = {
+      id: leaderboardEntryId(row.nome_giocatore, row.societa_id),
+      nomeGiocatore: normalizeArcadePlayerName(row.nome_giocatore),
+      societaId: row.societa_id,
+      livello: normalizeLevel(row.livello),
+      metri: row.metri,
+      updatedAt: row.updated_at,
+    };
+    const current = bestByNickname.get(normalizedName);
+    if (!current || isBetterNicknameRecord(candidate, current)) {
+      bestByNickname.set(normalizedName, candidate);
+    }
+  }
+
+  return [...bestByNickname.values()].sort(compareLeaderboardEntries);
+}
+
+function isBetterNicknameRecord(
+  candidate: ArcadeLeaderboardEntry,
+  current: ArcadeLeaderboardEntry
+) {
+  if (candidate.metri !== current.metri) return candidate.metri > current.metri;
+  return new Date(candidate.updatedAt).getTime() > new Date(current.updatedAt).getTime();
+}
+
+function compareLeaderboardEntries(
+  first: ArcadeLeaderboardEntry,
+  second: ArcadeLeaderboardEntry
+) {
+  if (first.metri !== second.metri) return second.metri - first.metri;
+  if (first.livello !== second.livello) return second.livello - first.livello;
+  const timeDifference = new Date(first.updatedAt).getTime() - new Date(second.updatedAt).getTime();
+  if (timeDifference !== 0) return timeDifference;
+  return first.id.localeCompare(second.id, "it-IT");
 }
 
 function leaderboardEntryId(nome: string, societaId: number) {

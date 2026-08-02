@@ -13,6 +13,9 @@ const LEAGUE_FILTERS = [
   ["all", "Tutte", "Tutte"], ["serie-a", "Serie A", "A"], ["serie-b", "Serie B", "B"],
   ["serie-c-a", "Serie C-A", "C-A"], ["serie-c-b", "Serie C-B", "C-B"], ["serie-c-c", "Serie C-C", "C-C"],
 ] as const;
+const RANDOM_ROLL_STEPS = 14;
+const RANDOM_WINNER_SETTLE_MS = 650;
+const RANDOM_WINNER_HOLD_MS = 1000;
 type LeagueFilter = (typeof LEAGUE_FILTERS)[number][0];
 
 function TeamSelector({
@@ -50,6 +53,8 @@ function TeamSelector({
   const confirmationLogoRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const randomTimerRef = useRef(0);
+  const randomRollIdRef = useRef(0);
+  const randomizingRef = useRef(false);
   const launchTimerRef = useRef(0);
   const selectionTimerRef = useRef(0);
   const handledPointerSelectionRef = useRef(0);
@@ -82,6 +87,8 @@ function TeamSelector({
   const isInfinite = search.trim().length === 0 && filteredTeams.length > 1;
 
   useEffect(() => () => {
+    randomRollIdRef.current += 1;
+    randomizingRef.current = false;
     window.clearTimeout(randomTimerRef.current);
     window.clearTimeout(launchTimerRef.current);
     window.clearTimeout(selectionTimerRef.current);
@@ -219,28 +226,49 @@ function TeamSelector({
   }
 
   function chooseRandomTeam() {
-    if (!filteredTeams.length || isRandomizing) return;
+    if (!filteredTeams.length || randomizingRef.current) return;
     const alternatives = filteredTeams.length > 1
       ? filteredTeams.filter((candidate) => candidate.id !== selectedTeam?.id)
       : filteredTeams;
     const randomTeam = alternatives[Math.floor(Math.random() * alternatives.length)];
+    const rollId = randomRollIdRef.current + 1;
+    randomRollIdRef.current = rollId;
+    randomizingRef.current = true;
     setIsRandomizing(true);
     setConfirmationTeam(null);
-    setSelectedTeam(randomTeam);
     window.clearTimeout(randomTimerRef.current);
-    requestAnimationFrame(() => {
+
+    let step = 0;
+    const advanceRoll = () => {
+      if (randomRollIdRef.current !== rollId) return;
+      const isFinalStep = step >= RANDOM_ROLL_STEPS;
+      const rollingTeam = isFinalStep
+        ? randomTeam
+        : filteredTeams[Math.floor(Math.random() * filteredTeams.length)];
+      setSelectedTeam(rollingTeam);
       requestAnimationFrame(() => {
-        buttonRefs.current.get(`1-${randomTeam.id}`)?.scrollIntoView({
-          behavior: "smooth",
+        buttonRefs.current.get(`1-${rollingTeam.id}`)?.scrollIntoView({
+          behavior: isFinalStep ? "smooth" : "auto",
           block: "nearest",
           inline: "center",
         });
       });
-    });
-    randomTimerRef.current = window.setTimeout(() => {
-      setIsRandomizing(false);
-      setConfirmationTeam(randomTeam);
-    }, 620);
+
+      if (isFinalStep) {
+        randomTimerRef.current = window.setTimeout(() => {
+          if (randomRollIdRef.current !== rollId) return;
+          randomizingRef.current = false;
+          setIsRandomizing(false);
+          setConfirmationTeam(randomTeam);
+        }, RANDOM_WINNER_SETTLE_MS + RANDOM_WINNER_HOLD_MS);
+        return;
+      }
+
+      step += 1;
+      const progressiveDelay = 45 + Math.pow(step, 1.55) * 7;
+      randomTimerRef.current = window.setTimeout(advanceRoll, progressiveDelay);
+    };
+    advanceRoll();
   }
 
   function confirmSelectedTeam() {
