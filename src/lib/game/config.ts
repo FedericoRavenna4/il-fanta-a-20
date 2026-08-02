@@ -98,6 +98,7 @@ export const MOBILE_OBSTACLE_SPAWN_CONFIG = {
     startsAtMeters: 300,
     maximumSilenceSeconds: 18,
     recoveryWindowSeconds: 7,
+    maximumRecoveryAttempts: 2,
   },
 } as const;
 

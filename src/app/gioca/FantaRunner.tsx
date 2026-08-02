@@ -77,7 +77,6 @@ import {
   RAFFICA_PRESENTATION_ASSETS,
 } from "@/lib/game/specialEvents";
 import { logRatingChange, type RatingChangeReason } from "@/lib/game/rating";
-import { writePersonalDistanceRecord } from "@/lib/game/records";
 import type {
   EventKind,
   GameScenario,
@@ -147,10 +146,10 @@ type Runtime = {
   effect: "bonus" | "malus" | "jump" | "hit" | "goal" | null;
   effectUntil: number;
   gameOverReason: string;
-  recordBroken: boolean;
+  initialPersonalBest: { level: 1 | 2 | 3; meters: number };
+  personalBestNotificationShown: boolean;
   recordCelebrationUntil: number;
   recordCelebrationDistance: number;
-  lastPersistedRecord: number;
   lastFrame: number;
   lastHudUpdate: number;
   finished: boolean;
@@ -180,6 +179,9 @@ type Runtime = {
   lastPhysicalKind: PhysicalObstacleKind | null;
   lastPhysicalSpawnAt: number;
   physicalSpawnRecoveryStartedAt: number | null;
+  barrierSpawnerState: "inactive" | "waiting" | "pausedForBoss" | "recovering";
+  barrierRecoveryAttempts: number;
+  nextBarrierSpawnAt: number;
   lastPatternId: string | null;
   lastPatternCategory: PatternCategory | null;
   mixedPatternStreak: number;
@@ -334,10 +336,10 @@ function createRuntime(level: GameLevel = 1): Runtime {
     effect: null,
     effectUntil: 0,
     gameOverReason: "",
-    recordBroken: false,
+    initialPersonalBest: { level: 1, meters: 0 },
+    personalBestNotificationShown: false,
     recordCelebrationUntil: 0,
     recordCelebrationDistance: 0,
-    lastPersistedRecord: 0,
     lastFrame: 0,
     lastHudUpdate: 0,
     finished: false,
@@ -362,6 +364,9 @@ function createRuntime(level: GameLevel = 1): Runtime {
     lastPhysicalKind: null,
     lastPhysicalSpawnAt: 0,
     physicalSpawnRecoveryStartedAt: null,
+    barrierSpawnerState: "inactive",
+    barrierRecoveryAttempts: 0,
+    nextBarrierSpawnAt: 1.05,
     lastPatternId: null,
     lastPatternCategory: null,
     mixedPatternStreak: 0,
@@ -454,6 +459,9 @@ function FantaRunner({
   const statusRef = useRef(status);
   const bestRef = useRef(best);
   const distanceRecordRef = useRef(distanceRecord);
+  const initialPersonalBestRef = useRef({ level: distanceRecordLevel, meters: distanceRecord });
+  const personalBestNotificationShownRef = useRef(false);
+  const personalBestRunIdRef = useRef(-1);
   const reducedMotionRef = useRef(false);
   const assetsRef = useRef<GameImageMap>(new Map());
   const renderStateRef = useRef<CanvasRenderState>({
@@ -561,6 +569,16 @@ function FantaRunner({
 
   useEffect(() => {
     const runtime = createRuntime(level);
+    if (personalBestRunIdRef.current !== runId) {
+      personalBestRunIdRef.current = runId;
+      initialPersonalBestRef.current = {
+        level: distanceRecordLevel,
+        meters: Math.max(0, Math.round(distanceRecordRef.current)),
+      };
+      personalBestNotificationShownRef.current = false;
+    }
+    runtime.initialPersonalBest = { ...initialPersonalBestRef.current };
+    runtime.personalBestNotificationShown = personalBestNotificationShownRef.current;
     const mobile = window.matchMedia("(max-width: 639px)").matches;
     configureMobileRuntime(runtime, renderStateRef.current, mobile);
     runtime.playerVisible = true;
@@ -689,7 +707,24 @@ function FantaRunner({
       runtime.lastFrame = time;
 
       const updateStartedAt = performance.now();
-      updateRuntime(runtime, delta, time);
+      try {
+        updateRuntime(runtime, delta, time);
+      } catch (error) {
+        runtime.sessionInvalid = true;
+        runtime.finished = true;
+        runtime.gameOverReason = "Errore non recuperabile nel ciclo di gioco";
+        console.error("[arcade:runtime] Ciclo di gioco interrotto", {
+          error,
+          barrierSpawnerState: runtime.barrierSpawnerState,
+          lastBarrierSpawnAt: runtime.lastPhysicalSpawnAt,
+          nextBarrierSpawnAt: runtime.nextBarrierSpawnAt,
+          activeBarrierCount: countActivePhysicalObstacles(runtime),
+          bossState: runtime.boss?.phase ?? "idle",
+          currentLevel: runtime.level,
+          distance: runtime.distance,
+          sessionIntegrityValid: false,
+        });
+      }
       const updateFinishedAt = performance.now();
       drawGame(
         context,
@@ -704,7 +739,9 @@ function FantaRunner({
       if (!runtime.finished && time - runtime.lastHudUpdate >= HUD_UPDATE_INTERVAL_MS) {
         runtime.lastHudUpdate = time;
         advanceDisplayDistance(runtime);
-        updatePersonalRecord(runtime, distanceRecordRef.current, time);
+        if (updatePersonalRecord(runtime, time, personalBestNotificationShownRef.current)) {
+          personalBestNotificationShownRef.current = true;
+        }
         onSnapshot(toSnapshot(runtime, best, distanceRecordRef.current, distanceRecordLevel, time));
         performanceRef.current.hudUpdates += 1;
       }
@@ -722,11 +759,13 @@ function FantaRunner({
 
       if (runtime.finished) {
         if (runtime.sessionInvalid) {
-          onSessionError("Si è verificato un problema durante la partita. Avvia una nuova corsa.");
+          onSessionError("Si è verificato un problema durante la partita. Il punteggio non è stato registrato.");
           return;
         }
         advanceDisplayDistance(runtime);
-        updatePersonalRecord(runtime, distanceRecordRef.current, time);
+        if (updatePersonalRecord(runtime, time, personalBestNotificationShownRef.current)) {
+          personalBestNotificationShownRef.current = true;
+        }
         const finalSnapshot = toSnapshot(runtime, best, distanceRecordRef.current, distanceRecordLevel, time);
         onSnapshot(finalSnapshot);
         onGameOver(finalSnapshot);
@@ -1135,7 +1174,7 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
   }
 
   monitorSpawnerHealth(runtime);
-  monitorMobilePhysicalSpawner(runtime);
+  monitorMobilePhysicalSpawner(runtime, speed, difficulty);
 
   const nicoStrength = getPowerUpStrength(runtime, "nico-paz");
   const gimenezStrength = getPowerUpStrength(runtime, "gimenez");
@@ -1384,6 +1423,7 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
   }
   runtime.entityScratch = runtime.entities;
   runtime.entities = remainingEntities;
+  reconcileActiveEntityCounts(runtime);
   runtime.lastCollisionTime = process.env.NODE_ENV !== "production"
     ? performance.now() - collisionStartedAt
     : 0;
@@ -1700,6 +1740,7 @@ function updateBoss(
     if (boss.timer <= 0 && runtime.boss?.encounterId === boss.encounterId) {
       debugBossTransition(runtime, boss.encounterId, "exiting", "idle", "exit-complete");
       runtime.boss = null;
+      rearmMobileBarrierSpawner(runtime, "boss-exit");
     }
     return;
   }
@@ -1985,58 +2026,116 @@ function monitorSpawnerHealth(runtime: Runtime) {
   }
 }
 
-function monitorMobilePhysicalSpawner(runtime: Runtime) {
+function monitorMobilePhysicalSpawner(runtime: Runtime, speed: number, difficulty: number) {
   const watchdog = MOBILE_OBSTACLE_SPAWN_CONFIG.watchdog;
+  const activePhysicalCount = countActivePhysicalObstacles(runtime);
   if (
     !runtime.mobileLayout ||
     runtime.sessionInvalid ||
     runtime.finished ||
     !runtime.initialBonusSpawned ||
     runtime.distance < watchdog.startsAtMeters ||
-    runtime.boss ||
-    runtime.burst ||
-    runtime.activeEntityCounts.physical > 0
+    runtime.burst
   ) {
+    return;
+  }
+
+  if (runtime.boss) {
+    runtime.barrierSpawnerState = "pausedForBoss";
+    runtime.physicalSpawnRecoveryStartedAt = null;
+    return;
+  }
+
+  if (activePhysicalCount > 0) {
+    runtime.barrierSpawnerState = "waiting";
+    runtime.barrierRecoveryAttempts = 0;
+    runtime.physicalSpawnRecoveryStartedAt = null;
     return;
   }
 
   const silence = runtime.elapsed - runtime.lastPhysicalSpawnAt;
   if (silence <= watchdog.maximumSilenceSeconds) {
     runtime.physicalSpawnRecoveryStartedAt = null;
+    runtime.barrierSpawnerState = "waiting";
     return;
   }
 
-  if (runtime.physicalSpawnRecoveryStartedAt === null) {
-    runtime.physicalSpawnRecoveryStartedAt = runtime.elapsed;
-    runtime.physicalFreePatternStreak = Math.max(3, runtime.physicalFreePatternStreak);
-    runtime.lastSpawnCategory = null;
-    runtime.repeatedSpawnCategory = 0;
-    runtime.spawnTimer = Math.min(runtime.spawnTimer, 0);
-    if (process.env.NODE_ENV !== "production") {
-      console.debug("[arcade:physical-spawner] recovery", {
-        silence: Number(silence.toFixed(2)),
-        distance: Math.round(runtime.distance),
-        spawnTimer: runtime.spawnTimer,
-        entityCount: runtime.entities.length,
-      });
-    }
+  if (runtime.physicalSpawnRecoveryStartedAt !== null &&
+      runtime.elapsed - runtime.physicalSpawnRecoveryStartedAt < watchdog.recoveryWindowSeconds) return;
+
+  runtime.barrierSpawnerState = "recovering";
+  runtime.physicalSpawnRecoveryStartedAt = runtime.elapsed;
+  runtime.barrierRecoveryAttempts += 1;
+  reconcileActiveEntityCounts(runtime);
+  runtime.physicalFreePatternStreak = Math.max(3, runtime.physicalFreePatternStreak);
+  runtime.lastSpawnCategory = null;
+  runtime.repeatedSpawnCategory = 0;
+  runtime.spawnTimer = 0;
+  const recoverySpawned = pushPhysicalObstacle(
+    runtime,
+    "cornerFlag",
+    runtime.worldWidth + Math.max(340, speed * 0.82),
+    difficulty,
+    speed,
+    true
+  );
+  debugPhysicalSpawner(runtime, recoverySpawned ? "recovery-success" : "recovery-failed", silence);
+  if (recoverySpawned) {
+    runtime.barrierSpawnerState = "waiting";
+    runtime.barrierRecoveryAttempts = 0;
     return;
   }
 
-  if (
-    runtime.elapsed - runtime.physicalSpawnRecoveryStartedAt >=
-    watchdog.recoveryWindowSeconds
-  ) {
+  if (runtime.barrierRecoveryAttempts >= watchdog.maximumRecoveryAttempts) {
     runtime.sessionInvalid = true;
     runtime.finished = true;
     runtime.gameOverReason = "Spawner delle barriere non disponibile";
-    if (process.env.NODE_ENV !== "production") {
-      console.debug("[arcade:physical-spawner] session-invalidated", {
-        silence: Number(silence.toFixed(2)),
-        distance: Math.round(runtime.distance),
-      });
-    }
+    debugPhysicalSpawner(runtime, "session-invalidated", silence);
   }
+}
+
+function countActivePhysicalObstacles(runtime: Runtime) {
+  let count = 0;
+  for (const entity of runtime.entities) {
+    if (entity.type === "physical" && entity.x + entity.width > -40) count += 1;
+  }
+  return count;
+}
+
+function reconcileActiveEntityCounts(runtime: Runtime) {
+  const counts: Runtime["activeEntityCounts"] = { event: 0, physical: 0, powerup: 0 };
+  for (const entity of runtime.entities) counts[entity.type] += 1;
+  runtime.activeEntityCounts = counts;
+}
+
+function rearmMobileBarrierSpawner(runtime: Runtime, reason: string) {
+  if (!runtime.mobileLayout) return;
+  runtime.barrierSpawnerState = "waiting";
+  runtime.barrierRecoveryAttempts = 0;
+  runtime.physicalSpawnRecoveryStartedAt = null;
+  runtime.lastPhysicalSpawnAt = runtime.elapsed;
+  runtime.nextBarrierSpawnAt = runtime.elapsed + 0.35;
+  runtime.spawnTimer = Math.min(runtime.spawnTimer, 0.35);
+  debugPhysicalSpawner(runtime, reason, 0);
+}
+
+function debugPhysicalSpawner(runtime: Runtime, reason: string, silence: number) {
+  if (process.env.NODE_ENV === "production") return;
+  console.debug("[arcade:physical-spawner]", {
+    reason,
+    barrierSpawnerState: runtime.barrierSpawnerState,
+    lastBarrierSpawnAt: Number(runtime.lastPhysicalSpawnAt.toFixed(2)),
+    nextBarrierSpawnAt: Number(runtime.nextBarrierSpawnAt.toFixed(2)),
+    activeBarrierCount: countActivePhysicalObstacles(runtime),
+    cachedBarrierCount: runtime.activeEntityCounts.physical,
+    poolSize: runtime.entityPool.length,
+    bossState: runtime.boss?.phase ?? "idle",
+    currentLevel: runtime.level,
+    distance: Math.round(runtime.distance),
+    elapsed: Number(runtime.elapsed.toFixed(2)),
+    silence: Number(silence.toFixed(2)),
+    sessionIntegrityValid: !runtime.sessionInvalid,
+  });
 }
 
 function getBonusPatternWeight(
@@ -2422,6 +2521,8 @@ function pushPhysicalObstacle(
   runtime.entities.push(entity);
   runtime.lastPhysicalKind = kind;
   runtime.lastPhysicalSpawnAt = runtime.elapsed;
+  runtime.nextBarrierSpawnAt = runtime.elapsed + Math.max(0.35, clearance / Math.max(1, speed));
+  runtime.barrierSpawnerState = "waiting";
   runtime.physicalSpawnRecoveryStartedAt = null;
   recordSpawnCategory(runtime, "physical");
   return true;
@@ -2648,13 +2749,11 @@ function toSnapshot(
   time: number
 ): GameSnapshot {
   const score = Math.max(0, Math.round(runtime.score));
-  const currentRunIsBetter = runtime.level > personalRecordLevel ||
-    (runtime.level === personalRecordLevel && runtime.displayDistance > personalRecord);
   return {
     score,
     best: Math.max(best, score),
-    personalRecord: currentRunIsBetter ? runtime.displayDistance : personalRecord,
-    personalRecordLevel: currentRunIsBetter ? runtime.level : personalRecordLevel,
+    personalRecord: runtime.initialPersonalBest.meters || personalRecord,
+    personalRecordLevel: runtime.initialPersonalBest.level || personalRecordLevel,
     recordCelebrationDistance: time < runtime.recordCelebrationUntil
       ? runtime.recordCelebrationDistance
       : 0,
@@ -2705,26 +2804,23 @@ function toSnapshot(
   };
 }
 
-function updatePersonalRecord(runtime: Runtime, personalRecord: number, time: number) {
+function updatePersonalRecord(runtime: Runtime, time: number, notificationAlreadyShown: boolean) {
+  const initialBest = runtime.initialPersonalBest;
+  const hasValidInitialBest = initialBest.meters > 0;
+  const currentRunIsBetter = runtime.level > initialBest.level ||
+    (runtime.level === initialBest.level && runtime.displayDistance > initialBest.meters);
   if (
-    runtime.displayDistance > personalRecord &&
-    (
-      runtime.lastPersistedRecord === 0 ||
-      runtime.displayDistance - runtime.lastPersistedRecord >= 10
-    )
-  ) {
-    writePersonalDistanceRecord(runtime.displayDistance);
-    runtime.lastPersistedRecord = runtime.displayDistance;
-  }
-  if (
-    runtime.recordBroken ||
-    personalRecord <= 0 ||
-    runtime.displayDistance <= personalRecord
-  ) return;
-  runtime.recordBroken = true;
+    notificationAlreadyShown ||
+    runtime.personalBestNotificationShown ||
+    !hasValidInitialBest ||
+    runtime.displayDistance <= 0 ||
+    !currentRunIsBetter
+  ) return false;
+  runtime.personalBestNotificationShown = true;
   runtime.recordCelebrationDistance = runtime.displayDistance;
   runtime.recordCelebrationUntil = time + 2400;
   triggerHaptic(runtime, [10, 35, 18]);
+  return true;
 }
 
 function advanceDisplayDistance(runtime: Runtime) {
