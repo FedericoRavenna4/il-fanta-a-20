@@ -23,7 +23,7 @@ import {
   JUMP_MAX_HOLD_SECONDS,
   JUMP_RELEASE_FACTOR,
   HAT_TRICK_SPAWN_CONFIG,
-  OBSTACLE_PROGRESSION,
+  MOBILE_OBSTACLE_SPAWN_CONFIG,
   RAFFICA_CONFIG,
   GOAL_RATING_STEP,
   GOAL_THRESHOLD_COMBO_BONUS,
@@ -177,6 +177,7 @@ type Runtime = {
   nextForcedBurstAt: number;
   lastSpawnCategory: "bonus" | "malus" | "physical" | "space" | null;
   repeatedSpawnCategory: number;
+  lastPhysicalKind: PhysicalObstacleKind | null;
   lastPatternId: string | null;
   lastPatternCategory: PatternCategory | null;
   mixedPatternStreak: number;
@@ -356,6 +357,7 @@ function createRuntime(level: GameLevel = 1): Runtime {
     ),
     lastSpawnCategory: null,
     repeatedSpawnCategory: 0,
+    lastPhysicalKind: null,
     lastPatternId: null,
     lastPatternCategory: null,
     mixedPatternStreak: 0,
@@ -1494,10 +1496,30 @@ function updateRaffica(
   }
 
   if (burst.timer > 0) return;
+  if (
+    runtime.mobileLayout &&
+    burst.type === "malus" &&
+    runtime.entities.some((entity) =>
+      entity.type === "event" && entity.horizontalSpeedFactor === 1.5
+    )
+  ) {
+    burst.timer = 0.12;
+    return;
+  }
   const beat = burst.pattern[burst.beatIndex];
   if (!beat) {
     burst.beatIndex = 0;
     burst.timer = 0.18;
+    return;
+  }
+  if (
+    runtime.mobileLayout &&
+    burst.type === "malus" &&
+    (runtime.activeEntityCounts.event + beat.count >
+      ENTITY_DENSITY_CONFIG.maximumActiveCollectiblesDuringBurst ||
+      runtime.entities.length + beat.count > getMaximumActiveEntities(runtime))
+  ) {
+    burst.timer = 0.12;
     return;
   }
 
@@ -1727,11 +1749,17 @@ function updateBoss(
       ? BOSS_CONFIG.mobile.maximumActiveProjectiles
       : 11;
     const availableProjectileSlots = projectileLimit - activeProjectiles;
-    if (availableProjectileSlots <= 0) {
+    const beat = boss.pattern.beats[boss.attackIndex % boss.pattern.beats.length];
+    const mobileVolleyLimit = runtime.mobileLayout
+      ? BOSS_CONFIG.mobile.volleyLimits[
+          beat.kind as keyof typeof BOSS_CONFIG.mobile.volleyLimits
+        ] ?? 1
+      : beat.count;
+    const desiredVolleyCount = Math.min(beat.count, mobileVolleyLimit);
+    if (availableProjectileSlots < desiredVolleyCount) {
       boss.spawnTimer = 0.18;
       return;
     }
-    const beat = boss.pattern.beats[boss.attackIndex % boss.pattern.beats.length];
     const kind = beat.kind;
     const bossRect = getBossRect(runtime);
     const dimensions = getEventDimensions(kind);
@@ -1744,11 +1772,7 @@ function updateBoss(
       : 455 + difficulty * 95;
     const projectileSpeed = baseProjectileSpeed *
       LEVEL_RULES[runtime.level].difficulty.bossProjectileMultiplier;
-    const volleyCount = Math.min(
-      beat.count,
-      availableProjectileSlots,
-      runtime.mobileLayout ? BOSS_CONFIG.mobile.maximumProjectilesPerVolley : beat.count
-    );
+    const volleyCount = desiredVolleyCount;
     for (let itemIndex = 0; itemIndex < volleyCount; itemIndex += 1) {
       const spawnX = bossRect.x + bossRect.width * 0.18 +
         itemIndex * (dimensions.width * scale + spread);
@@ -1909,18 +1933,25 @@ function getMaximumActiveEntities(runtime: Runtime) {
 }
 
 function getObstacleProgression(distance: number) {
-  const upperIndex = OBSTACLE_PROGRESSION.findIndex((step) => distance < step.distance);
-  if (upperIndex <= 0) return OBSTACLE_PROGRESSION[0];
-  if (upperIndex < 0) return OBSTACLE_PROGRESSION[OBSTACLE_PROGRESSION.length - 1];
-  const lower = OBSTACLE_PROGRESSION[upperIndex - 1];
-  const upper = OBSTACLE_PROGRESSION[upperIndex];
-  const progress = clamp01((distance - lower.distance) / (upper.distance - lower.distance));
+  const progress = getDistanceDifficultyCurve(distance);
   return {
     distance,
-    mixedWeight: lower.mixedWeight + (upper.mixedWeight - lower.mixedWeight) * progress,
-    intervalMultiplier: lower.intervalMultiplier +
-      (upper.intervalMultiplier - lower.intervalMultiplier) * progress,
+    mixedWeight: 8 + 132 * progress,
+    intervalMultiplier: 1.24 - 0.58 * progress,
   };
+}
+
+function getDistanceDifficultyCurve(distance: number) {
+  const curve = DIFFICULTY_CONFIG.distanceCurve;
+  const moderate = smoothstep01(distance / curve.moderateEndMeters) * curve.moderateShare;
+  const progressive = smoothstep01(
+    (distance - curve.moderateEndMeters) /
+      (curve.progressiveEndMeters - curve.moderateEndMeters)
+  ) * curve.progressiveShare;
+  const enduranceDistance = Math.max(0, distance - curve.progressiveEndMeters);
+  const endurance = (1 - Math.exp(-enduranceDistance / curve.enduranceCurveMeters)) *
+    curve.enduranceShare;
+  return moderate + progressive + endurance;
 }
 
 function getEndurancePressure(distance: number) {
@@ -2005,7 +2036,7 @@ function spawnNext(runtime: Runtime, speed: number, difficulty: number) {
   // pattern dichiarati introSafe fino a 30 m ed earlyGame fino a 70 m.
   if (runtime.distance < 12) return 0.72;
 
-  if (trySpawnRareHatTrick(runtime, startX, difficulty)) return 1.28;
+  if (trySpawnRareHatTrick(runtime, startX, speed, difficulty)) return 1.28;
 
   const luperto = getPowerUpStrength(runtime, "luperto");
   const nicoPaz = getPowerUpStrength(runtime, "nico-paz");
@@ -2015,10 +2046,12 @@ function spawnNext(runtime: Runtime, speed: number, difficulty: number) {
   const mixedStreakLimited = runtime.mixedPatternStreak >= maximumMixedStreak;
   const obstacleProgression = getObstacleProgression(runtime.distance);
   const highRatingPressure = clamp01((runtime.teamRating - 78) / 22);
-  const advancedPressure = clamp01(Math.max(
-    (runtime.distance - 280) / 420,
-    (speed - 480) / 300
-  ) + LEVEL_RULES[runtime.level].difficulty.advancedPressureBoost);
+  const advancedPressure = clamp01(
+    getDistanceDifficultyCurve(runtime.distance) +
+      clamp01((speed - SPEED_CONFIG.initial) /
+        (SPEED_CONFIG.maximum - SPEED_CONFIG.initial)) * 0.2 +
+      LEVEL_RULES[runtime.level].difficulty.advancedPressureBoost
+  );
   const openingBonusWeight = runtime.distance < 70
     ? 18 * (1 - runtime.distance / 70)
     : 0;
@@ -2053,6 +2086,7 @@ function spawnNext(runtime: Runtime, speed: number, difficulty: number) {
 function trySpawnRareHatTrick(
   runtime: Runtime,
   startX: number,
+  speed: number,
   difficulty: number
 ) {
   if (
@@ -2071,7 +2105,8 @@ function trySpawnRareHatTrick(
     runtime,
     runtime.distance >= 500 && Math.random() < 0.55 ? "slidingTackle" : "cornerFlag",
     startX,
-    difficulty
+    difficulty,
+    speed
   );
   runtime.lastPatternId = "evento-raro-tripletta";
   runtime.lastPatternCategory = "mixed";
@@ -2097,7 +2132,8 @@ function spawnGameplayPattern(
         runtime,
         item.kind,
         startX + itemOffset,
-        difficulty
+        difficulty,
+        speed
       ) || spawnedPhysical;
     } else {
       const mobileLine = runtime.mobileLayout &&
@@ -2113,10 +2149,12 @@ function spawnGameplayPattern(
       });
     }
   }
-  const advancedPressure = clamp01(Math.max(
-    (runtime.distance - 280) / 420,
-    (speed - 480) / 300
-  ) + LEVEL_RULES[runtime.level].difficulty.advancedPressureBoost);
+  const advancedPressure = clamp01(
+    getDistanceDifficultyCurve(runtime.distance) +
+      clamp01((speed - SPEED_CONFIG.initial) /
+        (SPEED_CONFIG.maximum - SPEED_CONFIG.initial)) * 0.2 +
+      LEVEL_RULES[runtime.level].difficulty.advancedPressureBoost
+  );
 
   if (spawnedPhysical) {
     runtime.physicalFreePatternStreak = 0;
@@ -2127,20 +2165,23 @@ function spawnGameplayPattern(
   // Nelle fasi avanzate gli ostacoli fisici non spariscono dal ritmo di gioco.
   // L'inserimento avviene dopo il pattern, con spazio di reazione dedicato: in
   // questo modo la pressione resta costante senza produrre combinazioni cieche.
-  const physicalFreeLimit = runtime.mobileLayout
-    ? runtime.distance >= 1200 ? 1 : runtime.distance >= 700 ? 2 : 3
-    : 3;
+  const physicalInsertionDue = runtime.mobileLayout
+    ? runtime.physicalFreePatternStreak >= 3 ||
+      (runtime.physicalFreePatternStreak >= 2 && Math.random() < advancedPressure * 0.72)
+    : runtime.physicalFreePatternStreak >= 3;
   if (
     runtime.distance >= 300 &&
-    runtime.physicalFreePatternStreak >= physicalFreeLimit
+    physicalInsertionDue
   ) {
     const reactionTime = runtime.mobileLayout
       ? 0.8 - advancedPressure * 0.08
       : 0.68;
     const reactionGap = Math.max(runtime.mobileLayout ? 340 : 300, speed * reactionTime);
-    const obstacleKinds: readonly PhysicalObstacleKind[] = advancedPressure > 0.55
+    const obstacleKinds: readonly PhysicalObstacleKind[] = runtime.mobileLayout
       ? ["cornerFlag", "stretcher", "slidingTackle", "var"]
-      : ["cornerFlag", "stretcher", "var"];
+      : advancedPressure > 0.55
+        ? ["cornerFlag", "stretcher", "slidingTackle", "var"]
+        : ["cornerFlag", "stretcher", "var"];
     const kind = obstacleKinds[Math.floor(Math.random() * obstacleKinds.length)];
     const obstacleOffset = furthestOffset + reactionGap;
     if (pushPhysicalObstacle(
@@ -2148,7 +2189,8 @@ function spawnGameplayPattern(
       kind,
       startX + obstacleOffset,
       difficulty,
-      runtime.mobileLayout && runtime.distance >= 700
+      speed,
+      runtime.mobileLayout && advancedPressure >= 0.5
     )) {
       furthestOffset = obstacleOffset;
       runtime.physicalFreePatternStreak = 0;
@@ -2272,6 +2314,7 @@ function pushPhysicalObstacle(
   kind: PhysicalObstacleKind,
   x: number,
   difficulty: number,
+  speed: number,
   allowCapacityReserve = false
 ) {
   if (
@@ -2281,7 +2324,9 @@ function pushPhysicalObstacle(
     return false;
   }
   if (
-    runtime.activeEntityCounts.physical >= ENTITY_DENSITY_CONFIG.maximumActivePhysicalObstacles ||
+    runtime.activeEntityCounts.physical >= (runtime.mobileLayout
+      ? MOBILE_OBSTACLE_SPAWN_CONFIG.maximumVisible
+      : ENTITY_DENSITY_CONFIG.maximumActivePhysicalObstacles) ||
     (!allowCapacityReserve && runtime.entities.length >= getMaximumActiveEntities(runtime))
   ) {
     return false;
@@ -2292,10 +2337,28 @@ function pushPhysicalObstacle(
     width: baseDimensions.width * obstacleScale,
     height: baseDimensions.height * obstacleScale,
   };
-  const clearance = runtime.mobileLayout ? 145 : 84;
+  if (runtime.mobileLayout) {
+    if (runtime.boss || runtime.burst) return false;
+    if (kind === "slidingTackle") {
+      if (runtime.lastPhysicalKind === "slidingTackle") return false;
+      if (Math.random() > getMobileSlidingTackleChance(runtime.distance)) return false;
+    }
+  }
+  const mobilePressure = getDistanceDifficultyCurve(runtime.distance);
+  const mobileReactionSeconds = MOBILE_OBSTACLE_SPAWN_CONFIG.baseReactionSeconds -
+    (MOBILE_OBSTACLE_SPAWN_CONFIG.baseReactionSeconds -
+      MOBILE_OBSTACLE_SPAWN_CONFIG.highDifficultyReactionSeconds) * mobilePressure;
+  const clearance = runtime.mobileLayout
+    ? speed * (kind === "slidingTackle"
+        ? MOBILE_OBSTACLE_SPAWN_CONFIG.slidingReactionSeconds
+        : mobileReactionSeconds)
+    : 84;
   if (runtime.entities.some((entity) =>
     entity.type === "physical" &&
-    Math.abs(entity.x - x) < (entity.width + dimensions.width) / 2 + clearance
+    Math.abs(entity.x - x) < (entity.width + dimensions.width) / 2 +
+      (runtime.mobileLayout && entity.kind === "slidingTackle"
+        ? speed * MOBILE_OBSTACLE_SPAWN_CONFIG.slidingFollowUpSeconds
+        : clearance)
   )) {
     return false;
   }
@@ -2306,13 +2369,29 @@ function pushPhysicalObstacle(
   entity.motion = movingObstacle ? "rush" : "ground";
   entity.horizontalSpeedFactor =
       movingObstacle
-        ? 1.24 + difficulty * 0.56 + Math.random() * 0.16
+        ? runtime.mobileLayout
+          ? 1.08 + difficulty * 0.16 + Math.random() * 0.06
+          : 1.24 + difficulty * 0.56 + Math.random() * 0.16
         : 1;
   entity.rotation = movingObstacle ? -0.045 : 0;
   entity.angularVelocity = movingObstacle ? 0.035 + Math.random() * 0.035 : 0;
   runtime.entities.push(entity);
+  runtime.lastPhysicalKind = kind;
   recordSpawnCategory(runtime, "physical");
   return true;
+}
+
+function getMobileSlidingTackleChance(distance: number) {
+  const config = MOBILE_OBSTACLE_SPAWN_CONFIG.slidingChance;
+  if (distance <= 500) return config.before500Meters;
+  if (distance <= 1500) {
+    return config.before500Meters +
+      (config.at1500Meters - config.before500Meters) *
+      smoothstep01((distance - 500) / 1000);
+  }
+  return config.at1500Meters +
+    (config.enduranceMaximum - config.at1500Meters) *
+    (1 - Math.exp(-(distance - 1500) / 3000));
 }
 
 function recordSpawnCategory(
@@ -2605,7 +2684,7 @@ function advanceDisplayDistance(runtime: Runtime) {
 
 function getDifficultyProgress(runtime: Runtime) {
   const duration = clamp01(runtime.elapsed / DIFFICULTY_CONFIG.rampSeconds);
-  const distance = clamp01(runtime.distance / DIFFICULTY_CONFIG.targetDistance);
+  const distance = getDistanceDifficultyCurve(runtime.distance);
   const score = clamp01(runtime.score / DIFFICULTY_CONFIG.targetScore);
   const rating = clamp01(
     (runtime.teamRating - TEAM_RATING_INITIAL) / DIFFICULTY_CONFIG.ratingRange
@@ -2653,6 +2732,11 @@ function getSpeedLevel(difficulty: number) {
 
 function clamp01(value: number) {
   return Math.max(0, Math.min(1, value));
+}
+
+function smoothstep01(value: number) {
+  const progress = clamp01(value);
+  return progress * progress * (3 - 2 * progress);
 }
 
 function distanceFromPointToSegment(

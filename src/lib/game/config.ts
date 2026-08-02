@@ -56,6 +56,14 @@ export const DIFFICULTY_CONFIG = {
     maximumSpawnIntervalReduction: 0.08,
     maximumBossDistanceReduction: 0.12,
   },
+  distanceCurve: {
+    moderateEndMeters: 500,
+    progressiveEndMeters: 1500,
+    moderateShare: 0.34,
+    progressiveShare: 0.42,
+    enduranceShare: 0.24,
+    enduranceCurveMeters: 3000,
+  },
 } as const;
 
 export const DIFFICULTY_BANDS = [
@@ -72,6 +80,19 @@ export const ENTITY_DENSITY_CONFIG = {
   maximumActiveEntities: 12,
   minimumCollectibleDistance: 96,
   burstCollectibleDistance: 78,
+} as const;
+
+export const MOBILE_OBSTACLE_SPAWN_CONFIG = {
+  maximumVisible: 2,
+  baseReactionSeconds: 0.82,
+  highDifficultyReactionSeconds: 0.7,
+  slidingReactionSeconds: 1.22,
+  slidingFollowUpSeconds: 1.34,
+  slidingChance: {
+    before500Meters: 0.16,
+    at1500Meters: 0.42,
+    enduranceMaximum: 0.58,
+  },
 } as const;
 
 export const OBSTACLE_PROGRESSION = [

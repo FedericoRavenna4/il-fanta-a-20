@@ -252,28 +252,28 @@ export const RAFFICA_PATTERN_LIBRARY: Record<RafficaType, readonly (readonly Raf
 
 export const MOBILE_MALUS_RAFFICA_PATTERNS: readonly (readonly RafficaBeat[])[] = [
   [
-    { kind:"yellowCard",count:4,line:0,mobileLine:0,spacing:7,intervalAfter:.9 },
-    { kind:"concededGoal",count:3,line:2,mobileLine:2,spacing:8,intervalAfter:.68 },
-    { kind:"redCard",count:3,line:2,mobileLine:2,spacing:9,intervalAfter:.92 },
-    { kind:"missedPenalty",count:2,line:0,mobileLine:0,spacing:26,intervalAfter:1.02 },
+    { kind:"yellowCard",count:3,line:0,mobileLine:0,spacing:12,intervalAfter:1.08 },
+    { kind:"concededGoal",count:2,line:2,mobileLine:2,spacing:16,intervalAfter:1.14 },
+    { kind:"redCard",count:3,line:2,mobileLine:2,spacing:13,intervalAfter:1.12 },
+    { kind:"missedPenalty",count:1,line:0,mobileLine:0,spacing:30,intervalAfter:1.28 },
   ],
   [
-    { kind:"concededGoal",count:3,line:2,mobileLine:2,spacing:8,intervalAfter:.88 },
-    { kind:"yellowCard",count:4,line:0,mobileLine:0,spacing:7,intervalAfter:.64 },
-    { kind:"redCard",count:3,line:0,mobileLine:0,spacing:9,intervalAfter:.9 },
-    { kind:"missedPenalty",count:2,line:2,mobileLine:2,spacing:28,intervalAfter:1.04 },
+    { kind:"concededGoal",count:2,line:2,mobileLine:2,spacing:17,intervalAfter:1.12 },
+    { kind:"yellowCard",count:3,line:0,mobileLine:0,spacing:12,intervalAfter:1.08 },
+    { kind:"ownGoal",count:1,line:2,mobileLine:2,spacing:30,intervalAfter:1.3 },
+    { kind:"redCard",count:3,line:0,mobileLine:0,spacing:13,intervalAfter:1.16 },
   ],
   [
-    { kind:"redCard",count:3,line:0,mobileLine:0,spacing:9,intervalAfter:.62 },
-    { kind:"yellowCard",count:4,line:0,mobileLine:0,spacing:7,intervalAfter:.94 },
-    { kind:"concededGoal",count:3,line:2,mobileLine:2,spacing:8,intervalAfter:.66 },
-    { kind:"missedPenalty",count:2,line:2,mobileLine:2,spacing:28,intervalAfter:1.06 },
+    { kind:"redCard",count:3,line:0,mobileLine:0,spacing:13,intervalAfter:1.1 },
+    { kind:"concededGoal",count:2,line:2,mobileLine:2,spacing:17,intervalAfter:1.16 },
+    { kind:"yellowCard",count:3,line:0,mobileLine:0,spacing:12,intervalAfter:1.14 },
+    { kind:"missedPenalty",count:1,line:2,mobileLine:2,spacing:30,intervalAfter:1.3 },
   ],
   [
-    { kind:"missedPenalty",count:2,line:2,mobileLine:2,spacing:28,intervalAfter:.9 },
-    { kind:"yellowCard",count:3,line:0,mobileLine:0,spacing:8,intervalAfter:.7 },
-    { kind:"concededGoal",count:3,line:0,mobileLine:0,spacing:9,intervalAfter:.92 },
-    { kind:"redCard",count:3,line:2,mobileLine:2,spacing:10,intervalAfter:1.08 },
+    { kind:"ownGoal",count:1,line:2,mobileLine:2,spacing:30,intervalAfter:1.3 },
+    { kind:"yellowCard",count:3,line:0,mobileLine:0,spacing:12,intervalAfter:1.12 },
+    { kind:"concededGoal",count:2,line:2,mobileLine:2,spacing:17,intervalAfter:1.18 },
+    { kind:"redCard",count:3,line:0,mobileLine:0,spacing:13,intervalAfter:1.16 },
   ],
 ];
 
@@ -289,14 +289,14 @@ export const BOSS_BLOCK_LIBRARY: readonly BossBlock[] = [
 ];
 
 export const MOBILE_BOSS_BLOCK_LIBRARY: readonly BossBlock[] = [
-  { id:"mobile-short-low",type:"shortBurst",difficulty:"medium",beats:[{kind:"yellowCard",count:2,line:0,mobileLine:0,spacing:16,intervalAfter:1.02}],pauseOptions:[.38,.48,.58] },
+  { id:"mobile-short-low",type:"shortBurst",difficulty:"medium",beats:[{kind:"yellowCard",count:3,line:0,mobileLine:0,spacing:14,intervalAfter:1.08}],pauseOptions:[.38,.48,.58] },
   { id:"mobile-medium-high",type:"mediumBurst",difficulty:"medium",beats:[{kind:"concededGoal",count:2,line:2,mobileLine:2,spacing:16,intervalAfter:1.06}],pauseOptions:[.4,.5,.6] },
-  { id:"mobile-recovery",type:"recoveryWindow",difficulty:"medium",beats:[{kind:"yellowCard",count:1,line:2,mobileLine:2,spacing:18,intervalAfter:1.18}],pauseOptions:[.62,.74,.86] },
+  { id:"mobile-recovery",type:"recoveryWindow",difficulty:"medium",beats:[{kind:"redCard",count:3,line:2,mobileLine:2,spacing:14,intervalAfter:1.2}],pauseOptions:[.62,.74,.86] },
   { id:"mobile-low-window",type:"recoveryWindow",difficulty:"medium",beats:[{kind:"concededGoal",count:2,line:0,mobileLine:0,spacing:18,intervalAfter:1.12}],pauseOptions:[.58,.7,.82] },
-  { id:"mobile-fake-pause",type:"fakePause",difficulty:"hard",beats:[{kind:"missedPenalty",count:1,line:2,mobileLine:2,spacing:34,intervalAfter:1.16},{kind:"yellowCard",count:2,line:0,mobileLine:0,spacing:16,intervalAfter:1.04}],pauseOptions:[.46,.58,.7] },
-  { id:"mobile-vertical-switch",type:"verticalSwitch",difficulty:"hard",beats:[{kind:"concededGoal",count:2,line:0,mobileLine:0,spacing:17,intervalAfter:1.2},{kind:"redCard",count:2,line:2,mobileLine:2,spacing:17,intervalAfter:1.08}],pauseOptions:[.48,.6,.72] },
-  { id:"mobile-diagonal-readable",type:"verticalSwitch",difficulty:"hard",beats:[{kind:"redCard",count:2,line:2,mobileLine:2,spacing:18,intervalAfter:1.22},{kind:"missedPenalty",count:1,line:0,mobileLine:0,spacing:34,intervalAfter:1.12}],pauseOptions:[.5,.62,.74] },
-  { id:"mobile-double-wave",type:"doubleWave",difficulty:"extreme",beats:[{kind:"redCard",count:2,line:2,mobileLine:2,spacing:19,intervalAfter:1.24},{kind:"concededGoal",count:2,line:0,mobileLine:0,spacing:19,intervalAfter:1.14}],pauseOptions:[.56,.68,.8] },
+  { id:"mobile-fake-pause",type:"fakePause",difficulty:"hard",beats:[{kind:"missedPenalty",count:1,line:2,mobileLine:2,spacing:34,intervalAfter:1.24},{kind:"yellowCard",count:3,line:0,mobileLine:0,spacing:14,intervalAfter:1.1}],pauseOptions:[.46,.58,.7] },
+  { id:"mobile-vertical-switch",type:"verticalSwitch",difficulty:"hard",beats:[{kind:"concededGoal",count:2,line:0,mobileLine:0,spacing:17,intervalAfter:1.2},{kind:"redCard",count:3,line:2,mobileLine:2,spacing:14,intervalAfter:1.12}],pauseOptions:[.48,.6,.72] },
+  { id:"mobile-diagonal-readable",type:"verticalSwitch",difficulty:"hard",beats:[{kind:"redCard",count:3,line:2,mobileLine:2,spacing:14,intervalAfter:1.22},{kind:"missedPenalty",count:1,line:0,mobileLine:0,spacing:34,intervalAfter:1.24}],pauseOptions:[.5,.62,.74] },
+  { id:"mobile-double-wave",type:"doubleWave",difficulty:"extreme",beats:[{kind:"redCard",count:3,line:2,mobileLine:2,spacing:14,intervalAfter:1.24},{kind:"concededGoal",count:2,line:0,mobileLine:0,spacing:19,intervalAfter:1.16}],pauseOptions:[.56,.68,.8] },
 ];
 
 export function getPatternTier(distance: number): PatternTier {
@@ -388,7 +388,12 @@ export function validateMobileRafficaPattern(
   for (let index = 0; index < pattern.length; index += 1) {
     const beat = pattern[index];
     const line = beat.mobileLine ?? beat.line;
-    if (line === 1 || beat.count > 4 || beat.count < 1 || beat.spacing < 6) return false;
+    if (
+      line === 1 ||
+      beat.count > getMobileMalusVolleyLimit(beat.kind) ||
+      beat.count < 1 ||
+      beat.spacing < 6
+    ) return false;
     const next = pattern[index + 1];
     if (!next) continue;
     const nextLine = next.mobileLine ?? next.line;
@@ -489,7 +494,11 @@ function validateMobileBossBeats(beats: readonly RafficaBeat[], speed: number) {
   for (let index = 0; index < beats.length; index += 1) {
     const beat = beats[index];
     const line = beat.mobileLine ?? beat.line;
-    if (line === 1 || beat.count > 4 || beat.spacing < 8) return false;
+    if (
+      line === 1 ||
+      beat.count > getMobileMalusVolleyLimit(beat.kind) ||
+      beat.spacing < 8
+    ) return false;
     const groupSpan = ((beat.count - 1) * (58 + beat.spacing)) / projectileSpeed;
     if (line === 0) {
       continuousLowPressure += groupSpan;
@@ -511,6 +520,13 @@ function validateMobileBossBeats(beats: readonly RafficaBeat[], speed: number) {
     }
   }
   return true;
+}
+
+function getMobileMalusVolleyLimit(kind: EventKind) {
+  if (kind === "yellowCard" || kind === "redCard") return 3;
+  if (kind === "concededGoal") return 2;
+  if (kind === "ownGoal" || kind === "missedPenalty") return 1;
+  return 4;
 }
 
 function buildMobileBossFallback(): BossPattern {
