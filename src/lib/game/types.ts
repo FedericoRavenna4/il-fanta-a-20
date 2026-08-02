@@ -52,7 +52,7 @@ export type RunnerEntity = {
   fleeing?: boolean;
   opacity?: number;
   velocityX?: number;
-  motion?: "ground" | "floating" | "sine" | "diagonal" | "serpentine" | "rush" | "launched" | "bossProjectile";
+  motion?: "ground" | "floating" | "sine" | "diagonal" | "serpentine" | "rush" | "bossProjectile";
   velocityY?: number;
   horizontalSpeedFactor?: number;
   rotation?: number;
@@ -62,6 +62,12 @@ export type RunnerEntity = {
   phase?: number;
   motionSpeed?: number;
   magnetCaptured?: boolean;
+  debugCreatedAt?: number;
+  debugCreatedElapsed?: number;
+  debugSpeed?: number;
+  debugActive?: boolean;
+  debugLastVisibleFrame?: number;
+  debugLastVisibleAt?: number;
 };
 
 export type ActivePowerUpSnapshot = {

@@ -53,7 +53,9 @@ export const DIFFICULTY_CONFIG = {
   endurance: {
     startsAtMeters: 1000,
     curveDistanceMeters: 4200,
-    maximumSpawnIntervalReduction: 0.08,
+    obstaclePressureStartsAtMeters: 1500,
+    obstaclePressureCurveMeters: 3600,
+    maximumSpawnIntervalReduction: 0.12,
     maximumBossDistanceReduction: 0.12,
   },
   distanceCurve: {

@@ -1,6 +1,7 @@
 "use client";
 
-import { memo, useCallback, useEffect, useRef } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   BONUS_HEIGHT_OFFSETS,
   EVENT_DEFINITIONS,
@@ -214,6 +215,9 @@ type Runtime = {
   mobileVisualScale: number;
   mobileLayout: boolean;
   worldWidth: number;
+  debugCanvasWidth: number;
+  debugDevicePixelRatio: number;
+  debugDistanceMilestones: number[];
   lastCollisionTime: number;
   lastCollisionChecks: number;
 };
@@ -283,6 +287,48 @@ type PerformanceMonitor = {
   lastLogAt: number;
   hudUpdates: number;
 };
+
+type BarrierRemovalReason =
+  | "offscreen"
+  | "collision"
+  | "resize"
+  | "pool_reuse"
+  | "max_entities"
+  | "level_change"
+  | "game_reset"
+  | "unknown";
+
+type BarrierDebugEvent = Record<string, unknown> & {
+  event: string;
+  timestamp: number;
+};
+
+const BARRIER_DEBUG_STORAGE_KEY = "fanta20_barrier_debug";
+const BARRIER_DEBUG_MAX_EVENTS = 4000;
+let barrierDebugFrame = 0;
+
+function isBarrierDebugEnabled() {
+  if (process.env.NODE_ENV === "production" || typeof window === "undefined") return false;
+  try {
+    return new URLSearchParams(window.location.search).get("debugBarriers") === "1" ||
+      window.localStorage.getItem(BARRIER_DEBUG_STORAGE_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function emitBarrierDebug(event: BarrierDebugEvent) {
+  if (!isBarrierDebugEnabled()) return;
+  const debugWindow = window as typeof window & {
+    __FANTA20_BARRIER_DEBUG__?: BarrierDebugEvent[];
+  };
+  const events = debugWindow.__FANTA20_BARRIER_DEBUG__ ??= [];
+  events.push(event);
+  if (events.length > BARRIER_DEBUG_MAX_EVENTS) {
+    events.splice(0, events.length - BARRIER_DEBUG_MAX_EVENTS);
+  }
+  console.debug(event.event, event);
+}
 
 function createRuntime(level: GameLevel = 1): Runtime {
   return {
@@ -392,6 +438,9 @@ function createRuntime(level: GameLevel = 1): Runtime {
     mobileVisualScale: 1,
     mobileLayout: false,
     worldWidth: GAME_WIDTH,
+    debugCanvasWidth: GAME_WIDTH,
+    debugDevicePixelRatio: 1,
+    debugDistanceMilestones: [],
     lastCollisionTime: 0,
     lastCollisionChecks: 0,
   };
@@ -482,6 +531,14 @@ function FantaRunner({
     lastLogAt: 0,
     hudUpdates: 0,
   });
+  const [debugPanelEnabled, setDebugPanelEnabled] = useState(false);
+  const [debugPanel, setDebugPanel] = useState({
+    meters: 0,
+    activeBarriers: 0,
+    lastEvent: "Nessun evento",
+    anomaly: false,
+    copied: false,
+  });
 
   useEffect(() => {
     if (process.env.NODE_ENV !== "production") runnerReactRenderCount += 1;
@@ -568,6 +625,15 @@ function FantaRunner({
   }, []);
 
   useEffect(() => {
+    const previousRuntime = runtimeRef.current;
+    const resetReason: BarrierRemovalReason = previousRuntime.level !== level
+      ? "level_change"
+      : "game_reset";
+    for (const entity of previousRuntime.entities) {
+      if (entity.type === "physical") {
+        logBarrierRemoval(previousRuntime, entity, resetReason, "FantaRunner runtime reset");
+      }
+    }
     const runtime = createRuntime(level);
     if (personalBestRunIdRef.current !== runId) {
       personalBestRunIdRef.current = runId;
@@ -597,6 +663,115 @@ function FantaRunner({
     renderStateRef.current.dirty = true;
     onSnapshot(toSnapshot(runtimeRef.current, bestRef.current, distanceRecordRef.current, distanceRecordLevel, 0));
   }, [distanceRecordLevel, level, onSnapshot, runId]);
+
+  useEffect(() => {
+    if (!isBarrierDebugEnabled()) return;
+    const logEnvironment = (event: string) => {
+      const runtime = runtimeRef.current;
+      emitBarrierDebug({
+        event,
+        timestamp: Date.now(),
+        viewportWidth: window.innerWidth,
+        canvasWidth: canvasRef.current?.getBoundingClientRect().width ?? 0,
+        devicePixelRatio: window.devicePixelRatio || 1,
+        activeBarrierIds: runtime.entities
+          .filter((entity) => entity.type === "physical")
+          .map((entity) => entity.id),
+      });
+    };
+    const onResize = () => logEnvironment("BARRIER_ENV_RESIZE");
+    const onVisibility = () => logEnvironment(document.hidden
+      ? "BARRIER_ENV_BACKGROUND"
+      : "BARRIER_ENV_FOREGROUND");
+    logEnvironment("BARRIER_DEBUG_ENABLED");
+    window.addEventListener("resize", onResize);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, []);
+
+  useEffect(() => {
+    const enabled = isBarrierDebugEnabled();
+    if (!enabled) return;
+    const updatePanel = () => {
+      const debugWindow = window as typeof window & {
+        __FANTA20_BARRIER_DEBUG__?: BarrierDebugEvent[];
+      };
+      const events = debugWindow.__FANTA20_BARRIER_DEBUG__ ?? [];
+      const runtime = runtimeRef.current;
+      setDebugPanel((current) => ({
+        ...current,
+        meters: Math.round(runtime.displayDistance || runtime.distance),
+        activeBarriers: runtime.entities.filter((entity) => entity.type === "physical").length,
+        lastEvent: events.at(-1)?.event ?? "Nessun evento",
+        anomaly: events.some((event) =>
+          event.event === "BARRIER_PREMATURE_REMOVAL" ||
+          event.event === "BARRIER_INVARIANT_VIOLATION"
+        ),
+      }));
+    };
+    const frame = window.requestAnimationFrame(() => {
+      setDebugPanelEnabled(true);
+      updatePanel();
+    });
+    const timer = window.setInterval(updatePanel, 300);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearInterval(timer);
+    };
+  }, []);
+
+  const copyBarrierDebugLog = useCallback(async () => {
+    const debugWindow = window as typeof window & {
+      __FANTA20_BARRIER_DEBUG__?: BarrierDebugEvent[];
+    };
+    const content = JSON.stringify(debugWindow.__FANTA20_BARRIER_DEBUG__ ?? [], null, 2);
+    try {
+      await navigator.clipboard.writeText(content);
+    } catch {
+      const field = document.createElement("textarea");
+      field.value = content;
+      field.style.position = "fixed";
+      field.style.opacity = "0";
+      document.body.appendChild(field);
+      field.select();
+      document.execCommand("copy");
+      field.remove();
+    }
+    setDebugPanel((current) => ({ ...current, copied: true }));
+    window.setTimeout(() => {
+      setDebugPanel((current) => ({ ...current, copied: false }));
+    }, 1800);
+  }, []);
+
+  const downloadBarrierDebugLog = useCallback(() => {
+    const debugWindow = window as typeof window & {
+      __FANTA20_BARRIER_DEBUG__?: BarrierDebugEvent[];
+    };
+    const blob = new Blob(
+      [JSON.stringify(debugWindow.__FANTA20_BARRIER_DEBUG__ ?? [], null, 2)],
+      { type: "application/json" }
+    );
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "fanta20-barriere-debug.json";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }, []);
+
+  useEffect(() => () => {
+    const runtime = runtimeRef.current;
+    for (const entity of runtime.entities) {
+      if (entity.type === "physical" && entity.debugActive) {
+        logBarrierRemoval(runtime, entity, "game_reset", "FantaRunner unmount cleanup");
+      }
+    }
+  }, []);
 
   const beginJump = useCallback(() => {
     if (statusRef.current !== "running") return;
@@ -700,6 +875,9 @@ function FantaRunner({
 
     const frame = (time: number) => {
       if (statusRef.current !== "running") return;
+      barrierDebugFrame += 1;
+      runtime.debugCanvasWidth = canvas.getBoundingClientRect().width;
+      runtime.debugDevicePixelRatio = window.devicePixelRatio || 1;
       const context = prepareCanvas(canvas, renderStateRef.current);
       const delta = runtime.lastFrame
         ? Math.min((time - runtime.lastFrame) / 1000, 0.035)
@@ -820,6 +998,7 @@ function FantaRunner({
   }, []);
 
   return (
+    <>
     <canvas
       ref={canvasRef}
       data-game-canvas
@@ -909,6 +1088,33 @@ function FantaRunner({
       aria-label={`Campo di gioco. Tocca o usa il tasto sinistro del mouse per saltare; usa il tasto destro per abbassarti con ${team.nome}.`}
       className="block aspect-[9/5] w-full touch-none bg-[#020817] outline-none max-sm:aspect-auto max-sm:h-full"
     />
+    {debugPanelEnabled && typeof document !== "undefined" && createPortal(
+      <div className="pointer-events-none fixed inset-0 z-[9999]">
+      <aside
+        className="pointer-events-none absolute left-[max(.4rem,env(safe-area-inset-left))] top-[max(.4rem,env(safe-area-inset-top))] w-[min(15rem,calc(100vw-.8rem))] rounded-xl border border-amber-300/60 bg-slate-950/95 p-2.5 text-left text-white shadow-2xl backdrop-blur-md"
+      >
+        <p className="text-[9px] font-black uppercase tracking-[.12em] text-amber-300">Debug barriere attivo</p>
+        <div className="mt-1.5 grid grid-cols-2 gap-x-3 gap-y-1 text-[9px] font-bold">
+          <span className="text-white/55">Metri</span><strong className="text-right">{debugPanel.meters}</strong>
+          <span className="text-white/55">Barriere attive</span><strong className="text-right">{debugPanel.activeBarriers}</strong>
+          <span className="text-white/55">Ultimo evento</span><strong className="truncate text-right" title={debugPanel.lastEvent}>{debugPanel.lastEvent}</strong>
+        </div>
+        <p className={`mt-1.5 rounded-md px-2 py-1 text-center text-[8px] font-black uppercase ${debugPanel.anomaly ? "bg-rose-500 text-white" : "bg-emerald-500/15 text-emerald-300"}`}>
+          {debugPanel.anomaly ? "Anomalia barriera rilevata" : "Nessuna anomalia rilevata"}
+        </p>
+        <div className="mt-2 grid grid-cols-2 gap-1.5">
+          <button type="button" onClick={copyBarrierDebugLog} className="pointer-events-auto min-h-8 touch-manipulation rounded-md bg-amber-300 px-2 text-[8px] font-black uppercase text-blue-950">
+            {debugPanel.copied ? "Log copiato" : "Copia log"}
+          </button>
+          <button type="button" onClick={downloadBarrierDebugLog} className="pointer-events-auto min-h-8 touch-manipulation rounded-md border border-white/20 px-2 text-[8px] font-black uppercase text-white">
+            Scarica log
+          </button>
+        </div>
+      </aside>
+      </div>,
+      document.body
+    )}
+    </>
   );
 }
 
@@ -1026,6 +1232,33 @@ function updatePerformanceMonitor(
       activeGameLoops: activeGameLoopCount,
       runnerReactRenders: runnerReactRenderCount,
     });
+    if (isBarrierDebugEnabled()) {
+      emitBarrierDebug({
+        event: "BARRIER_STATE",
+        timestamp: Date.now(),
+        elapsed: runtime.elapsed,
+        distance: runtime.distance,
+        level: runtime.level,
+        viewportWidth: window.innerWidth,
+        canvasWidth: runtime.debugCanvasWidth,
+        worldWidth: runtime.worldWidth,
+        devicePixelRatio: runtime.debugDevicePixelRatio,
+        spawnerState: runtime.barrierSpawnerState,
+        lastPhysicalSpawnAt: runtime.lastPhysicalSpawnAt,
+        nextBarrierSpawnAt: runtime.nextBarrierSpawnAt,
+        spawnTimer: runtime.spawnTimer,
+        activeBarrierIds: runtime.entities
+          .filter((entity) => entity.type === "physical")
+          .map((entity) => entity.id),
+        activeEntities: runtime.entities.length,
+        poolSize: runtime.entityPool.length,
+        boss: runtime.boss?.phase ?? null,
+        burst: runtime.burst?.type ?? null,
+        activePowerUps: Object.keys(runtime.activePowerUps),
+        renderQuality: runtime.renderQuality,
+        fps: Math.round(averageFps),
+      });
+    }
   }
 
   monitor.windowStartedAt = time;
@@ -1130,6 +1363,7 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
   }
 
   runtime.distance += speed * delta * 0.01;
+  logBarrierDistanceMilestones(runtime);
   runtime.flowProgress += FLOW_PROGRESS_PER_SECOND * delta;
 
   if (
@@ -1183,12 +1417,7 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
   const magnetTargetX = magnetTarget ? magnetTarget.x + magnetTarget.width / 2 : 0;
   const magnetTargetY = magnetTarget ? magnetTarget.y + magnetTarget.height / 2 : 0;
   for (const entity of runtime.entities) {
-    if (entity.type === "physical" && entity.motion === "launched") {
-      entity.x += ((entity.velocityX ?? 440) - worldSpeed * 0.22) * delta;
-      entity.velocityY = (entity.velocityY ?? -210) + GRAVITY * 0.72 * delta;
-      entity.y += entity.velocityY * delta;
-      entity.rotation = (entity.rotation ?? 0) + (entity.angularVelocity ?? 4.5) * delta;
-    } else if (entity.type === "event" && entity.motion === "bossProjectile") {
+    if (entity.type === "event" && entity.motion === "bossProjectile") {
       entity.x += (entity.velocityX ?? -360) * delta;
       entity.y += (entity.velocityY ?? 0) * delta;
       entity.rotation = (entity.rotation ?? 0) + (entity.angularVelocity ?? 0) * delta;
@@ -1299,7 +1528,7 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
     let landingTop: number | null = null;
 
     for (const entity of runtime.entities) {
-      if (entity.type !== "physical" || entity.motion === "launched") continue;
+      if (entity.type !== "physical") continue;
       if (
         entity.x > runtime.playerX + PLAYER_SIZE + 20 ||
         entity.x + entity.width < runtime.playerX - 20
@@ -1341,7 +1570,7 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
   let collisionChecks = 0;
   for (const entity of runtime.entities) {
     if (entity.x + entity.width <= -5) {
-      releaseEntity(runtime, entity);
+      releaseEntity(runtime, entity, "offscreen", "updateRuntime early offscreen cleanup");
       continue;
     }
     if (entity.x > runtime.playerX + PLAYER_SIZE + 160) {
@@ -1363,27 +1592,25 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
       entity.type === "event" &&
       EVENT_DEFINITIONS[entity.kind as EventKind].category === "bonus" &&
       (gimenezStrength > 0 || entity.fleeing);
-    const launchedObstacle = entity.type === "physical" && entity.motion === "launched";
     const capturedByNico = entity.type === "event" && entity.magnetCaptured === true;
     const intersectsEntity = entity.type === "physical"
       ? intersectsPhysicalObstacle(collisionPlayerRect, entityRect, !runtime.grounded, runtime.mobileLayout)
       : intersects(collisionPlayerRect, entityRect);
     const hit = capturedByNico ||
-      (!protectedByGimenez && !launchedObstacle && intersectsEntity);
+      (!protectedByGimenez && intersectsEntity);
 
     if (hit) {
       if (entity.type === "event") {
         applyEvent(runtime, entity.kind as EventKind, time);
-        releaseEntity(runtime, entity);
+        releaseEntity(runtime, entity, "collision", "updateRuntime event collision");
         continue;
       } else if (entity.type === "powerup") {
         activatePowerUp(runtime, entity.kind as PowerUpKind, time);
-        releaseEntity(runtime, entity);
+        releaseEntity(runtime, entity, "collision", "updateRuntime powerup collision");
         continue;
       } else {
         if (lukakuStrength > 0) {
-          launchObstacle(runtime, entity, time);
-          remainingEntities.push(entity);
+          destroyObstacleWithLukaku(runtime, entity, time);
           continue;
         }
         const playerHitboxOffset = playerRect.x - runtime.playerX;
@@ -1412,18 +1639,14 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
     }
 
     if (entity.fleeing && (entity.opacity ?? 1) <= 0.02) {
-      releaseEntity(runtime, entity);
-    } else if (
-      entity.motion === "launched" &&
-      (entity.x > runtime.worldWidth + 180 || entity.y > GROUND_Y + 180)
-    ) {
-      releaseEntity(runtime, entity);
+      releaseEntity(runtime, entity, "collision", "updateRuntime fleeing entity consumed");
     } else if (entity.x + entity.width > -40) remainingEntities.push(entity);
-    else releaseEntity(runtime, entity);
+    else releaseEntity(runtime, entity, "offscreen", "updateRuntime trailing offscreen cleanup");
   }
   runtime.entityScratch = runtime.entities;
   runtime.entities = remainingEntities;
   reconcileActiveEntityCounts(runtime);
+  validateBarrierDebugInvariants(runtime);
   runtime.lastCollisionTime = process.env.NODE_ENV !== "production"
     ? performance.now() - collisionStartedAt
     : 0;
@@ -1722,6 +1945,18 @@ function updateBoss(
         ? 2 + Math.floor(Math.random() * 2)
         : 2 + Math.floor(Math.random() * 3),
     };
+    if (isBarrierDebugEnabled()) {
+      emitBarrierDebug({
+        event: "BARRIER_BOSS_STARTED",
+        timestamp: Date.now(),
+        encounterId,
+        distance: runtime.distance,
+        nextBossAt: runtime.nextBossAt,
+        activeBarriers: runtime.entities
+          .filter((entity) => entity.type === "physical")
+          .map(barrierDebugSnapshot),
+      });
+    }
     debugBossTransition(runtime, encounterId, "idle", "warning", "distance-threshold");
     runtime.presentation = {
       asset: BOSS_CONFIG.warningAsset,
@@ -1988,7 +2223,12 @@ function getEndurancePressure(distance: number) {
 }
 
 function getEnduranceSpawnIntervalMultiplier(distance: number) {
-  return 1 - getEndurancePressure(distance) *
+  const endurance = DIFFICULTY_CONFIG.endurance;
+  const excessDistance = Math.max(0, distance - endurance.obstaclePressureStartsAtMeters);
+  const obstaclePressure = 1 - Math.exp(
+    -excessDistance / endurance.obstaclePressureCurveMeters
+  );
+  return 1 - obstaclePressure *
     DIFFICULTY_CONFIG.endurance.maximumSpawnIntervalReduction;
 }
 
@@ -2519,6 +2759,7 @@ function pushPhysicalObstacle(
   entity.rotation = movingObstacle ? -0.045 : 0;
   entity.angularVelocity = movingObstacle ? 0.035 + Math.random() * 0.035 : 0;
   runtime.entities.push(entity);
+  logBarrierCreated(runtime, entity, speed);
   runtime.lastPhysicalKind = kind;
   runtime.lastPhysicalSpawnAt = runtime.elapsed;
   runtime.nextBarrierSpawnAt = runtime.elapsed + Math.max(0.35, clearance / Math.max(1, speed));
@@ -2562,6 +2803,9 @@ function acquireEntity(
   height: number
 ) {
   const entity = runtime.entityPool.pop() ?? ({} as RunnerEntity);
+  if (entity.debugActive && entity.type === "physical") {
+    logBarrierRemoval(runtime, entity, "pool_reuse", "acquireEntity active object reuse");
+  }
   entity.id = runtime.nextEntityId++;
   entity.type = type;
   entity.kind = kind;
@@ -2573,29 +2817,245 @@ function acquireEntity(
   entity.rewarded = undefined;
   entity.fleeing = undefined;
   entity.opacity = 1;
-  entity.velocityX = undefined;
-  entity.motion = undefined;
-  entity.velocityY = undefined;
+  resetEntityPhysics(entity);
   entity.horizontalSpeedFactor = undefined;
-  entity.rotation = undefined;
-  entity.angularVelocity = undefined;
   entity.originY = undefined;
   entity.amplitude = undefined;
   entity.phase = undefined;
   entity.motionSpeed = undefined;
   entity.magnetCaptured = undefined;
+  entity.debugCreatedAt = Date.now();
+  entity.debugCreatedElapsed = runtime.elapsed;
+  entity.debugSpeed = undefined;
+  entity.debugActive = true;
+  entity.debugLastVisibleFrame = undefined;
+  entity.debugLastVisibleAt = undefined;
   runtime.activeEntityCounts[type] += 1;
   runtime.lastGameplaySpawnAt = runtime.elapsed;
   runtime.spawnRecoveryStartedAt = null;
   return entity;
 }
 
-function releaseEntity(runtime: Runtime, entity: RunnerEntity) {
+function releaseEntity(
+  runtime: Runtime,
+  entity: RunnerEntity,
+  reason: BarrierRemovalReason = "unknown",
+  removedBy = "releaseEntity"
+) {
+  if (entity.type === "physical") {
+    logBarrierRemoval(runtime, entity, reason, removedBy);
+  }
+  entity.debugActive = false;
   runtime.activeEntityCounts[entity.type] = Math.max(
     0,
     runtime.activeEntityCounts[entity.type] - 1
   );
+  resetEntityPhysics(entity);
   if (runtime.entityPool.length < ENTITY_POOL_CAPACITY) runtime.entityPool.push(entity);
+}
+
+function resetEntityPhysics(entity: RunnerEntity) {
+  entity.velocityX = undefined;
+  entity.velocityY = undefined;
+  entity.motion = undefined;
+  entity.rotation = undefined;
+  entity.angularVelocity = undefined;
+}
+
+function logBarrierCreated(runtime: Runtime, entity: RunnerEntity, speed: number) {
+  if (entity.type !== "physical" || !isBarrierDebugEnabled()) return;
+  entity.debugSpeed = speed * (entity.horizontalSpeedFactor ?? 1);
+  const hitbox = getObstacleHitbox(entity);
+  emitBarrierDebug({
+    event: "BARRIER_CREATED",
+    timestamp: entity.debugCreatedAt ?? Date.now(),
+    id: entity.id,
+    type: entity.kind,
+    createdElapsed: entity.debugCreatedElapsed,
+    x: entity.x,
+    y: entity.y,
+    visualWidth: entity.width,
+    visualHeight: entity.height,
+    hitboxX: hitbox.x,
+    hitboxY: hitbox.y,
+    hitboxWidth: hitbox.width,
+    hitboxHeight: hitbox.height,
+    viewportWidth: window.innerWidth,
+    canvasWidth: runtime.debugCanvasWidth,
+    worldWidth: runtime.worldWidth,
+    devicePixelRatio: runtime.debugDevicePixelRatio,
+    speed: entity.debugSpeed,
+    activeEntities: runtime.entities.length,
+    poolSize: runtime.entityPool.length,
+  });
+}
+
+function logBarrierRemoval(
+  runtime: Runtime,
+  entity: RunnerEntity,
+  reason: BarrierRemovalReason,
+  removedBy: string
+) {
+  if (!isBarrierDebugEnabled()) return;
+  const hitbox = getObstacleHitbox(entity);
+  const visualStillVisible = rectanglesOverlapViewport(
+    entity.x,
+    entity.y,
+    entity.width,
+    entity.height,
+    runtime.worldWidth,
+    GAME_HEIGHT
+  );
+  const hitboxStillVisible = rectanglesOverlapViewport(
+    hitbox.x,
+    hitbox.y,
+    hitbox.width,
+    hitbox.height,
+    runtime.worldWidth,
+    GAME_HEIGHT
+  );
+  const explicitReset = reason === "game_reset" || reason === "level_change" ||
+    removedBy === "FantaRunner unmount cleanup";
+  const lukakuDestruction = removedBy === "destroyObstacleWithLukaku";
+  const unexpectedReason = reason !== "offscreen" && !explicitReset && !lukakuDestruction;
+  if (((visualStillVisible || hitboxStillVisible) && !explicitReset && !lukakuDestruction) || unexpectedReason) {
+    emitBarrierDebug({
+      event: "BARRIER_PREMATURE_REMOVAL",
+      timestamp: Date.now(),
+      id: entity.id,
+      type: entity.kind,
+      reason,
+      removedBy,
+      x: entity.x,
+      y: entity.y,
+      visualWidth: entity.width,
+      visualHeight: entity.height,
+      hitboxX: hitbox.x,
+      hitboxY: hitbox.y,
+      hitboxWidth: hitbox.width,
+      hitboxHeight: hitbox.height,
+      visualStillVisible,
+      hitboxStillVisible,
+      lastVisibleFrame: entity.debugLastVisibleFrame ?? null,
+      viewportWidth: window.innerWidth,
+      canvasWidth: runtime.debugCanvasWidth,
+      worldWidth: runtime.worldWidth,
+      devicePixelRatio: runtime.debugDevicePixelRatio,
+    });
+  }
+  emitBarrierDebug({
+    event: "BARRIER_REMOVED",
+    timestamp: Date.now(),
+    removedAt: Date.now(),
+    id: entity.id,
+    type: entity.kind,
+    reason,
+    removedBy,
+    createdAt: entity.debugCreatedAt,
+    createdElapsed: entity.debugCreatedElapsed,
+    lastVisibleFrame: entity.debugLastVisibleFrame ?? null,
+    lastVisibleAt: entity.debugLastVisibleAt ?? null,
+    x: entity.x,
+    y: entity.y,
+    visualWidth: entity.width,
+    visualHeight: entity.height,
+    hitboxX: hitbox.x,
+    hitboxY: hitbox.y,
+    hitboxWidth: hitbox.width,
+    hitboxHeight: hitbox.height,
+    viewportWidth: window.innerWidth,
+    canvasWidth: runtime.debugCanvasWidth,
+    worldWidth: runtime.worldWidth,
+    devicePixelRatio: runtime.debugDevicePixelRatio,
+    speed: entity.debugSpeed,
+    activeEntities: runtime.entities.length,
+    poolSize: runtime.entityPool.length,
+  });
+}
+
+function rectanglesOverlapViewport(
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  viewportWidth: number,
+  viewportHeight: number
+) {
+  return x + width > 0 && x < viewportWidth && y + height > 0 && y < viewportHeight;
+}
+
+function validateBarrierDebugInvariants(runtime: Runtime) {
+  if (!isBarrierDebugEnabled()) return;
+  const activeObjects = new Set<RunnerEntity>();
+  const activeIds = new Set<number>();
+  for (const entity of runtime.entities) {
+    if (entity.type !== "physical") continue;
+    const duplicateObject = activeObjects.has(entity);
+    const duplicateId = activeIds.has(entity.id);
+    activeObjects.add(entity);
+    activeIds.add(entity.id);
+    if (!entity.debugActive || duplicateObject || duplicateId) {
+      emitBarrierDebug({
+        event: "BARRIER_INVARIANT_VIOLATION",
+        timestamp: Date.now(),
+        id: entity.id,
+        type: entity.kind,
+        inactiveInWorld: !entity.debugActive,
+        duplicateObject,
+        duplicateId,
+      });
+    }
+  }
+  for (const pooled of runtime.entityPool) {
+    if (pooled.type === "physical" && pooled.debugActive) {
+      emitBarrierDebug({
+        event: "BARRIER_INVARIANT_VIOLATION",
+        timestamp: Date.now(),
+        id: pooled.id,
+        type: pooled.kind,
+        activeInPool: true,
+      });
+    }
+  }
+}
+
+function logBarrierDistanceMilestones(runtime: Runtime) {
+  if (!isBarrierDebugEnabled()) return;
+  for (const milestone of [900, 1000, 1100]) {
+    if (runtime.distance < milestone || runtime.debugDistanceMilestones.includes(milestone)) continue;
+    runtime.debugDistanceMilestones.push(milestone);
+    emitBarrierDebug({
+      event: "BARRIER_DISTANCE_MILESTONE",
+      timestamp: Date.now(),
+      milestone,
+      distance: runtime.distance,
+      spawnerState: runtime.barrierSpawnerState,
+      boss: runtime.boss?.phase ?? null,
+      burst: runtime.burst?.type ?? null,
+      activeBarriers: runtime.entities
+        .filter((entity) => entity.type === "physical")
+        .map(barrierDebugSnapshot),
+      activeEntities: runtime.entities.length,
+      poolSize: runtime.entityPool.length,
+    });
+  }
+}
+
+function barrierDebugSnapshot(entity: RunnerEntity) {
+  const hitbox = getObstacleHitbox(entity);
+  return {
+    id: entity.id,
+    type: entity.kind,
+    x: entity.x,
+    y: entity.y,
+    visualWidth: entity.width,
+    visualHeight: entity.height,
+    hitboxX: hitbox.x,
+    hitboxY: hitbox.y,
+    hitboxWidth: hitbox.width,
+    hitboxHeight: hitbox.height,
+    lastVisibleFrame: entity.debugLastVisibleFrame ?? null,
+  };
 }
 
 function applyEvent(runtime: Runtime, kind: EventKind, time: number) {
@@ -2706,14 +3166,17 @@ function awardPerfectPass(runtime: Runtime) {
   runtime.score += 90 * Math.max(1, runtime.multiplier);
 }
 
-function launchObstacle(runtime: Runtime, entity: RunnerEntity, time: number) {
-  if (entity.alreadyHit || entity.motion === "launched") return;
+function destroyObstacleWithLukaku(runtime: Runtime, entity: RunnerEntity, time: number) {
   entity.alreadyHit = true;
   entity.rewarded = true;
-  entity.motion = "launched";
-  entity.velocityX = entity.kind === "slidingTackle" ? 360 : 500;
-  entity.velocityY = entity.kind === "slidingTackle" ? -150 : -245;
-  entity.angularVelocity = entity.kind === "slidingTackle" ? 3.2 : 5.4;
+  emitBarrierDebug({
+    event: "BARRIER_LUKAKU_DESTROYED",
+    timestamp: Date.now(),
+    id: entity.id,
+    type: entity.kind,
+    x: entity.x,
+    y: entity.y,
+  });
   runtime.effect = "bonus";
   runtime.effectUntil = time + 420;
   runtime.message = "BARRIERA RESPINTA";
@@ -2721,6 +3184,7 @@ function launchObstacle(runtime: Runtime, entity: RunnerEntity, time: number) {
   runtime.messageStartedAt = time;
   runtime.messageUntil = time + 720;
   runtime.score += 75;
+  releaseEntity(runtime, entity, "collision", "destroyObstacleWithLukaku");
 }
 
 function applyPhysicalHit(runtime: Runtime, time: number, repel: boolean) {
@@ -3114,6 +3578,10 @@ function drawGame(
   drawBoss(context, runtime, assets);
   for (const entity of runtime.entities) {
     if (entity.x + entity.width <= 0 || entity.x >= runtime.worldWidth + 80) continue;
+    if (entity.type === "physical" && isBarrierDebugEnabled()) {
+      entity.debugLastVisibleFrame = barrierDebugFrame;
+      entity.debugLastVisibleAt = Date.now();
+    }
     const opacity = entity.opacity ?? 1;
     if (opacity < 0.999) {
       context.save();
@@ -3964,7 +4432,7 @@ function drawMobileEntityFast(
     return true;
   }
 
-  if (entity.type === "physical" && entity.motion !== "launched") {
+  if (entity.type === "physical") {
     const sprite = OBSTACLE_SPRITES[entity.kind as PhysicalObstacleKind];
     const image = MOBILE_OBSTACLE_RENDER_CACHE.get(entity.kind as PhysicalObstacleKind) ??
       assets.get(sprite.asset);
@@ -4115,13 +4583,6 @@ function drawPhysicalObstacle(
   context.shadowColor = "rgba(2,6,23,0.62)";
   context.shadowBlur = 0;
   context.shadowOffsetY = 4;
-  if (entity.motion === "launched") {
-    const centerX = entity.x + entity.width / 2;
-    const centerY = entity.y + entity.height / 2;
-    context.translate(centerX, centerY);
-    context.rotate(entity.rotation ?? 0);
-    context.translate(-centerX, -centerY);
-  }
   const mobileSprite = mobileLayout
     ? MOBILE_OBSTACLE_RENDER_CACHE.get(entity.kind as PhysicalObstacleKind)
     : DESKTOP_OBSTACLE_RENDER_CACHE.get(entity.kind as PhysicalObstacleKind);
