@@ -3,7 +3,9 @@ import type { Metadata } from "next";
 export const SITE_URL = "https://ilfantaa20.it";
 export const SITE_NAME = "Il Fanta a 20";
 export const OPEN_GRAPH_SITE_NAME = "Fanta a 20";
-export const SITE_DESCRIPTION = "Il Fantacalcio Classic a 20 squadre: la piattaforma ufficiale del Fanta a 20. Competizioni, società, statistiche, emblemi, ranking storico e modalità carriera.";
+export const SITE_DESCRIPTION = "Il portale ufficiale del Fanta a 20: il fantacalcio classic a 20 squadre con rose uniche. Scopri le 100 società, le competizioni, il Ranking Storico, gli emblemi collezionabili e tutti i record della competizione.";
+export const SOCIAL_DESCRIPTION = "Il Fantacalcio Classic a 20 squadre. Cento società, rose uniche, competizioni, Ranking Storico, trofei ed emblemi da conquistare. Entra nel mondo del Fanta a 20.";
+export const SOCIAL_URL = "https://www.ilfantaa20.it";
 export const SITE_IMAGE = `${SITE_URL}/og-image.png`;
 export const SITE_KEYWORDS = [
   "Il Fanta a 20",
@@ -75,13 +77,13 @@ export function createPageMetadata({
       siteName: OPEN_GRAPH_SITE_NAME,
       url: path,
       title,
-      description,
+      description: SOCIAL_DESCRIPTION,
       images: [{ url: SITE_IMAGE, width: 1200, height: 630, alt: SITE_NAME }],
     },
     twitter: {
       card: "summary_large_image",
       title,
-      description,
+      description: SOCIAL_DESCRIPTION,
       images: [SITE_IMAGE],
     },
   };

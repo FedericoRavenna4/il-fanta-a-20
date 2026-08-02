@@ -3,6 +3,8 @@ import { Manrope, Outfit } from "next/font/google";
 import Script from "next/script";
 import {
   OPEN_GRAPH_SITE_NAME,
+  SOCIAL_DESCRIPTION,
+  SOCIAL_URL,
   SITE_DESCRIPTION,
   SITE_IMAGE,
   SITE_KEYWORDS,
@@ -65,15 +67,15 @@ export const metadata: Metadata = {
     type: "website",
     locale: "it_IT",
     siteName: OPEN_GRAPH_SITE_NAME,
-    url: "/",
+    url: SOCIAL_URL,
     title: SITE_NAME,
-    description: SITE_DESCRIPTION,
+    description: SOCIAL_DESCRIPTION,
     images: [{ url: SITE_IMAGE, width: 1200, height: 630, alt: SITE_NAME }],
   },
   twitter: {
     card: "summary_large_image",
     title: SITE_NAME,
-    description: SITE_DESCRIPTION,
+    description: SOCIAL_DESCRIPTION,
     images: [SITE_IMAGE],
   },
   appleWebApp: {

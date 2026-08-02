@@ -67,13 +67,20 @@ export const POWER_UP_SPAWN_CONFIG = {
   maximumOnField: 1,
   guaranteedDistanceStart: 35,
   guaranteedDistanceLimit: 40,
+  restrictedKindsMinimumDistance: 500,
 } as const;
+
+export function isPowerUpEligible(kind: PowerUpKind, distance: number) {
+  return distance >= POWER_UP_SPAWN_CONFIG.restrictedKindsMinimumDistance ||
+    (kind !== "dybala" && kind !== "gimenez");
+}
 
 export function pickPowerUp(
   random = Math.random,
-  weightMultiplier: (definition: PowerUpDefinition) => number = () => 1
+  weightMultiplier: (definition: PowerUpDefinition) => number = () => 1,
+  eligible: (definition: PowerUpDefinition) => boolean = () => true
 ): PowerUpDefinition {
-  const definitions = Object.values(POWER_UP_CONFIG);
+  const definitions = Object.values(POWER_UP_CONFIG).filter(eligible);
   const weights = definitions.map((definition) =>
     Math.max(0, definition.weight * weightMultiplier(definition))
   );

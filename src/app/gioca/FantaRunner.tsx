@@ -65,6 +65,7 @@ import {
 import {
   POWER_UP_CONFIG,
   POWER_UP_SPAWN_CONFIG,
+  isPowerUpEligible,
   pickPowerUp,
 } from "@/lib/game/powerups";
 import {
@@ -1283,7 +1284,7 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
       ? getObstacleHitbox(entity)
       : entity.type === "powerup"
         ? getPowerUpHitbox(entity)
-        : getEventHitbox(entity);
+        : getEventHitbox(entity, runtime.mobileLayout);
     const collisionPlayerRect =
       entity.type === "event" &&
       EVENT_DEFINITIONS[entity.kind as EventKind].category === "bonus"
@@ -1552,12 +1553,11 @@ function trySpawnPowerUp(runtime: Runtime, guaranteed: boolean) {
     (!guaranteed && Math.random() >= spawnChance) ||
     runtime.activeEntityCounts.powerup > 0
   ) return false;
-  const definition = pickPowerUp(Math.random, (candidate) => {
-    if (candidate.kind !== "dybala" && candidate.kind !== "gimenez") return 1;
-    if (runtime.distance < 180) return guaranteed ? 0.1 : 0.18;
-    if (runtime.distance < 350) return 0.45;
-    return 1;
-  });
+  const definition = pickPowerUp(
+    Math.random,
+    () => 1,
+    (candidate) => isPowerUpEligible(candidate.kind, runtime.distance)
+  );
   const scale = runtime.mobileLayout ? MOBILE_POWER_UP_SCALE : 1;
   const width = definition.width * scale;
   const height = definition.height * scale;
@@ -1635,7 +1635,7 @@ function updateBoss(
     runtime.boss = {
       phase: "warning",
       timer: BOSS_CONFIG.warningSeconds +
-        (runtime.mobileLayout ? 0.5 : 0) +
+        (runtime.mobileLayout ? BOSS_CONFIG.mobile.warningBonusSeconds : 0) +
         (runtime.level === 1 ? 0.2 : runtime.level === 3 ? -0.08 : 0),
       spawnTimer: 0,
       lastShotAt: -10,
@@ -1667,7 +1667,9 @@ function updateBoss(
     if (boss.timer > 0) return;
     boss.phase = "active";
     boss.timer = BOSS_CONFIG.durationSeconds;
-    boss.spawnTimer = 0.48;
+    boss.spawnTimer = runtime.mobileLayout
+      ? BOSS_CONFIG.mobile.initialAttackDelaySeconds
+      : 0.48;
     runtime.presentation = {
       asset: BOSS_CONFIG.bannerAsset,
       title: SPECIAL_EVENT_COPY.boss.title,
@@ -1686,7 +1688,9 @@ function updateBoss(
         activeProjectiles += 1;
       }
     }
-    if (activeProjectiles >= (runtime.mobileLayout ? 9 : 11)) {
+    if (activeProjectiles >= (runtime.mobileLayout
+      ? BOSS_CONFIG.mobile.maximumActiveProjectiles
+      : 11)) {
       boss.spawnTimer = 0.18;
       return;
     }
@@ -1698,7 +1702,8 @@ function updateBoss(
     const spread = Math.max(beat.spacing, kind === "missedPenalty" ? 16 : 2) +
       (runtime.mobileLayout ? 6 : 0);
     const baseProjectileSpeed = runtime.mobileLayout
-      ? 325 + difficulty * 65
+      ? BOSS_CONFIG.mobile.projectileSpeedBase +
+        difficulty * BOSS_CONFIG.mobile.projectileSpeedDifficultyBonus
       : 455 + difficulty * 95;
     const projectileSpeed = baseProjectileSpeed *
       LEVEL_RULES[runtime.level].difficulty.bossProjectileMultiplier;
@@ -1735,16 +1740,24 @@ function updateBoss(
       boss.attackIndex = nextAttackIndex;
     }
     boss.volleysSinceRecovery += 1;
-    boss.spawnTimer = Math.min(
+    const attackInterval = Math.min(
       BOSS_CONFIG.itemIntervalSeconds.maximum,
       Math.max(
         BOSS_CONFIG.itemIntervalSeconds.minimum,
         beat.intervalAfter * (0.94 - difficulty * 0.18)
       )
     );
+    boss.spawnTimer = runtime.mobileLayout
+      ? Math.max(
+          BOSS_CONFIG.mobile.minimumAttackIntervalSeconds,
+          attackInterval * BOSS_CONFIG.mobile.attackIntervalMultiplier
+        )
+      : attackInterval;
     if (boss.volleysSinceRecovery >= boss.recoveryEvery) {
       boss.spawnTimer += boss.pattern.difficulty === "extreme" ? 0.42 : 0.3;
-      if (runtime.mobileLayout) boss.spawnTimer += 0.36;
+      if (runtime.mobileLayout) {
+        boss.spawnTimer += BOSS_CONFIG.mobile.recoveryBonusSeconds;
+      }
       boss.spawnTimer = Math.max(
         0.2,
         boss.spawnTimer + LEVEL_RULES[runtime.level].difficulty.bossRecoveryBonus
@@ -2573,7 +2586,7 @@ function getObstacleHitbox(entity: RunnerEntity) {
   };
 }
 
-function getEventHitbox(entity: RunnerEntity) {
+function getEventHitbox(entity: RunnerEntity, mobile: boolean) {
   const sprite = EVENT_SPRITES[entity.kind as EventKind];
   if (!sprite) {
     return {
@@ -2585,11 +2598,22 @@ function getEventHitbox(entity: RunnerEntity) {
   }
   const scaleX = entity.width / sprite.width;
   const scaleY = entity.height / sprite.height;
-  return {
+  const hitboxRect = {
     x: entity.x + sprite.hitbox.x * scaleX,
     y: entity.y + sprite.hitbox.y * scaleY,
     width: sprite.hitbox.width * scaleX,
     height: sprite.hitbox.height * scaleY,
+  };
+  if (!mobile || entity.motion !== "bossProjectile") return hitboxRect;
+
+  const hitboxScale = BOSS_CONFIG.mobile.projectileHitboxScale;
+  const horizontalInset = hitboxRect.width * (1 - hitboxScale) / 2;
+  const verticalInset = hitboxRect.height * (1 - hitboxScale) / 2;
+  return {
+    x: hitboxRect.x + horizontalInset,
+    y: hitboxRect.y + verticalInset,
+    width: hitboxRect.width * hitboxScale,
+    height: hitboxRect.height * hitboxScale,
   };
 }
 
