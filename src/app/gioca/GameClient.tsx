@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { createPortal } from "react-dom";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   TEAM_RATING_INITIAL,
   TEAM_RATING_THRESHOLD,
@@ -16,11 +16,14 @@ import {
 import type { GameSnapshot, GameStatus, GameTeam } from "@/lib/game/types";
 import type { ArcadeLeaderboardEntry, ArcadeSaveResult } from "@/lib/arcade/types";
 import {
-  writePersonalDistanceRecord,
   readPersonalArcadeRecord,
   writePersonalArcadeRecord,
   isBetterPersonalRecord,
 } from "@/lib/game/records";
+import {
+  arcadeTeamBestStorageKey,
+  ensureArcadeStorageVersion,
+} from "@/lib/game/storage";
 import {
   LEVEL_RULES,
   applyLevelResult,
@@ -122,6 +125,10 @@ export default function GameClient({
   const startTransitionTimerRef = useRef<number | null>(null);
   const highlightTimerRef = useRef<number | null>(null);
   const modalOpen = Boolean(team) && status !== "selecting";
+
+  useLayoutEffect(() => {
+    ensureArcadeStorageVersion();
+  }, []);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
@@ -261,7 +268,6 @@ export default function GameClient({
       [String(team.id)]: levelResult.progress,
     }));
     writeBest(team.id, nextBest);
-    writePersonalDistanceRecord(nextPersonalRecord);
     writePersonalArcadeRecord(nextPersonal);
     writeClubProgress(team.id, levelResult.progress);
     triggerOutcomeHaptic(levelResult.resolution.outcome);
@@ -700,17 +706,15 @@ function MobileJumpHint() {
   );
 }
 
-function storageKey(teamId: number) { return `fanta-runner-best:${teamId}`; }
-
 function readBest(teamId: number) {
   try {
-    const value = Number(window.localStorage.getItem(storageKey(teamId)) ?? 0);
+    const value = Number(window.localStorage.getItem(arcadeTeamBestStorageKey(teamId)) ?? 0);
     return Number.isFinite(value) && value > 0 ? Math.round(value) : 0;
   } catch { return 0; }
 }
 
 function writeBest(teamId: number, score: number) {
-  try { window.localStorage.setItem(storageKey(teamId), String(score)); }
+  try { window.localStorage.setItem(arcadeTeamBestStorageKey(teamId), String(score)); }
   catch { /* Il gioco resta utilizzabile se lo storage è bloccato. */ }
 }
 

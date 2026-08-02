@@ -1,4 +1,5 @@
 import type { GameBackgroundStage } from "./assets";
+import { ARCADE_PROGRESS_STORAGE_KEY } from "./storage";
 
 export type GameLevel = 1 | 2 | 3;
 export type LevelOutcome = "promoted" | "relegated" | "safe" | "stayed";
@@ -23,7 +24,6 @@ export type LevelResolution = {
 
 export type VarVerdict = "validated" | "overturned";
 
-export const ARCADE_PROGRESS_STORAGE_KEY = "fanta-a-20-arcade-progress-v1";
 export const ARCADE_PROGRESS_STORAGE_VERSION = 3;
 export const DISPLAY_DISTANCE_RATE = 1.33;
 

@@ -1,5 +1,4 @@
-export const PLAYER_NICKNAME_KEY = "fanta20_player_nickname";
-export const PLAYER_ID_KEY = "fanta20_player_id";
+import { PLAYER_ID_KEY, PLAYER_NICKNAME_KEY } from "./storage";
 export const PLAYER_NICKNAME_MIN_LENGTH = 2;
 export const PLAYER_NICKNAME_MAX_LENGTH = 30;
 let volatilePlayerId = "";

@@ -1,5 +1,4 @@
-export const PERSONAL_DISTANCE_RECORD_KEY = "fanta-runner-personal-distance-record";
-export const PERSONAL_ARCADE_RECORD_KEY = "fanta-runner-personal-arcade-record-v2";
+import { PERSONAL_ARCADE_RECORD_KEY } from "./storage";
 
 export type PersonalArcadeRecord = { level: 1 | 2 | 3; meters: number };
 
@@ -11,9 +10,9 @@ export function readPersonalArcadeRecord(): PersonalArcadeRecord {
       return { level: parsed.level, meters: Math.max(0, Math.round(parsed.meters ?? 0)) };
     }
   } catch {
-    // Il formato precedente viene recuperato qui sotto come record di livello 1.
+    // Un valore non valido equivale all'assenza di un record locale.
   }
-  return { level: 1, meters: readPersonalDistanceRecord() };
+  return { level: 1, meters: 0 };
 }
 
 export function isBetterPersonalRecord(candidate: PersonalArcadeRecord, current: PersonalArcadeRecord) {
@@ -30,24 +29,4 @@ export function writePersonalArcadeRecord(candidate: PersonalArcadeRecord) {
     // Il gioco resta utilizzabile anche quando lo storage locale non è disponibile.
   }
   return next;
-}
-
-export function readPersonalDistanceRecord() {
-  if (typeof window === "undefined") return 0;
-  try {
-    const value = Number(window.localStorage.getItem(PERSONAL_DISTANCE_RECORD_KEY) ?? 0);
-    return Number.isFinite(value) && value > 0 ? Math.round(value) : 0;
-  } catch {
-    return 0;
-  }
-}
-
-export function writePersonalDistanceRecord(distance: number) {
-  if (typeof window === "undefined") return;
-  try {
-    const nextRecord = Math.max(readPersonalDistanceRecord(), Math.round(distance));
-    window.localStorage.setItem(PERSONAL_DISTANCE_RECORD_KEY, String(nextRecord));
-  } catch {
-    // Il gioco resta utilizzabile anche quando lo storage locale non è disponibile.
-  }
 }

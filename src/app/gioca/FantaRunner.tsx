@@ -37,6 +37,7 @@ import {
   TEAM_RATING_THRESHOLD,
 } from "@/lib/game/config";
 import { getSafeSpawnInterval } from "@/lib/game/generator";
+import { BARRIER_DEBUG_STORAGE_KEY } from "@/lib/game/storage";
 import {
   pickGameplayPattern,
   pickBossPattern,
@@ -303,7 +304,6 @@ type BarrierDebugEvent = Record<string, unknown> & {
   timestamp: number;
 };
 
-const BARRIER_DEBUG_STORAGE_KEY = "fanta20_barrier_debug";
 const BARRIER_DEBUG_MAX_EVENTS = 4000;
 let barrierDebugFrame = 0;
 
