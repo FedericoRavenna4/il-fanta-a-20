@@ -65,7 +65,7 @@ export function ScattoPromozioneContent({ embedded = false }: { embedded?: boole
           La volata per la Serie B
         </h2>
 
-        <div className="mt-3 max-w-5xl space-y-4 text-sm font-normal leading-6 text-slate-600 sm:mt-4 sm:text-lg sm:leading-8">
+        <div className="mt-3 max-w-5xl space-y-4 text-sm font-semibold leading-6 text-slate-600 sm:mt-4 sm:text-lg sm:leading-8">
           <p>
   Al termine della 29ª giornata accedono allo Scatto Promozione le prime
   cinque classificate di ciascun girone di Serie C, ognuna con un bonus

@@ -21,8 +21,7 @@ export default function SocietaClient({ societa }: { societa: Societa[] }) {
 
   const filtered = societa
     .filter((team) => {
-      const searchText =
-        `${team.nome} ${team.fantallenatore} ${team.nicknameInstagram} ${team.squadraReale}`.toLowerCase();
+      const searchText = `${team.nome} ${team.squadraReale}`.toLowerCase();
 
       const matchSearch = searchText.includes(search.toLowerCase());
 
@@ -49,7 +48,7 @@ export default function SocietaClient({ societa }: { societa: Societa[] }) {
       <div className="mb-12">
         <input
           type="text"
-          placeholder="Cerca società, fantallenatore o nickname..."
+          placeholder="Cerca società o nome personalizzato..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="mx-auto block min-h-12 w-full max-w-3xl rounded-[1.25rem] border border-slate-200 bg-white px-4 py-4 text-base text-slate-700 shadow-lg outline-none transition-all duration-300 placeholder:text-slate-400 focus:border-blue-900 focus:shadow-xl sm:px-6 sm:py-5 sm:text-lg"

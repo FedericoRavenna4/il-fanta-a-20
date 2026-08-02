@@ -4,7 +4,7 @@ import { SITE_NAME } from "@/lib/seo";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: SITE_NAME,
-    short_name: "Fanta a 20",
+    short_name: SITE_NAME,
     description: "Il Fantacalcio Classic a 20 squadre",
     start_url: "/",
     display: "standalone",

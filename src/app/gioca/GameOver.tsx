@@ -70,7 +70,7 @@ export default function GameOver({
             {savePending ? (
               <span className="inline-flex items-center gap-2 text-white/60"><span className="h-3 w-3 animate-spin rounded-full border-2 border-white/20 border-t-amber-300" /> Salvataggio del record…</span>
             ) : saveResult ? (
-              <span className={saveResult.ok ? "text-emerald-200" : "text-rose-200"}>{saveResult.message}</span>
+              <span className={`whitespace-pre-line ${saveResult.ok ? "text-emerald-200" : "text-rose-200"}`}>{saveResult.message}</span>
             ) : (
               <span className="text-white/50">Preparazione del salvataggio…</span>
             )}

@@ -1,15 +1,27 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import type { ArcadeLeaderboardEntry } from "@/lib/arcade/types";
 import type { GameTeam } from "@/lib/game/types";
 
 export default function ArcadeTopThree({ entries, teams }: { entries: ArcadeLeaderboardEntry[]; teams: GameTeam[] }) {
-  if (entries.length === 0) return null;
+  const [liveEntries, setLiveEntries] = useState(entries.slice(0, 3));
+  useEffect(() => {
+    const handleUpdate = (event: Event) => {
+      setLiveEntries((event as CustomEvent<ArcadeLeaderboardEntry[]>).detail.slice(0, 3));
+    };
+    window.addEventListener("arcade-leaderboard-updated", handleUpdate);
+    return () => window.removeEventListener("arcade-leaderboard-updated", handleUpdate);
+  }, []);
+
+  if (liveEntries.length === 0) return null;
   const teamsById = new Map(teams.map((team) => [team.id, team]));
   return (
     <section aria-label="Primi tre della classifica Arcade" className="mb-3 rounded-xl border border-sky-200/70 bg-gradient-to-r from-white/90 via-sky-50/80 to-white/90 p-2 shadow-lg shadow-blue-950/8 sm:mb-7 sm:p-4">
       <div className="grid grid-cols-3 gap-1 sm:gap-3">
-        {entries.map((entry, index) => {
+        {liveEntries.map((entry, index) => {
           const team = teamsById.get(entry.societaId);
           const tone = index === 0
             ? "bg-[linear-gradient(145deg,rgba(255,255,255,.48)_0%,rgba(255,255,255,0)_30%),linear-gradient(135deg,#ffe878_0%,#d9aa08_48%,#f3ca45_100%)]"

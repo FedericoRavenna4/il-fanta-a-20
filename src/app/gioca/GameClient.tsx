@@ -177,6 +177,9 @@ export default function GameClient({
 
   const updateLeaderboard = useCallback((entries: ArcadeLeaderboardEntry[], highlightedId?: string) => {
     setLeaderboard(entries);
+    window.dispatchEvent(new CustomEvent("arcade-leaderboard-updated", {
+      detail: entries.slice(0, 3),
+    }));
     setHighlightedRecordId(highlightedId ?? null);
     if (highlightTimerRef.current !== null) window.clearTimeout(highlightTimerRef.current);
     if (highlightedId) {

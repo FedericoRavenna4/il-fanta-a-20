@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const SITE_URL = "https://ilfantaa20.it";
 export const SITE_NAME = "Il Fanta a 20";
 export const OPEN_GRAPH_SITE_NAME = "Fanta a 20";
-export const SITE_DESCRIPTION = "Il Fantacalcio Classic a 20 squadre: società, competizioni, statistiche, emblemi e Arcade ufficiale.";
+export const SITE_DESCRIPTION = "Il Fantacalcio Classic a 20 squadre: la piattaforma ufficiale del Fanta a 20. Competizioni, società, statistiche, emblemi, ranking storico e modalità carriera.";
 export const SITE_IMAGE = `${SITE_URL}/og-image.png`;
 export const SITE_KEYWORDS = [
   "Il Fanta a 20",

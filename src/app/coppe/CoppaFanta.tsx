@@ -47,7 +47,7 @@ export default function CoppaFanta() {
               La Coppa Fanta a 20
             </h2>
 
-            <p className="mt-3 max-w-5xl text-sm font-normal leading-6 text-blue-950/75 sm:mt-4 sm:text-lg sm:leading-8">
+            <p className="mt-3 max-w-5xl text-sm font-semibold leading-6 text-blue-950/75 sm:mt-4 sm:text-lg sm:leading-8">
               Il trofeo più prestigioso del Fanta a 20. Le 100 società partono
               dallo stesso punto, senza distinzioni di lega o categoria: solo 64
               entrano nel tabellone finale, dove ogni sfida può cambiare la

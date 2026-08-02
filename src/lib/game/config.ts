@@ -69,12 +69,13 @@ export const ENTITY_DENSITY_CONFIG = {
 } as const;
 
 export const OBSTACLE_PROGRESSION = [
-  { distance: 0, mixedWeight: 10, intervalMultiplier: 1.18 },
-  { distance: 70, mixedWeight: 38, intervalMultiplier: 1.05 },
-  { distance: 150, mixedWeight: 65, intervalMultiplier: 0.96 },
-  { distance: 300, mixedWeight: 92, intervalMultiplier: 0.84 },
-  { distance: 500, mixedWeight: 116, intervalMultiplier: 0.76 },
-  { distance: 700, mixedWeight: 132, intervalMultiplier: 0.72 },
+  { distance: 0, mixedWeight: 8, intervalMultiplier: 1.24 },
+  { distance: 70, mixedWeight: 18, intervalMultiplier: 1.16 },
+  { distance: 150, mixedWeight: 36, intervalMultiplier: 1.08 },
+  { distance: 300, mixedWeight: 65, intervalMultiplier: 0.98 },
+  { distance: 500, mixedWeight: 92, intervalMultiplier: 0.88 },
+  { distance: 700, mixedWeight: 112, intervalMultiplier: 0.8 },
+  { distance: 1000, mixedWeight: 128, intervalMultiplier: 0.74 },
 ] as const;
 
 export const HAT_TRICK_SPAWN_CONFIG = {

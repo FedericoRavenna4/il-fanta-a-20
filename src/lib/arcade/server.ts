@@ -103,12 +103,6 @@ export async function saveArcadeRecord(input: {
     }
 
     const supabase = getSupabaseAdminClient();
-    const { data: previous } = await supabase
-      .from("classifica_arcade")
-      .select("metri,livello,updated_at")
-      .eq("nome_giocatore_normalizzato", normalizedName)
-      .maybeSingle();
-
     const { data, error } = await supabase.rpc("salva_record_arcade", {
       p_nome_giocatore: nomeGiocatore,
       p_societa_id: payload.societaId,
@@ -126,21 +120,17 @@ export async function saveArcadeRecord(input: {
     if (savedError || !savedRow) return serviceUnavailable();
 
     const metriRecord = returnedRecord ?? savedRow.metri;
-    const improved = !previous || metri > previous.metri;
     const [leaderboard, position] = await Promise.all([
       getArcadeLeaderboard(),
       getArcadePosition(savedRow.metri, normalizeLevel(savedRow.livello), savedRow.updated_at),
     ]);
     const highlightedId = leaderboardEntryId(nomeGiocatore, payload.societaId);
-    const topMessage = position <= 100
-      ? `Sei entrato nella Top 100! Posizione: ${position}ª.`
-      : "Non hai raggiunto la Top 100. Continua a correre e riprova!";
 
     return {
       ok: true,
-      message: `${improved
-        ? "Nuovo record salvato nella classifica."
-        : `Il tuo record resta ${metriRecord.toLocaleString("it-IT")} metri.`} ${topMessage}`,
+      message: position <= 100
+        ? `POSIZIONE ${position}°`
+        : "SEI FUORI DALLA TOP 100...\nRIPROVA!",
       metriRecord,
       position,
       highlightedId,

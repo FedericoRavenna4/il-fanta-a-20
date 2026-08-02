@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useState } from "react";
 import type { ArcadeLeaderboardEntry } from "@/lib/arcade/types";
 import type { GameTeam } from "@/lib/game/types";
 
@@ -13,7 +14,9 @@ export default function ArcadeLeaderboard({
   teams: GameTeam[];
   highlightedId?: string | null;
 }) {
+  const [expanded, setExpanded] = useState(false);
   const teamsById = new Map(teams.map((team) => [team.id, team]));
+  const visibleEntries = entries.slice(0, expanded ? 100 : 10);
 
   return (
     <section id="hall-of-fame-arcade" className="mt-10 border-t border-blue-950/10 pt-10 sm:mt-16 sm:pt-14">
@@ -43,7 +46,7 @@ export default function ArcadeLeaderboard({
               <span>Posizione</span><span>Giocatore</span><span className="text-center">Società</span><span className="text-center">Livello</span><span className="text-right">Metri</span>
             </div>
             <ol>
-              {entries.map((entry, index) => {
+              {visibleEntries.map((entry, index) => {
                 const team = teamsById.get(entry.societaId);
                 const highlighted = entry.id === highlightedId;
                 return (
@@ -60,6 +63,13 @@ export default function ArcadeLeaderboard({
               })}
             </ol>
           </div>
+          {!expanded && entries.length > 10 && (
+            <div className="mt-5 flex justify-center">
+              <button type="button" onClick={() => setExpanded(true)} className="rounded-full border border-blue-950/15 bg-white px-5 py-2 text-[10px] font-black uppercase tracking-[.12em] text-blue-950 transition hover:border-blue-950 hover:bg-blue-950 hover:text-white">
+                Espandi classifica
+              </button>
+            </div>
+          )}
         </>
       )}
     </section>

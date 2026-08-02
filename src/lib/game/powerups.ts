@@ -69,8 +69,19 @@ export const POWER_UP_SPAWN_CONFIG = {
   guaranteedDistanceLimit: 40,
 } as const;
 
-export function pickPowerUp(random = Math.random): PowerUpDefinition {
+export function pickPowerUp(
+  random = Math.random,
+  weightMultiplier: (definition: PowerUpDefinition) => number = () => 1
+): PowerUpDefinition {
   const definitions = Object.values(POWER_UP_CONFIG);
-  const index = Math.min(definitions.length - 1, Math.floor(random() * definitions.length));
-  return definitions[index];
+  const weights = definitions.map((definition) =>
+    Math.max(0, definition.weight * weightMultiplier(definition))
+  );
+  const totalWeight = weights.reduce((total, weight) => total + weight, 0);
+  let cursor = random() * totalWeight;
+  for (let index = 0; index < definitions.length; index += 1) {
+    cursor -= weights[index];
+    if (cursor <= 0) return definitions[index];
+  }
+  return definitions[definitions.length - 1];
 }

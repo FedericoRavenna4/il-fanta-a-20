@@ -236,7 +236,7 @@ const MOBILE_WORLD_OFFSET_Y = 266;
 const MOBILE_CAMERA_SCALE = 0.8;
 const MOBILE_PLAYER_X = 104;
 const MOBILE_OBSTACLE_SCALE: Record<PhysicalObstacleKind, number> = {
-  cornerFlag: 1.6,
+  cornerFlag: 1.45,
   stretcher: 1.5,
   slidingTackle: 1.52,
   var: 1.55,
@@ -1295,8 +1295,11 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
       (gimenezStrength > 0 || entity.fleeing);
     const launchedObstacle = entity.type === "physical" && entity.motion === "launched";
     const capturedByNico = entity.type === "event" && entity.magnetCaptured === true;
+    const intersectsEntity = entity.type === "physical"
+      ? intersectsPhysicalObstacle(collisionPlayerRect, entityRect, !runtime.grounded, runtime.mobileLayout)
+      : intersects(collisionPlayerRect, entityRect);
     const hit = capturedByNico ||
-      (!protectedByGimenez && !launchedObstacle && intersects(collisionPlayerRect, entityRect));
+      (!protectedByGimenez && !launchedObstacle && intersectsEntity);
 
     if (hit) {
       if (entity.type === "event") {
@@ -1549,7 +1552,12 @@ function trySpawnPowerUp(runtime: Runtime, guaranteed: boolean) {
     (!guaranteed && Math.random() >= spawnChance) ||
     runtime.activeEntityCounts.powerup > 0
   ) return false;
-  const definition = pickPowerUp();
+  const definition = pickPowerUp(Math.random, (candidate) => {
+    if (candidate.kind !== "dybala" && candidate.kind !== "gimenez") return 1;
+    if (runtime.distance < 180) return guaranteed ? 0.1 : 0.18;
+    if (runtime.distance < 350) return 0.45;
+    return 1;
+  });
   const scale = runtime.mobileLayout ? MOBILE_POWER_UP_SCALE : 1;
   const width = definition.width * scale;
   const height = definition.height * scale;
@@ -1570,6 +1578,7 @@ function trySpawnPowerUp(runtime: Runtime, guaranteed: boolean) {
   runtime.entities.push(entity);
   runtime.powerUpCooldown = POWER_UP_SPAWN_CONFIG.cooldownSeconds;
   runtime.firstPowerUpSpawned = true;
+  recordSpawnCategory(runtime, "space");
   return true;
 }
 
@@ -1735,7 +1744,7 @@ function updateBoss(
     );
     if (boss.volleysSinceRecovery >= boss.recoveryEvery) {
       boss.spawnTimer += boss.pattern.difficulty === "extreme" ? 0.42 : 0.3;
-      if (runtime.mobileLayout) boss.spawnTimer += 0.24;
+      if (runtime.mobileLayout) boss.spawnTimer += 0.36;
       boss.spawnTimer = Math.max(
         0.2,
         boss.spawnTimer + LEVEL_RULES[runtime.level].difficulty.bossRecoveryBonus
@@ -2000,9 +2009,9 @@ function spawnGameplayPattern(
     runtime.physicalFreePatternStreak >= physicalFreeLimit
   ) {
     const reactionTime = runtime.mobileLayout
-      ? 0.72 - advancedPressure * 0.1
+      ? 0.8 - advancedPressure * 0.08
       : 0.68;
-    const reactionGap = Math.max(300, speed * reactionTime);
+    const reactionGap = Math.max(runtime.mobileLayout ? 340 : 300, speed * reactionTime);
     const obstacleKinds: readonly PhysicalObstacleKind[] = advancedPressure > 0.55
       ? ["cornerFlag", "stretcher", "slidingTackle", "var"]
       : ["cornerFlag", "stretcher", "var"];
@@ -2127,6 +2136,7 @@ function pushEvent(
   entity.rotation = 0;
   entity.angularVelocity = options.angularVelocity;
   runtime.entities.push(entity);
+  recordSpawnCategory(runtime, definition.category);
   return true;
 }
 
@@ -2137,6 +2147,12 @@ function pushPhysicalObstacle(
   difficulty: number,
   allowCapacityReserve = false
 ) {
+  if (
+    runtime.lastSpawnCategory === "physical" &&
+    runtime.repeatedSpawnCategory >= 2
+  ) {
+    return false;
+  }
   if (
     runtime.activeEntityCounts.physical >= ENTITY_DENSITY_CONFIG.maximumActivePhysicalObstacles ||
     (!allowCapacityReserve && runtime.entities.length >= getMaximumActiveEntities(runtime))
@@ -2149,7 +2165,7 @@ function pushPhysicalObstacle(
     width: baseDimensions.width * obstacleScale,
     height: baseDimensions.height * obstacleScale,
   };
-  const clearance = runtime.mobileLayout ? 125 : 72;
+  const clearance = runtime.mobileLayout ? 145 : 84;
   if (runtime.entities.some((entity) =>
     entity.type === "physical" &&
     Math.abs(entity.x - x) < (entity.width + dimensions.width) / 2 + clearance
@@ -2168,7 +2184,19 @@ function pushPhysicalObstacle(
   entity.rotation = movingObstacle ? -0.045 : 0;
   entity.angularVelocity = movingObstacle ? 0.035 + Math.random() * 0.035 : 0;
   runtime.entities.push(entity);
+  recordSpawnCategory(runtime, "physical");
   return true;
+}
+
+function recordSpawnCategory(
+  runtime: Runtime,
+  category: Runtime["lastSpawnCategory"]
+) {
+  if (category === null) return;
+  runtime.repeatedSpawnCategory = runtime.lastSpawnCategory === category
+    ? runtime.repeatedSpawnCategory + 1
+    : 1;
+  runtime.lastSpawnCategory = category;
 }
 
 function acquireEntity(
@@ -2660,6 +2688,19 @@ function intersects(
     first.y < second.y + second.height &&
     first.y + first.height > second.y
   );
+}
+
+function intersectsPhysicalObstacle(
+  player: { x: number; y: number; width: number; height: number },
+  obstacle: { x: number; y: number; width: number; height: number },
+  airborne: boolean,
+  mobile: boolean
+) {
+  if (!intersects(player, obstacle)) return false;
+  if (!airborne) return true;
+
+  const playerFeet = player.y + player.height;
+  return playerFeet > obstacle.y + (mobile ? 12 : 8);
 }
 
 function roundRating(value: number) {
