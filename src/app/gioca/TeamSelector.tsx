@@ -15,7 +15,6 @@ import {
   validatePlayerNickname,
   writePlayerNickname,
 } from "@/lib/game/nickname";
-import { claimPlayerNickname } from "./actions";
 
 const LEAGUE_FILTERS = [
   ["all", "Tutte", "Tutte"], ["serie-a", "Serie A", "A"], ["serie-b", "Serie B", "B"],
@@ -35,7 +34,7 @@ function TeamSelector({
   initialTeamSlug?: string;
   progressByClub: Record<string, ClubProgress>;
   keyboardEnabled?: boolean;
-  onSelect: (team: GameTeam, playerName: string, playerId: string) => void;
+  onSelect: (team: GameTeam, playerName: string) => void;
 }) {
   const initialTeam = teams.find((team) => team.slug === initialTeamSlug) ?? null;
   const [isMobileFlow, setIsMobileFlow] = useState(false);
@@ -303,7 +302,7 @@ function TeamSelector({
     randomAnimationFrameRef.current = requestAnimationFrame(animateRoll);
   }
 
-  async function confirmSelectedTeam() {
+  function confirmSelectedTeam() {
     if (!confirmationTeam || isLaunching) return;
     const validation = validatePlayerNickname(playerName);
     if (!validation.ok) {
@@ -313,25 +312,13 @@ function TeamSelector({
     const normalizedName = validation.nickname;
     setPlayerNameError("");
     setIsLaunching(true);
-    const playerId = getOrCreatePlayerId();
-    if (!playerId) {
-      setPlayerNameError("Impossibile preparare il profilo di gioco. Riprova.");
-      setIsLaunching(false);
-      return;
-    }
-    const claim = await claimPlayerNickname(playerId, normalizedName);
-    if (!claim.ok) {
-      setPlayerNameError(claim.message ?? "Nickname già utilizzato. Scegline un altro.");
-      setIsEditingPlayerName(true);
-      setIsLaunching(false);
-      return;
-    }
+    getOrCreatePlayerId();
     writePlayerNickname(normalizedName);
     setPlayerName(normalizedName);
     setSavedPlayerName(normalizedName);
     setIsEditingPlayerName(false);
     window.clearTimeout(launchTimerRef.current);
-    launchTimerRef.current = window.setTimeout(() => onSelect(confirmationTeam, normalizedName, playerId), 260);
+    launchTimerRef.current = window.setTimeout(() => onSelect(confirmationTeam, normalizedName), 260);
   }
 
   function beginDrag(event: React.PointerEvent<HTMLDivElement>) {

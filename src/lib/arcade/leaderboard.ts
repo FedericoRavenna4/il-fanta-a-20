@@ -26,7 +26,7 @@ export function compareArcadeLeaderboardEntries(
 export function deduplicateArcadeLeaderboard(entries: readonly ArcadeLeaderboardEntry[]) {
   const bestByNickname = new Map<string, ArcadeLeaderboardEntry>();
   for (const candidate of entries) {
-    const identity = candidate.playerId || normalizeArcadePlayerNameForLookup(candidate.nomeGiocatore);
+    const identity = normalizeArcadePlayerNameForLookup(candidate.nomeGiocatore);
     if (!identity) continue;
     const current = bestByNickname.get(identity);
     if (!current || compareArcadeLeaderboardEntries(candidate, current) < 0) {
