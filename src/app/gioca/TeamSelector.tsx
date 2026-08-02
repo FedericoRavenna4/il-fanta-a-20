@@ -13,9 +13,7 @@ const LEAGUE_FILTERS = [
   ["all", "Tutte", "Tutte"], ["serie-a", "Serie A", "A"], ["serie-b", "Serie B", "B"],
   ["serie-c-a", "Serie C-A", "C-A"], ["serie-c-b", "Serie C-B", "C-B"], ["serie-c-c", "Serie C-C", "C-C"],
 ] as const;
-const RANDOM_ROLL_STEPS = 14;
-const RANDOM_WINNER_SETTLE_MS = 650;
-const RANDOM_WINNER_HOLD_MS = 1000;
+const RANDOM_ROLL_DURATION_MS = 2600;
 type LeagueFilter = (typeof LEAGUE_FILTERS)[number][0];
 
 function TeamSelector({
@@ -40,6 +38,7 @@ function TeamSelector({
   );
   const [confirmationTeam, setConfirmationTeam] = useState<GameTeam | null>(null);
   const [isRandomizing, setIsRandomizing] = useState(false);
+  const [randomResultTeam, setRandomResultTeam] = useState<GameTeam | null>(null);
   const [isLaunching, setIsLaunching] = useState(false);
   const [playerName, setPlayerName] = useState("");
   const [playerNameError, setPlayerNameError] = useState("");
@@ -55,6 +54,7 @@ function TeamSelector({
   const randomTimerRef = useRef(0);
   const randomRollIdRef = useRef(0);
   const randomizingRef = useRef(false);
+  const randomAnimationFrameRef = useRef(0);
   const launchTimerRef = useRef(0);
   const selectionTimerRef = useRef(0);
   const handledPointerSelectionRef = useRef(0);
@@ -89,6 +89,7 @@ function TeamSelector({
   useEffect(() => () => {
     randomRollIdRef.current += 1;
     randomizingRef.current = false;
+    cancelAnimationFrame(randomAnimationFrameRef.current);
     window.clearTimeout(randomTimerRef.current);
     window.clearTimeout(launchTimerRef.current);
     window.clearTimeout(selectionTimerRef.current);
@@ -216,6 +217,7 @@ function TeamSelector({
   }, []);
 
   function chooseTeam(team: GameTeam, replica = 1) {
+    setRandomResultTeam(null);
     selectAndCenter(team, replica);
     window.clearTimeout(selectionTimerRef.current);
     if (isMobileFlow) {
@@ -235,40 +237,49 @@ function TeamSelector({
     randomRollIdRef.current = rollId;
     randomizingRef.current = true;
     setIsRandomizing(true);
+    setRandomResultTeam(null);
     setConfirmationTeam(null);
     window.clearTimeout(randomTimerRef.current);
+    cancelAnimationFrame(randomAnimationFrameRef.current);
 
-    let step = 0;
-    const advanceRoll = () => {
+    const ribbon = ribbonRef.current;
+    const winnerButton = buttonRefs.current.get(`${isInfinite ? 2 : 1}-${randomTeam.id}`);
+    if (!ribbon || !winnerButton) {
+      randomizingRef.current = false;
+      setIsRandomizing(false);
+      setSelectedTeam(randomTeam);
+      setRandomResultTeam(randomTeam);
+      return;
+    }
+
+    const startScroll = ribbon.scrollLeft;
+    const targetScroll = winnerButton.offsetLeft -
+      (ribbon.clientWidth - winnerButton.offsetWidth) / 2;
+    const startedAt = performance.now();
+    const animateRoll = (time: number) => {
       if (randomRollIdRef.current !== rollId) return;
-      const isFinalStep = step >= RANDOM_ROLL_STEPS;
-      const rollingTeam = isFinalStep
-        ? randomTeam
-        : filteredTeams[Math.floor(Math.random() * filteredTeams.length)];
-      setSelectedTeam(rollingTeam);
-      requestAnimationFrame(() => {
-        buttonRefs.current.get(`1-${rollingTeam.id}`)?.scrollIntoView({
-          behavior: isFinalStep ? "smooth" : "auto",
-          block: "nearest",
-          inline: "center",
-        });
-      });
-
-      if (isFinalStep) {
-        randomTimerRef.current = window.setTimeout(() => {
-          if (randomRollIdRef.current !== rollId) return;
-          randomizingRef.current = false;
-          setIsRandomizing(false);
-          setConfirmationTeam(randomTeam);
-        }, RANDOM_WINNER_SETTLE_MS + RANDOM_WINNER_HOLD_MS);
+      const progress = Math.min(1, (time - startedAt) / RANDOM_ROLL_DURATION_MS);
+      const easedProgress = 1 - Math.pow(1 - progress, 4);
+      ribbon.scrollLeft = startScroll + (targetScroll - startScroll) * easedProgress;
+      if (progress < 1) {
+        randomAnimationFrameRef.current = requestAnimationFrame(animateRoll);
         return;
       }
 
-      step += 1;
-      const progressiveDelay = 45 + Math.pow(step, 1.55) * 7;
-      randomTimerRef.current = window.setTimeout(advanceRoll, progressiveDelay);
+      if (isInfinite) {
+        const middleWinner = buttonRefs.current.get(`1-${randomTeam.id}`);
+        if (middleWinner) {
+          ribbon.scrollLeft = middleWinner.offsetLeft -
+            (ribbon.clientWidth - middleWinner.offsetWidth) / 2;
+        }
+      }
+      setSelectedTeam(randomTeam);
+      setRandomResultTeam(randomTeam);
+      randomizingRef.current = false;
+      setIsRandomizing(false);
+      updateScrollIndicator();
     };
-    advanceRoll();
+    randomAnimationFrameRef.current = requestAnimationFrame(animateRoll);
   }
 
   function confirmSelectedTeam() {
@@ -380,12 +391,15 @@ function TeamSelector({
 
     if (!closest) return;
     const team = teams.find((candidate) => candidate.id === closest.teamId);
-    if (team) setSelectedTeam(team);
+    if (team) {
+      setRandomResultTeam(null);
+      setSelectedTeam(team);
+    }
   }
 
   function preserveInfiniteLoop() {
     const ribbon = ribbonRef.current;
-    if (!ribbon || !filteredTeams.length || !isInfinite) return;
+    if (!ribbon || !filteredTeams.length || !isInfinite || randomizingRef.current) return;
     const segmentWidth = getCarouselSegmentWidth();
     if (!segmentWidth) return;
 
@@ -455,6 +469,7 @@ function TeamSelector({
 
   const moveSelection = useCallback((direction: -1 | 1) => {
     if (!filteredTeams.length) return;
+    setRandomResultTeam(null);
     const currentIndex = Math.max(
       0,
       filteredTeams.findIndex((team) => team.id === activeTeam?.id)
@@ -508,15 +523,19 @@ function TeamSelector({
             <span className="sr-only">Cerca una società</span>
             <input
               type="search"
+              disabled={isRandomizing}
               value={search}
-              onChange={(event) => setSearch(event.target.value)}
+              onChange={(event) => {
+                setSearch(event.target.value);
+                setRandomResultTeam(null);
+              }}
               placeholder="Cerca una società"
               className="min-h-10 w-full rounded-2xl border border-sky-200/20 bg-slate-950/55 px-5 text-center text-xs font-bold text-white shadow-[0_12px_35px_rgba(2,8,23,0.25),inset_0_1px_0_rgba(255,255,255,0.08)] outline-none transition placeholder:text-white/35 focus:border-sky-200/50 focus:bg-slate-900/75 focus:ring-4 focus:ring-sky-400/10 sm:min-h-14 sm:text-base"
             />
           </label>
           <div className="mt-2 flex flex-wrap justify-center gap-1 sm:mt-3 sm:gap-1.5" aria-label="Filtra le società per lega">
             {LEAGUE_FILTERS.map(([value, label, mobileLabel]) => (
-              <button key={value} type="button" aria-label={label} aria-pressed={leagueFilter === value} onClick={() => { setLeagueFilter(value); setConfirmationTeam(null); }} className={`min-h-8 min-w-8 rounded-full border px-1.5 text-[7px] font-black uppercase tracking-[.06em] transition sm:min-h-9 sm:min-w-0 sm:px-3 sm:text-[8px] sm:tracking-[.08em] ${leagueFilter === value ? "border-sky-300 bg-sky-300 text-blue-950 shadow-[0_5px_18px_rgba(56,189,248,.22)]" : "border-white/15 bg-white/[.05] text-white/60 hover:border-white/35 hover:text-white"}`}>
+              <button key={value} type="button" disabled={isRandomizing} aria-label={label} aria-pressed={leagueFilter === value} onClick={() => { setLeagueFilter(value); setConfirmationTeam(null); setRandomResultTeam(null); }} className={`min-h-8 min-w-8 rounded-full border px-1.5 text-[7px] font-black uppercase tracking-[.06em] transition disabled:cursor-wait disabled:opacity-50 sm:min-h-9 sm:min-w-0 sm:px-3 sm:text-[8px] sm:tracking-[.08em] ${leagueFilter === value ? "border-sky-300 bg-sky-300 text-blue-950 shadow-[0_5px_18px_rgba(56,189,248,.22)]" : "border-white/15 bg-white/[.05] text-white/60 hover:border-white/35 hover:text-white"}`}>
                 <span className="sm:hidden">{mobileLabel}</span><span className="hidden sm:inline">{label}</span>
               </button>
             ))}
@@ -531,7 +550,7 @@ function TeamSelector({
           <button
             type="button"
             onClick={() => moveSelection(-1)}
-            disabled={filteredTeams.length <= 1}
+            disabled={isRandomizing || filteredTeams.length <= 1}
             aria-label="Società precedente"
             className="absolute left-0 top-1/2 z-10 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-sky-100/20 bg-[linear-gradient(145deg,rgba(18,61,103,0.96),rgba(4,18,39,0.94))] text-2xl font-light text-sky-50 shadow-[0_14px_34px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.12)] transition duration-300 hover:scale-105 hover:border-sky-100/40 hover:text-white disabled:hidden"
           >
@@ -545,7 +564,8 @@ function TeamSelector({
             onPointerUp={endDrag}
             onPointerCancel={cancelDrag}
             onScroll={preserveInfiniteLoop}
-            className={`flex items-center gap-2 overflow-x-auto px-12 py-5 overscroll-x-contain touch-pan-y select-none [perspective:900px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:gap-4 sm:px-14 sm:py-12 ${isInfinite ? "cursor-grab active:cursor-grabbing" : filteredTeams.length === 1 ? "justify-center" : "cursor-grab active:cursor-grabbing"}`}
+            aria-busy={isRandomizing}
+            className={`flex items-center gap-2 overflow-x-auto px-12 py-5 overscroll-x-contain touch-pan-y select-none [perspective:900px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:gap-4 sm:px-14 sm:py-12 ${isRandomizing ? "pointer-events-none cursor-wait" : isInfinite ? "cursor-grab active:cursor-grabbing" : filteredTeams.length === 1 ? "justify-center" : "cursor-grab active:cursor-grabbing"}`}
           >
             {carouselTeams.map(({ team, replica }) => {
               const selected = activeTeam?.id === team.id;
@@ -598,7 +618,7 @@ function TeamSelector({
           <button
             type="button"
             onClick={() => moveSelection(1)}
-            disabled={filteredTeams.length <= 1}
+            disabled={isRandomizing || filteredTeams.length <= 1}
             aria-label="Società successiva"
             className="absolute right-0 top-1/2 z-10 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-sky-100/20 bg-[linear-gradient(145deg,rgba(18,61,103,0.96),rgba(4,18,39,0.94))] text-2xl font-light text-sky-50 shadow-[0_14px_34px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.12)] transition duration-300 hover:scale-105 hover:border-sky-100/40 hover:text-white disabled:hidden"
           >
@@ -613,7 +633,15 @@ function TeamSelector({
           </div>
         )}
 
-        {isInfinite && (
+        {randomResultTeam && !confirmationTeam && !isRandomizing && (
+          <div className="mt-3 flex justify-center">
+            <button type="button" onClick={() => setConfirmationTeam(randomResultTeam)} className="min-h-10 rounded-full bg-white px-6 text-[9px] font-black uppercase tracking-[.14em] text-blue-950 transition hover:bg-sky-100">
+              Scegli questa società
+            </button>
+          </div>
+        )}
+
+        {isInfinite && !isRandomizing && (
         <div className="mx-auto mt-1.5 max-w-3xl px-8 sm:mt-2">
           <div
             ref={scrollTrackRef}

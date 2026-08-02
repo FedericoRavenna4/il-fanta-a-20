@@ -289,12 +289,14 @@ export const BOSS_BLOCK_LIBRARY: readonly BossBlock[] = [
 ];
 
 export const MOBILE_BOSS_BLOCK_LIBRARY: readonly BossBlock[] = [
-  { id:"mobile-short-low",type:"shortBurst",difficulty:"medium",beats:[{kind:"yellowCard",count:3,line:0,mobileLine:0,spacing:10,intervalAfter:.76}],pauseOptions:[.24,.34,.44] },
-  { id:"mobile-medium-high",type:"mediumBurst",difficulty:"medium",beats:[{kind:"concededGoal",count:3,line:2,mobileLine:2,spacing:11,intervalAfter:.8}],pauseOptions:[.26,.36,.46] },
-  { id:"mobile-recovery",type:"recoveryWindow",difficulty:"medium",beats:[{kind:"yellowCard",count:2,line:0,mobileLine:0,spacing:13,intervalAfter:.82}],pauseOptions:[.5,.62,.74] },
-  { id:"mobile-fake-pause",type:"fakePause",difficulty:"hard",beats:[{kind:"missedPenalty",count:1,line:2,mobileLine:2,spacing:32,intervalAfter:1},{kind:"yellowCard",count:2,line:0,mobileLine:0,spacing:12,intervalAfter:.82}],pauseOptions:[.28,.4,.52] },
-  { id:"mobile-vertical-switch",type:"verticalSwitch",difficulty:"hard",beats:[{kind:"concededGoal",count:3,line:0,mobileLine:0,spacing:12,intervalAfter:1.04},{kind:"redCard",count:3,line:2,mobileLine:2,spacing:12,intervalAfter:.86}],pauseOptions:[.3,.42,.54] },
-  { id:"mobile-double-wave",type:"doubleWave",difficulty:"extreme",beats:[{kind:"redCard",count:3,line:2,mobileLine:2,spacing:13,intervalAfter:1.06},{kind:"concededGoal",count:3,line:0,mobileLine:0,spacing:14,intervalAfter:.92}],pauseOptions:[.4,.52,.64] },
+  { id:"mobile-short-low",type:"shortBurst",difficulty:"medium",beats:[{kind:"yellowCard",count:2,line:0,mobileLine:0,spacing:16,intervalAfter:1.02}],pauseOptions:[.38,.48,.58] },
+  { id:"mobile-medium-high",type:"mediumBurst",difficulty:"medium",beats:[{kind:"concededGoal",count:2,line:2,mobileLine:2,spacing:16,intervalAfter:1.06}],pauseOptions:[.4,.5,.6] },
+  { id:"mobile-recovery",type:"recoveryWindow",difficulty:"medium",beats:[{kind:"yellowCard",count:1,line:2,mobileLine:2,spacing:18,intervalAfter:1.18}],pauseOptions:[.62,.74,.86] },
+  { id:"mobile-low-window",type:"recoveryWindow",difficulty:"medium",beats:[{kind:"concededGoal",count:2,line:0,mobileLine:0,spacing:18,intervalAfter:1.12}],pauseOptions:[.58,.7,.82] },
+  { id:"mobile-fake-pause",type:"fakePause",difficulty:"hard",beats:[{kind:"missedPenalty",count:1,line:2,mobileLine:2,spacing:34,intervalAfter:1.16},{kind:"yellowCard",count:2,line:0,mobileLine:0,spacing:16,intervalAfter:1.04}],pauseOptions:[.46,.58,.7] },
+  { id:"mobile-vertical-switch",type:"verticalSwitch",difficulty:"hard",beats:[{kind:"concededGoal",count:2,line:0,mobileLine:0,spacing:17,intervalAfter:1.2},{kind:"redCard",count:2,line:2,mobileLine:2,spacing:17,intervalAfter:1.08}],pauseOptions:[.48,.6,.72] },
+  { id:"mobile-diagonal-readable",type:"verticalSwitch",difficulty:"hard",beats:[{kind:"redCard",count:2,line:2,mobileLine:2,spacing:18,intervalAfter:1.22},{kind:"missedPenalty",count:1,line:0,mobileLine:0,spacing:34,intervalAfter:1.12}],pauseOptions:[.5,.62,.74] },
+  { id:"mobile-double-wave",type:"doubleWave",difficulty:"extreme",beats:[{kind:"redCard",count:2,line:2,mobileLine:2,spacing:19,intervalAfter:1.24},{kind:"concededGoal",count:2,line:0,mobileLine:0,spacing:19,intervalAfter:1.14}],pauseOptions:[.56,.68,.8] },
 ];
 
 export function getPatternTier(distance: number): PatternTier {
@@ -406,8 +408,8 @@ export function pickBossPattern(
   validationAttempt = 0
 ) {
   const library = mobile ? MOBILE_BOSS_BLOCK_LIBRARY : BOSS_BLOCK_LIBRARY;
-  const blockCount = mobile ? 4 : 4 + (random() > 0.58 ? 1 : 0);
-  const allowMobileExtreme = !mobile || random() < 0.24;
+  const blockCount = mobile ? 3 : 4 + (random() > 0.58 ? 1 : 0);
+  const allowMobileExtreme = !mobile || random() < 0.14;
   const selected: BossBlock[] = [];
   let lastKind: EventKind | null = null;
   let lastLine: 0 | 1 | 2 | null = null;
@@ -421,6 +423,7 @@ export function pickBossPattern(
       if (previousPattern?.difficulty === "extreme" && block.difficulty === "extreme") return false;
       if (mobile && block.difficulty === "extreme" && !allowMobileExtreme) return false;
       if (mobile && block.type === "fakePause" && selected.some((item) => item.type === "fakePause")) return false;
+      if (mobile && selected.at(-1)?.difficulty !== "medium" && block.difficulty !== "medium") return false;
       if (slot === 0 && previousPattern?.difficulty === "extreme" && block.difficulty !== "medium") return false;
       const firstBeat = block.beats[0];
       const firstLine = mobile ? firstBeat.mobileLine ?? firstBeat.line : firstBeat.line;
@@ -469,7 +472,7 @@ function validateMobileBossBlock(block: BossBlock, speed: number) {
 }
 
 export function validateMobileBossPattern(pattern: BossPattern, speed: number) {
-  return pattern.blockTypes.length >= 4 && validateMobileBossBeats(pattern.beats, speed);
+  return pattern.blockTypes.length >= 3 && validateMobileBossBeats(pattern.beats, speed);
 }
 
 function validateMobileBossBeats(beats: readonly RafficaBeat[], speed: number) {
@@ -515,7 +518,6 @@ function buildMobileBossFallback(): BossPattern {
     MOBILE_BOSS_BLOCK_LIBRARY[0],
     MOBILE_BOSS_BLOCK_LIBRARY[1],
     MOBILE_BOSS_BLOCK_LIBRARY[2],
-    MOBILE_BOSS_BLOCK_LIBRARY[3],
   ];
   return {
     id: "mobile-safe-fallback",

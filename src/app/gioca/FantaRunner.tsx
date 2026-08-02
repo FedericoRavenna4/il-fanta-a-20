@@ -190,6 +190,7 @@ type Runtime = {
   lastPowerUpKind: PowerUpKind | null;
   presentation: PresentationState | null;
   boss: {
+    encounterId: number;
     phase: "warning" | "active" | "exiting";
     timer: number;
     spawnTimer: number;
@@ -201,6 +202,8 @@ type Runtime = {
   } | null;
   lastBossPattern: BossPattern | null;
   nextBossAt: number;
+  nextBossEncounterId: number;
+  bossCooldownUntil: number;
   reducedPerformance: boolean;
   renderQuality: "high" | "balanced" | "low";
   mobileVisualScale: number;
@@ -371,6 +374,8 @@ function createRuntime(level: GameLevel = 1): Runtime {
       BOSS_CONFIG.distanceWindowMeters.minimum,
       BOSS_CONFIG.distanceWindowMeters.maximum
     ) + getLevelBossDistanceOffset(level),
+    nextBossEncounterId: 1,
+    bossCooldownUntil: 0,
     reducedPerformance: false,
     renderQuality: "high",
     mobileVisualScale: 1,
@@ -1645,13 +1650,17 @@ function updateBoss(
   if (!runtime.boss) {
     if (
       runtime.distance < runtime.nextBossAt ||
+      runtime.elapsed < runtime.bossCooldownUntil ||
       runtime.burst ||
       runtime.activeEntityCounts.powerup > 0 ||
       runtime.distance < SPAWN_CONFIG.openingBonus.distanceEndMeters
     ) return;
     const pattern = pickLevelBossPattern(runtime, runtime.lastBossPattern, speed);
     runtime.lastBossPattern = pattern;
+    const encounterId = runtime.nextBossEncounterId;
+    runtime.nextBossEncounterId += 1;
     runtime.boss = {
+      encounterId,
       phase: "warning",
       timer: BOSS_CONFIG.warningSeconds +
         (runtime.mobileLayout ? BOSS_CONFIG.mobile.warningBonusSeconds : 0) +
@@ -1665,6 +1674,7 @@ function updateBoss(
         ? 2 + Math.floor(Math.random() * 2)
         : 2 + Math.floor(Math.random() * 3),
     };
+    debugBossTransition(runtime, encounterId, "idle", "warning", "distance-threshold");
     runtime.presentation = {
       asset: BOSS_CONFIG.warningAsset,
       title: SPECIAL_EVENT_COPY.boss.title,
@@ -1679,16 +1689,22 @@ function updateBoss(
   const boss = runtime.boss;
   boss.timer -= delta;
   if (boss.phase === "exiting") {
-    if (boss.timer <= 0) runtime.boss = null;
+    if (boss.timer <= 0 && runtime.boss?.encounterId === boss.encounterId) {
+      debugBossTransition(runtime, boss.encounterId, "exiting", "idle", "exit-complete");
+      runtime.boss = null;
+    }
     return;
   }
   if (boss.phase === "warning") {
     if (boss.timer > 0) return;
     boss.phase = "active";
-    boss.timer = BOSS_CONFIG.durationSeconds;
+    boss.timer = runtime.mobileLayout
+      ? BOSS_CONFIG.mobile.durationSeconds
+      : BOSS_CONFIG.durationSeconds;
     boss.spawnTimer = runtime.mobileLayout
       ? BOSS_CONFIG.mobile.initialAttackDelaySeconds
       : 0.48;
+    debugBossTransition(runtime, boss.encounterId, "warning", "active", "warning-complete");
     runtime.presentation = {
       asset: BOSS_CONFIG.bannerAsset,
       title: SPECIAL_EVENT_COPY.boss.title,
@@ -1707,9 +1723,11 @@ function updateBoss(
         activeProjectiles += 1;
       }
     }
-    if (activeProjectiles >= (runtime.mobileLayout
+    const projectileLimit = runtime.mobileLayout
       ? BOSS_CONFIG.mobile.maximumActiveProjectiles
-      : 11)) {
+      : 11;
+    const availableProjectileSlots = projectileLimit - activeProjectiles;
+    if (availableProjectileSlots <= 0) {
       boss.spawnTimer = 0.18;
       return;
     }
@@ -1726,7 +1744,11 @@ function updateBoss(
       : 455 + difficulty * 95;
     const projectileSpeed = baseProjectileSpeed *
       LEVEL_RULES[runtime.level].difficulty.bossProjectileMultiplier;
-    const volleyCount = beat.count;
+    const volleyCount = Math.min(
+      beat.count,
+      availableProjectileSlots,
+      runtime.mobileLayout ? BOSS_CONFIG.mobile.maximumProjectilesPerVolley : beat.count
+    );
     for (let itemIndex = 0; itemIndex < volleyCount; itemIndex += 1) {
       const spawnX = bossRect.x + bossRect.width * 0.18 +
         itemIndex * (dimensions.width * scale + spread);
@@ -1750,7 +1772,8 @@ function updateBoss(
     }
     boss.lastShotAt = runtime.elapsed;
     const nextAttackIndex = boss.attackIndex + 1;
-    if (nextAttackIndex >= boss.pattern.beats.length) {
+    const patternCompleted = nextAttackIndex >= boss.pattern.beats.length;
+    if (patternCompleted) {
       const nextPattern = pickLevelBossPattern(runtime, boss.pattern, speed);
       boss.pattern = nextPattern;
       runtime.lastBossPattern = nextPattern;
@@ -1772,6 +1795,9 @@ function updateBoss(
           attackInterval * BOSS_CONFIG.mobile.attackIntervalMultiplier
         )
       : attackInterval;
+    if (runtime.mobileLayout && patternCompleted) {
+      boss.spawnTimer += BOSS_CONFIG.mobile.patternTransitionPauseSeconds;
+    }
     if (boss.volleysSinceRecovery >= boss.recoveryEvery) {
       boss.spawnTimer += boss.pattern.difficulty === "extreme" ? 0.42 : 0.3;
       if (runtime.mobileLayout) {
@@ -1797,6 +1823,8 @@ function updateBoss(
     BOSS_CONFIG.distanceWindowMeters.maximum
   ) * getEnduranceBossDistanceMultiplier(runtime.distance) +
     getLevelBossDistanceOffset(runtime.level);
+  runtime.bossCooldownUntil = runtime.elapsed + BOSS_CONFIG.cooldownSeconds;
+  debugBossTransition(runtime, boss.encounterId, "active", "exiting", "duration-complete");
   changeTeamRating(runtime, BOSS_CONFIG.rewardRating, time, "boss-reward", "Boss 20 superato");
   runtime.presentation = null;
 }
@@ -1812,6 +1840,25 @@ function pickLevelBossPattern(
     pattern = pickBossPattern(previousPattern, runtime.mobileLayout, speed);
   }
   return pattern;
+}
+
+function debugBossTransition(
+  runtime: Runtime,
+  encounterId: number,
+  from: "idle" | "warning" | "active" | "exiting",
+  to: "idle" | "warning" | "active" | "exiting",
+  reason: string
+) {
+  if (process.env.NODE_ENV === "production") return;
+  console.debug("[arcade:boss]", {
+    encounterId,
+    from,
+    to,
+    reason,
+    distance: Math.round(runtime.distance),
+    elapsed: Number(runtime.elapsed.toFixed(2)),
+    nextBossAt: Math.round(runtime.nextBossAt),
+  });
 }
 
 function updateRafficaOverlay(runtime: Runtime, delta: number) {
@@ -1896,6 +1943,7 @@ function monitorSpawnerHealth(runtime: Runtime) {
   const watchdog = SPAWN_CONFIG.watchdog;
   if (
     runtime.sessionInvalid ||
+    runtime.initialBonusSpawned ||
     runtime.elapsed < watchdog.startupGraceSeconds ||
     runtime.entities.length > 0 ||
     runtime.elapsed - runtime.lastGameplaySpawnAt <= watchdog.maximumSilenceSeconds
@@ -1905,7 +1953,6 @@ function monitorSpawnerHealth(runtime: Runtime) {
     runtime.spawnRecoveryStartedAt = runtime.elapsed;
     runtime.activeEntityCounts = { event: 0, physical: 0, powerup: 0 };
     runtime.burst = null;
-    runtime.boss = null;
     runtime.presentation = null;
     runtime.spawnTimer = 0;
     return;
