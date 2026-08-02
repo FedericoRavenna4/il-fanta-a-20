@@ -107,6 +107,7 @@ export type Database = {
           used_at: string | null;
           created_at: string;
           player_id: string | null;
+          consumed_valid: boolean;
         };
         Insert: {
           nonce: string;
@@ -117,6 +118,7 @@ export type Database = {
           used_at?: string | null;
           created_at?: string;
           player_id?: string | null;
+          consumed_valid?: boolean;
         };
         Update: {
           nonce?: string;
@@ -127,13 +129,14 @@ export type Database = {
           used_at?: string | null;
           created_at?: string;
           player_id?: string | null;
+          consumed_valid?: boolean;
         };
         Relationships: [];
       };
       arcade_players: {
-        Row: { player_id: string; nickname: string; nickname_normalizzato: string; created_at: string; updated_at: string };
-        Insert: { player_id: string; nickname: string; nickname_normalizzato: string; created_at?: string; updated_at?: string };
-        Update: { player_id?: string; nickname?: string; nickname_normalizzato?: string; created_at?: string; updated_at?: string };
+        Row: { player_id: string; nickname: string; nickname_normalized: string; created_at: string; updated_at: string };
+        Insert: { player_id: string; nickname: string; nickname_normalized: string; created_at?: string; updated_at?: string };
+        Update: { player_id?: string; nickname?: string; nickname_normalized?: string; created_at?: string; updated_at?: string };
         Relationships: [];
       };
     };
@@ -148,22 +151,13 @@ export type Database = {
         };
         Returns: unknown;
       };
-      salva_record_arcade_v2: {
-        Args: {
-          p_nome_giocatore: string;
-          p_societa_id: number;
-          p_livello: number;
-          p_metri: number;
-        };
-        Returns: unknown;
-      };
       salva_record_arcade_v3: {
-        Args: { p_player_id: string; p_nome_giocatore: string; p_societa_id: number; p_livello: number; p_metri: number };
+        Args: { p_nonce: string; p_player_id: string; p_nome_giocatore: string; p_societa_id: number; p_livello: number; p_metri: number };
         Returns: unknown;
       };
       assegna_nickname_arcade: {
-        Args: { p_player_id: string; p_nome_giocatore: string };
-        Returns: boolean;
+        Args: { p_player_id: string; p_nickname: string; p_nickname_normalized: string };
+        Returns: Array<{ accepted: boolean; status: string; nickname: string | null; nickname_normalized: string | null }>;
       };
       consuma_rate_limit: {
         Args: {

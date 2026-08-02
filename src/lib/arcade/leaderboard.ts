@@ -24,16 +24,18 @@ export function compareArcadeLeaderboardEntries(
 }
 
 export function deduplicateArcadeLeaderboard(entries: readonly ArcadeLeaderboardEntry[]) {
-  const bestByNickname = new Map<string, ArcadeLeaderboardEntry>();
+  const bestByPlayer = new Map<string, ArcadeLeaderboardEntry>();
   for (const candidate of entries) {
-    const identity = normalizeArcadePlayerNameForLookup(candidate.nomeGiocatore);
+    const identity = candidate.playerId
+      ? `player:${candidate.playerId}`
+      : `legacy:${normalizeArcadePlayerNameForLookup(candidate.nomeGiocatore)}`;
     if (!identity) continue;
-    const current = bestByNickname.get(identity);
+    const current = bestByPlayer.get(identity);
     if (!current || compareArcadeLeaderboardEntries(candidate, current) < 0) {
-      bestByNickname.set(identity, candidate);
+      bestByPlayer.set(identity, candidate);
     }
   }
-  return [...bestByNickname.values()].sort(compareArcadeLeaderboardEntries);
+  return [...bestByPlayer.values()].sort(compareArcadeLeaderboardEntries);
 }
 
 function safeTimestamp(value: string) {

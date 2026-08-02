@@ -90,9 +90,9 @@ export const MOBILE_OBSTACLE_SPAWN_CONFIG = {
   slidingReactionSeconds: 1.22,
   slidingFollowUpSeconds: 1.34,
   slidingChance: {
-    before500Meters: 0.1664,
-    at1500Meters: 0.4368,
-    enduranceMaximum: 0.6032,
+    before500Meters: 0.18,
+    at1500Meters: 0.46,
+    enduranceMaximum: 0.62,
   },
   watchdog: {
     startsAtMeters: 300,

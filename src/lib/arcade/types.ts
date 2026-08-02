@@ -24,4 +24,8 @@ export type ArcadeRunProofResult = {
   message?: string;
 };
 
-export type ArcadeNicknameClaimResult = { ok: boolean; message?: string };
+export type ArcadeNicknameClaimResult = {
+  ok: boolean;
+  status: "assigned" | "nickname_taken" | "invalid" | "unavailable";
+  message?: string;
+};

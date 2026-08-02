@@ -289,14 +289,16 @@ export const BOSS_BLOCK_LIBRARY: readonly BossBlock[] = [
 ];
 
 export const MOBILE_BOSS_BLOCK_LIBRARY: readonly BossBlock[] = [
-  { id:"mobile-short-low",type:"shortBurst",difficulty:"medium",beats:[{kind:"yellowCard",count:3,line:0,mobileLine:0,spacing:14,intervalAfter:1.08}],pauseOptions:[.38,.48,.58] },
-  { id:"mobile-medium-high",type:"mediumBurst",difficulty:"medium",beats:[{kind:"concededGoal",count:2,line:2,mobileLine:2,spacing:16,intervalAfter:1.06}],pauseOptions:[.4,.5,.6] },
-  { id:"mobile-recovery",type:"recoveryWindow",difficulty:"medium",beats:[{kind:"redCard",count:3,line:2,mobileLine:2,spacing:14,intervalAfter:1.2}],pauseOptions:[.62,.74,.86] },
-  { id:"mobile-low-window",type:"recoveryWindow",difficulty:"medium",beats:[{kind:"concededGoal",count:2,line:0,mobileLine:0,spacing:18,intervalAfter:1.12}],pauseOptions:[.58,.7,.82] },
-  { id:"mobile-fake-pause",type:"fakePause",difficulty:"hard",beats:[{kind:"missedPenalty",count:1,line:2,mobileLine:2,spacing:34,intervalAfter:1.24},{kind:"yellowCard",count:3,line:0,mobileLine:0,spacing:14,intervalAfter:1.1}],pauseOptions:[.46,.58,.7] },
-  { id:"mobile-vertical-switch",type:"verticalSwitch",difficulty:"hard",beats:[{kind:"concededGoal",count:2,line:0,mobileLine:0,spacing:17,intervalAfter:1.2},{kind:"redCard",count:3,line:2,mobileLine:2,spacing:14,intervalAfter:1.12}],pauseOptions:[.48,.6,.72] },
-  { id:"mobile-diagonal-readable",type:"verticalSwitch",difficulty:"hard",beats:[{kind:"redCard",count:3,line:2,mobileLine:2,spacing:14,intervalAfter:1.22},{kind:"missedPenalty",count:1,line:0,mobileLine:0,spacing:34,intervalAfter:1.24}],pauseOptions:[.5,.62,.74] },
-  { id:"mobile-double-wave",type:"doubleWave",difficulty:"extreme",beats:[{kind:"redCard",count:3,line:2,mobileLine:2,spacing:14,intervalAfter:1.24},{kind:"concededGoal",count:2,line:0,mobileLine:0,spacing:19,intervalAfter:1.16}],pauseOptions:[.56,.68,.8] },
+  { id:"mobile-cards-ground",type:"shortBurst",difficulty:"medium",beats:[{kind:"yellowCard",count:3,line:0,mobileLine:0,spacing:17,intervalAfter:1.2}],pauseOptions:[.48,.6,.72] },
+  { id:"mobile-goals-air",type:"mediumBurst",difficulty:"medium",beats:[{kind:"concededGoal",count:2,line:2,mobileLine:2,spacing:20,intervalAfter:1.2}],pauseOptions:[.5,.62,.74] },
+  { id:"mobile-red-recovery",type:"recoveryWindow",difficulty:"medium",beats:[{kind:"redCard",count:3,line:2,mobileLine:2,spacing:17,intervalAfter:1.3}],pauseOptions:[.68,.8,.92] },
+  { id:"mobile-goals-ground",type:"recoveryWindow",difficulty:"medium",beats:[{kind:"concededGoal",count:2,line:0,mobileLine:0,spacing:21,intervalAfter:1.28}],pauseOptions:[.64,.76,.88] },
+  { id:"mobile-own-goal-window",type:"recoveryWindow",difficulty:"medium",beats:[{kind:"ownGoal",count:1,line:0,mobileLine:0,spacing:36,intervalAfter:1.34}],pauseOptions:[.72,.84,.96] },
+  { id:"mobile-penalty-switch",type:"fakePause",difficulty:"hard",beats:[{kind:"missedPenalty",count:1,line:2,mobileLine:2,spacing:38,intervalAfter:1.36},{kind:"yellowCard",count:3,line:0,mobileLine:0,spacing:17,intervalAfter:1.24}],pauseOptions:[.56,.68,.8] },
+  { id:"mobile-goal-red-switch",type:"verticalSwitch",difficulty:"hard",beats:[{kind:"concededGoal",count:2,line:0,mobileLine:0,spacing:21,intervalAfter:1.34},{kind:"redCard",count:3,line:2,mobileLine:2,spacing:17,intervalAfter:1.28}],pauseOptions:[.58,.7,.82] },
+  { id:"mobile-red-penalty-switch",type:"verticalSwitch",difficulty:"hard",beats:[{kind:"redCard",count:3,line:2,mobileLine:2,spacing:17,intervalAfter:1.36},{kind:"missedPenalty",count:1,line:0,mobileLine:0,spacing:38,intervalAfter:1.38}],pauseOptions:[.6,.72,.84] },
+  { id:"mobile-yellow-own-goal",type:"verticalSwitch",difficulty:"hard",beats:[{kind:"yellowCard",count:3,line:0,mobileLine:0,spacing:18,intervalAfter:1.34},{kind:"ownGoal",count:1,line:2,mobileLine:2,spacing:38,intervalAfter:1.42}],pauseOptions:[.62,.74,.86] },
+  { id:"mobile-pressure-wave",type:"doubleWave",difficulty:"extreme",beats:[{kind:"redCard",count:3,line:2,mobileLine:2,spacing:18,intervalAfter:1.4},{kind:"concededGoal",count:2,line:0,mobileLine:0,spacing:22,intervalAfter:1.34}],pauseOptions:[.68,.8,.92] },
 ];
 
 export function getPatternTier(distance: number): PatternTier {

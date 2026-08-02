@@ -48,6 +48,7 @@ export const STRUCTURED_DATA = {
 
 export function createPageMetadata({
   title,
+  description = SITE_DESCRIPTION,
   path,
 }: {
   title: string;
@@ -56,7 +57,7 @@ export function createPageMetadata({
 }): Metadata {
   return {
     title,
-    description: SITE_DESCRIPTION,
+    description,
     keywords: [title, `${title} ${SITE_NAME}`, ...SITE_KEYWORDS],
     robots: {
       index: true,

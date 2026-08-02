@@ -8,6 +8,7 @@ import {
   type ClubProgress,
 } from "@/lib/game/progression";
 import LevelJourney from "./LevelJourney";
+import { verifyArcadeNickname } from "./actions";
 import {
   PLAYER_NICKNAME_MAX_LENGTH,
   getOrCreatePlayerId,
@@ -34,7 +35,7 @@ function TeamSelector({
   initialTeamSlug?: string;
   progressByClub: Record<string, ClubProgress>;
   keyboardEnabled?: boolean;
-  onSelect: (team: GameTeam, playerName: string) => void;
+  onSelect: (team: GameTeam, playerName: string, playerId: string) => void;
 }) {
   const initialTeam = teams.find((team) => team.slug === initialTeamSlug) ?? null;
   const [isMobileFlow, setIsMobileFlow] = useState(false);
@@ -302,7 +303,7 @@ function TeamSelector({
     randomAnimationFrameRef.current = requestAnimationFrame(animateRoll);
   }
 
-  function confirmSelectedTeam() {
+  async function confirmSelectedTeam() {
     if (!confirmationTeam || isLaunching) return;
     const validation = validatePlayerNickname(playerName);
     if (!validation.ok) {
@@ -312,13 +313,22 @@ function TeamSelector({
     const normalizedName = validation.nickname;
     setPlayerNameError("");
     setIsLaunching(true);
-    getOrCreatePlayerId();
+    const playerId = getOrCreatePlayerId();
+    const claim = await verifyArcadeNickname(playerId, normalizedName);
+    if (!claim.ok) {
+      const canUsePersistedIdentity = claim.status === "unavailable" && savedPlayerName === normalizedName;
+      if (!canUsePersistedIdentity) {
+        setIsLaunching(false);
+        setPlayerNameError(claim.message ?? "Impossibile verificare il nickname. Riprova.");
+        return;
+      }
+    }
     writePlayerNickname(normalizedName);
     setPlayerName(normalizedName);
     setSavedPlayerName(normalizedName);
     setIsEditingPlayerName(false);
     window.clearTimeout(launchTimerRef.current);
-    launchTimerRef.current = window.setTimeout(() => onSelect(confirmationTeam, normalizedName), 260);
+    launchTimerRef.current = window.setTimeout(() => onSelect(confirmationTeam, normalizedName, playerId), 260);
   }
 
   function beginDrag(event: React.PointerEvent<HTMLDivElement>) {

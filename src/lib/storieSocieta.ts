@@ -16,7 +16,7 @@ export function getStorieSocieta(): StoriaSocietaEditoriale[] {
   const filePath = path.join(process.cwd(), "data", "storie_societa.csv");
 
   if (!fs.existsSync(filePath)) {
-    console.log("storie_societa.csv NON trovato");
+    console.error("[dati] File storie_societa.csv non trovato");
     return [];
   }
 
