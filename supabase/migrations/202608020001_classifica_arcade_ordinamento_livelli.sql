@@ -1,5 +1,28 @@
 begin;
 
+-- I record storici privi di livello equivalgono al livello 1.
+update public.classifica_arcade
+set livello = 1
+where livello is null;
+
+alter table public.classifica_arcade
+  alter column livello set default 1,
+  alter column livello set not null;
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conrelid = 'public.classifica_arcade'::regclass
+      and conname = 'classifica_arcade_livello_check'
+  ) then
+    alter table public.classifica_arcade
+      add constraint classifica_arcade_livello_check check (livello between 1 and 3);
+  end if;
+end
+$$;
+
 -- Migliora le letture della Top 100 senza modificare o eliminare record esistenti.
 create index if not exists classifica_arcade_livello_metri_data_idx
   on public.classifica_arcade (livello desc, metri desc, updated_at asc);

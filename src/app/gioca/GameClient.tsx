@@ -16,8 +16,10 @@ import {
 import type { GameSnapshot, GameStatus, GameTeam } from "@/lib/game/types";
 import type { ArcadeLeaderboardEntry, ArcadeSaveResult } from "@/lib/arcade/types";
 import {
-  readPersonalDistanceRecord,
   writePersonalDistanceRecord,
+  readPersonalArcadeRecord,
+  writePersonalArcadeRecord,
+  isBetterPersonalRecord,
 } from "@/lib/game/records";
 import {
   LEVEL_RULES,
@@ -47,11 +49,12 @@ type PendingVarReview = {
   relegation: LevelResolution;
 };
 
-function createEmptySnapshot(best = 0, personalRecord = 0): GameSnapshot {
+function createEmptySnapshot(best = 0, personalRecord = 0, personalRecordLevel: 1 | 2 | 3 = 1): GameSnapshot {
   return {
     score: 0,
     best,
     personalRecord,
+    personalRecordLevel,
     recordCelebrationDistance: 0,
     multiplier: 1,
     teamRating: TEAM_RATING_INITIAL,
@@ -92,6 +95,7 @@ export default function GameClient({
   const [runId, setRunId] = useState(0);
   const [best, setBest] = useState(0);
   const [personalRecord, setPersonalRecord] = useState(0);
+  const [personalRecordLevel, setPersonalRecordLevel] = useState<1 | 2 | 3>(1);
   const [assetsReady, setAssetsReady] = useState(false);
   const [loadProgress, setLoadProgress] = useState(0);
   const [loadingTip, setLoadingTip] = useState(LOADING_GUIDES[0]);
@@ -127,7 +131,8 @@ export default function GameClient({
 
   const selectTeam = useCallback((selectedTeam: GameTeam, selectedPlayerName: string) => {
     const savedBest = readBest(selectedTeam.id);
-    const savedPersonalRecord = readPersonalDistanceRecord();
+    const savedPersonal = readPersonalArcadeRecord();
+    const savedPersonalRecord = savedPersonal.meters;
     const savedProgress = readArcadeProgress()[String(selectedTeam.id)] ??
       createDefaultClubProgress();
     setTeam(selectedTeam);
@@ -136,6 +141,7 @@ export default function GameClient({
     setActiveLevel(savedProgress.currentLevel);
     setBest(savedBest);
     setPersonalRecord(savedPersonalRecord);
+    setPersonalRecordLevel(savedPersonal.level);
     setIsNewRecord(false);
     setFinalResult(null);
     setFinalResolution(null);
@@ -143,7 +149,7 @@ export default function GameClient({
     setArcadeSaveResult(null);
     setArcadeSavePending(false);
     setSessionError("");
-    setSnapshot(createEmptySnapshot(savedBest, savedPersonalRecord));
+    setSnapshot(createEmptySnapshot(savedBest, savedPersonalRecord, savedPersonal.level));
     setAssetsReady(false);
     setLoadProgress(0);
     setLoadingTip(pickLoadingGuide());
@@ -167,7 +173,7 @@ export default function GameClient({
     void beginArcadeRun(playerName, team.id, activeLevel).then((result) => {
       if (result.ok && result.proof) setRunProof(result.proof);
     });
-    setSnapshot(createEmptySnapshot(best, personalRecord));
+    setSnapshot(createEmptySnapshot(best, personalRecord, personalRecordLevel));
     setStatus("starting");
     const transitionDuration = window.matchMedia("(prefers-reduced-motion: reduce)").matches
       ? 0
@@ -176,7 +182,7 @@ export default function GameClient({
       startTransitionTimerRef.current = null;
       setStatus("running");
     }, transitionDuration);
-  }, [activeLevel, assetsReady, best, personalRecord, playerName, team]);
+  }, [activeLevel, assetsReady, best, personalRecord, personalRecordLevel, playerName, team]);
 
   const handleSessionError = useCallback((message: string) => {
     setRunProof("");
@@ -223,7 +229,10 @@ export default function GameClient({
   const commitGameOver = useCallback((result: GameSnapshot, resolutionOverride?: LevelResolution) => {
     if (!team) return;
     const nextBest = Math.max(best, result.score);
-    const nextPersonalRecord = Math.max(personalRecord, result.distance);
+    const currentPersonal = { level: personalRecordLevel, meters: personalRecord };
+    const candidatePersonal = { level: activeLevel, meters: result.distance };
+    const nextPersonal = isBetterPersonalRecord(candidatePersonal, currentPersonal) ? candidatePersonal : currentPersonal;
+    const nextPersonalRecord = nextPersonal.meters;
     const levelResult = applyLevelResult(
       clubProgress,
       activeLevel,
@@ -234,11 +243,13 @@ export default function GameClient({
       ...result,
       best: nextBest,
       personalRecord: nextPersonalRecord,
+      personalRecordLevel: nextPersonal.level,
       recordCelebrationDistance: 0,
     };
-    setIsNewRecord(result.distance > personalRecord);
+    setIsNewRecord(isBetterPersonalRecord(candidatePersonal, currentPersonal));
     setBest(nextBest);
     setPersonalRecord(nextPersonalRecord);
+    setPersonalRecordLevel(nextPersonal.level);
     setSnapshot(completedResult);
     setFinalResult(completedResult);
     setFinalResolution(levelResult.resolution);
@@ -249,12 +260,13 @@ export default function GameClient({
     }));
     writeBest(team.id, nextBest);
     writePersonalDistanceRecord(nextPersonalRecord);
+    writePersonalArcadeRecord(nextPersonal);
     writeClubProgress(team.id, levelResult.progress);
     triggerOutcomeHaptic(levelResult.resolution.outcome);
     setPendingVarReview(null);
     setStatus("gameOver");
     void saveResultAutomatically(completedResult);
-  }, [activeLevel, best, clubProgress, personalRecord, saveResultAutomatically, team]);
+  }, [activeLevel, best, clubProgress, personalRecord, personalRecordLevel, saveResultAutomatically, team]);
 
   const handleGameOver = useCallback((result: GameSnapshot) => {
     const outcome = resolveLevelOutcome(activeLevel, result.distance);
@@ -290,10 +302,10 @@ export default function GameClient({
     setArcadeSaveResult(null);
     setArcadeSavePending(false);
     setSessionError("");
-    setSnapshot(createEmptySnapshot(best, personalRecord));
+    setSnapshot(createEmptySnapshot(best, personalRecord, personalRecordLevel));
     setRunId((current) => current + 1);
     setStatus("ready");
-  }, [best, clubProgress.currentLevel, personalRecord]);
+  }, [best, clubProgress.currentLevel, personalRecord, personalRecordLevel]);
 
   const returnToGameHome = useCallback((requireConfirmation: boolean) => {
     if (
@@ -314,6 +326,7 @@ export default function GameClient({
     setRunId((current) => current + 1);
     setBest(0);
     setPersonalRecord(0);
+    setPersonalRecordLevel(1);
     setIsNewRecord(false);
     setFinalResult(null);
     setFinalResolution(null);
@@ -477,6 +490,7 @@ export default function GameClient({
                 runId={runId}
                 best={best}
                 distanceRecord={personalRecord}
+                distanceRecordLevel={personalRecordLevel}
                 onSnapshot={setSnapshot}
                 onGameOver={handleGameOver}
                 onSessionError={handleSessionError}

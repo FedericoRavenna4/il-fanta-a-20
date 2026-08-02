@@ -7,6 +7,7 @@ import { consumeRateLimit } from "@/lib/rate-limit/server";
 import type { ArcadeLeaderboardEntry, ArcadeSaveResult } from "./types";
 import {
   deduplicateArcadeLeaderboard,
+  compareArcadeLeaderboardEntries,
   normalizeArcadeLevel,
   normalizeArcadePlayerName,
   normalizeArcadePlayerNameForLookup,
@@ -94,14 +95,34 @@ export async function saveArcadeRecord(input: {
     }
 
     const supabase = getSupabaseAdminClient();
-    const { data, error } = await supabase.rpc("salva_record_arcade_v2", {
+    const rpcResponse = await supabase.rpc("salva_record_arcade_v2", {
       p_nome_giocatore: nomeGiocatore,
       p_societa_id: payload.societaId,
       p_livello: payload.livello,
       p_metri: metri,
     });
-    if (error) {
-      console.error("[arcade] RPC salva_record_arcade_v2 non riuscita", error);
+    let data = rpcResponse.data;
+    if (rpcResponse.error?.code === "PGRST202") {
+      console.error("[arcade] RPC salva_record_arcade_v2 assente; uso fallback compatibile", {
+        status: rpcResponse.status,
+        statusText: rpcResponse.statusText,
+        ...rpcResponse.error,
+      });
+      const fallback = await persistArcadeRecordCompat({
+        nomeGiocatore,
+        normalizedName,
+        societaId: payload.societaId,
+        livello: payload.livello,
+        metri,
+      });
+      if (!fallback.ok) return serviceUnavailable();
+      data = [{ metri_record: fallback.metriRecord }];
+    } else if (rpcResponse.error) {
+      console.error("[arcade] RPC salva_record_arcade_v2 non riuscita", {
+        status: rpcResponse.status,
+        statusText: rpcResponse.statusText,
+        ...rpcResponse.error,
+      });
       return serviceUnavailable();
     }
 
@@ -148,7 +169,7 @@ export async function saveArcadeRecord(input: {
 async function loadDeduplicatedLeaderboard(): Promise<ArcadeLeaderboardEntry[]> {
   const { data, error } = await getSupabaseAdminClient()
     .from("classifica_arcade")
-    .select("nome_giocatore,societa_id,livello,metri,created_at,updated_at")
+    .select("id,nome_giocatore,societa_id,livello,metri,created_at,updated_at")
     .order("livello", { ascending: false })
     .order("metri", { ascending: false })
     .order("updated_at", { ascending: true })
@@ -163,7 +184,12 @@ async function loadDeduplicatedLeaderboard(): Promise<ArcadeLeaderboardEntry[]> 
       !Number.isInteger(row.societa_id) ||
       !Number.isFinite(row.metri)
     ) {
-      console.warn("[arcade] Record incompleto ignorato nella classifica");
+      console.warn("[arcade] Record incompleto ignorato nella classifica", {
+        id: row.id,
+        societaId: row.societa_id,
+        livello: row.livello,
+        metri: row.metri,
+      });
       continue;
     }
     const candidate: ArcadeLeaderboardEntry = {
@@ -178,6 +204,68 @@ async function loadDeduplicatedLeaderboard(): Promise<ArcadeLeaderboardEntry[]> 
   }
 
   return deduplicateArcadeLeaderboard(entries);
+}
+
+async function persistArcadeRecordCompat(input: {
+  nomeGiocatore: string;
+  normalizedName: string;
+  societaId: number;
+  livello: 1 | 2 | 3;
+  metri: number;
+}): Promise<{ ok: true; metriRecord: number } | { ok: false }> {
+  const supabase = getSupabaseAdminClient();
+  const existingResponse = await supabase
+    .from("classifica_arcade")
+    .select("id,nome_giocatore,societa_id,livello,metri,created_at,updated_at")
+    .eq("nome_giocatore_normalizzato", input.normalizedName);
+  if (existingResponse.error) {
+    console.error("[arcade] Fallback: select del record personale non riuscita", existingResponse.error);
+    return { ok: false };
+  }
+
+  const existing = (existingResponse.data ?? [])
+    .filter((row) => Number.isInteger(row.societa_id) && Number.isFinite(row.metri))
+    .map((row) => ({
+      rowId: row.id,
+      entry: {
+        id: String(row.id),
+        nomeGiocatore: normalizeArcadePlayerName(row.nome_giocatore),
+        societaId: row.societa_id,
+        livello: normalizeArcadeLevel(row.livello),
+        metri: row.metri,
+        updatedAt: row.updated_at || row.created_at || "",
+      } satisfies ArcadeLeaderboardEntry,
+    }))
+    .sort((a, b) => compareArcadeLeaderboardEntries(a.entry, b.entry));
+  const current = existing[0];
+  const candidate: ArcadeLeaderboardEntry = {
+    id: "candidate",
+    nomeGiocatore: input.nomeGiocatore,
+    societaId: input.societaId,
+    livello: input.livello,
+    metri: input.metri,
+    updatedAt: new Date().toISOString(),
+  };
+  if (current && compareArcadeLeaderboardEntries(candidate, current.entry) >= 0) {
+    return { ok: true, metriRecord: current.entry.metri };
+  }
+
+  const values = {
+    nome_giocatore: input.nomeGiocatore,
+    nome_giocatore_normalizzato: input.normalizedName,
+    societa_id: input.societaId,
+    livello: input.livello,
+    metri: input.metri,
+    updated_at: new Date().toISOString(),
+  };
+  const writeResponse = current
+    ? await supabase.from("classifica_arcade").update(values).eq("id", current.rowId).select("metri").single()
+    : await supabase.from("classifica_arcade").insert(values).select("metri").single();
+  if (writeResponse.error || !writeResponse.data) {
+    console.error("[arcade] Fallback: scrittura del record non riuscita", writeResponse.error);
+    return { ok: false };
+  }
+  return { ok: true, metriRecord: writeResponse.data.metri };
 }
 
 function leaderboardEntryId(nome: string, societaId: number) {

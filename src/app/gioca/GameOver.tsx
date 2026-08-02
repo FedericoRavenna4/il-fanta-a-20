@@ -61,7 +61,7 @@ export default function GameOver({
           <Score label="Distanza" value={`${result.distance} m`} />
           <Score
             label="Record personale"
-            value={`${result.personalRecord.toLocaleString("it-IT")} m`}
+            value={`Livello ${result.personalRecordLevel} · ${result.personalRecord.toLocaleString("it-IT")} m`}
             highlight={isNewRecord}
           />
         </div>

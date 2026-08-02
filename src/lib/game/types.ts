@@ -81,6 +81,7 @@ export type GameSnapshot = {
   score: number;
   best: number;
   personalRecord: number;
+  personalRecordLevel: 1 | 2 | 3;
   recordCelebrationDistance: number;
   multiplier: number;
   teamRating: number;

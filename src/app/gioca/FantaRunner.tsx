@@ -428,6 +428,7 @@ function FantaRunner({
   runId,
   best,
   distanceRecord,
+  distanceRecordLevel,
   onSnapshot,
   onGameOver,
   onSessionError,
@@ -440,6 +441,7 @@ function FantaRunner({
   runId: number;
   best: number;
   distanceRecord: number;
+  distanceRecordLevel: 1 | 2 | 3;
   onSnapshot: (snapshot: GameSnapshot) => void;
   onGameOver: (snapshot: GameSnapshot) => void;
   onSessionError: (message: string) => void;
@@ -575,8 +577,8 @@ function FantaRunner({
       hudUpdates: 0,
     };
     renderStateRef.current.dirty = true;
-    onSnapshot(toSnapshot(runtimeRef.current, bestRef.current, distanceRecordRef.current, 0));
-  }, [level, onSnapshot, runId]);
+    onSnapshot(toSnapshot(runtimeRef.current, bestRef.current, distanceRecordRef.current, distanceRecordLevel, 0));
+  }, [distanceRecordLevel, level, onSnapshot, runId]);
 
   const beginJump = useCallback(() => {
     if (statusRef.current !== "running") return;
@@ -703,7 +705,7 @@ function FantaRunner({
         runtime.lastHudUpdate = time;
         advanceDisplayDistance(runtime);
         updatePersonalRecord(runtime, distanceRecordRef.current, time);
-        onSnapshot(toSnapshot(runtime, best, distanceRecordRef.current, time));
+        onSnapshot(toSnapshot(runtime, best, distanceRecordRef.current, distanceRecordLevel, time));
         performanceRef.current.hudUpdates += 1;
       }
 
@@ -725,7 +727,7 @@ function FantaRunner({
         }
         advanceDisplayDistance(runtime);
         updatePersonalRecord(runtime, distanceRecordRef.current, time);
-        const finalSnapshot = toSnapshot(runtime, best, distanceRecordRef.current, time);
+        const finalSnapshot = toSnapshot(runtime, best, distanceRecordRef.current, distanceRecordLevel, time);
         onSnapshot(finalSnapshot);
         onGameOver(finalSnapshot);
         return;
@@ -741,7 +743,7 @@ function FantaRunner({
         activeGameLoopCount = Math.max(0, activeGameLoopCount - 1);
       }
     };
-  }, [best, onGameOver, onSessionError, onSnapshot, runId, status]);
+  }, [best, distanceRecordLevel, onGameOver, onSessionError, onSnapshot, runId, status]);
 
   useEffect(() => {
     if (status === "running") return;
@@ -2642,13 +2644,17 @@ function toSnapshot(
   runtime: Runtime,
   best: number,
   personalRecord: number,
+  personalRecordLevel: 1 | 2 | 3,
   time: number
 ): GameSnapshot {
   const score = Math.max(0, Math.round(runtime.score));
+  const currentRunIsBetter = runtime.level > personalRecordLevel ||
+    (runtime.level === personalRecordLevel && runtime.displayDistance > personalRecord);
   return {
     score,
     best: Math.max(best, score),
-    personalRecord: Math.max(personalRecord, runtime.displayDistance),
+    personalRecord: currentRunIsBetter ? runtime.displayDistance : personalRecord,
+    personalRecordLevel: currentRunIsBetter ? runtime.level : personalRecordLevel,
     recordCelebrationDistance: time < runtime.recordCelebrationUntil
       ? runtime.recordCelebrationDistance
       : 0,
