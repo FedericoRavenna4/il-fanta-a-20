@@ -136,6 +136,15 @@ export type Database = {
         };
         Returns: unknown;
       };
+      salva_record_arcade_v2: {
+        Args: {
+          p_nome_giocatore: string;
+          p_societa_id: number;
+          p_livello: number;
+          p_metri: number;
+        };
+        Returns: unknown;
+      };
       consuma_rate_limit: {
         Args: {
           p_chiave_hash: string;

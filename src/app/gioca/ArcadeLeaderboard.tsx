@@ -56,7 +56,7 @@ export default function ArcadeLeaderboard({
                     <span className="flex h-6 items-center justify-center sm:h-10">
                       {team && <Image src={team.logo} alt={`Stemma ${team.nome}`} width={42} height={42} sizes="(max-width: 639px) 24px, 40px" className="max-h-full max-w-full object-contain" />}
                     </span>
-                    <span className="justify-self-center whitespace-nowrap rounded-full bg-blue-950/8 px-1.5 py-1 text-[8px] font-black uppercase tracking-[.03em] text-blue-950 sm:px-2.5 sm:text-[10px] sm:tracking-[.08em]">{levelLabel(entry.livello)}</span>
+                    <span className="justify-self-center whitespace-nowrap rounded-full bg-blue-950/10 px-1.5 py-1 text-[9px] font-black uppercase tracking-[.035em] text-blue-950 sm:px-2.5 sm:text-[11px] sm:tracking-[.08em]">{levelLabel(entry.livello)}</span>
                     <strong className="whitespace-nowrap text-right text-[12px] font-black tabular-nums text-blue-700 sm:text-xl">{entry.metri.toLocaleString("it-IT")} m</strong>
                   </li>
                 );

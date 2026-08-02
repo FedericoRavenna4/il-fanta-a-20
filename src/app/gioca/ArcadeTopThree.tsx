@@ -36,7 +36,7 @@ export default function ArcadeTopThree({ entries, teams }: { entries: ArcadeLead
               </span>
               <span className="min-w-0">
                 <strong className="block truncate text-[8px] font-black text-blue-950 [text-shadow:none] sm:text-xs">{entry.nomeGiocatore.toLocaleUpperCase("it-IT")}</strong>
-                <span className="mt-0.5 block truncate text-[7px] font-black uppercase tracking-[.04em] text-blue-950 [text-shadow:none] sm:text-[10px] sm:tracking-[.07em]">Livello {romanLevel(entry.livello)}</span>
+                <span className="mt-1 block truncate text-[8px] font-black uppercase tracking-[.045em] text-blue-950 [text-shadow:none] sm:text-[11px] sm:tracking-[.07em]">Livello {romanLevel(entry.livello)}</span>
               </span>
               <strong className="col-span-3 text-right text-[11px] font-black leading-none tabular-nums sm:col-span-1 sm:text-base">{entry.metri.toLocaleString("it-IT")} m</strong>
             </article>

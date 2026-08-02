@@ -178,6 +178,8 @@ type Runtime = {
   lastSpawnCategory: "bonus" | "malus" | "physical" | "space" | null;
   repeatedSpawnCategory: number;
   lastPhysicalKind: PhysicalObstacleKind | null;
+  lastPhysicalSpawnAt: number;
+  physicalSpawnRecoveryStartedAt: number | null;
   lastPatternId: string | null;
   lastPatternCategory: PatternCategory | null;
   mixedPatternStreak: number;
@@ -358,6 +360,8 @@ function createRuntime(level: GameLevel = 1): Runtime {
     lastSpawnCategory: null,
     repeatedSpawnCategory: 0,
     lastPhysicalKind: null,
+    lastPhysicalSpawnAt: 0,
+    physicalSpawnRecoveryStartedAt: null,
     lastPatternId: null,
     lastPatternCategory: null,
     mixedPatternStreak: 0,
@@ -716,7 +720,7 @@ function FantaRunner({
 
       if (runtime.finished) {
         if (runtime.sessionInvalid) {
-          onSessionError("Si è verificato un problema durante l’avvio della partita. Riprova.");
+          onSessionError("Si è verificato un problema durante la partita. Avvia una nuova corsa.");
           return;
         }
         advanceDisplayDistance(runtime);
@@ -1129,6 +1133,7 @@ function updateRuntime(runtime: Runtime, delta: number, time: number) {
   }
 
   monitorSpawnerHealth(runtime);
+  monitorMobilePhysicalSpawner(runtime);
 
   const nicoStrength = getPowerUpStrength(runtime, "nico-paz");
   const gimenezStrength = getPowerUpStrength(runtime, "gimenez");
@@ -1978,6 +1983,60 @@ function monitorSpawnerHealth(runtime: Runtime) {
   }
 }
 
+function monitorMobilePhysicalSpawner(runtime: Runtime) {
+  const watchdog = MOBILE_OBSTACLE_SPAWN_CONFIG.watchdog;
+  if (
+    !runtime.mobileLayout ||
+    runtime.sessionInvalid ||
+    runtime.finished ||
+    !runtime.initialBonusSpawned ||
+    runtime.distance < watchdog.startsAtMeters ||
+    runtime.boss ||
+    runtime.burst ||
+    runtime.activeEntityCounts.physical > 0
+  ) {
+    return;
+  }
+
+  const silence = runtime.elapsed - runtime.lastPhysicalSpawnAt;
+  if (silence <= watchdog.maximumSilenceSeconds) {
+    runtime.physicalSpawnRecoveryStartedAt = null;
+    return;
+  }
+
+  if (runtime.physicalSpawnRecoveryStartedAt === null) {
+    runtime.physicalSpawnRecoveryStartedAt = runtime.elapsed;
+    runtime.physicalFreePatternStreak = Math.max(3, runtime.physicalFreePatternStreak);
+    runtime.lastSpawnCategory = null;
+    runtime.repeatedSpawnCategory = 0;
+    runtime.spawnTimer = Math.min(runtime.spawnTimer, 0);
+    if (process.env.NODE_ENV !== "production") {
+      console.debug("[arcade:physical-spawner] recovery", {
+        silence: Number(silence.toFixed(2)),
+        distance: Math.round(runtime.distance),
+        spawnTimer: runtime.spawnTimer,
+        entityCount: runtime.entities.length,
+      });
+    }
+    return;
+  }
+
+  if (
+    runtime.elapsed - runtime.physicalSpawnRecoveryStartedAt >=
+    watchdog.recoveryWindowSeconds
+  ) {
+    runtime.sessionInvalid = true;
+    runtime.finished = true;
+    runtime.gameOverReason = "Spawner delle barriere non disponibile";
+    if (process.env.NODE_ENV !== "production") {
+      console.debug("[arcade:physical-spawner] session-invalidated", {
+        silence: Number(silence.toFixed(2)),
+        distance: Math.round(runtime.distance),
+      });
+    }
+  }
+}
+
 function getBonusPatternWeight(
   teamRating: number,
   requestedWeight: number,
@@ -2177,7 +2236,10 @@ function spawnGameplayPattern(
   }
 
   const recovery = Math.max(0.58, pattern.recovery * (1 - advancedPressure * 0.35));
-  return furthestOffset / Math.max(1, speed) + recovery;
+  const sequenceInterval = furthestOffset / Math.max(1, speed) + recovery;
+  return runtime.mobileLayout && spawnedPhysical
+    ? sequenceInterval * MOBILE_OBSTACLE_SPAWN_CONFIG.intervalMultiplier
+    : sequenceInterval;
 }
 
 function pushEvent(
@@ -2297,6 +2359,7 @@ function pushPhysicalObstacle(
   allowCapacityReserve = false
 ) {
   if (
+    !runtime.mobileLayout &&
     runtime.lastSpawnCategory === "physical" &&
     runtime.repeatedSpawnCategory >= 2
   ) {
@@ -2356,6 +2419,8 @@ function pushPhysicalObstacle(
   entity.angularVelocity = movingObstacle ? 0.035 + Math.random() * 0.035 : 0;
   runtime.entities.push(entity);
   runtime.lastPhysicalKind = kind;
+  runtime.lastPhysicalSpawnAt = runtime.elapsed;
+  runtime.physicalSpawnRecoveryStartedAt = null;
   recordSpawnCategory(runtime, "physical");
   return true;
 }

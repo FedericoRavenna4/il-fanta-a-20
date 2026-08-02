@@ -4,9 +4,10 @@ begin;
 create index if not exists classifica_arcade_livello_metri_data_idx
   on public.classifica_arcade (livello desc, metri desc, updated_at asc);
 
-drop function if exists public.salva_record_arcade(text, integer, smallint, integer);
+create index if not exists classifica_arcade_nome_normalizzato_idx
+  on public.classifica_arcade (nome_giocatore_normalizzato);
 
-create function public.salva_record_arcade(
+create or replace function public.salva_record_arcade_v2(
   p_nome_giocatore text,
   p_societa_id integer,
   p_livello smallint,
@@ -38,44 +39,56 @@ begin
     raise exception 'societa_non_valida';
   end if;
 
-  insert into public.classifica_arcade (
-    nome_giocatore,
-    nome_giocatore_normalizzato,
-    societa_id,
-    livello,
-    metri
-  ) values (
-    v_nome,
-    v_nome_normalizzato,
-    p_societa_id,
-    p_livello,
-    p_metri
-  )
-  on conflict (nome_giocatore_normalizzato) do update
-  set nome_giocatore = excluded.nome_giocatore,
-      societa_id = excluded.societa_id,
-      livello = excluded.livello,
-      metri = excluded.metri,
-      updated_at = now()
-  where excluded.livello > public.classifica_arcade.livello
-     or (
-       excluded.livello = public.classifica_arcade.livello
-       and excluded.metri > public.classifica_arcade.metri
-     )
-  returning * into v_record;
-
-  if found then
-    return query select true, v_record.metri;
-  end if;
+  -- Serializza i salvataggi dello stesso nickname senza richiedere la rimozione
+  -- dei duplicati storici o un nuovo vincolo univoco.
+  perform pg_advisory_xact_lock(hashtextextended(v_nome_normalizzato, 0));
 
   select * into v_record
   from public.classifica_arcade
-  where nome_giocatore_normalizzato = v_nome_normalizzato;
+  where nome_giocatore_normalizzato = v_nome_normalizzato
+  order by coalesce(livello, 1) desc, metri desc, updated_at asc, created_at asc, id asc
+  limit 1
+  for update;
+
+  if not found then
+    insert into public.classifica_arcade (
+      nome_giocatore,
+      nome_giocatore_normalizzato,
+      societa_id,
+      livello,
+      metri
+    ) values (
+      v_nome,
+      v_nome_normalizzato,
+      p_societa_id,
+      p_livello,
+      p_metri
+    )
+    returning * into v_record;
+    return query select true, v_record.metri;
+    return;
+  end if;
+
+  if p_livello > coalesce(v_record.livello, 1)
+     or (p_livello = coalesce(v_record.livello, 1) and p_metri > v_record.metri) then
+    update public.classifica_arcade
+    set nome_giocatore = v_nome,
+        nome_giocatore_normalizzato = v_nome_normalizzato,
+        societa_id = p_societa_id,
+        livello = p_livello,
+        metri = p_metri,
+        updated_at = now()
+    where id = v_record.id
+    returning * into v_record;
+    return query select true, v_record.metri;
+    return;
+  end if;
+
   return query select false, v_record.metri;
 end;
 $$;
 
-revoke all on function public.salva_record_arcade(text, integer, smallint, integer) from public;
-grant execute on function public.salva_record_arcade(text, integer, smallint, integer) to service_role;
+revoke all on function public.salva_record_arcade_v2(text, integer, smallint, integer) from public;
+grant execute on function public.salva_record_arcade_v2(text, integer, smallint, integer) to service_role;
 
 commit;

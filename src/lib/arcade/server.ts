@@ -94,14 +94,14 @@ export async function saveArcadeRecord(input: {
     }
 
     const supabase = getSupabaseAdminClient();
-    const { data, error } = await supabase.rpc("salva_record_arcade", {
+    const { data, error } = await supabase.rpc("salva_record_arcade_v2", {
       p_nome_giocatore: nomeGiocatore,
       p_societa_id: payload.societaId,
       p_livello: payload.livello,
       p_metri: metri,
     });
     if (error) {
-      console.error("[arcade] RPC salva_record_arcade non riuscita", error);
+      console.error("[arcade] RPC salva_record_arcade_v2 non riuscita", error);
       return serviceUnavailable();
     }
 

@@ -84,6 +84,7 @@ export const ENTITY_DENSITY_CONFIG = {
 
 export const MOBILE_OBSTACLE_SPAWN_CONFIG = {
   maximumVisible: 2,
+  intervalMultiplier: 0.96,
   baseReactionSeconds: 0.82,
   highDifficultyReactionSeconds: 0.7,
   slidingReactionSeconds: 1.22,
@@ -92,6 +93,11 @@ export const MOBILE_OBSTACLE_SPAWN_CONFIG = {
     before500Meters: 0.1664,
     at1500Meters: 0.4368,
     enduranceMaximum: 0.6032,
+  },
+  watchdog: {
+    startsAtMeters: 300,
+    maximumSilenceSeconds: 18,
+    recoveryWindowSeconds: 7,
   },
 } as const;
 
