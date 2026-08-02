@@ -61,7 +61,13 @@ export default function GameOver({
           <Score label="Distanza" value={`${result.distance} m`} />
           <Score
             label="Record personale"
-            value={`Livello ${result.personalRecordLevel} · ${result.personalRecord.toLocaleString("it-IT")} m`}
+            value={<>
+              <span className="hidden sm:inline">Livello {result.personalRecordLevel} · {result.personalRecord.toLocaleString("it-IT")} m</span>
+              <span className="flex flex-col items-center leading-tight sm:hidden">
+                <span className="text-[9px] uppercase tracking-[.04em]">Livello {result.personalRecordLevel}</span>
+                <span className="mt-0.5 text-sm">{result.personalRecord.toLocaleString("it-IT")} m</span>
+              </span>
+            </>}
             highlight={isNewRecord}
           />
         </div>
@@ -89,11 +95,11 @@ export default function GameOver({
   );
 }
 
-function Score({ label, value, highlight = false, emphasize = false }: { label: string; value: string; highlight?: boolean; emphasize?: boolean }) {
+function Score({ label, value, highlight = false, emphasize = false }: { label: string; value: React.ReactNode; highlight?: boolean; emphasize?: boolean }) {
   return (
     <div className="rounded-xl border border-white/[0.07] bg-white/[0.045] px-2 py-2.5 max-sm:py-2">
       <p className="text-[6px] font-black uppercase tracking-[0.13em] text-white/35">{label}</p>
-      <p className={`mt-1 truncate font-black tabular-nums ${emphasize ? "text-lg text-sky-200" : "text-base"} ${highlight ? "text-amber-300" : emphasize ? "" : "text-white"}`}>{value}</p>
+      <div className={`mt-1 min-w-0 font-black tabular-nums ${emphasize ? "text-lg text-sky-200" : "text-base"} ${highlight ? "text-amber-300" : emphasize ? "" : "text-white"}`}>{value}</div>
     </div>
   );
 }

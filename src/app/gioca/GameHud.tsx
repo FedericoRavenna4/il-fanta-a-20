@@ -31,7 +31,13 @@ export default function GameHud({ team, snapshot, level }: {
 
       <div className="grid grid-cols-[66px_minmax(0,1fr)_82px] items-center gap-1.5 pt-1 sm:grid-cols-[105px_minmax(0,560px)_125px] sm:justify-center sm:gap-4 sm:pt-1.5">
         <div className="space-y-1 border-r border-white/10 pr-1.5 text-center sm:pr-3">
-          <Metric label="Record" value={`L${snapshot.personalRecordLevel} · ${formatNumber(snapshot.personalRecord)} m`} />
+          <Metric label="Record" value={<>
+            <span className="hidden whitespace-nowrap sm:inline">L{snapshot.personalRecordLevel} · {formatNumber(snapshot.personalRecord)} m</span>
+            <span className="flex flex-col items-center whitespace-nowrap leading-[.9] sm:hidden">
+              <span className="text-[9px]">L{snapshot.personalRecordLevel}</span>
+              <span className="mt-1 text-[11px]">{formatNumber(snapshot.personalRecord)} m</span>
+            </span>
+          </>} />
           <Metric label="Gol" value={String(snapshot.goals)} accent />
         </div>
 
@@ -110,8 +116,8 @@ function getLevelStatus(level: GameLevel, distance: number) {
     : { text: "Salvezza raggiunta", tone: "text-emerald-300" };
 }
 
-function Metric({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) {
-  return <div className="min-w-0"><p className="text-[8px] font-black uppercase tracking-[.1em] text-white/42 sm:text-[7px]">{label}</p><p className={`truncate text-[13px] font-black leading-none tabular-nums sm:text-sm ${accent ? "text-amber-300" : "text-white"}`}>{value}</p></div>;
+function Metric({ label, value, accent = false }: { label: string; value: React.ReactNode; accent?: boolean }) {
+  return <div className="min-w-0"><p className="text-[8px] font-black uppercase tracking-[.1em] text-white/42 sm:text-[7px]">{label}</p><div className={`min-w-0 text-[13px] font-black leading-none tabular-nums sm:text-sm ${accent ? "text-amber-300" : "text-white"}`}>{value}</div></div>;
 }
 
 function formatNumber(value: number) { return Math.round(value).toLocaleString("it-IT"); }

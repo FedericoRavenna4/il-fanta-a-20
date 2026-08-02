@@ -5,7 +5,7 @@ export function normalizeArcadeLevel(value: number | null | undefined): 1 | 2 | 
 }
 
 export function normalizeArcadePlayerName(value: string) {
-  return String(value ?? "").trim().replace(/\s+/g, " ").toLocaleUpperCase("it-IT");
+  return String(value ?? "").trim().replace(/\s+/g, " ");
 }
 
 export function normalizeArcadePlayerNameForLookup(value: string) {
@@ -26,11 +26,11 @@ export function compareArcadeLeaderboardEntries(
 export function deduplicateArcadeLeaderboard(entries: readonly ArcadeLeaderboardEntry[]) {
   const bestByNickname = new Map<string, ArcadeLeaderboardEntry>();
   for (const candidate of entries) {
-    const nickname = normalizeArcadePlayerNameForLookup(candidate.nomeGiocatore);
-    if (!nickname) continue;
-    const current = bestByNickname.get(nickname);
+    const identity = candidate.playerId || normalizeArcadePlayerNameForLookup(candidate.nomeGiocatore);
+    if (!identity) continue;
+    const current = bestByNickname.get(identity);
     if (!current || compareArcadeLeaderboardEntries(candidate, current) < 0) {
-      bestByNickname.set(nickname, candidate);
+      bestByNickname.set(identity, candidate);
     }
   }
   return [...bestByNickname.values()].sort(compareArcadeLeaderboardEntries);

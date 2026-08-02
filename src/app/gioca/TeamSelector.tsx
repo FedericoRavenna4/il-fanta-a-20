@@ -8,6 +8,14 @@ import {
   type ClubProgress,
 } from "@/lib/game/progression";
 import LevelJourney from "./LevelJourney";
+import {
+  PLAYER_NICKNAME_MAX_LENGTH,
+  getOrCreatePlayerId,
+  readPlayerNickname,
+  validatePlayerNickname,
+  writePlayerNickname,
+} from "@/lib/game/nickname";
+import { claimPlayerNickname } from "./actions";
 
 const LEAGUE_FILTERS = [
   ["all", "Tutte", "Tutte"], ["serie-a", "Serie A", "A"], ["serie-b", "Serie B", "B"],
@@ -27,7 +35,7 @@ function TeamSelector({
   initialTeamSlug?: string;
   progressByClub: Record<string, ClubProgress>;
   keyboardEnabled?: boolean;
-  onSelect: (team: GameTeam, playerName: string) => void;
+  onSelect: (team: GameTeam, playerName: string, playerId: string) => void;
 }) {
   const initialTeam = teams.find((team) => team.slug === initialTeamSlug) ?? null;
   const [isMobileFlow, setIsMobileFlow] = useState(false);
@@ -41,6 +49,8 @@ function TeamSelector({
   const [randomResultTeam, setRandomResultTeam] = useState<GameTeam | null>(null);
   const [isLaunching, setIsLaunching] = useState(false);
   const [playerName, setPlayerName] = useState("");
+  const [savedPlayerName, setSavedPlayerName] = useState("");
+  const [isEditingPlayerName, setIsEditingPlayerName] = useState(true);
   const [playerNameError, setPlayerNameError] = useState("");
   const buttonRefs = useRef(new Map<string, HTMLButtonElement>());
   const ribbonRef = useRef<HTMLDivElement>(null);
@@ -85,6 +95,17 @@ function TeamSelector({
     null;
 
   const isInfinite = search.trim().length === 0 && filteredTeams.length > 1;
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      const saved = readPlayerNickname();
+      if (!saved) return;
+      setPlayerName(saved);
+      setSavedPlayerName(saved);
+      setIsEditingPlayerName(false);
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
 
   useEffect(() => () => {
     randomRollIdRef.current += 1;
@@ -282,18 +303,35 @@ function TeamSelector({
     randomAnimationFrameRef.current = requestAnimationFrame(animateRoll);
   }
 
-  function confirmSelectedTeam() {
+  async function confirmSelectedTeam() {
     if (!confirmationTeam || isLaunching) return;
-    const normalizedName = playerName.trim().replace(/\s+/g, " ");
-    if (normalizedName.length < 2 || normalizedName.length > 50) {
-      setPlayerNameError("Inserisci un nome da 2 a 50 caratteri.");
+    const validation = validatePlayerNickname(playerName);
+    if (!validation.ok) {
+      setPlayerNameError(validation.message);
       return;
     }
-    setPlayerName(normalizedName);
+    const normalizedName = validation.nickname;
     setPlayerNameError("");
     setIsLaunching(true);
+    const playerId = getOrCreatePlayerId();
+    if (!playerId) {
+      setPlayerNameError("Impossibile preparare il profilo di gioco. Riprova.");
+      setIsLaunching(false);
+      return;
+    }
+    const claim = await claimPlayerNickname(playerId, normalizedName);
+    if (!claim.ok) {
+      setPlayerNameError(claim.message ?? "Nickname già utilizzato. Scegline un altro.");
+      setIsEditingPlayerName(true);
+      setIsLaunching(false);
+      return;
+    }
+    writePlayerNickname(normalizedName);
+    setPlayerName(normalizedName);
+    setSavedPlayerName(normalizedName);
+    setIsEditingPlayerName(false);
     window.clearTimeout(launchTimerRef.current);
-    launchTimerRef.current = window.setTimeout(() => onSelect(confirmationTeam, normalizedName), 260);
+    launchTimerRef.current = window.setTimeout(() => onSelect(confirmationTeam, normalizedName, playerId), 260);
   }
 
   function beginDrag(event: React.PointerEvent<HTMLDivElement>) {
@@ -721,13 +759,21 @@ function TeamSelector({
             <LevelJourney
               progress={progressByClub[String(confirmationTeam.id)] ?? createDefaultClubProgress()}
             />
-            <label className="relative mx-auto mt-2 block max-w-xs text-left sm:mt-3">
+            {savedPlayerName && !isEditingPlayerName ? (
+              <div className="relative mx-auto mt-2 max-w-xs rounded-xl border border-white/10 bg-slate-950/35 px-3 py-2 text-left sm:mt-3">
+                <span className="block text-[7px] font-black uppercase tracking-[.14em] text-sky-200/70">Nome del giocatore</span>
+                <div className="mt-0.5 flex min-w-0 items-center justify-between gap-3">
+                  <strong className="min-w-0 truncate text-xs text-white sm:text-sm">{savedPlayerName}</strong>
+                  <button type="button" onClick={() => setIsEditingPlayerName(true)} className="shrink-0 text-[7px] font-black uppercase tracking-[.1em] text-amber-300 transition hover:text-amber-200">Modifica nickname</button>
+                </div>
+              </div>
+            ) : <label className="relative mx-auto mt-2 block max-w-xs text-left sm:mt-3">
               <span className="mb-1 block text-[7px] font-black uppercase tracking-[.14em] text-sky-200/70">Nome del giocatore</span>
               <input
                 type="text"
                 required
                 minLength={2}
-                maxLength={50}
+                maxLength={PLAYER_NICKNAME_MAX_LENGTH}
                 autoComplete="name"
                 value={playerName}
                 onChange={(event) => {
@@ -740,7 +786,7 @@ function TeamSelector({
                 className="min-h-10 w-full rounded-full border border-white/15 bg-slate-950/55 px-4 text-xs font-bold text-white outline-none placeholder:text-white/25 focus:border-sky-300 sm:min-h-11 sm:text-sm"
               />
               {playerNameError && <span id="player-name-error" className="mt-1 block text-[8px] font-bold text-rose-300">{playerNameError}</span>}
-            </label>
+            </label>}
             <div className="relative mx-auto mt-2 grid max-w-xs gap-1 sm:mt-4 sm:gap-1.5">
               <button
                 ref={confirmButtonRef}

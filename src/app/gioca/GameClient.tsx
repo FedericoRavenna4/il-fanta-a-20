@@ -110,6 +110,7 @@ export default function GameClient({
   const [pendingVarReview, setPendingVarReview] = useState<PendingVarReview | null>(null);
   const [runProof, setRunProof] = useState("");
   const [playerName, setPlayerName] = useState("");
+  const [playerId, setPlayerId] = useState("");
   const [arcadeSaveResult, setArcadeSaveResult] = useState<ArcadeSaveResult | null>(null);
   const [arcadeSavePending, setArcadeSavePending] = useState(false);
   const [sessionError, setSessionError] = useState("");
@@ -129,7 +130,7 @@ export default function GameClient({
     return () => window.cancelAnimationFrame(frame);
   }, []);
 
-  const selectTeam = useCallback((selectedTeam: GameTeam, selectedPlayerName: string) => {
+  const selectTeam = useCallback((selectedTeam: GameTeam, selectedPlayerName: string, selectedPlayerId: string) => {
     const savedBest = readBest(selectedTeam.id);
     const savedPersonal = readPersonalArcadeRecord();
     const savedPersonalRecord = savedPersonal.meters;
@@ -137,6 +138,7 @@ export default function GameClient({
       createDefaultClubProgress();
     setTeam(selectedTeam);
     setPlayerName(selectedPlayerName);
+    setPlayerId(selectedPlayerId);
     setClubProgress(savedProgress);
     setActiveLevel(savedProgress.currentLevel);
     setBest(savedBest);
@@ -170,7 +172,7 @@ export default function GameClient({
     setArcadeSavePending(false);
     setSessionError("");
     setRunProof("");
-    void beginArcadeRun(playerName, team.id, activeLevel).then((result) => {
+    void beginArcadeRun(playerId, playerName, team.id, activeLevel).then((result) => {
       if (result.ok && result.proof) setRunProof(result.proof);
     });
     setSnapshot(createEmptySnapshot(best, personalRecord, personalRecordLevel));
@@ -182,7 +184,7 @@ export default function GameClient({
       startTransitionTimerRef.current = null;
       setStatus("running");
     }, transitionDuration);
-  }, [activeLevel, assetsReady, best, personalRecord, personalRecordLevel, playerName, team]);
+  }, [activeLevel, assetsReady, best, personalRecord, personalRecordLevel, playerId, playerName, team]);
 
   const handleSessionError = useCallback((message: string) => {
     setRunProof("");
@@ -322,6 +324,7 @@ export default function GameClient({
     setStatus("selecting");
     setTeam(null);
     setPlayerName("");
+    setPlayerId("");
     setRunProof("");
     setRunId((current) => current + 1);
     setBest(0);

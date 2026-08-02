@@ -84,7 +84,7 @@ export const ENTITY_DENSITY_CONFIG = {
 
 export const MOBILE_OBSTACLE_SPAWN_CONFIG = {
   maximumVisible: 2,
-  intervalMultiplier: 0.96,
+  intervalMultiplier: 0.94,
   baseReactionSeconds: 0.82,
   highDifficultyReactionSeconds: 0.7,
   slidingReactionSeconds: 1.22,

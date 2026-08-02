@@ -4,10 +4,9 @@ import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { getSocieta } from "@/lib/societa";
 import { getSupabaseAdminClient } from "@/lib/supabase/server";
 import { consumeRateLimit } from "@/lib/rate-limit/server";
-import type { ArcadeLeaderboardEntry, ArcadeSaveResult } from "./types";
+import type { ArcadeLeaderboardEntry, ArcadeNicknameClaimResult, ArcadeSaveResult } from "./types";
 import {
   deduplicateArcadeLeaderboard,
-  compareArcadeLeaderboardEntries,
   normalizeArcadeLevel,
   normalizeArcadePlayerName,
   normalizeArcadePlayerNameForLookup,
@@ -20,12 +19,31 @@ const MAXIMUM_PLAUSIBLE_METERS_PER_SECOND = 12;
 const DISTANCE_TOLERANCE_METERS = 60;
 
 type RunProofPayload = {
+  playerId: string;
   nomeGiocatoreNormalizzato: string;
   societaId: number;
   livello: 1 | 2 | 3;
   issuedAt: number;
   nonce: string;
 };
+
+export async function claimArcadeNickname(playerId: string, nomeGiocatore: string): Promise<ArcadeNicknameClaimResult> {
+  const normalizedName = normalizeArcadePlayerNameForLookup(nomeGiocatore);
+  if (!isValidPlayerId(playerId) || normalizedName.length < 2 || normalizedName.length > 30) {
+    return { ok: false, message: "Inserisci un nickname valido." };
+  }
+  const { data, error } = await getSupabaseAdminClient().rpc("assegna_nickname_arcade", {
+    p_player_id: playerId,
+    p_nome_giocatore: normalizeArcadePlayerName(nomeGiocatore),
+  });
+  if (error) {
+    console.error("[arcade] Controllo univocità nickname non riuscito", error);
+    return { ok: false, message: "La verifica del nickname non è disponibile. Riprova più tardi." };
+  }
+  return data === true
+    ? { ok: true }
+    : { ok: false, message: "Nickname già utilizzato. Scegline un altro." };
+}
 
 export async function getArcadeLeaderboard(): Promise<ArcadeLeaderboardEntry[]> {
   try {
@@ -36,12 +54,15 @@ export async function getArcadeLeaderboard(): Promise<ArcadeLeaderboardEntry[]> 
   }
 }
 
-export async function createArcadeRunProof(nomeGiocatore: string, societaId: number, livello: number) {
+export async function createArcadeRunProof(playerId: string, nomeGiocatore: string, societaId: number, livello: number) {
   const nomeGiocatoreNormalizzato = normalizeArcadePlayerNameForLookup(nomeGiocatore);
-  if (nomeGiocatoreNormalizzato.length < 2 || nomeGiocatoreNormalizzato.length > 50 || !isValidTeam(societaId) || !isValidLevel(livello)) return null;
+  if (!isValidPlayerId(playerId) || nomeGiocatoreNormalizzato.length < 2 || nomeGiocatoreNormalizzato.length > 30 || !isValidTeam(societaId) || !isValidLevel(livello)) return null;
+  const claim = await claimArcadeNickname(playerId, nomeGiocatore);
+  if (!claim.ok) return null;
   const issuedAt = Date.now();
   const nonce = randomBytes(24).toString("base64url");
   const payload: RunProofPayload = {
+    playerId,
     nomeGiocatoreNormalizzato,
     societaId,
     livello,
@@ -50,6 +71,7 @@ export async function createArcadeRunProof(nomeGiocatore: string, societaId: num
   };
   const { error } = await getSupabaseAdminClient().from("arcade_run_tokens").insert({
     nonce,
+    player_id: playerId,
     nome_giocatore_normalizzato: nomeGiocatoreNormalizzato,
     societa_id: societaId,
     started_at: new Date(issuedAt).toISOString(),
@@ -75,6 +97,7 @@ export async function saveArcadeRecord(input: {
   if (!proofResult.ok) return proofResult.reason === "expired" ? expiredRun() : invalidRun();
   const payload = proofResult.payload;
   const normalizedName = normalizeArcadePlayerNameForLookup(nomeGiocatore);
+  if (!isValidPlayerId(payload.playerId)) return invalidRun();
   if (!isValidTeam(payload.societaId) || !isValidLevel(payload.livello)) return invalidRun();
   try {
     const consumed = await consumeArcadeRunToken(payload, normalizedName);
@@ -95,30 +118,16 @@ export async function saveArcadeRecord(input: {
     }
 
     const supabase = getSupabaseAdminClient();
-    const rpcResponse = await supabase.rpc("salva_record_arcade_v2", {
+    const rpcResponse = await supabase.rpc("salva_record_arcade_v3", {
+      p_player_id: payload.playerId,
       p_nome_giocatore: nomeGiocatore,
       p_societa_id: payload.societaId,
       p_livello: payload.livello,
       p_metri: metri,
     });
-    let data = rpcResponse.data;
-    if (rpcResponse.error?.code === "PGRST202") {
-      console.error("[arcade] RPC salva_record_arcade_v2 assente; uso fallback compatibile", {
-        status: rpcResponse.status,
-        statusText: rpcResponse.statusText,
-        ...rpcResponse.error,
-      });
-      const fallback = await persistArcadeRecordCompat({
-        nomeGiocatore,
-        normalizedName,
-        societaId: payload.societaId,
-        livello: payload.livello,
-        metri,
-      });
-      if (!fallback.ok) return serviceUnavailable();
-      data = [{ metri_record: fallback.metriRecord }];
-    } else if (rpcResponse.error) {
-      console.error("[arcade] RPC salva_record_arcade_v2 non riuscita", {
+    const data = rpcResponse.data;
+    if (rpcResponse.error) {
+      console.error("[arcade] RPC salva_record_arcade_v3 non riuscita", {
         status: rpcResponse.status,
         statusText: rpcResponse.statusText,
         ...rpcResponse.error,
@@ -130,7 +139,7 @@ export async function saveArcadeRecord(input: {
     const { data: savedRow, error: savedError } = await supabase
       .from("classifica_arcade")
       .select("nome_giocatore,societa_id,metri,livello,updated_at")
-      .eq("nome_giocatore_normalizzato", normalizedName)
+      .eq("player_id", payload.playerId)
       .order("livello", { ascending: false })
       .order("metri", { ascending: false })
       .order("updated_at", { ascending: true })
@@ -144,11 +153,11 @@ export async function saveArcadeRecord(input: {
     const metriRecord = returnedRecord ?? savedRow.metri;
     const completeLeaderboard = await loadDeduplicatedLeaderboard();
     const positionIndex = completeLeaderboard.findIndex(
-      (entry) => normalizeArcadePlayerNameForLookup(entry.nomeGiocatore) === normalizedName
+      (entry) => entry.playerId === payload.playerId
     );
     const position = positionIndex >= 0 ? positionIndex + 1 : completeLeaderboard.length + 1;
     const leaderboard = completeLeaderboard.slice(0, 100);
-    const highlightedId = leaderboardEntryId(savedRow.nome_giocatore, savedRow.societa_id);
+    const highlightedId = leaderboardEntryId(payload.playerId, savedRow.nome_giocatore, savedRow.societa_id);
 
     return {
       ok: true,
@@ -169,7 +178,7 @@ export async function saveArcadeRecord(input: {
 async function loadDeduplicatedLeaderboard(): Promise<ArcadeLeaderboardEntry[]> {
   const { data, error } = await getSupabaseAdminClient()
     .from("classifica_arcade")
-    .select("id,nome_giocatore,societa_id,livello,metri,created_at,updated_at")
+    .select("id,player_id,nome_giocatore,societa_id,livello,metri,created_at,updated_at")
     .order("livello", { ascending: false })
     .order("metri", { ascending: false })
     .order("updated_at", { ascending: true })
@@ -193,7 +202,8 @@ async function loadDeduplicatedLeaderboard(): Promise<ArcadeLeaderboardEntry[]> 
       continue;
     }
     const candidate: ArcadeLeaderboardEntry = {
-      id: leaderboardEntryId(row.nome_giocatore, row.societa_id),
+      id: leaderboardEntryId(row.player_id, row.nome_giocatore, row.societa_id),
+      playerId: row.player_id,
       nomeGiocatore: normalizeArcadePlayerName(row.nome_giocatore),
       societaId: row.societa_id,
       livello: normalizeArcadeLevel(row.livello),
@@ -206,70 +216,8 @@ async function loadDeduplicatedLeaderboard(): Promise<ArcadeLeaderboardEntry[]> 
   return deduplicateArcadeLeaderboard(entries);
 }
 
-async function persistArcadeRecordCompat(input: {
-  nomeGiocatore: string;
-  normalizedName: string;
-  societaId: number;
-  livello: 1 | 2 | 3;
-  metri: number;
-}): Promise<{ ok: true; metriRecord: number } | { ok: false }> {
-  const supabase = getSupabaseAdminClient();
-  const existingResponse = await supabase
-    .from("classifica_arcade")
-    .select("id,nome_giocatore,societa_id,livello,metri,created_at,updated_at")
-    .eq("nome_giocatore_normalizzato", input.normalizedName);
-  if (existingResponse.error) {
-    console.error("[arcade] Fallback: select del record personale non riuscita", existingResponse.error);
-    return { ok: false };
-  }
-
-  const existing = (existingResponse.data ?? [])
-    .filter((row) => Number.isInteger(row.societa_id) && Number.isFinite(row.metri))
-    .map((row) => ({
-      rowId: row.id,
-      entry: {
-        id: String(row.id),
-        nomeGiocatore: normalizeArcadePlayerName(row.nome_giocatore),
-        societaId: row.societa_id,
-        livello: normalizeArcadeLevel(row.livello),
-        metri: row.metri,
-        updatedAt: row.updated_at || row.created_at || "",
-      } satisfies ArcadeLeaderboardEntry,
-    }))
-    .sort((a, b) => compareArcadeLeaderboardEntries(a.entry, b.entry));
-  const current = existing[0];
-  const candidate: ArcadeLeaderboardEntry = {
-    id: "candidate",
-    nomeGiocatore: input.nomeGiocatore,
-    societaId: input.societaId,
-    livello: input.livello,
-    metri: input.metri,
-    updatedAt: new Date().toISOString(),
-  };
-  if (current && compareArcadeLeaderboardEntries(candidate, current.entry) >= 0) {
-    return { ok: true, metriRecord: current.entry.metri };
-  }
-
-  const values = {
-    nome_giocatore: input.nomeGiocatore,
-    nome_giocatore_normalizzato: input.normalizedName,
-    societa_id: input.societaId,
-    livello: input.livello,
-    metri: input.metri,
-    updated_at: new Date().toISOString(),
-  };
-  const writeResponse = current
-    ? await supabase.from("classifica_arcade").update(values).eq("id", current.rowId).select("metri").single()
-    : await supabase.from("classifica_arcade").insert(values).select("metri").single();
-  if (writeResponse.error || !writeResponse.data) {
-    console.error("[arcade] Fallback: scrittura del record non riuscita", writeResponse.error);
-    return { ok: false };
-  }
-  return { ok: true, metriRecord: writeResponse.data.metri };
-}
-
-function leaderboardEntryId(nome: string, societaId: number) {
-  return `${normalizeArcadePlayerNameForLookup(nome)}:${societaId}`;
+function leaderboardEntryId(playerId: string | null, nome: string, societaId: number) {
+  return `${playerId || normalizeArcadePlayerNameForLookup(nome)}:${societaId}`;
 }
 
 function verifyRunProof(proof: string): { ok: true; payload: RunProofPayload } | { ok: false; reason: "expired" | "invalid" } {
@@ -280,7 +228,7 @@ function verifyRunProof(proof: string): { ok: true; payload: RunProofPayload } |
     const received = Buffer.from(signature);
     if (expected.length !== received.length || !timingSafeEqual(expected, received)) return { ok: false, reason: "invalid" };
     const payload = JSON.parse(Buffer.from(encoded, "base64url").toString("utf8")) as RunProofPayload;
-    if (!payload.nonce || !payload.nomeGiocatoreNormalizzato || !Number.isFinite(payload.issuedAt)) return { ok: false, reason: "invalid" };
+    if (!payload.nonce || !isValidPlayerId(payload.playerId) || !payload.nomeGiocatoreNormalizzato || !Number.isFinite(payload.issuedAt)) return { ok: false, reason: "invalid" };
     if (Date.now() - payload.issuedAt > MAXIMUM_RUN_AGE_MS) return { ok: false, reason: "expired" };
     if (Date.now() - payload.issuedAt < 0) return { ok: false, reason: "invalid" };
     return { ok: true, payload };
@@ -290,8 +238,9 @@ function verifyRunProof(proof: string): { ok: true; payload: RunProofPayload } |
 }
 
 async function consumeArcadeRunToken(payload: RunProofPayload, normalizedName: string) {
-  const { data, error } = await getSupabaseAdminClient().rpc("consuma_arcade_run_token", {
+  const { data, error } = await getSupabaseAdminClient().rpc("consuma_arcade_run_token_v2", {
     p_nonce: payload.nonce,
+    p_player_id: payload.playerId,
     p_nome_giocatore_normalizzato: normalizedName,
     p_societa_id: payload.societaId,
   });
@@ -322,6 +271,11 @@ function isValidTeam(value: number) {
 function isValidLevel(value: number): value is 1 | 2 | 3 {
   return value === 1 || value === 2 || value === 3;
 }
+
+function isValidPlayerId(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
 
 function serviceUnavailable(): ArcadeSaveResult {
   return { ok: false, message: "La classifica non è momentaneamente disponibile. Riprova più tardi." };

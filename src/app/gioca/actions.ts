@@ -1,11 +1,15 @@
 "use server";
 
-import { createArcadeRunProof, saveArcadeRecord } from "@/lib/arcade/server";
-import type { ArcadeRunProofResult, ArcadeSaveResult } from "@/lib/arcade/types";
+import { claimArcadeNickname, createArcadeRunProof, saveArcadeRecord } from "@/lib/arcade/server";
+import type { ArcadeNicknameClaimResult, ArcadeRunProofResult, ArcadeSaveResult } from "@/lib/arcade/types";
 
-export async function beginArcadeRun(nomeGiocatore: string, societaId: number, livello: number): Promise<ArcadeRunProofResult> {
+export async function claimPlayerNickname(playerId: string, nomeGiocatore: string): Promise<ArcadeNicknameClaimResult> {
+  return claimArcadeNickname(playerId, nomeGiocatore);
+}
+
+export async function beginArcadeRun(playerId: string, nomeGiocatore: string, societaId: number, livello: number): Promise<ArcadeRunProofResult> {
   try {
-    const proof = await createArcadeRunProof(nomeGiocatore, Number(societaId), Number(livello));
+    const proof = await createArcadeRunProof(playerId, nomeGiocatore, Number(societaId), Number(livello));
     return proof ? { ok: true, proof } : { ok: false };
   } catch {
     return { ok: false };

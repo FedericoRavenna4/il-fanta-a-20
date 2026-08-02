@@ -50,6 +50,7 @@ export type Database = {
           metri: number;
           created_at: string;
           updated_at: string;
+          player_id: string | null;
         };
         Insert: {
           id?: string | number;
@@ -60,6 +61,7 @@ export type Database = {
           metri: number;
           created_at?: string;
           updated_at?: string;
+          player_id?: string | null;
         };
         Update: {
           id?: string | number;
@@ -70,6 +72,7 @@ export type Database = {
           metri?: number;
           created_at?: string;
           updated_at?: string;
+          player_id?: string | null;
         };
         Relationships: [];
       };
@@ -103,6 +106,7 @@ export type Database = {
           expires_at: string;
           used_at: string | null;
           created_at: string;
+          player_id: string | null;
         };
         Insert: {
           nonce: string;
@@ -112,6 +116,7 @@ export type Database = {
           expires_at: string;
           used_at?: string | null;
           created_at?: string;
+          player_id?: string | null;
         };
         Update: {
           nonce?: string;
@@ -121,7 +126,14 @@ export type Database = {
           expires_at?: string;
           used_at?: string | null;
           created_at?: string;
+          player_id?: string | null;
         };
+        Relationships: [];
+      };
+      arcade_players: {
+        Row: { player_id: string; nickname: string; nickname_normalizzato: string; created_at: string; updated_at: string };
+        Insert: { player_id: string; nickname: string; nickname_normalizzato: string; created_at?: string; updated_at?: string };
+        Update: { player_id?: string; nickname?: string; nickname_normalizzato?: string; created_at?: string; updated_at?: string };
         Relationships: [];
       };
     };
@@ -145,6 +157,14 @@ export type Database = {
         };
         Returns: unknown;
       };
+      salva_record_arcade_v3: {
+        Args: { p_player_id: string; p_nome_giocatore: string; p_societa_id: number; p_livello: number; p_metri: number };
+        Returns: unknown;
+      };
+      assegna_nickname_arcade: {
+        Args: { p_player_id: string; p_nome_giocatore: string };
+        Returns: boolean;
+      };
       consuma_rate_limit: {
         Args: {
           p_chiave_hash: string;
@@ -164,6 +184,10 @@ export type Database = {
           stato: string;
           started_at: string | null;
         }>;
+      };
+      consuma_arcade_run_token_v2: {
+        Args: { p_nonce: string; p_player_id: string; p_nome_giocatore_normalizzato: string; p_societa_id: number };
+        Returns: Array<{ stato: string; started_at: string | null }>;
       };
     };
     Enums: Record<string, never>;
