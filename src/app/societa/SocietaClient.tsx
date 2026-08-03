@@ -15,15 +15,24 @@ function getHighlight() {
   };
 }
 
+function normalizeSearchValue(value: string) {
+  return value
+    .toLocaleLowerCase("it")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+}
+
 export default function SocietaClient({ societa }: { societa: Societa[] }) {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("Tutte");
 
   const filtered = societa
     .filter((team) => {
-      const searchText = `${team.nome} ${team.squadraReale}`.toLowerCase();
-
-      const matchSearch = searchText.includes(search.toLowerCase());
+      const searchText = normalizeSearchValue(
+        `${team.nome} ${team.squadraReale} ${team.fantallenatore}`
+      );
+      const matchSearch = searchText.includes(normalizeSearchValue(search));
 
       const matchFilter =
         filter === "Tutte" ||
@@ -48,7 +57,7 @@ export default function SocietaClient({ societa }: { societa: Societa[] }) {
       <div className="mb-12">
         <input
           type="text"
-          placeholder="Cerca società o nome personalizzato..."
+          placeholder="Cerca società, squadra o fantallenatore..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="mx-auto block min-h-12 w-full max-w-3xl rounded-[1.25rem] border border-slate-200 bg-white px-4 py-4 text-base text-slate-700 shadow-lg outline-none transition-all duration-300 placeholder:text-slate-400 focus:border-blue-900 focus:shadow-xl sm:px-6 sm:py-5 sm:text-lg"
@@ -119,7 +128,7 @@ export default function SocietaClient({ societa }: { societa: Societa[] }) {
       {filtered.length === 0 && (
         <div className="rounded-[1.75rem] border border-dashed border-slate-300 bg-white/70 px-5 py-12 text-center shadow-sm">
           <h2 className="text-lg font-black uppercase text-blue-950">Nessuna società trovata</h2>
-          <p className="mx-auto mt-2 max-w-md text-sm font-semibold leading-6 text-slate-500">Prova con un altro nome, fantallenatore o nickname, oppure cambia il filtro selezionato.</p>
+          <p className="mx-auto mt-2 max-w-md text-sm font-semibold leading-6 text-slate-500">Prova con un altro nome di società, squadra o fantallenatore, oppure cambia il filtro selezionato.</p>
         </div>
       )}
     </>
