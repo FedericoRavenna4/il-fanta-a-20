@@ -5,7 +5,7 @@ export type LeagueId =
   | "serie-c-b"
   | "serie-c-c";
 
-export type MockTeam = { id: number; name: string; logo: string };
+export type MockTeam = { id: number; name: string; logo: string; slug: string };
 
 export type MockMatch = {
   id: string;
@@ -45,4 +45,3 @@ export type ScoreHighlight = {
   score: number;
   matchday: number;
 };
-

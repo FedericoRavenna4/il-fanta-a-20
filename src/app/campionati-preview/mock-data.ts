@@ -17,7 +17,7 @@ const leagueDefinitions: Array<{
 ];
 
 function toMockTeam(team: Societa): MockTeam {
-  return { id: team.id, name: team.nome, logo: team.logo };
+  return { id: team.id, name: team.nome, logo: team.logo, slug: team.slug };
 }
 
 function score(seed: number) {
@@ -79,4 +79,3 @@ export function createChampionshipMockData(societa: Societa[]): LeagueMock[] {
     };
   });
 }
-

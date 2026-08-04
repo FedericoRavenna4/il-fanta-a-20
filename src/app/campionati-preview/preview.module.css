@@ -1,0 +1,28 @@
+.marqueeViewport {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.marqueeText {
+  display: block;
+  width: max-content;
+  min-width: 100%;
+  white-space: nowrap;
+}
+
+.marqueeActive {
+  animation: preview-name-marquee 8s ease-in-out 1s infinite;
+  will-change: transform;
+}
+
+@keyframes preview-name-marquee {
+  0%, 12% { transform: translateX(0); }
+  58%, 72% { transform: translateX(var(--marquee-distance)); }
+  88%, 100% { transform: translateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marqueeActive {
+    animation: none;
+  }
+}
