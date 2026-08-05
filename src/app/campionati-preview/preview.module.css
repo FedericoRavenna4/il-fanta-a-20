@@ -1,17 +1,20 @@
 .marqueeViewport {
+  display: block;
+  max-width: 100%;
   min-width: 0;
   overflow: hidden;
 }
 
 .marqueeText {
-  display: block;
+  display: inline-block;
   width: max-content;
-  min-width: 100%;
+  max-width: none;
   white-space: nowrap;
+  transform: translateX(0);
 }
 
 .marqueeActive {
-  animation: preview-name-marquee 8s ease-in-out 1s infinite;
+  animation: preview-name-marquee 8s ease-in-out infinite;
   will-change: transform;
 }
 
