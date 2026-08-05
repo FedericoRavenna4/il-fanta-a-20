@@ -31,19 +31,19 @@ function AutoMarquee({ children, className = "" }: { children: string; className
 }
 
 export function LeagueSelector({ leagues, selected, onSelect }: { leagues: LeagueMock[]; selected: LeagueId; onSelect: (id: LeagueId) => void }) {
-  const colors: Record<LeagueId, string> = {
-    "serie-a": "from-sky-500 to-blue-700 ring-sky-200",
-    "serie-b": "from-emerald-500 to-teal-700 ring-emerald-200",
-    "serie-c-a": "from-violet-500 to-indigo-700 ring-violet-200",
-    "serie-c-b": "from-violet-500 to-indigo-700 ring-violet-200",
-    "serie-c-c": "from-violet-500 to-indigo-700 ring-violet-200",
+  const colors: Record<LeagueId, { active: string; idle: string; dot: string }> = {
+    "serie-a": { active: "from-sky-500 to-blue-700 ring-sky-200", idle: "border-sky-200 bg-sky-50/70 text-sky-950 hover:border-sky-400", dot: "bg-sky-500" },
+    "serie-b": { active: "from-emerald-500 to-teal-700 ring-emerald-200", idle: "border-emerald-200 bg-emerald-50/70 text-emerald-950 hover:border-emerald-400", dot: "bg-emerald-500" },
+    "serie-c-a": { active: "from-violet-500 to-indigo-700 ring-violet-200", idle: "border-violet-200 bg-violet-50/70 text-violet-950 hover:border-violet-400", dot: "bg-violet-500" },
+    "serie-c-b": { active: "from-violet-500 to-indigo-700 ring-violet-200", idle: "border-violet-200 bg-violet-50/70 text-violet-950 hover:border-violet-400", dot: "bg-violet-500" },
+    "serie-c-c": { active: "from-violet-500 to-indigo-700 ring-violet-200", idle: "border-violet-200 bg-violet-50/70 text-violet-950 hover:border-violet-400", dot: "bg-violet-500" },
   };
   return (
-    <div className="grid grid-cols-5 gap-1.5 sm:gap-2" aria-label="Seleziona lega">
+    <div className="grid min-w-0 grid-cols-5 gap-1 sm:gap-2" aria-label="Seleziona lega">
       {leagues.map((league) => (
         <button key={league.id} type="button" onClick={() => onSelect(league.id)} aria-pressed={selected === league.id}
-          className={`${focus} flex min-h-14 items-center justify-center rounded-xl px-1.5 py-2 text-center text-[12px] font-black leading-tight transition sm:min-h-16 sm:rounded-2xl sm:px-3 sm:text-sm ${selected === league.id ? `bg-gradient-to-br text-white shadow-lg ring-2 ring-offset-2 ${colors[league.id]}` : "border border-slate-200 bg-white text-blue-950 shadow-sm hover:-translate-y-0.5 hover:border-slate-300"}`}>
-          <span className="sm:hidden">{league.id === "serie-c-a" ? "C Gir A" : league.id === "serie-c-b" ? "C Gir B" : league.id === "serie-c-c" ? "C Gir C" : league.shortName}</span><span className="hidden sm:inline">{league.name}</span>
+          className={`${focus} flex min-h-12 min-w-0 items-center justify-center gap-1.5 rounded-xl border px-0.5 py-2 text-center text-[10px] font-black leading-tight transition min-[390px]:text-[11px] sm:min-h-16 sm:rounded-2xl sm:px-3 sm:text-sm ${selected === league.id ? `border-transparent bg-gradient-to-br text-white shadow-lg ring-2 ring-offset-1 ${colors[league.id].active}` : `${colors[league.id].idle} shadow-sm hover:-translate-y-0.5`}`}>
+          <i className={`hidden h-1.5 w-1.5 shrink-0 rounded-full sm:block ${selected === league.id ? "bg-white/85" : colors[league.id].dot}`} /><span className="min-w-0 sm:hidden">{league.id === "serie-c-a" ? "C Gir A" : league.id === "serie-c-b" ? "C Gir B" : league.id === "serie-c-c" ? "C Gir C" : league.shortName}</span><span className="hidden min-w-0 sm:inline">{league.name}</span>
         </button>
       ))}
     </div>
@@ -102,17 +102,27 @@ function zone(position: number) {
   return { color: "bg-emerald-500", tint: "bg-emerald-50/35", label: "Conference League" };
 }
 
+const competitionIcons = {
+  crown: "/icon/competizioni/corona_logo.png",
+  champions: "/icon/competizioni/champions_league_logo.png",
+  europa: "/icon/competizioni/europa_league_logo.png",
+  conference: "/icon/competizioni/conference_league_logo.png",
+  promotion: "/icon/competizioni/scatto_promozione_logo.png",
+};
+
 function Movement({ value }: { value: number }) {
   if (!value) return <span className="text-slate-400" aria-label="Posizione invariata">—</span>;
   return <span className={`font-black ${value > 0 ? "text-emerald-600" : "text-rose-600"}`} aria-label={`${Math.abs(value)} posizioni ${value > 0 ? "guadagnate" : "perse"}`}>{value > 0 ? "↑" : "↓"}{Math.abs(value)}</span>;
 }
 
-function RaceIndicator() {
-  return <span title="Accesso allo Scatto Promozione" aria-label="Accesso allo Scatto Promozione" className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full bg-slate-900 text-white shadow-sm"><svg viewBox="0 0 16 16" className="h-2 w-2" aria-hidden="true"><path fill="currentColor" d="M3 2h1v12H3V2Zm2 1h7l-1.4 2L12 7H5V3Zm0 1v2h2V4H5Zm2 2h2V4H7v2Zm2 0v1h2l-.7-1H9Z" /></svg></span>;
-}
-
 function PositionIndicators({ position, leagueId }: { position: number; leagueId: LeagueId }) {
-  return <span className="relative inline-flex h-5 w-5 items-center justify-center"><span>{position}</span>{position === 1 && <span title="Prima classificata" aria-label="Prima classificata" className="absolute -left-2 -top-2 text-[13px] text-amber-500 drop-shadow-sm">♛</span>}{leagueId.startsWith("serie-c") && position <= 5 && <span className="absolute -right-2.5 -top-1"><RaceIndicator /></span>}</span>;
+  const serieC = leagueId.startsWith("serie-c");
+  const icons = [
+    ...(position === 1 ? [[competitionIcons.crown, "Prima classificata"]] : []),
+    ...(position <= 8 ? [[competitionIcons.champions, "Champions League"]] : position <= 14 ? [[competitionIcons.europa, "Europa League"]] : [[competitionIcons.conference, "Conference League"]]),
+    ...(serieC && position <= 5 ? [[competitionIcons.promotion, "Scatto Promozione"]] : []),
+  ];
+  return <span className="inline-flex items-center justify-center gap-0.5"><span>{position}</span><span className="inline-flex items-center gap-px">{icons.map(([src, label]) => <Image key={src} src={src} alt={label} title={label} width={12} height={12} className="h-2.5 w-2.5 shrink-0 object-contain sm:h-3 sm:w-3" />)}</span></span>;
 }
 
 function lastSafePosition(leagueId: LeagueId) {
@@ -127,7 +137,7 @@ export function Standings({ rows, leagueId }: { rows: StandingRow[]; leagueId: L
       {rows.map((row) => { const marker = zone(row.position); return (
         <div key={row.id} className={`relative border-b border-slate-100 last:border-0 ${row.position === lastSafePosition(leagueId) ? "after:absolute after:-bottom-px after:left-0 after:right-0 after:z-10 after:h-px after:bg-rose-500" : ""}`}>
           <span className={`absolute inset-y-0 left-0 w-1 ${marker.color}`} title={marker.label} />
-          <div className="grid min-h-14 grid-cols-[28px_36px_minmax(0,1fr)_42px_38px] items-center gap-2 px-3 py-2 text-[12px] sm:grid-cols-[30px_40px_minmax(0,1fr)_48px_42px]">
+          <div className="grid min-h-14 grid-cols-[48px_34px_minmax(0,1fr)_36px_32px] items-center gap-1.5 px-2 py-2 text-[12px] sm:grid-cols-[56px_40px_minmax(0,1fr)_48px_42px] sm:gap-2 sm:px-3">
             <span className="text-center font-black text-slate-500"><PositionIndicators position={row.position} leagueId={leagueId} /></span><Image src={row.logo} alt="" width={38} height={38} className="h-8 w-8 object-contain" /><Link href={`/societa/${row.slug}`} className={`${focus} min-w-0 rounded font-black uppercase text-blue-950`}><AutoMarquee>{row.name}</AutoMarquee></Link><strong className="text-right text-sm text-blue-950">{row.points}</strong><span className="text-center"><Movement value={row.movement} /></span>
           </div>
         </div>
@@ -141,27 +151,27 @@ export function ZoneLegend({ leagueId }: { leagueId: LeagueId }) {
   return <div className="space-y-2 text-[12px] font-bold text-slate-500"><div className="flex flex-wrap gap-x-3 gap-y-2">{[["bg-blue-500","1–8 Champions"],["bg-orange-500","9–14 Europa"],["bg-emerald-500","15–20 Conference"]].map(([color,label]) => <span key={label} className="flex items-center gap-1.5"><i className={`h-2.5 w-2.5 rounded-full ${color}`} />{label}</span>)}</div><p className="border-t border-slate-200 pt-2 text-slate-600">{serieC ? "1ª promossa · 1–5 Scatto Promozione · nessuna retrocessione" : leagueId === "serie-b" ? "1–3 promosse · linea rossa: zona retrocessione (17–20)" : "Linea rossa: zona retrocessione (18–20)"}</p></div>;
 }
 
-type SortKey = "position" | "name" | "points" | "fantasyPoints" | "played" | "won" | "drawn" | "lost" | "goalsFor" | "goalsAgainst" | "goalDifference";
+type SortKey = "position" | "logo" | "name" | "points" | "fantasyPoints" | "won" | "drawn" | "lost" | "goalsFor" | "goalsAgainst";
 
 export function ExpandedStandingsModal({ rows, league, onClose }: { rows: StandingRow[]; league: LeagueMock; onClose: () => void }) {
   const [sort, setSort] = useState<SortKey>("position");
   const [direction, setDirection] = useState<"asc" | "desc">("asc");
   useEffect(() => { const previous = document.body.style.overflow; document.body.style.overflow = "hidden"; const escape = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); }; window.addEventListener("keydown", escape); return () => { document.body.style.overflow = previous; window.removeEventListener("keydown", escape); }; }, [onClose]);
-  const sorted = useMemo(() => [...rows].sort((a, b) => { const left = sort === "name" ? a.name : a[sort]; const right = sort === "name" ? b.name : b[sort]; const result = typeof left === "string" ? left.localeCompare(String(right), "it") : Number(left) - Number(right); return direction === "asc" ? result : -result; }), [rows, sort, direction]);
+  const sorted = useMemo(() => [...rows].sort((a, b) => { const left = sort === "name" || sort === "logo" ? a.name : a[sort]; const right = sort === "name" || sort === "logo" ? b.name : b[sort]; const result = typeof left === "string" ? left.localeCompare(String(right), "it") : Number(left) - Number(right); return direction === "asc" ? result : -result; }), [rows, sort, direction]);
   const changeSort = (key: SortKey) => { if (sort === key) setDirection((value) => value === "asc" ? "desc" : "asc"); else { setSort(key); setDirection(key === "name" || key === "position" ? "asc" : "desc"); } };
-  const headers: Array<[SortKey, string]> = [["position","POS"],["name","SQUADRA"],["points","PT"],["fantasyPoints","PT TOT"],["played","G"],["won","V"],["drawn","P"],["lost","S"],["goalsFor","GF"],["goalsAgainst","GS"],["goalDifference","DR"]];
+  const headers: Array<[SortKey, string]> = [["position","POS"],["logo","LOGO"],["name","SQUADRA"],["points","PT"],["fantasyPoints","PT TOT"],["won","V"],["drawn","P"],["lost","S"],["goalsFor","GF"],["goalsAgainst","GS"]];
   return (
     <div role="dialog" aria-modal="true" aria-label={`Classifica completa ${league.name}`} className="fixed inset-0 z-[100] bg-slate-950/65 backdrop-blur-md sm:p-3" onMouseDown={onClose}>
       <div className="mx-auto flex h-full w-full max-w-7xl flex-col overflow-hidden bg-[#f8fbff] shadow-2xl sm:h-[calc(100dvh-1.5rem)] sm:rounded-[2rem]" onMouseDown={(event) => event.stopPropagation()}>
         <header className="flex items-center justify-between border-b border-slate-200 bg-white px-3 py-3 sm:px-5 sm:py-4">
-          <div><p className="section-eyebrow">{league.name}</p><h2 className="mt-1 text-lg font-black uppercase text-blue-950 sm:text-2xl">Classifica completa</h2></div>
+          <div><p className="section-eyebrow">{league.name}</p><h2 className="mt-1 text-lg font-black uppercase text-blue-950 sm:text-2xl">Classifica completa</h2><p className="mt-0.5 text-[11px] font-bold text-slate-500 sm:text-sm">Giornata {league.currentMatchday}</p></div>
           <button type="button" onClick={onClose} aria-label="Chiudi classifica" className={`${focus} flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-2xl text-blue-950 shadow-sm`}>×</button>
         </header>
         <div className="min-h-0 flex-1 overflow-y-auto">
-          <table className="w-full table-fixed border-collapse text-[12px]">
-            <colgroup><col className="w-[9%]" /><col className="w-[28%]" />{Array.from({ length: 9 }, (_, index) => <col key={index} className="w-[7%]" />)}</colgroup>
+          <table className="w-full table-fixed border-collapse text-[10px] sm:text-[12px]">
+            <colgroup><col className="w-[11%] sm:w-[8%]" /><col className="w-[8%] sm:w-[7%]" /><col className="w-[23%] sm:w-[29%]" />{Array.from({ length: 7 }, (_, index) => <col key={index} className="w-[8.25%] sm:w-[8%]" />)}</colgroup>
             <thead className="sticky top-0 z-20 bg-slate-100/95 backdrop-blur"><tr>{headers.map(([key,label]) => <th key={key} className={`border-b border-slate-200 px-0.5 py-2 font-black leading-tight text-slate-500 ${key === "name" ? "text-left" : "text-center"}`}><button type="button" onClick={() => changeSort(key)} aria-label={`Ordina per ${label}`} className={`${focus} w-full rounded py-1 hover:text-blue-950`}><span className={key === "fantasyPoints" ? "block leading-[1.05]" : ""}>{key === "fantasyPoints" ? <>PT<br />TOT</> : label}</span><span aria-hidden="true" className="block text-slate-400">{sort === key ? direction === "asc" ? "↑" : "↓" : "↕"}</span></button></th>)}</tr></thead>
-            <tbody>{sorted.map((row) => { const marker = zone(row.position); const relegationLine = row.position === lastSafePosition(league.id); const values = [row.points,row.fantasyPoints.toFixed(1),row.played,row.won,row.drawn,row.lost,row.goalsFor,row.goalsAgainst,row.goalDifference > 0 ? `+${row.goalDifference}` : row.goalDifference]; return <tr key={row.id} className={`border-b border-slate-100 ${marker.tint} ${relegationLine ? "border-b-2 border-b-rose-500" : ""}`}><td className="border-l-[3px] px-0.5 py-2 text-center font-black" style={{ borderLeftColor: row.position <= 8 ? "#3b82f6" : row.position <= 14 ? "#f97316" : "#10b981" }}><PositionIndicators position={row.position} leagueId={league.id} /></td><td className="min-w-0 px-1 py-2"><Link href={`/societa/${row.slug}`} className={`${focus} flex min-w-0 items-center gap-1 rounded`}><Image src={row.logo} alt="" width={28} height={28} className="hidden h-7 w-7 shrink-0 object-contain sm:block" /><AutoMarquee className="min-w-0 flex-1 font-black uppercase text-blue-950">{row.name}</AutoMarquee></Link></td>{values.map((value,index) => <td key={index} className="px-0.5 py-2 text-center font-bold tabular-nums text-blue-950">{value}</td>)}</tr>; })}</tbody>
+            <tbody>{sorted.map((row) => { const marker = zone(row.position); const relegationLine = row.position === lastSafePosition(league.id); const values = [row.points,row.fantasyPoints.toFixed(1),row.won,row.drawn,row.lost,row.goalsFor,row.goalsAgainst]; return <tr key={row.id} className={`border-b border-slate-100 ${marker.tint} ${relegationLine ? "border-b-2 border-b-rose-500" : ""}`}><td className="border-l-[3px] px-0.5 py-1.5 text-center font-black" style={{ borderLeftColor: row.position <= 8 ? "#3b82f6" : row.position <= 14 ? "#f97316" : "#10b981" }}><PositionIndicators position={row.position} leagueId={league.id} /></td><td className="p-0.5 text-center"><Link href={`/societa/${row.slug}`} aria-label={`Apri ${row.name}`} className={`${focus} inline-flex rounded`}><Image src={row.logo} alt="" width={24} height={24} className="h-5 w-5 object-contain sm:h-7 sm:w-7" /></Link></td><td className="min-w-0 px-0.5 py-1.5"><Link href={`/societa/${row.slug}`} className={`${focus} block min-w-0 rounded`}><AutoMarquee className="font-black uppercase text-blue-950">{row.name}</AutoMarquee></Link></td>{values.map((value,index) => <td key={index} className="px-px py-1.5 text-center font-bold tabular-nums text-blue-950">{value}</td>)}</tr>; })}</tbody>
           </table>
         </div>
         <footer className="border-t border-slate-200 bg-white px-3 py-2"><ZoneLegend leagueId={league.id} /></footer>
@@ -174,5 +184,5 @@ export function GlobalMatchdayStats({ leagues, day }: { leagues: LeagueMock[]; d
   const stats = globalDayStats(leagues, day);
   if (!stats.best || !stats.worst || !stats.highestScoringMatch) return <div className="rounded-2xl bg-white p-5 text-sm font-bold text-slate-500">La giornata non è ancora stata giocata.</div>;
   const match = stats.highestScoringMatch;
-  return <section className="grid gap-3 md:grid-cols-3"><ScoreHighlightCard title="🏆 MVP di giornata" value={stats.best} tone="best" /><article className="rounded-[1.5rem] border border-sky-200 bg-sky-50 p-4"><p className="text-[12px] font-black uppercase tracking-[0.16em] text-sky-700">⚽ Partita con più gol</p><p className="mt-4 text-sm font-black uppercase text-blue-950">{match.home.name} {match.homeGoals}–{match.awayGoals} {match.away.name}</p><p className="mt-1 text-[12px] font-bold text-slate-500">{(match.homeScore! + match.awayScore!).toFixed(1)} fantapunti complessivi</p></article><ScoreHighlightCard title="💀 Peggior punteggio di giornata" value={stats.worst} tone="worst" /></section>;
+  return <section className="grid gap-3 md:grid-cols-3"><ScoreHighlightCard title="🏆 MVP di giornata" value={stats.best} tone="best" /><article className="rounded-[1.5rem] border border-sky-200 bg-sky-50 p-4"><p className="text-[12px] font-black uppercase tracking-[0.16em] text-sky-700">⚽ Partita con più gol</p><div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-2"><div className="min-w-0 text-center"><Image src={match.home.logo} alt="" width={38} height={38} className="mx-auto h-8 w-8 object-contain" /><AutoMarquee className="mt-1 text-[11px] font-black uppercase text-blue-950">{match.home.name}</AutoMarquee></div><strong className="whitespace-nowrap text-base font-black text-blue-950">{match.homeGoals}–{match.awayGoals}</strong><div className="min-w-0 text-center"><Image src={match.away.logo} alt="" width={38} height={38} className="mx-auto h-8 w-8 object-contain" /><AutoMarquee className="mt-1 text-[11px] font-black uppercase text-blue-950">{match.away.name}</AutoMarquee></div></div><p className="mt-1 text-center text-[11px] font-bold text-slate-500">{(match.homeScore! + match.awayScore!).toFixed(1)} fantapunti complessivi</p></article><ScoreHighlightCard title="💀 Peggior punteggio di giornata" value={stats.worst} tone="worst" /></section>;
 }

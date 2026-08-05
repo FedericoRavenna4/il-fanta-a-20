@@ -32,11 +32,11 @@ export default function ChampionshipPreview({ leagues }: { leagues: LeagueMock[]
   </section>;
 
   return (
-    <main className="mx-auto max-w-[1440px] px-3 py-5 sm:px-5 sm:py-10 lg:px-8 lg:py-14">
-      <PageHeader eyebrow="Prototipo · Versione 1.1" title="I Campionati" description="Risultati e classifiche delle cinque leghe del Fanta a 20." />
-      <div className="-mt-2 sm:-mt-5"><GlobalMatchdayStats leagues={leagues} day={league.currentMatchday} /><p className="mt-3 text-[12px] font-black uppercase tracking-[0.12em] text-slate-400">{MOCK_DATA_NOTICE}</p></div>
-      <div className="sticky top-[4.25rem] z-20 -mx-1 mt-5 rounded-[1.5rem] border border-white/80 bg-slate-50/95 p-2 shadow-lg backdrop-blur lg:static lg:mt-7"><LeagueSelector leagues={leagues} selected={league.id} onSelect={selectLeague} /></div>
-      <div className="mt-4 grid grid-cols-2 rounded-2xl bg-slate-200 p-1 lg:hidden"><button type="button" aria-pressed={mobileTab === "results"} onClick={() => setMobileTab("results")} className={`min-h-11 rounded-xl text-sm font-black ${mobileTab === "results" ? "bg-white text-blue-950 shadow-sm" : "text-slate-500"}`}>Risultati</button><button type="button" aria-pressed={mobileTab === "table"} onClick={() => setMobileTab("table")} className={`min-h-11 rounded-xl text-sm font-black ${mobileTab === "table" ? "bg-white text-blue-950 shadow-sm" : "text-slate-500"}`}>Classifica</button></div>
+    <main className="mx-auto max-w-[1440px] overflow-x-clip px-3 py-5 sm:px-5 sm:py-10 lg:px-8 lg:py-14">
+      <PageHeader eyebrow="Campionati" title="I Campionati" description="Risultati e classifiche delle cinque leghe del Fanta a 20." />
+      <div className="-mt-2 sm:-mt-5"><GlobalMatchdayStats leagues={leagues} day={league.currentMatchday} /><p className="mt-3 text-[11px] font-black uppercase tracking-[0.12em] text-slate-400">{MOCK_DATA_NOTICE}</p></div>
+      <div className="sticky top-[4.25rem] z-20 -mx-1 mt-5 rounded-[1.25rem] border border-slate-200/80 bg-slate-50/95 p-1.5 shadow-[0_12px_35px_-22px_rgba(15,23,42,.45)] backdrop-blur lg:static lg:mt-7 lg:p-2"><LeagueSelector leagues={leagues} selected={league.id} onSelect={selectLeague} /></div>
+      <div className="mt-4 grid min-w-0 grid-cols-2 rounded-2xl bg-slate-200 p-1 lg:hidden"><button type="button" aria-pressed={mobileTab === "results"} onClick={() => setMobileTab("results")} className={`min-h-11 min-w-0 rounded-xl text-sm font-black ${mobileTab === "results" ? "bg-white text-blue-950 shadow-sm" : "text-slate-500"}`}>Risultati</button><button type="button" aria-pressed={mobileTab === "table"} onClick={() => setMobileTab("table")} className={`min-h-11 min-w-0 rounded-xl text-sm font-black ${mobileTab === "table" ? "bg-white text-blue-950 shadow-sm" : "text-slate-500"}`}>Classifica</button></div>
       <div className="mt-5 lg:grid lg:grid-cols-[minmax(0,1.45fr)_minmax(390px,0.85fr)] lg:items-start lg:gap-6">
         <div className={mobileTab === "results" ? "block" : "hidden lg:block"}>{Results}</div>
         <div className={mobileTab === "table" ? "block" : "hidden lg:block"}>{Table}</div>
