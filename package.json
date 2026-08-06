@@ -10,7 +10,8 @@
     "test:calendar-import": "node scripts/calendar-import-preview.mjs",
     "test:calendar-parser": "node --test scripts/calendar-import.test.mjs",
     "test:importazioni-schema": "node --test scripts/importazioni-migration.test.mjs",
-    "test:admin-import": "node --test scripts/admin-import.test.mjs"
+    "test:admin-import": "node --test scripts/admin-import.test.mjs",
+    "test:campionati-live": "node --experimental-strip-types --test src/app/campionati-live-preview/logic.test.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",

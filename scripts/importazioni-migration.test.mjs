@@ -8,6 +8,8 @@ const migrationPath = path.join(root, "supabase", "migrations", "202608050003_im
 const sql = fs.readFileSync(migrationPath, "utf8");
 const privilegesPath = path.join(root, "supabase", "migrations", "202608050004_service_role_import_privileges.sql");
 const privilegesSql = fs.readFileSync(privilegesPath, "utf8");
+const catalogPrivilegesPath = path.join(root, "supabase", "migrations", "202608060001_service_role_catalog_privileges.sql");
+const catalogPrivilegesSql = fs.readFileSync(catalogPrivilegesPath, "utf8");
 
 function includes(pattern, message) {
   assert.match(sql, pattern, message);
@@ -74,4 +76,22 @@ test("la migrazione privilegi non amplia i permessi client e non modifica RLS", 
   assert.doesNotMatch(privilegesSql, /\bto\s+(anon|authenticated|public)\b/i);
   assert.doesNotMatch(privilegesSql, /disable row level security|create policy|alter policy/i);
   assert.doesNotMatch(privilegesSql, /grant\s+all/i);
+});
+
+test("la migrazione catalogo concede al backend soltanto le letture necessarie", () => {
+  assert.match(catalogPrivilegesSql, /^\s*--[\s\S]*?\bbegin;/i);
+  assert.match(catalogPrivilegesSql, /grant usage on schema public to service_role/i);
+  for (const table of ["stagioni", "competizioni", "edizioni_competizioni", "societa", "societa_alias"]) {
+    assert.match(catalogPrivilegesSql, new RegExp(`public\\.${table}`), `Manca il catalogo public.${table}`);
+  }
+  assert.match(catalogPrivilegesSql, /grant select[\s\S]*to service_role/i);
+  assert.match(catalogPrivilegesSql, /commit;\s*$/i);
+});
+
+test("la migrazione catalogo è idempotente e non amplia privilegi client o RLS", () => {
+  assert.doesNotMatch(catalogPrivilegesSql, /\bto\s+(anon|authenticated|public)\b/i);
+  assert.doesNotMatch(catalogPrivilegesSql, /\b(insert|update|delete|truncate|references|trigger)\b/i);
+  assert.doesNotMatch(catalogPrivilegesSql, /disable row level security|create policy|alter policy/i);
+  assert.doesNotMatch(catalogPrivilegesSql, /grant\s+all/i);
+  assert.doesNotMatch(catalogPrivilegesSql, /revoke/i);
 });

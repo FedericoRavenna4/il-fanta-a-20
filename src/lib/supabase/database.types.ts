@@ -1,6 +1,36 @@
 export type Database = {
   public: {
     Tables: {
+      stagioni: {
+        Row: { id: number; codice: string; anno_inizio: number; anno_fine: number; nome: string; attiva: boolean; data_inizio: string | null; data_fine: string | null; created_at: string; updated_at: string };
+        Insert: Partial<Database["public"]["Tables"]["stagioni"]["Row"]>;
+        Update: Partial<Database["public"]["Tables"]["stagioni"]["Row"]>;
+        Relationships: [];
+      };
+      competizioni: {
+        Row: { id: number; codice: string; nome: string; tipo: string; divisione_riferimento: string | null; livello: number | null; attiva: boolean; created_at: string; updated_at: string };
+        Insert: Partial<Database["public"]["Tables"]["competizioni"]["Row"]>;
+        Update: Partial<Database["public"]["Tables"]["competizioni"]["Row"]>;
+        Relationships: [];
+      };
+      edizioni_competizioni: {
+        Row: { id: number; competizione_id: number; stagione_id: number; nome_edizione: string; formato: string | null; numero_squadre: number | null; stato: string; data_inizio: string | null; data_fine: string | null; attiva: boolean; created_at: string; updated_at: string };
+        Insert: Partial<Database["public"]["Tables"]["edizioni_competizioni"]["Row"]>;
+        Update: Partial<Database["public"]["Tables"]["edizioni_competizioni"]["Row"]>;
+        Relationships: [{ foreignKeyName: "edizioni_competizioni_competizione_id_fkey"; columns: ["competizione_id"]; isOneToOne: false; referencedRelation: "competizioni"; referencedColumns: ["id"] }];
+      };
+      partite: {
+        Row: { id: number; edizione_competizione_id: number; giornata_lega: number; giornata_serie_a: number | null; societa_casa_id: number; societa_trasferta_id: number; fantapunti_casa: number | null; fantapunti_trasferta: number | null; gol_casa: number | null; gol_trasferta: number | null; stato: string; fonte_importazione: string | null; import_batch_id: string | null; created_at: string; updated_at: string };
+        Insert: Partial<Database["public"]["Tables"]["partite"]["Row"]>;
+        Update: Partial<Database["public"]["Tables"]["partite"]["Row"]>;
+        Relationships: [];
+      };
+      societa: {
+        Row: { id: number; nome_ufficiale: string; nome_personalizzato: string | null; nome_normalizzato: string; squadra_associata: string | null; fantallenatore: string | null; nickname_instagram: string | null; stagione_ingresso: string | null; categoria: string | null; girone: string | null; logo_path: string | null; storia: string | null; badge_tipo: string | null; attiva: boolean; created_at: string; updated_at: string };
+        Insert: Partial<Database["public"]["Tables"]["societa"]["Row"]>;
+        Update: Partial<Database["public"]["Tables"]["societa"]["Row"]>;
+        Relationships: [];
+      };
       lista_attesa: {
         Row: {
           id: string | number;

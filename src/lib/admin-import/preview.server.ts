@@ -5,7 +5,7 @@ import { normalizeSocietaName, parseCalendarBuffer } from "../../../scripts/lib/
 import { sha256 } from "./hash.server";
 import { validateImportFile } from "./file-validation";
 import type { ImportChange, ImportIssue, ImportPreview, ImportType } from "./types";
-import { assertPublishable, compareByLogicalKey } from "./logic";
+import { assertPublishable, compareByLogicalKey, parsePositiveInteger, validateEditionSelection } from "./logic";
 import { getSupabaseAdminClient } from "@/lib/supabase/server";
 
 function issues(parsed: ReturnType<typeof parseCalendarBuffer>) {
@@ -65,14 +65,32 @@ export async function createAuthenticatedPreview(formData: FormData, userId: str
   const file = validateImportFile(fileValue instanceof File ? fileValue : null);
   const importType = String(formData.get("importType")) as ImportType;
   if (importType !== "calendario_campionato" && importType !== "calendario_coppa") throw new Error("Tipo di importazione non supportato.");
-  const seasonId = Number(formData.get("seasonId"));
-  const editionId = Number(formData.get("editionId"));
-  const competitionId = Number(formData.get("competitionId"));
+  const receivedSeasonId = formData.get("seasonId");
+  const receivedEditionId = formData.get("editionCompetitionId");
   const seasonLabel = String(formData.get("seasonLabel") ?? "").trim();
   const competitionLabel = String(formData.get("competitionLabel") ?? "").trim();
-  if (!Number.isInteger(seasonId) || !Number.isInteger(editionId) || !Number.isInteger(competitionId) || !seasonLabel || !competitionLabel) throw new Error("Seleziona stagione e competizione.");
-  const { data: selectedEdition, error: selectedEditionError } = await admin().from("edizioni_competizioni").select("id").eq("id", editionId).eq("stagione_id", seasonId).eq("competizione_id", competitionId).eq("attiva", true).maybeSingle();
-  if (selectedEditionError || !selectedEdition) throw new Error("La competizione selezionata non è disponibile per questa stagione.");
+  if (!seasonLabel || !competitionLabel) throw new Error("Seleziona stagione e competizione.");
+  let seasonId: number;
+  try {
+    seasonId = parsePositiveInteger(receivedSeasonId, "Stagione");
+  } catch (error) {
+    if (process.env.NODE_ENV === "development") console.error("[admin/importazioni] Selezione anteprima rifiutata", { stagione_id: String(receivedSeasonId), edizione_competizione_id: String(receivedEditionId), tipo: importType, edizioni_valide: [], motivo: error instanceof Error ? error.message : "stagione non valida" });
+    throw error;
+  }
+  const { data: validEditions, error: editionsError } = await admin().from("edizioni_competizioni").select("id,stagione_id,competizione_id,competizioni!inner(tipo)").eq("stagione_id", seasonId).eq("attiva", true);
+  const candidates = (validEditions ?? []).map((edition) => {
+    const competition = Array.isArray(edition.competizioni) ? edition.competizioni[0] : edition.competizioni;
+    return { edizioneCompetizioneId: edition.id, stagioneId: edition.stagione_id, competizioneId: edition.competizione_id, competitionType: competition?.tipo };
+  });
+  let editionId: number;
+  try {
+    if (editionsError) throw new Error("Impossibile verificare le edizioni disponibili.");
+    editionId = validateEditionSelection({ seasonId: receivedSeasonId, editionCompetitionId: receivedEditionId, importType }, candidates).editionCompetitionId;
+    if (process.env.NODE_ENV === "development") console.info("[admin/importazioni] Selezione anteprima accettata", { stagione_id: seasonId, edizione_competizione_id: editionId, tipo: importType, edizioni_valide: candidates.map((item) => item.edizioneCompetizioneId) });
+  } catch (error) {
+    if (process.env.NODE_ENV === "development") console.error("[admin/importazioni] Selezione anteprima rifiutata", { stagione_id: String(receivedSeasonId), edizione_competizione_id: String(receivedEditionId), tipo: importType, edizioni_valide: candidates.map((item) => item.edizioneCompetizioneId), motivo: error instanceof Error ? error.message : "rifiuto sconosciuto" });
+    throw error;
+  }
   const bytes = new Uint8Array(await file.arrayBuffer());
   const hash = sha256(bytes);
   const { data: importRow, error: insertError } = await admin().from("importazioni").insert({ tipo: importType, stagione_id: seasonId, edizione_competizione_id: editionId, nome_file: file.name, file_hash: hash, dimensione_file: file.size, stato: "anteprima", importato_da: userId }).select("id").single();

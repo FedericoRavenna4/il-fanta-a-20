@@ -4,7 +4,7 @@ import path from "node:path";
 import test from "node:test";
 import { evaluateAdminIdentity, parseAdminEmailAllowlist } from "../src/lib/admin-import/auth-logic.ts";
 import { MAX_IMPORT_FILE_BYTES, validateImportFile } from "../src/lib/admin-import/file-validation.ts";
-import { assertPublishable, compareByLogicalKey } from "../src/lib/admin-import/logic.ts";
+import { assertPublishable, compareByLogicalKey, validateEditionSelection } from "../src/lib/admin-import/logic.ts";
 import { assertHistoryQuerySucceeded, buildImportHistory } from "../src/lib/admin-import/history.ts";
 
 test("normalizza la allowlist e distingue sessione assente, autorizzata e negata", () => {
@@ -53,6 +53,25 @@ test("storico lancia soltanto per un errore Supabase reale", () => {
   assert.throws(() => assertHistoryQuerySucceeded({ message: "permission denied", code: "42501", details: null, hint: null }), /Impossibile caricare lo storico/);
 });
 
+const editions = [
+  { edizioneCompetizioneId: "101", stagioneId: "4", competizioneId: "1", competitionType: "campionato" },
+  { edizioneCompetizioneId: 88, stagioneId: 3, competizioneId: 1, competitionType: "campionato" },
+  { edizioneCompetizioneId: 205, stagioneId: 4, competizioneId: 6, competitionType: "coppa_nazionale" },
+];
+
+test("Serie A 2026/27 accetta ID numerici ricevuti come stringhe", () => {
+  assert.deepEqual(validateEditionSelection({ seasonId: "4", editionCompetitionId: "101", importType: "calendario_campionato" }, editions), { seasonId: 4, editionCompetitionId: 101, competitionId: 1 });
+});
+
+test("non confonde competizione_id con edizione_competizione_id", () => {
+  assert.throws(() => validateEditionSelection({ seasonId: 4, editionCompetitionId: 1, importType: "calendario_campionato" }, editions), /non appartiene/);
+});
+
+test("blocca edizione di altra stagione e campionato incompatibile con coppa", () => {
+  assert.throws(() => validateEditionSelection({ seasonId: 4, editionCompetitionId: 88, importType: "calendario_campionato" }, editions), /non appartiene/);
+  assert.throws(() => validateEditionSelection({ seasonId: 4, editionCompetitionId: 205, importType: "calendario_campionato" }, editions), /non è un campionato/);
+});
+
 test("azioni, pagina, storico e logout sono protetti e il client non espone service role", () => {
   const root = process.cwd();
   const read = (...parts) => fs.readFileSync(path.join(root, ...parts), "utf8");
@@ -73,9 +92,13 @@ test("azioni, pagina, storico e logout sono protetti e il client non espone serv
   assert.match(data, /riepilogo,errori,warning/);
   assert.doesNotMatch(data, /from\("competizioni"\)[\s\S]*?eq\("attiva"/);
   assert.match(data, /from\("edizioni_competizioni"\)[\s\S]*?eq\("attiva", true\)/);
-  assert.match(data, /editionId,/);
+  assert.match(data, /edizioneCompetizioneId:/);
   assert.match(data, /seasonId:/);
   assert.match(data, /competitionId:/);
+  assert.match(client, /name="editionCompetitionId"/);
+  assert.match(client, /value=\{editionCompetitionId\}/);
+  assert.equal((client.match(/resetCompetitionSelection\(\)/g) ?? []).length, 3);
+  assert.doesNotMatch(client, /formData\.set\("competitionId"/);
   assert.match(loginActions, /auth\.signOut\(\)/);
   assert.match(loginActions, /revalidatePath\("\/admin\/login"/);
   assert.match(loginClient, /<form action=\{formAction\}/);

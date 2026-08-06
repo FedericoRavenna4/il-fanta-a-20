@@ -49,10 +49,8 @@ export async function getImportAdminCatalog(): Promise<AdminCatalog> {
       const competition = competitionMap.get(Number(edition.competizione_id));
       if (!season || !competition) return [];
       const importType: ImportType = competition.tipo === "campionato" ? "calendario_campionato" : "calendario_coppa";
-      const editionId = String(edition.id);
       return [{
-        id: editionId,
-        editionId,
+        edizioneCompetizioneId: String(edition.id),
         seasonId: String(edition.stagione_id),
         competitionId: String(edition.competizione_id),
         label: `${String(competition.nome)} · ${String(season.codice)}`,

@@ -14,20 +14,26 @@ export default function ImportazioniClient({ catalog, history }: { catalog: Admi
   const [importType, setImportType] = useState<ImportType>("calendario_campionato");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [seasonId, setSeasonId] = useState(catalog.seasons[0]?.id ?? "");
+  const [editionCompetitionId, setEditionCompetitionId] = useState("");
   const competitions = useMemo(
     () => catalog.competitions.filter((item) => item.importType === importType && item.seasonId === seasonId),
     [catalog.competitions, importType, seasonId],
   );
+
+  function resetCompetitionSelection() {
+    setEditionCompetitionId("");
+    setPreview(null);
+    setMessage("");
+  }
 
   function submitPreview(formData: FormData) {
     setMessage("");
     const file = formData.get("file");
     if (file instanceof File) setSelectedFile(file);
     const season = catalog.seasons.find((item) => item.id === formData.get("seasonId"));
-    const competition = catalog.competitions.find((item) => item.editionId === formData.get("editionId"));
+    const competition = catalog.competitions.find((item) => item.edizioneCompetizioneId === formData.get("editionCompetitionId"));
     formData.set("seasonLabel", season?.label ?? "");
     formData.set("competitionLabel", competition?.label ?? "");
-    formData.set("competitionId", competition?.competitionId ?? "");
     startTransition(async () => {
       const result = await createImportPreviewAction(formData);
       if (result.ok) { setPreview(result.preview); setShowAll(false); }
@@ -50,9 +56,9 @@ export default function ImportazioniClient({ catalog, history }: { catalog: Admi
   return <div className="space-y-7">
     <form action={submitPreview} className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className="text-sm font-black text-blue-950">Stagione<select name="seasonId" required className={field} value={seasonId} onChange={(event) => setSeasonId(event.target.value)}>{catalog.seasons.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
-        <label className="text-sm font-black text-blue-950">Tipo importazione<select name="importType" className={field} value={importType} onChange={(event) => setImportType(event.target.value as ImportType)}><option value="calendario_campionato">Calendario campionato</option><option value="calendario_coppa">Calendario coppa</option><option disabled>Rose — non ancora disponibili</option><option disabled>Mercato — non ancora disponibile</option></select></label>
-        <label className="text-sm font-black text-blue-950">Competizione<select name="editionId" required className={field} key={`${seasonId}-${importType}`}>{competitions.map((item) => <option key={item.editionId} value={item.editionId}>{item.label}</option>)}</select></label>
+        <label className="text-sm font-black text-blue-950">Stagione<select name="seasonId" required className={field} value={seasonId} onChange={(event) => { setSeasonId(event.target.value); resetCompetitionSelection(); }}>{catalog.seasons.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}</select></label>
+        <label className="text-sm font-black text-blue-950">Tipo importazione<select name="importType" className={field} value={importType} onChange={(event) => { setImportType(event.target.value as ImportType); resetCompetitionSelection(); }}><option value="calendario_campionato">Calendario campionato</option><option value="calendario_coppa">Calendario coppa</option><option disabled>Rose — non ancora disponibili</option><option disabled>Mercato — non ancora disponibile</option></select></label>
+        <label className="text-sm font-black text-blue-950">Competizione<select name="editionCompetitionId" required className={field} value={editionCompetitionId} onChange={(event) => setEditionCompetitionId(event.target.value)}><option value="" disabled>Seleziona una competizione</option>{competitions.map((item) => <option key={item.edizioneCompetizioneId} value={item.edizioneCompetizioneId}>{item.label}</option>)}</select></label>
         <label className="text-sm font-black text-blue-950">File Excel<input name="file" type="file" required onChange={(event) => setSelectedFile(event.target.files?.[0] ?? null)} accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" className={`${field} py-2 file:mr-3 file:rounded-lg file:border-0 file:bg-sky-100 file:px-3 file:py-1.5 file:font-black file:text-sky-800`} /></label>
       </div>
       <button disabled={pending} className="mt-5 min-h-12 w-full rounded-xl bg-blue-950 px-5 py-3 text-sm font-black text-white transition hover:bg-sky-700 disabled:opacity-50 sm:w-auto">{pending ? "Elaborazione…" : "Crea anteprima"}</button>

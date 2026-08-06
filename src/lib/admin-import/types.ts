@@ -44,8 +44,7 @@ export type ActionResult = { ok: true; preview: ImportPreview } | { ok: false; m
 export type AdminCatalog = {
   seasons: Array<{ id: string; label: string }>;
   competitions: Array<{
-    id: string;
-    editionId: string;
+    edizioneCompetizioneId: string;
     seasonId: string;
     competitionId: string;
     label: string;
