@@ -73,3 +73,21 @@ La struttura consigliata di `riepilogo`, non imposta tramite vincoli SQL rigidi,
 Gli elementi di `errori` e `warning` condividono la forma `{ "codice": "SOCIETA_NON_RICONOSCIUTA", "messaggio": "...", "riga": 15, "valore": "..." }`.
 
 La chiusura deve avvenire dal backend in una singola transazione o singola istruzione `update public.importazioni`, valorizzando insieme `stato`, `completata_il`, tutti i conteggi, `riepilogo`, `errori` e `warning`. Non viene introdotta una funzione `SECURITY DEFINER`: finché non esisterà il sistema di ruoli admin, la tabella non ha policy client e resta accessibile soltanto dal backend privilegiato. La service role non deve mai essere esposta al browser.
+
+## Area admin e autenticazione
+
+La route `/admin/importazioni` è esclusa dall'indicizzazione e non è collegata dalla navigazione pubblica. L'accesso passa da `/admin/login` con email e password Supabase e richiede:
+
+- `ADMIN_IMPORT_EMAILS`: elenco di email autorizzate separate da virgole;
+- `NEXT_PUBLIC_SUPABASE_URL`: URL del progetto;
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: chiave pubblica usata soltanto per Auth;
+- `SUPABASE_SERVICE_ROLE_KEY`: esclusivamente nell'ambiente server;
+- account admin creati manualmente nel dashboard Supabase Auth.
+
+La sessione SSR è mantenuta nei cookie tramite `@supabase/ssr` e `proxy.ts`, limitato alle route `/admin`. Pagina, anteprima, pubblicazione e storico convalidano nuovamente l'utente server-side con `auth.getUser()` e applicano la allowlist normalizzata. `ADMIN_IMPORT_DEV_MODE` non abilita accessi e non interviene più nel flusso operativo. Non sono disponibili registrazione pubblica, magic link o OTP.
+
+Il file è limitato a 10 MB, accetta solo `.xlsx`/`.xls`, viene hashato SHA-256 ed elaborato in memoria senza path forniti dall'utente o salvataggio su storage. L'anteprima confronta i dati remoti in `insert`/`update`/`unchanged` senza cancellazioni. La pubblicazione richiede due conferme, ricontrolla sessione, allowlist, file e hash, e acquisisce un lock condizionale sullo stato per impedire il doppio invio.
+
+In Vercel le quattro variabili vanno configurate manualmente in Project Settings → Environment Variables per ciascun ambiente Development, Preview e Production, usando credenziali e allowlist appropriate, quindi va avviato un nuovo deployment. `SUPABASE_SERVICE_ROLE_KEY` e `ADMIN_IMPORT_EMAILS` non devono avere il prefisso `NEXT_PUBLIC_`.
+
+Nel dashboard Supabase occorre abilitare Email/Password, creare manualmente gli account amministrativi e verificare le impostazioni che impediscono la registrazione autonoma. Le migrazioni prerequisite vanno applicate separatamente soltanto dopo revisione: nessuno strumento locale le esegue automaticamente.

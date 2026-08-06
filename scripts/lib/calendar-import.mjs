@@ -1,6 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
-import XLSX from "xlsx";
+import { createRequire } from "node:module";
+
+const require = createRequire(import.meta.url);
+const XLSX = require("xlsx");
 
 const DAY_HEADER = /^(\d+)[ªa]?\s+Giornata\s+(lega|serie\s*a)$/i;
 const RESULT = /^\s*(\d+)\s*[-–—]\s*(\d+)\s*$/;
@@ -128,9 +131,9 @@ function detectLayout(rows) {
   return hasCompetitionPhase || hasWideDayHeader ? LAYOUTS.competizione : LAYOUTS.campionato;
 }
 
-export function parseCalendarWorkbook(filePath, options = {}) {
+function parseCalendarData(data, readOptions, options = {}) {
   const resolver = options.resolver ?? { resolve: (name) => ({ input: name, normalized: normalizeSocietaName(name), matches: [], societaId: null }) };
-  const workbook = XLSX.readFile(filePath, { cellDates: true, cellFormula: true });
+  const workbook = XLSX.read(data, { ...readOptions, cellDates: true, cellFormula: true });
   const sheetName = options.sheetName ?? workbook.SheetNames.find((name) => normalizeSocietaName(name) === "calendario") ?? workbook.SheetNames[0];
   const sheet = workbook.Sheets[sheetName];
   if (!sheet) throw new Error("Il workbook non contiene fogli leggibili.");
@@ -248,6 +251,14 @@ export function parseCalendarWorkbook(filePath, options = {}) {
     rests,
     diagnostics: { unknownNames: [...unknownNames].sort(), ambiguousNames: [...ambiguousNames].sort(), duplicates, restDuplicates, incompleteRows, incompleteDays, uninterpretableValues: [...uninterpretableValues].sort(), anomalies },
   };
+}
+
+export function parseCalendarWorkbook(filePath, options = {}) {
+  return parseCalendarData(fs.readFileSync(filePath), { type: "buffer" }, options);
+}
+
+export function parseCalendarBuffer(buffer, options = {}) {
+  return parseCalendarData(buffer, { type: "buffer" }, options);
 }
 
 export function buildUpsertPayload(parsed, options) {

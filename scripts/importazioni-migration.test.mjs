@@ -6,6 +6,8 @@ import test from "node:test";
 const root = process.cwd();
 const migrationPath = path.join(root, "supabase", "migrations", "202608050003_importazioni.sql");
 const sql = fs.readFileSync(migrationPath, "utf8");
+const privilegesPath = path.join(root, "supabase", "migrations", "202608050004_service_role_import_privileges.sql");
+const privilegesSql = fs.readFileSync(privilegesPath, "utf8");
 
 function includes(pattern, message) {
   assert.match(sql, pattern, message);
@@ -54,4 +56,22 @@ test("le migrazioni prerequisite restano separate e ordinate", () => {
   assert.equal(fs.existsSync(path.join(root, "supabase", "migrations", "202608050002_riposi_competizione.sql")), true);
   const partite = fs.readFileSync(path.join(root, "supabase", "migrations", "202608050001_partite.sql"), "utf8");
   assert.match(partite, /import_batch_id uuid null/i);
+});
+
+test("la migrazione incrementale concede al backend i privilegi minimi richiesti", () => {
+  assert.match(privilegesSql, /^\s*--[\s\S]*?\bbegin;/i);
+  assert.match(privilegesSql, /grant usage on schema public to service_role/i);
+  assert.match(privilegesSql, /grant select, insert, update, delete\s+on table public\.importazioni\s+to service_role/i);
+  assert.match(privilegesSql, /grant select, insert, update\s+on table public\.partite\s+to service_role/i);
+  assert.match(privilegesSql, /grant select, insert, update\s+on table public\.riposi_competizione\s+to service_role/i);
+  assert.match(privilegesSql, /grant usage, select\s+on sequence public\.partite_id_seq\s+to service_role/i);
+  assert.match(privilegesSql, /grant usage, select\s+on sequence public\.riposi_competizione_id_seq\s+to service_role/i);
+  assert.match(privilegesSql, /server-only/i);
+  assert.match(privilegesSql, /commit;\s*$/i);
+});
+
+test("la migrazione privilegi non amplia i permessi client e non modifica RLS", () => {
+  assert.doesNotMatch(privilegesSql, /\bto\s+(anon|authenticated|public)\b/i);
+  assert.doesNotMatch(privilegesSql, /disable row level security|create policy|alter policy/i);
+  assert.doesNotMatch(privilegesSql, /grant\s+all/i);
 });
