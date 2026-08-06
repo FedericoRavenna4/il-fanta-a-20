@@ -54,6 +54,51 @@ export function calculateGlobalMatchdayStats(matches: Match[], matchday: number)
   return { best: [...scores].sort((a, b) => b.score - a.score || a.team.name.localeCompare(b.team.name, "it"))[0] ?? null, worst: [...scores].sort((a, b) => a.score - b.score || a.team.name.localeCompare(b.team.name, "it"))[0] ?? null, highestScoringMatch };
 }
 
+export function calculateSeasonStats(matches: Match[]): GlobalStats {
+  const played = matches.filter(calculated);
+  const scores = played.flatMap((m) => [
+    ...(m.homeScore === null ? [] : [{ team: m.home, score: m.homeScore, matchday: m.matchday }]),
+    ...(m.awayScore === null ? [] : [{ team: m.away, score: m.awayScore, matchday: m.matchday }]),
+  ]);
+  const stableMatchOrder = (a: Match, b: Match) =>
+    (b.homeGoals! + b.awayGoals!) - (a.homeGoals! + a.awayGoals!) ||
+    ((b.homeScore ?? 0) + (b.awayScore ?? 0)) - ((a.homeScore ?? 0) + (a.awayScore ?? 0)) ||
+    a.matchday - b.matchday || String(a.id).localeCompare(String(b.id));
+  return {
+    best: [...scores].sort((a, b) => b.score - a.score || a.matchday - b.matchday || a.team.name.localeCompare(b.team.name, "it"))[0] ?? null,
+    worst: [...scores].sort((a, b) => a.score - b.score || a.matchday - b.matchday || a.team.name.localeCompare(b.team.name, "it"))[0] ?? null,
+    highestScoringMatch: [...played].sort(stableMatchOrder)[0] ?? null,
+  };
+}
+
+/** Standings for an isolated analytical interval. */
+export function standingsForRange(teams: Team[], matches: Match[], from: number, to: number): StandingRow[] {
+  const ranged = matches.filter((match) => match.matchday >= from && match.matchday <= to);
+  return calculateStandings(teams, ranged);
+}
+
+export type StandingsSortKey = "official" | "points" | "fantasyPoints";
+export function sortStandings(rows: StandingRow[], key: StandingsSortKey, direction: "asc" | "desc" = "desc") {
+  if (key === "official") return [...rows].sort((a, b) => a.position - b.position);
+  const factor = direction === "desc" ? -1 : 1;
+  return [...rows].sort((a, b) => (a[key] - b[key]) * factor || a.position - b.position);
+}
+
+export function isRelegationBoundary(league: LeagueId, officialPosition: number, teamCount: number) {
+  return league === "serie-a" ? officialPosition === teamCount - 3 : league === "serie-b" ? officialPosition === teamCount - 4 : false;
+}
+
+export function isOfficiallyRelegated(league: LeagueId, officialPosition: number, teamCount: number) {
+  return league === "serie-a" ? officialPosition > teamCount - 3 : league === "serie-b" ? officialPosition > teamCount - 4 : false;
+}
+
+/** Keeps the official relegation zone contiguous while preserving the chosen order inside both groups. */
+export function groupByOfficialRelegation(rows: StandingRow[], league: LeagueId) {
+  const safe = rows.filter((row) => !isOfficiallyRelegated(league, row.position, rows.length));
+  const relegated = rows.filter((row) => isOfficiallyRelegated(league, row.position, rows.length));
+  return [...safe, ...relegated];
+}
+
 export function getLeagueRules(league: LeagueId, position: number, teamCount = 20): LeagueRules {
   return { promoted: league === "serie-b" ? position <= 3 : league.startsWith("serie-c") ? position === 1 : false, relegated: league === "serie-a" ? position > teamCount - 3 : league === "serie-b" ? position > teamCount - 4 : false, scattoPromozione: league.startsWith("serie-c") && position <= 5 };
 }

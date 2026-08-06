@@ -105,7 +105,6 @@ function zone(position: number) {
 }
 
 const competitionIcons = {
-  crown: "/icon/competizioni/corona_logo.png",
   champions: "/icon/competizioni/champions_league_logo.png",
   europa: "/icon/competizioni/europa_league_logo.png",
   conference: "/icon/competizioni/conference_league_logo.png",
@@ -115,10 +114,6 @@ const competitionIcons = {
 function Movement({ value }: { value: number }) {
   if (!value) return <span className="text-slate-400" aria-label="Posizione invariata">—</span>;
   return <span className={`font-black ${value > 0 ? "text-emerald-600" : "text-rose-600"}`} aria-label={`${Math.abs(value)} posizioni ${value > 0 ? "guadagnate" : "perse"}`}>{value > 0 ? "↑" : "↓"}{Math.abs(value)}</span>;
-}
-
-function CrownIcon({ visible }: { visible: boolean }) {
-  return <span className="inline-flex h-4 w-4 items-center justify-center">{visible && <Image src={competitionIcons.crown} alt="Prima classificata" title="Prima classificata" width={16} height={16} className="h-4 w-4 object-contain" />}</span>;
 }
 
 function QualificationIcons({ position, leagueId }: { position: number; leagueId: LeagueId }) {
@@ -142,8 +137,8 @@ export function Standings({ rows, leagueId }: { rows: StandingRow[]; leagueId: L
       {rows.map((row) => { const marker = zone(row.position); return (
         <div key={row.id} className={`relative border-b border-slate-100 last:border-0 ${row.position === lastSafePosition(leagueId) ? "after:absolute after:-bottom-px after:left-0 after:right-0 after:z-10 after:h-px after:bg-rose-500" : ""}`}>
           <span className={`absolute inset-y-0 left-0 w-1 ${marker.color}`} title={marker.label} />
-          <div className="grid min-h-14 grid-cols-[16px_22px_34px_minmax(0,1fr)_34px_34px_30px] items-center gap-1 px-2 py-2 text-[12px] sm:grid-cols-[18px_24px_40px_minmax(0,1fr)_42px_48px_42px] sm:gap-1.5 sm:px-3">
-            <CrownIcon visible={row.position === 1} /><span className="text-center font-black tabular-nums text-slate-500">{row.position}</span><Image src={row.logo} alt="" width={38} height={38} className="h-8 w-8 object-contain" /><Link href={`/societa/${row.slug}`} className={`${focus} block min-w-0 overflow-hidden rounded font-black uppercase text-blue-950`}><AutoMarquee>{row.name}</AutoMarquee></Link><QualificationIcons position={row.position} leagueId={leagueId} /><strong className="text-right text-sm text-blue-950">{row.points}</strong><span className="text-center"><Movement value={row.movement} /></span>
+          <div className="grid min-h-14 grid-cols-[22px_34px_minmax(0,1fr)_34px_34px_30px] items-center gap-1 px-2 py-2 text-[12px] sm:grid-cols-[24px_40px_minmax(0,1fr)_42px_48px_42px] sm:gap-1.5 sm:px-3">
+            <span className="text-center font-black tabular-nums text-slate-500">{row.position}</span><Image src={row.logo} alt="" width={38} height={38} className="h-8 w-8 object-contain" /><Link href={`/societa/${row.slug}`} className={`${focus} block min-w-0 overflow-hidden rounded font-black uppercase text-blue-950`}><AutoMarquee>{row.name}</AutoMarquee></Link><QualificationIcons position={row.position} leagueId={leagueId} /><strong className="text-right text-sm text-blue-950">{row.points}</strong><span className="text-center"><Movement value={row.movement} /></span>
           </div>
         </div>
       ); })}
@@ -176,7 +171,7 @@ export function ExpandedStandingsModal({ rows, league, onClose }: { rows: Standi
           <table className="w-full table-fixed border-collapse text-[10px] sm:text-[12px]">
             <colgroup><col className="w-[11%] sm:w-[8%]" /><col className="w-[8%] sm:w-[7%]" /><col className="w-[23%] sm:w-[29%]" />{Array.from({ length: 7 }, (_, index) => <col key={index} className="w-[8.25%] sm:w-[8%]" />)}</colgroup>
             <thead className="sticky top-0 z-20 bg-slate-100/95 backdrop-blur"><tr>{headers.map(([key,label]) => <th key={key} className={`border-b border-slate-200 px-0.5 py-2 font-black leading-tight text-slate-500 ${key === "name" ? "text-left" : "text-center"}`}><button type="button" onClick={() => changeSort(key)} aria-label={`Ordina per ${label}`} className={`${focus} w-full rounded py-1 hover:text-blue-950`}><span className={key === "fantasyPoints" ? "block leading-[1.05]" : ""}>{key === "fantasyPoints" ? <>PT<br />TOT</> : label}</span><span aria-hidden="true" className="block text-slate-400">{sort === key ? direction === "asc" ? "↑" : "↓" : "↕"}</span></button></th>)}</tr></thead>
-            <tbody>{sorted.map((row) => { const marker = zone(row.position); const relegationLine = row.position === lastSafePosition(league.id); const values = [row.points,row.fantasyPoints.toFixed(1),row.won,row.drawn,row.lost,row.goalsFor,row.goalsAgainst]; return <tr key={row.id} className={`border-b border-slate-200/80 ${marker.tint} ${relegationLine ? "border-b-2 border-b-rose-500" : ""}`}><td className="border-l-[3px] px-0.5 py-1.5 text-center font-black" style={{ borderLeftColor: row.position <= 8 ? "#3b82f6" : row.position <= 14 ? "#f97316" : "#10b981" }}><span className="flex items-center justify-center gap-0.5"><CrownIcon visible={row.position === 1} /><span className="w-4 text-center tabular-nums">{row.position}</span></span></td><td className="p-0.5 text-center"><Link href={`/societa/${row.slug}`} aria-label={`Apri ${row.name}`} className={`${focus} inline-flex rounded`}><Image src={row.logo} alt="" width={24} height={24} className="h-5 w-5 object-contain sm:h-7 sm:w-7" /></Link></td><td className="min-w-0 px-0.5 py-1.5"><Link href={`/societa/${row.slug}`} className={`${focus} block min-w-0 overflow-hidden rounded`}><AutoMarquee className="font-black uppercase text-blue-950">{row.name}</AutoMarquee></Link></td>{values.map((value,index) => <td key={index} className="px-px py-1.5 text-center font-bold tabular-nums text-blue-950">{value}</td>)}</tr>; })}</tbody>
+            <tbody>{sorted.map((row) => { const marker = zone(row.position); const relegationLine = row.position === lastSafePosition(league.id); const values = [row.points,row.fantasyPoints.toFixed(1),row.won,row.drawn,row.lost,row.goalsFor,row.goalsAgainst]; return <tr key={row.id} className={`border-b border-slate-200/80 ${marker.tint} ${relegationLine ? "border-b-2 border-b-rose-500" : ""}`}><td className="border-l-[3px] px-0.5 py-1.5 text-center font-black" style={{ borderLeftColor: row.position <= 8 ? "#3b82f6" : row.position <= 14 ? "#f97316" : "#10b981" }}><span className="text-center tabular-nums">{row.position}</span></td><td className="p-0.5 text-center"><Link href={`/societa/${row.slug}`} aria-label={`Apri ${row.name}`} className={`${focus} inline-flex rounded`}><Image src={row.logo} alt="" width={24} height={24} className="h-5 w-5 object-contain sm:h-7 sm:w-7" /></Link></td><td className="min-w-0 px-0.5 py-1.5"><Link href={`/societa/${row.slug}`} className={`${focus} block min-w-0 overflow-hidden rounded`}><AutoMarquee className="font-black uppercase text-blue-950">{row.name}</AutoMarquee></Link></td>{values.map((value,index) => <td key={index} className="px-px py-1.5 text-center font-bold tabular-nums text-blue-950">{value}</td>)}</tr>; })}</tbody>
           </table>
         </div>
         <footer className="border-t border-slate-200 bg-white px-3 py-2"><ZoneLegend leagueId={league.id} /></footer>

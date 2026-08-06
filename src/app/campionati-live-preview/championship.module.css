@@ -1,0 +1,51 @@
+.marqueeViewport { display:block; min-width:0; overflow:hidden; white-space:nowrap; }
+.marqueeText { display:inline-block; min-width:max-content; }
+.marqueeActive { animation:smart-marquee 9s ease-in-out 1s infinite alternate; }
+.contentEnter { animation:none; }
+.movementUp { animation:movement-up .3s ease-out both; }
+.movementDown { animation:movement-down .3s ease-out both; }
+.currentDot { animation:current-dot 3.2s ease-in-out infinite; }
+.menuEnter { transform-origin:top right; animation:menu-enter .16s ease-out both; }
+.overlayEnter { animation:overlay-enter .18s ease-out both; }
+.panelEnter { animation:panel-enter .2s ease-out both; }
+.overlayExit { animation:overlay-exit .16s ease-in both; }
+.panelExit { animation:panel-exit .16s ease-in both; }
+.numberFade { animation:none; }
+.press { transition:transform .1s ease,filter .2s ease,box-shadow .2s ease; }
+.press:active { transform:scale(.98); }
+.recordCard { transition:transform .2s ease,filter .2s ease,box-shadow .2s ease; }
+.resultRow { transition:border-color .2s ease,box-shadow .2s ease; }
+.resultRow img { transition:filter .2s ease; }
+.standingRow { transition:filter .2s ease,background-color .2s ease; }
+
+.rangeTrack { position:relative; height:2rem; }
+.rangeRail { position:absolute; inset:50% 0 auto; height:.25rem; transform:translateY(-50%); border-radius:999px; background:#dbe4ef; }
+.rangeFill { position:absolute; top:50%; height:.25rem; transform:translateY(-50%); border-radius:999px; background:linear-gradient(90deg,#38bdf8,#2563eb); filter:brightness(1.08); transition:none; }
+.rangeInput { position:absolute; inset:0; width:100%; margin:0; appearance:none; background:transparent; outline:none; pointer-events:none; }
+.rangeInput::-webkit-slider-thumb { width:1.35rem; height:1.35rem; appearance:none; border:3px solid white; border-radius:50%; background:#2563eb; box-shadow:none; pointer-events:auto; cursor:grab; transition:none; }
+.rangeInput::-moz-range-thumb { width:1rem; height:1rem; border:3px solid white; border-radius:50%; background:#2563eb; box-shadow:none; pointer-events:auto; cursor:grab; transition:none; }
+.rangeInput::-moz-range-track { background:transparent; }
+.rangeInput:focus-visible::-webkit-slider-thumb { box-shadow:0 0 0 3px rgba(14,165,233,.35); }
+.rangeInput:focus-visible::-moz-range-thumb { box-shadow:0 0 0 3px rgba(14,165,233,.35); }
+.rangeTooltip { position:absolute; top:-1.05rem; transform:translateX(-50%); border-radius:.35rem; background:#172554; padding:.1rem .35rem; color:white; font-size:.625rem; line-height:1rem; pointer-events:none; }
+
+@media (hover:hover) and (pointer:fine) {
+  .recordCard:hover { transform:translateY(-2px); filter:brightness(1.025); box-shadow:0 16px 32px -24px rgba(15,23,42,.9); }
+  .resultRow:hover { border-color:rgba(14,165,233,.4); box-shadow:0 8px 20px -17px rgba(2,132,199,.65); }
+  .resultRow:hover img { filter:saturate(1.12) contrast(1.04); }
+  .standingRow:hover { filter:saturate(1.08) brightness(.985); }
+}
+
+@keyframes smart-marquee { 0%,12%{transform:translateX(0)} 82%,100%{transform:translateX(var(--marquee-distance))} }
+@keyframes movement-up { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(-1px)} }
+@keyframes movement-down { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(1px)} }
+@keyframes current-dot { 0%,100%{opacity:.82;box-shadow:0 0 4px rgba(16,185,129,.45)} 50%{opacity:1;box-shadow:0 0 8px rgba(16,185,129,.75)} }
+@keyframes menu-enter { from{opacity:0;transform:scale(.98) translateY(-3px)} to{opacity:1;transform:scale(1) translateY(0)} }
+@keyframes overlay-enter { from{opacity:0} to{opacity:1} }
+@keyframes panel-enter { from{opacity:0;transform:scale(.985)} to{opacity:1;transform:scale(1)} }
+@keyframes overlay-exit { from{opacity:1} to{opacity:0} }
+@keyframes panel-exit { from{opacity:1;transform:scale(1)} to{opacity:0;transform:scale(.985)} }
+@media (prefers-reduced-motion:reduce) {
+  .marqueeActive,.movementUp,.movementDown,.currentDot,.menuEnter,.overlayEnter,.panelEnter,.overlayExit,.panelExit { animation:none; transform:none; }
+  .press,.recordCard,.resultRow,.standingRow,.rangeFill { transition:none; }
+}
