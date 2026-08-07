@@ -184,6 +184,10 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: {
+      set_my_avatar_path: {
+        Args: { p_avatar_path: string };
+        Returns: undefined;
+      };
       salva_record_arcade: {
         Args: {
           p_nome_giocatore: string;

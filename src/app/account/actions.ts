@@ -5,9 +5,40 @@ import { revalidatePath } from "next/cache";
 import { createAuthenticatedSupabaseClient } from "@/lib/supabase/authenticated.server";
 import { accountRedirectUrl } from "@/lib/account/server";
 import { validateAccountUsername } from "@/lib/account/username";
+import { ACCOUNT_AVATAR_BUCKET, isOwnedAvatarPath, validateAccountAvatar } from "@/lib/account/avatar";
 
 export type AccountActionState = { message: string; field?: "email" | "password" | "username"; success?: boolean };
 const GENERIC_AUTH_ERROR = "Non è stato possibile completare l’operazione. Controlla i dati e riprova.";
+export type AvatarActionState = { message: string; success?: boolean };
+
+export async function uploadAvatarAction(_state: AvatarActionState, formData: FormData): Promise<AvatarActionState> {
+  const file = formData.get("avatar");
+  if (!(file instanceof File)) return { message: "Seleziona un’immagine." };
+  const validation = await validateAccountAvatar(file);
+  if (!validation.ok) return { message: validation.message };
+
+  const supabase = await createAuthenticatedSupabaseClient();
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) return { message: "Sessione non valida. Accedi nuovamente." };
+  const { data: profile } = await supabase.from("profiles").select("avatar_url").eq("id", user.id).maybeSingle();
+  if (!profile) return { message: "Il profilo pubblico non è configurato." };
+
+  const path = `${user.id}/avatar.${validation.extension}`;
+  const { error: uploadError } = await supabase.storage.from(ACCOUNT_AVATAR_BUCKET).upload(path, file, { contentType: validation.contentType, cacheControl: "0", upsert: true });
+  if (uploadError) return { message: "Non è stato possibile caricare l’avatar." };
+  const { error: profileError } = await supabase.rpc("set_my_avatar_path", { p_avatar_path: path });
+  if (profileError) {
+    if (profile.avatar_url !== path) await supabase.storage.from(ACCOUNT_AVATAR_BUCKET).remove([path]);
+    return { message: "Avatar caricato, ma il profilo non è stato aggiornato." };
+  }
+
+  if (isOwnedAvatarPath(profile.avatar_url, user.id) && profile.avatar_url !== path) {
+    await supabase.storage.from(ACCOUNT_AVATAR_BUCKET).remove([profile.avatar_url!]);
+  }
+  revalidatePath("/", "layout");
+  revalidatePath("/account");
+  return { success: true, message: "Avatar aggiornato." };
+}
 
 export async function signUpAction(_state: AccountActionState, formData: FormData): Promise<AccountActionState> {
   const email = String(formData.get("email") ?? "").trim();
