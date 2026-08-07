@@ -3,6 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import type { AccountViewer } from "@/lib/account/server";
+import { logoutAction } from "../account/actions";
 
 const statisticheLinks = [
   {
@@ -35,7 +37,7 @@ const competizioniLinks = [
   },
 ];
 
-export default function Header() {
+export default function Header({ account }: { account: AccountViewer | null }) {
   const [hidden, setHidden] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -244,6 +246,7 @@ export default function Header() {
           <Link href="/regolamento" onClick={closeMenu} className="rounded-full px-3 py-2 transition hover:bg-blue-950 hover:text-white">
             Regolamento
           </Link>
+          {account ? <><Link href="/account" onClick={closeMenu} className="ml-1 max-w-36 truncate rounded-full bg-sky-100 px-4 py-2 text-blue-950">{account.username}</Link><form action={logoutAction}><button className="rounded-full px-3 py-2 text-slate-500 transition hover:bg-slate-100">Logout</button></form></> : <><Link href="/account/accedi" onClick={closeMenu} className="ml-1 rounded-full px-3 py-2 text-blue-950">Accedi</Link><Link href="/account/registrati" onClick={closeMenu} className="rounded-full bg-blue-950 px-4 py-2 text-white">Registrati</Link></>}
         </nav>
 
         <button
@@ -279,6 +282,7 @@ export default function Header() {
               <p className="mt-0.5 text-xs font-semibold text-slate-500">{item.text}</p>
             </Link>
           ))}
+          {account ? <><Link href="/account" onClick={closeMenu} className="flex min-h-14 flex-col justify-center rounded-[1.1rem] bg-sky-100 px-4 py-3"><p className="truncate text-sm font-black uppercase text-blue-950">{account.username}</p><p className="text-xs font-semibold text-slate-500">Il mio account</p></Link><form action={logoutAction}><button className="min-h-14 w-full rounded-[1.1rem] border border-slate-200 bg-white px-4 text-left text-sm font-black uppercase text-blue-950">Logout</button></form></> : <div className="grid grid-cols-2 gap-3"><Link href="/account/accedi" onClick={closeMenu} className="flex min-h-14 items-center justify-center rounded-[1.1rem] border border-blue-950 font-black uppercase text-blue-950">Accedi</Link><Link href="/account/registrati" onClick={closeMenu} className="flex min-h-14 items-center justify-center rounded-[1.1rem] bg-blue-950 font-black uppercase text-white">Registrati</Link></div>}
         </div>
       </nav>
     </>

@@ -18,6 +18,7 @@ import "./globals.css";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import ScrollToTop from "./components/ScrollToTop";
+import { getCurrentAccount } from "@/lib/account/server";
 
 const manrope = Manrope({
   variable: "--font-manrope",
@@ -101,11 +102,12 @@ export const viewport: Viewport = {
   colorScheme: "light",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const account = await getCurrentAccount();
   return (
     <html lang="it" className={`${manrope.variable} ${outfit.variable}`}>
       <body className="min-h-screen flex flex-col font-[var(--font-outfit)]">
@@ -116,7 +118,7 @@ export default function RootLayout({
           }}
         />
         <ScrollToTop />
-        <Header />
+        <Header account={account} />
 
         <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top))] lg:pt-0">{children}</main>
 

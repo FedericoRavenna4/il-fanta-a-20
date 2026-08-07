@@ -9,7 +9,7 @@ function developmentProxyLog(pathname: string, destination: string | null) {
   console.info("[admin/proxy]", { pathname, redirect: destination });
 }
 
-export async function refreshAdminSession(request: NextRequest) {
+export async function refreshSession(request: NextRequest) {
   let response = NextResponse.next({ request });
   const { url, key } = getSupabasePublicConfig();
   const supabase = createServerClient<Database>(url, key, {
@@ -28,24 +28,21 @@ export async function refreshAdminSession(request: NextRequest) {
   const email = normalizeAdminEmail(user?.email);
   const authorized = evaluateAdminIdentity(email, process.env.ADMIN_IMPORT_EMAILS) === "authorized";
 
-  if (user && !authorized) {
-    await supabase.auth.signOut();
+  if (pathname.startsWith("/admin") && user && !authorized) {
     const target = request.nextUrl.clone();
-    target.pathname = "/admin/login";
-    target.search = "?denied=1";
+    target.pathname = "/account";
+    target.search = "?admin=denied";
     developmentProxyLog(pathname, `${target.pathname}${target.search}`);
-    const redirectResponse = NextResponse.redirect(target);
-    response.cookies.getAll().forEach((cookie) => redirectResponse.cookies.set(cookie));
-    return redirectResponse;
+    return NextResponse.redirect(target);
   }
-  if (!user && !isLogin) {
+  if (pathname.startsWith("/admin") && !user && !isLogin) {
     const target = request.nextUrl.clone();
     target.pathname = "/admin/login";
     target.search = "";
     developmentProxyLog(pathname, target.pathname);
     return NextResponse.redirect(target);
   }
-  if (user && authorized && isLogin) {
+  if (pathname.startsWith("/admin") && user && authorized && isLogin) {
     const target = request.nextUrl.clone();
     target.pathname = "/admin/importazioni";
     target.search = "";
@@ -55,3 +52,5 @@ export async function refreshAdminSession(request: NextRequest) {
   developmentProxyLog(pathname, null);
   return response;
 }
+
+export const refreshAdminSession = refreshSession;

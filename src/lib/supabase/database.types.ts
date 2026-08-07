@@ -1,6 +1,18 @@
 export type Database = {
   public: {
     Tables: {
+      profiles: {
+        Row: { id: string; username: string; username_normalizzato: string; societa_id: number | null; avatar_url: string | null; created_at: string; updated_at: string };
+        Insert: { id: string; username: string; username_normalizzato: string; societa_id?: number | null; avatar_url?: string | null; created_at?: string; updated_at?: string };
+        Update: { id?: string; username?: string; username_normalizzato?: string; societa_id?: number | null; avatar_url?: string | null; created_at?: string; updated_at?: string };
+        Relationships: [{ foreignKeyName: "profiles_societa_id_fkey"; columns: ["societa_id"]; isOneToOne: false; referencedRelation: "societa"; referencedColumns: ["id"] }];
+      };
+      reserved_usernames: {
+        Row: { username_normalizzato: string; created_at: string };
+        Insert: { username_normalizzato: string; created_at?: string };
+        Update: { username_normalizzato?: string; created_at?: string };
+        Relationships: [];
+      };
       stagioni: {
         Row: { id: number; codice: string; anno_inizio: number; anno_fine: number; nome: string; attiva: boolean; data_inizio: string | null; data_fine: string | null; created_at: string; updated_at: string };
         Insert: Partial<Database["public"]["Tables"]["stagioni"]["Row"]>;
