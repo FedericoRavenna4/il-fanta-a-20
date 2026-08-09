@@ -6,6 +6,7 @@ import { createAuthenticatedSupabaseClient } from "@/lib/supabase/authenticated.
 import { accountRedirectUrl } from "@/lib/account/server";
 import { validateAccountUsername } from "@/lib/account/username";
 import { ACCOUNT_AVATAR_BUCKET, isOwnedAvatarPath, validateAccountAvatar } from "@/lib/account/avatar";
+import { resolveAccountLoginEmail } from "@/lib/account/login.server";
 
 export type AccountActionState = { message: string; field?: "email" | "password" | "username"; success?: boolean };
 const GENERIC_AUTH_ERROR = "Non è stato possibile completare l’operazione. Controlla i dati e riprova.";
@@ -66,12 +67,14 @@ export async function signUpAction(_state: AccountActionState, formData: FormDat
 }
 
 export async function loginAction(_state: AccountActionState, formData: FormData): Promise<AccountActionState> {
-  const email = String(formData.get("email") ?? "").trim();
+  const identifier = String(formData.get("identifier") ?? "").trim();
   const password = String(formData.get("password") ?? "");
-  if (!email || !password) return { message: "Inserisci email e password." };
+  if (!identifier || !password) return { message: "Credenziali non valide." };
+  const email = await resolveAccountLoginEmail(identifier);
+  if (!email) return { message: "Credenziali non valide." };
   const supabase = await createAuthenticatedSupabaseClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) return { message: "Credenziali non valide oppure email non ancora verificata." };
+  if (error) return { message: "Credenziali non valide." };
   revalidatePath("/", "layout");
   redirect("/account");
 }

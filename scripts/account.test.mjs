@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
-import { normalizeAccountUsername, validateAccountUsername } from "../src/lib/account/username.ts";
+import { classifyAccountLogin, normalizeAccountUsername, validateAccountUsername } from "../src/lib/account/username.ts";
 
 const root = process.cwd();
 const read = (...parts) => fs.readFileSync(path.join(root, ...parts), "utf8");
@@ -19,6 +19,24 @@ test("rifiuta username non validi e riservati", () => {
   for (const value of ["1utente", "ab", "nome-utente", "èutente", "utente spazio"]) assert.equal(validateAccountUsername(value).ok, false);
   for (const value of ["ADMIN", " staff ", "IlFantaA20"]) assert.equal(validateAccountUsername(value).ok, false);
   assert.equal(validateAccountUsername("Utente_20").ok, true);
+});
+
+test("login distingue email e username con normalizzazione condivisa", () => {
+  assert.deepEqual(classifyAccountLogin("utente@example.com"), { type: "email", value: "utente@example.com" });
+  assert.deepEqual(classifyAccountLogin(" TestFanta20 "), { type: "username", value: "testfanta20" });
+  assert.deepEqual(classifyAccountLogin("UTENTE_20"), { type: "username", value: "utente_20" });
+});
+
+test("login username risolve email soltanto server-side e usa errore neutro", () => {
+  const actions = read("src", "app", "account", "actions.ts");
+  const page = read("src", "app", "account", "accedi", "page.tsx");
+  const resolver = read("src", "lib", "account", "login.server.ts");
+  const client = read("src", "app", "account", "AuthForm.tsx");
+  assert.match(page, /Email o username/); assert.match(page, /name: "identifier"/);
+  assert.match(actions, /resolveAccountLoginEmail\(identifier\)/); assert.match(actions, /signInWithPassword\(\{ email, password \}\)/);
+  assert.equal((actions.match(/Credenziali non valide\./g) ?? []).length, 3);
+  assert.match(resolver, /import "server-only"/); assert.match(resolver, /username_normalizzato/); assert.match(resolver, /auth\.admin\.getUserById/);
+  assert.doesNotMatch(page + client, /SUPABASE_SERVICE_ROLE_KEY|service_role|username_normalizzato|auth\.admin|user\.email/);
 });
 
 test("crea il profilo automaticamente e lo valida nel database", () => {
@@ -135,4 +153,60 @@ test("username e badge non causano overflow mobile", () => {
   const page = read("src", "app", "account", "page.tsx");
   assert.match(page, /<h1 className="[^"]*min-w-0[^"]*"/);
   assert.match(page, /<span className="min-w-0 break-all">\{profile\.username\}<\/span>/);
+});
+
+test("header espone solo Home Campionati Società e FantaBet", () => {
+  const header = read("src", "app", "components", "Header.tsx");
+  assert.match(header, /href: "\/".*title: "Home"/s);
+  assert.match(header, /href: "\/campionati-live-preview".*title: "Campionati"/s);
+  assert.match(header, /href: "\/societa".*title: "Società"/s);
+  assert.match(header, /href: "\/fantabet".*title: "FantaBet"/s);
+  assert.doesNotMatch(header, /href: "\/(?:emblemi|statistiche|gioca)"|title: "(?:Emblemi|Statistiche|Gioca|Arcade)"/);
+});
+
+test("header autenticato usa avatar reale o fallback senza username testuale", () => {
+  const header = read("src", "app", "components", "Header.tsx");
+  const server = read("src", "lib", "account", "server.ts");
+  assert.match(header, /<ProfileAvatar username=\{username \?\? "Account"\} avatarUrl=\{account\.avatarUrl\} size="header"/);
+  assert.match(header, /aria-label="Apri il tuo profilo"/);
+  assert.match(header, /`\/user\/\$\{encodeURIComponent\(username\)\}` : "\/account"/);
+  assert.doesNotMatch(header, />\{account\.username\}</);
+  assert.match(server, /isOwnedAvatarPath/); assert.match(server, /getPublicUrl\(avatarPath\)/);
+  assert.match(server, /username: null, avatarUrl: null/);
+});
+
+test("mobile mantiene avatar accanto hamburger e fuori dal drawer", () => {
+  const header = read("src", "app", "components", "Header.tsx");
+  const controls = header.slice(header.indexOf('<div className="flex shrink-0 items-center gap-2">'), header.indexOf('</header>'));
+  const drawer = header.slice(header.indexOf('aria-label="Navigazione mobile"'));
+  assert.match(controls, /<ProfileButton[\s\S]*aria-label=\{mobileOpen \? "Chiudi menu" : "Apri menu"\}/);
+  assert.doesNotMatch(drawer, /<ProfileButton|ProfileAvatar/);
+  assert.match(drawer, /mainLinks\.map/); assert.match(drawer, /min-w-0/);
+});
+
+test("profilo pubblico risolve lo username reale senza leggere colonne non pubbliche", () => {
+  const page = read("src", "app", "user", "[username]", "page.tsx");
+  assert.match(page, /\.eq\("username", username\)\.maybeSingle\(\)/);
+  assert.doesNotMatch(page, /username_normalizzato|normalizeAccountUsername/);
+  assert.match(page, /if \(!profile\) notFound\(\)/);
+});
+
+test("menu mobile separa le azioni account e usa il logout server-side esistente", () => {
+  const header = read("src", "app", "components", "Header.tsx");
+  const drawer = header.slice(header.indexOf('aria-label="Navigazione mobile"'));
+  assert.match(header, /import \{ logoutAction \} from "@\/app\/account\/actions"/);
+  assert.match(drawer, /data-mobile-account-menu[\s\S]*mt-auto[\s\S]*border-t/);
+  assert.match(drawer, /account \? <form action=\{logoutAction\}>[\s\S]*Logout/);
+  assert.match(drawer, /: <div className="grid grid-cols-2 gap-3">[\s\S]*Accedi[\s\S]*Registrati/);
+});
+
+test("anonimo vede Accedi e Registrati senza avatar fake", () => {
+  const header = read("src", "app", "components", "Header.tsx");
+  assert.match(header, /account \? <ProfileButton[\s\S]*Accedi[\s\S]*Registrati/);
+  assert.match(header, /account \? <form action=\{logoutAction\}>[\s\S]*: <div[\s\S]*Accedi[\s\S]*Registrati/);
+});
+
+test("solo il proprietario del profilo pubblico vede Gestisci account", () => {
+  const page = read("src", "app", "user", "[username]", "page.tsx");
+  assert.match(page, /user\?\.id === profile\.id[\s\S]*href="\/account"[\s\S]*Gestisci account/);
 });

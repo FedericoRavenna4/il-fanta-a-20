@@ -104,6 +104,31 @@ a {
   }
 }
 
+@keyframes fantabet-team-name-marquee {
+  0%,
+  15% {
+    transform: translateX(0);
+  }
+
+  85%,
+  100% {
+    transform: translateX(calc(-1 * var(--team-name-distance)));
+  }
+}
+
+.fantabet-team-name-marquee {
+  animation: fantabet-team-name-marquee 18s linear infinite alternate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fantabet-team-name-marquee {
+    animation: none;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
 .home-club-marquee {
   animation: home-club-marquee 150s linear infinite;
 }

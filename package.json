@@ -12,6 +12,7 @@
     "test:importazioni-schema": "node --test scripts/importazioni-migration.test.mjs",
     "test:admin-import": "node --test scripts/admin-import.test.mjs",
     "test:account": "node --test scripts/account.test.mjs",
+    "test:fantabet": "node --experimental-strip-types --test src/lib/fantabet/*.test.ts",
     "test:campionati-live": "node --experimental-strip-types --test src/app/campionati-live-preview/logic.test.ts"
   },
   "dependencies": {

@@ -13,6 +13,7 @@ const publicRoutes = [
   { path: "/ranking", priority: 0.8, changeFrequency: "weekly" as const },
   { path: "/hall-of-fame", priority: 0.8, changeFrequency: "weekly" as const },
   { path: "/gioca", priority: 0.9, changeFrequency: "daily" as const },
+  { path: "/fantabet", priority: 0.9, changeFrequency: "daily" as const },
   { path: "/emblemi", priority: 0.8, changeFrequency: "weekly" as const },
   { path: "/regolamento", priority: 0.7, changeFrequency: "monthly" as const },
   { path: "/lista-attesa", priority: 0.6, changeFrequency: "monthly" as const },

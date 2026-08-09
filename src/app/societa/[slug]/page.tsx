@@ -290,6 +290,7 @@ export default async function SchedaSocietaPage({
   />
 </div>
 
+<span id="rosa" className="block scroll-mt-24" aria-hidden="true" />
 <div id="rose">
   <RosaSocieta
     rosa={rosaTeam}

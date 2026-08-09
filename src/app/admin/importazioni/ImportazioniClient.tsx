@@ -1,12 +1,15 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { createImportPreviewAction, publishImportAction } from "./actions";
+import { useRouter } from "next/navigation";
+import { createImportPreviewAction, deleteImportAction, publishImportAction } from "./actions";
 import type { AdminCatalog, ImportHistoryItem, ImportPreview, ImportType } from "@/lib/admin-import/types";
 
 const field = "mt-1.5 min-h-12 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-blue-950 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-200";
 
 export default function ImportazioniClient({ catalog, history }: { catalog: AdminCatalog; history: ImportHistoryItem[] }) {
+  const router = useRouter();
+  const [historyItems, setHistoryItems] = useState(history);
   const [preview, setPreview] = useState<ImportPreview | null>(null);
   const [message, setMessage] = useState("");
   const [showAll, setShowAll] = useState(false);
@@ -53,6 +56,15 @@ export default function ImportazioniClient({ catalog, history }: { catalog: Admi
     });
   }
 
+  function removeImport(item: ImportHistoryItem) {
+    if (!window.confirm("Eliminare questa importazione? Verrà rimosso soltanto il record non pubblicato.")) return;
+    startTransition(async () => {
+      const result = await deleteImportAction(item.id);
+      setMessage(result.message);
+      if (result.ok) { setHistoryItems((items) => items.filter((entry) => entry.id !== item.id)); router.refresh(); }
+    });
+  }
+
   return <div className="space-y-7">
     <form action={submitPreview} className="rounded-[1.5rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
       <div className="grid gap-4 sm:grid-cols-2">
@@ -74,6 +86,6 @@ export default function ImportazioniClient({ catalog, history }: { catalog: Admi
       {preview.changes.length > 12 && <button type="button" onClick={() => setShowAll((value) => !value)} className="min-h-11 w-full rounded-xl border border-slate-300 bg-white px-4 text-sm font-black text-blue-950">{showAll ? "Mostra meno" : `Mostra tutte (${preview.changes.length})`}</button>}
       <div className="rounded-2xl border border-slate-200 bg-white p-4"><button type="button" disabled={!preview.publishEnabled || preview.errors.length > 0 || pending} onClick={publish} className="min-h-12 w-full rounded-xl bg-emerald-700 px-5 font-black text-white disabled:cursor-not-allowed disabled:bg-slate-300">Pubblica</button>{!preview.publishEnabled && <p className="mt-2 text-center text-xs font-bold text-slate-500">Correggi gli errori bloccanti prima di pubblicare.</p>}</div>
     </section>}
-    <section><p className="section-eyebrow">Audit</p><h2 className="mt-1 text-2xl font-black uppercase text-blue-950">Ultime importazioni</h2><div className="mt-3 space-y-2">{history.length === 0 ? <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm font-bold text-slate-500">Nessuna importazione registrata.</div> : history.map((item) => <details key={item.id} className="rounded-xl border border-slate-200 bg-white p-4"><summary className="cursor-pointer break-words font-black text-blue-950">{item.fileName} · {item.status}</summary><p className="mt-2 text-xs font-bold text-slate-500">{new Date(item.createdAt).toLocaleString("it-IT")} · {item.type} · {item.competition}</p><p className="mt-1 text-xs font-bold text-slate-500">Inserite {item.inserted} · aggiornate {item.updated} · warning {item.warnings} · errori {item.errors}</p><pre className="mt-3 overflow-auto whitespace-pre-wrap break-words text-xs text-slate-600">{JSON.stringify({ riepilogo: item.summary, warning: item.warningItems, errori: item.errorItems }, null, 2)}</pre></details>)}</div></section>
+    <section><p className="section-eyebrow">Audit</p><h2 className="mt-1 text-2xl font-black uppercase text-blue-950">Ultime importazioni</h2><div className="mt-3 space-y-2">{historyItems.length === 0 ? <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm font-bold text-slate-500">Nessuna importazione registrata.</div> : historyItems.map((item) => <details key={item.id} className="rounded-xl border border-slate-200 bg-white p-3 sm:p-4"><summary className="cursor-pointer break-words font-black text-blue-950">{item.fileName} · {item.status}</summary><p className="mt-2 text-xs font-bold text-slate-500">{new Date(item.createdAt).toLocaleString("it-IT")} · {item.type} · {item.competition}</p><p className="mt-1 text-xs font-bold text-slate-500">Inserite {item.inserted} · aggiornate {item.updated} · warning {item.warnings} · errori {item.errors}</p><pre className="mt-3 overflow-auto whitespace-pre-wrap break-words text-xs text-slate-600">{JSON.stringify({ riepilogo: item.summary, warning: item.warningItems, errori: item.errorItems }, null, 2)}</pre>{["anteprima", "errore", "annullata"].includes(item.status) && <button type="button" disabled={pending} onClick={() => removeImport(item)} className="mt-3 min-h-10 rounded-lg border border-rose-200 px-3 text-xs font-black text-rose-700 disabled:opacity-40">ELIMINA</button>}</details>)}</div></section>
   </div>;
 }

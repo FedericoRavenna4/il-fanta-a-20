@@ -12,6 +12,15 @@ export function normalizeAccountUsername(value: string) {
   return value.trim().toLowerCase();
 }
 
+const ACCOUNT_EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export function classifyAccountLogin(value: string) {
+  const trimmed = value.trim();
+  return ACCOUNT_EMAIL_PATTERN.test(trimmed)
+    ? { type: "email" as const, value: trimmed.toLowerCase() }
+    : { type: "username" as const, value: normalizeAccountUsername(trimmed) };
+}
+
 export function validateAccountUsername(value: string) {
   const username = value.trim();
   const normalized = normalizeAccountUsername(username);

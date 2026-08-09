@@ -86,7 +86,6 @@ export async function createAuthenticatedPreview(formData: FormData, userId: str
   try {
     if (editionsError) throw new Error("Impossibile verificare le edizioni disponibili.");
     editionId = validateEditionSelection({ seasonId: receivedSeasonId, editionCompetitionId: receivedEditionId, importType }, candidates).editionCompetitionId;
-    if (process.env.NODE_ENV === "development") console.info("[admin/importazioni] Selezione anteprima accettata", { stagione_id: seasonId, edizione_competizione_id: editionId, tipo: importType, edizioni_valide: candidates.map((item) => item.edizioneCompetizioneId) });
   } catch (error) {
     if (process.env.NODE_ENV === "development") console.error("[admin/importazioni] Selezione anteprima rifiutata", { stagione_id: String(receivedSeasonId), edizione_competizione_id: String(receivedEditionId), tipo: importType, edizioni_valide: candidates.map((item) => item.edizioneCompetizioneId), motivo: error instanceof Error ? error.message : "rifiuto sconosciuto" });
     throw error;

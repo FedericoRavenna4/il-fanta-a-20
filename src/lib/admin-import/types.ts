@@ -1,7 +1,7 @@
 export type ImportType = "calendario_campionato" | "calendario_coppa";
 export type ChangeKind = "insert" | "update" | "unchanged" | "warning" | "error";
 
-export type AdminAccess = { allowed: boolean; canPublish: boolean; mode: "denied" | "development" | "authenticated"; email: string | null; userId: string | null; reason: string };
+export type AdminAccess = { allowed: boolean; canPublish: boolean; mode: "denied" | "development" | "authenticated"; email: string | null; username: string; userId: string | null; reason: string };
 
 export type ImportIssue = { codice: string; messaggio: string; riga?: number; valore?: string };
 
