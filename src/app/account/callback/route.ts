@@ -10,8 +10,14 @@ export async function GET(request: NextRequest) {
   const destination = safeNext(request.nextUrl.searchParams.get("next"));
   if (code) {
     const supabase = await createAuthenticatedSupabaseClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) return NextResponse.redirect(new URL(destination, request.url));
+    const { data: session, error } = await supabase.auth.exchangeCodeForSession(code);
+    if (!error) {
+      if (destination === "/account" && session.user) {
+        const { data: profile } = await supabase.from("profiles").select("username").eq("id", session.user.id).maybeSingle();
+        if (profile?.username) return NextResponse.redirect(new URL(`/user/${encodeURIComponent(profile.username)}`, request.url));
+      }
+      return NextResponse.redirect(new URL(destination, request.url));
+    }
   }
   return NextResponse.redirect(new URL("/account/accedi?auth_error=1", request.url));
 }

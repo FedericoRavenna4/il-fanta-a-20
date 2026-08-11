@@ -111,7 +111,7 @@ test("azioni, pagina, storico e logout sono protetti e il client non espone serv
   assert.match(loginClient, /autoComplete="current-password"/);
   assert.doesNotMatch(loginClient, /setTimeout|location\.reload|useRouter|router\.(push|replace)/);
   assert.match(loginActions, /signInWithPassword/);
-  assert.match(loginActions, /redirect\("\/admin\/importazioni"\)/);
+  assert.match(loginActions, /redirect\(profile\?\.username \? `\/user\/\$\{encodeURIComponent\(profile\.username\)\}` : "\/account"\)/);
   assert.match(loginActions, /redirect\("\/admin\/login"\)/);
   assert.match(loginPage, /dynamic = "force-dynamic"/);
   assert.doesNotMatch(loginClient, /signUp|magic|otp/i);

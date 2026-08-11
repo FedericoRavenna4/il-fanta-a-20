@@ -1,4 +1,4 @@
-import type { Societa } from "@/lib/societa";
+import type { CurrentSocieta } from "@/lib/societa/current.server";
 import type { LeagueId, LeagueMock, MockMatch, MockTeam } from "./types";
 
 export const MOCK_DATA_NOTICE = "Dati simulati locali · nessun collegamento a Supabase";
@@ -16,8 +16,10 @@ const leagueDefinitions: Array<{
   { id: "serie-c-c", name: "Serie C Girone C", shortName: "C · C", sourceName: "Serie C - Girone C" },
 ];
 
-function toMockTeam(team: Societa): MockTeam {
-  return { id: team.id, name: team.nome, logo: team.logo, slug: team.slug };
+const normalizeGroup = (value: string | null) => value?.replace(/^girone\s+/i, "").trim().toUpperCase() ?? null;
+
+function toMockTeam(team: CurrentSocieta): MockTeam {
+  return { id: team.id, name: team.nome, logo: team.logo_path ?? "/logo.png", slug: team.slug };
 }
 
 function score(seed: number) {
@@ -64,18 +66,20 @@ function createSchedule(teams: MockTeam[], leagueOffset: number) {
   return matchdays;
 }
 
-export function createChampionshipMockData(societa: Societa[]): LeagueMock[] {
+export function createChampionshipMockData(societa: CurrentSocieta[]): LeagueMock[] {
   return leagueDefinitions.map((league, leagueIndex) => {
-    const selected = societa.filter((team) => team.legaAttuale === league.sourceName).slice(0, 20);
-    const fallback = societa.slice(leagueIndex * 20, leagueIndex * 20 + 20);
-    const teams = (selected.length === 20 ? selected : fallback).map(toMockTeam);
+    const [sourceCategory, sourceGroup = null] = league.sourceName.split(" - Girone ");
+    const teams = societa
+      .filter((team) => team.categoria === sourceCategory && normalizeGroup(team.girone) === sourceGroup)
+      .slice(0, 20)
+      .map(toMockTeam);
     return {
       id: league.id,
       name: league.name,
       shortName: league.shortName,
       currentMatchday: 3,
       teams,
-      matchdays: createSchedule(teams, leagueIndex * 101),
+      matchdays: teams.length === 20 ? createSchedule(teams, leagueIndex * 101) : {},
     };
   });
 }

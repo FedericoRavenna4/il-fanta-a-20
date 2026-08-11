@@ -1,5 +1,7 @@
 import SocietaClient from "./SocietaClient";
-import { getSocieta } from "@/lib/societa";
+import { getActiveSocietaCatalog } from "@/lib/societa/catalog.server";
+import { getPalmares } from "@/lib/palmares";
+import { getRanking } from "@/lib/ranking";
 import PageHeader from "../components/PageHeader";
 import Image from "next/image";
 import { createPageMetadata } from "@/lib/seo";
@@ -10,8 +12,15 @@ export const metadata = createPageMetadata({
   path: "/societa",
 });
 
-export default function SocietaPage() {
-  const societa = getSocieta();
+export default async function SocietaPage() {
+  const currentSocieta = await getActiveSocietaCatalog();
+  const rankingById = new Map(getRanking().map((item) => [item.squadraId, item]));
+  const trophiesById = new Map(getPalmares().map((item) => [item.squadraId, item]));
+  const societa = currentSocieta.map((team) => ({
+    ...team,
+    ranking: rankingById.get(team.id)?.posizione ?? null,
+    trofei: trophiesById.get(team.id)?.totaleTrofei ?? 0,
+  }));
 
   return (
     <section className="bg-[linear-gradient(180deg,#f8fbff_0%,#f3f8fc_48%,#f8fafc_100%)]">
@@ -33,7 +42,7 @@ export default function SocietaPage() {
               className="flex h-20 w-20 shrink-0 items-center justify-center max-sm:h-16 max-sm:w-16"
             >
               <Image
-                src={team.logo}
+                src={team.logo_path ?? "/logos/logo.png"}
                 alt=""
                 width={76}
                 height={76}

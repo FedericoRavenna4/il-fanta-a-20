@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
-import { getSocieta } from "@/lib/societa";
+import { getActiveSocietaById } from "@/lib/societa/catalog.server";
 import { getSupabaseAdminClient } from "@/lib/supabase/server";
 import { consumeRateLimit } from "@/lib/rate-limit/server";
 import type { ArcadeLeaderboardEntry, ArcadeNicknameClaimResult, ArcadeSaveResult } from "./types";
@@ -66,7 +66,7 @@ export async function getArcadeLeaderboard(): Promise<ArcadeLeaderboardEntry[]> 
 
 export async function createArcadeRunProof(playerId: string, nomeGiocatore: string, societaId: number, livello: number) {
   const nomeGiocatoreNormalizzato = normalizeArcadePlayerNameForLookup(nomeGiocatore);
-  if (!isValidPlayerId(playerId) || nomeGiocatoreNormalizzato.length < 2 || nomeGiocatoreNormalizzato.length > 30 || !isValidTeam(societaId) || !isValidLevel(livello)) return null;
+  if (!isValidPlayerId(playerId) || nomeGiocatoreNormalizzato.length < 2 || nomeGiocatoreNormalizzato.length > 30 || !(await isValidTeam(societaId)) || !isValidLevel(livello)) return null;
   const { data: identity, error: identityError } = await getSupabaseAdminClient()
     .from("arcade_players")
     .select("player_id")
@@ -114,7 +114,7 @@ export async function saveArcadeRecord(input: {
   const payload = proofResult.payload;
   const normalizedName = normalizeArcadePlayerNameForLookup(nomeGiocatore);
   if (payload.playerId !== input.playerId || payload.nomeGiocatoreNormalizzato !== normalizedName) return invalidRun();
-  if (!isValidTeam(payload.societaId) || !isValidLevel(payload.livello)) return invalidRun();
+  if (!(await isValidTeam(payload.societaId)) || !isValidLevel(payload.livello)) return invalidRun();
   try {
     const consumed = await consumeArcadeRunToken(payload, normalizedName);
     if (consumed.status === "expired") return expiredRun();
@@ -281,8 +281,13 @@ function extractRecordMeters(data: unknown) {
   return Number.isSafeInteger(metriRecord) ? metriRecord : null;
 }
 
-function isValidTeam(value: number) {
-  return Number.isInteger(value) && getSocieta().some((team) => team.id === value);
+async function isValidTeam(value: number) {
+  if (!Number.isInteger(value)) return false;
+  try {
+    return Boolean(await getActiveSocietaById(value));
+  } catch {
+    return false;
+  }
 }
 
 function isValidLevel(value: number): value is 1 | 2 | 3 {

@@ -3,7 +3,8 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { getPalmares } from "@/lib/palmares";
 import { getRanking } from "@/lib/ranking";
-import { getSocieta, type Societa } from "@/lib/societa";
+import { getActiveSocietaCatalog } from "@/lib/societa/catalog.server";
+import type { CurrentSocieta } from "@/lib/societa/current.server";
 import { getCatalogoEmblemi, getEmblemiSocieta } from "@/lib/emblemi";
 import { isEmblemaNascosto } from "@/lib/emblemi-ui";
 import { getRisultati } from "@/lib/risultati";
@@ -47,7 +48,35 @@ const competizioni = [
   },
 ];
 
-function TeamLogo({ team, size = 88 }: { team: Societa; size?: number }) {
+type HomeTeam = {
+  id: number;
+  nome: string;
+  slug: string | null;
+  logo: string;
+  legaAttuale: string | null;
+  badgeTipo: string | null;
+};
+
+function toHomeTeam(team: CurrentSocieta): HomeTeam {
+  return {
+    id: team.id,
+    nome: team.nome,
+    slug: team.slug,
+    logo: team.logo_path ?? "/logo.png",
+    legaAttuale: team.girone ? `${team.categoria ?? ""} - Girone ${team.girone.replace(/^girone\s+/i, "")}` : team.categoria,
+    badgeTipo: team.badge_tipo,
+  };
+}
+
+function historicalHomeTeam(id: number, historicalName: string): HomeTeam {
+  return { id, nome: historicalName || "Società storica", slug: null, logo: "/logo.png", legaAttuale: null, badgeTipo: null };
+}
+
+function homeTeamHref(team: HomeTeam) {
+  return team.slug ? `/societa/${team.slug}` : "/societa";
+}
+
+function TeamLogo({ team, size = 88 }: { team: HomeTeam; size?: number }) {
   return (
     <Image
       src={team.logo}
@@ -116,19 +145,23 @@ function SectionHeading({
 }
 
 export default async function Home() {
-  const societa = getSocieta();
+  const societa = (await getActiveSocietaCatalog()).map(toHomeTeam);
+  const societaById = new Map(societa.map((team) => [team.id, team]));
+  const newEntryIds = new Set(societa.filter((team) => team.badgeTipo === "new_entry").map((team) => team.id));
   const ranking = getRanking();
   const palmares = getPalmares();
   const catalogoEmblemi = getCatalogoEmblemi();
-  const assegnazioniEmblemi = getEmblemiSocieta();
+  const assegnazioniEmblemi = getEmblemiSocieta(newEntryIds);
   const risultati = getRisultati();
 
   const podioRanking = ranking.slice(0, 3).flatMap((item) => {
-    const team = societa.find((societaItem) => societaItem.id === item.squadraId);
-    return team ? [{ team, ranking: item }] : [];
+    const team = societaById.get(item.squadraId) ?? historicalHomeTeam(item.squadraId, item.nomeRanking);
+    return [{ team, ranking: item }];
   });
   const piuTitolata = [...palmares].sort((a, b) => b.totaleTrofei - a.totaleTrofei)[0];
-  const teamPiuTitolato = societa.find((team) => team.id === piuTitolata?.squadraId);
+  const teamPiuTitolato = piuTitolata
+    ? societaById.get(piuTitolata.squadraId) ?? historicalHomeTeam(piuTitolata.squadraId, piuTitolata.nomeSquadra)
+    : null;
   const primaRanking = [...ranking].sort((a, b) => a.posizione - b.posizione)[0];
   const collezionista = [...assegnazioniEmblemi].sort((a, b) => {
     const emblemiA = a.emblemi.filter(
@@ -146,10 +179,12 @@ export default async function Home() {
         risultato.risultatoTesto.trim().toLocaleLowerCase("it") === "vincitore"
     )
     .sort((a, b) => b.stagioneId - a.stagioneId)[0];
-  const teamCollezionista = societa.find((team) => team.id === collezionista?.squadraId);
+  const teamCollezionista = collezionista
+    ? societaById.get(collezionista.squadraId) ?? historicalHomeTeam(collezionista.squadraId, "Società storica")
+    : null;
   const societaCampioni = [
     {
-      team: societa.find((item) => item.id === primaRanking?.squadraId),
+      team: primaRanking ? societaById.get(primaRanking.squadraId) ?? historicalHomeTeam(primaRanking.squadraId, primaRanking.nomeRanking) : null,
       label: "Ranking Leader",
       tone: "text-sky-300",
       descrizione: "Protagonista fin dalla prima edizione, conquista la vetta del Ranking Storico grazie allo storico double.",
@@ -161,7 +196,7 @@ export default async function Home() {
       descrizione: "In appena due stagioni conquista uno storico triplete e costruisce la collezione di emblemi più prestigiosa.",
     },
     {
-      team: societa.find((item) => item.id === ultimaCoppa?.squadraId),
+      team: ultimaCoppa ? societaById.get(ultimaCoppa.squadraId) ?? historicalHomeTeam(ultimaCoppa.squadraId, ultimaCoppa.nomeStorico) : null,
       label: "Campione in carica · Coppa Fanta a 20",
       tone: "text-emerald-300",
       descrizione: "All’esordio conquista la Coppa Fanta a 20, scrivendo subito il proprio nome nella storia della competizione.",
@@ -209,7 +244,7 @@ export default async function Home() {
         </Link>
         <div className="grid gap-3 sm:gap-5 lg:grid-cols-3">
           {societaCampioni.map(({ team, label, tone, descrizione }) => (
-            <Link key={team.id} href={`/societa/${team.slug}`} className="group relative grid h-full grid-rows-[auto_auto_1fr_auto] gap-y-2 overflow-hidden rounded-[1.6rem] bg-blue-950 p-3 text-white shadow-xl shadow-blue-950/10 transition duration-300 hover:-translate-y-1 hover:shadow-2xl sm:gap-y-2.5 sm:rounded-[1.75rem] sm:p-4 lg:grid-rows-[1.75rem_7rem_1fr_auto] lg:gap-y-0">
+            <Link key={team.id} href={homeTeamHref(team)} className="group relative grid h-full grid-rows-[auto_auto_1fr_auto] gap-y-2 overflow-hidden rounded-[1.6rem] bg-blue-950 p-3 text-white shadow-xl shadow-blue-950/10 transition duration-300 hover:-translate-y-1 hover:shadow-2xl sm:gap-y-2.5 sm:rounded-[1.75rem] sm:p-4 lg:grid-rows-[1.75rem_7rem_1fr_auto] lg:gap-y-0">
               <div className="pointer-events-none absolute right-0 top-0 h-52 w-52 bg-sky-400/10 blur-3xl" />
               <p className={`relative self-start text-[10px] font-black uppercase leading-5 tracking-[0.22em] ${tone}`}>{label}</p>
               <div className="relative grid min-w-0 grid-cols-[minmax(0,1fr)_4.5rem] items-start gap-2 sm:flex sm:items-center sm:justify-between sm:gap-4">
@@ -268,7 +303,7 @@ export default async function Home() {
               <p className="relative text-[10px] font-black uppercase tracking-[0.2em] text-sky-300 sm:text-xs sm:tracking-[0.24em]">Il podio del ranking</p>
               <div className="relative mt-3 grid grid-cols-3 items-end gap-1.5 sm:mt-8 sm:gap-3">
                 {podioRanking.map(({ team, ranking: rankingItem }, index) => (
-                  <Link key={team.id} href={`/societa/${team.slug}`} className={`group flex flex-col items-center rounded-xl border px-1.5 py-2 text-center transition hover:-translate-y-1 sm:rounded-[1.5rem] sm:p-5 ${index === 0 ? "min-h-36 justify-center border-amber-300/55 bg-[linear-gradient(145deg,rgba(202,146,32,.34),rgba(255,255,255,.06))] shadow-[0_12px_30px_rgba(202,146,32,.14)] sm:min-h-64" : index === 1 ? "min-h-28 justify-center border-slate-300/40 bg-[linear-gradient(145deg,rgba(203,213,225,.2),rgba(255,255,255,.035))] sm:min-h-56" : "min-h-24 justify-center border-orange-400/35 bg-[linear-gradient(145deg,rgba(180,92,35,.2),rgba(255,255,255,.03))] sm:min-h-52"}`}>
+                  <Link key={team.id} href={homeTeamHref(team)} className={`group flex flex-col items-center rounded-xl border px-1.5 py-2 text-center transition hover:-translate-y-1 sm:rounded-[1.5rem] sm:p-5 ${index === 0 ? "min-h-36 justify-center border-amber-300/55 bg-[linear-gradient(145deg,rgba(202,146,32,.34),rgba(255,255,255,.06))] shadow-[0_12px_30px_rgba(202,146,32,.14)] sm:min-h-64" : index === 1 ? "min-h-28 justify-center border-slate-300/40 bg-[linear-gradient(145deg,rgba(203,213,225,.2),rgba(255,255,255,.035))] sm:min-h-56" : "min-h-24 justify-center border-orange-400/35 bg-[linear-gradient(145deg,rgba(180,92,35,.2),rgba(255,255,255,.03))] sm:min-h-52"}`}>
                     <div className={`${index === 0 ? "h-12 w-12 sm:h-28 sm:w-28" : "h-10 w-10 sm:h-24 sm:w-24"} flex items-center justify-center p-0.5 sm:p-1`}><TeamLogo team={team} size={index === 0 ? 105 : 90} /></div>
                     <p className="mt-1 text-[8px] font-black uppercase tracking-[0.1em] text-white/45 sm:mt-4 sm:text-[10px] sm:tracking-[0.18em]">{rankingItem.posizione}° posto</p>
                     <h3 className="mt-1 line-clamp-2 text-[10px] font-black uppercase leading-tight sm:mt-2 sm:text-sm">{team.nome}</h3>

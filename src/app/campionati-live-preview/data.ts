@@ -1,6 +1,7 @@
 import "server-only";
 import { createAuthenticatedSupabaseClient } from "@/lib/supabase/authenticated.server";
-import { getSocieta } from "@/lib/societa";
+import { getActiveSocietaCatalog } from "@/lib/societa/catalog.server";
+import type { CurrentSocieta } from "@/lib/societa/current.server";
 import { deriveAvailableMatchdays } from "./logic";
 import type { LeagueData, LeagueId, LiveChampionshipData, Match, Season, Team } from "./types";
 
@@ -14,10 +15,8 @@ const LEAGUES: Array<{ id: LeagueId; code: string; name: string; shortName: stri
 
 type RawSeason = { id: number; codice: string; nome: string; attiva: boolean };
 type RawEdition = { id: number; competizioni: { codice: string } | { codice: string }[] | null };
-type RawTeam = { id: number; nome_ufficiale: string; nome_personalizzato: string | null; categoria: string | null; girone: string | null; logo_path: string | null };
 type RawMatch = { id: number; edizione_competizione_id: number; giornata_lega: number; giornata_serie_a: number | null; societa_casa_id: number; societa_trasferta_id: number; fantapunti_casa: number | null; fantapunti_trasferta: number | null; gol_casa: number | null; gol_trasferta: number | null; stato: string };
 
-const fallbackSlug = new Map(getSocieta().map((team) => [team.id, team.slug]));
 const normalizeGroup = (value: string | null) => value?.replace(/^girone\s+/i, "").trim().toUpperCase() ?? null;
 
 export async function loadChampionshipData(seasonCode?: string): Promise<LiveChampionshipData | null> {
@@ -39,10 +38,8 @@ export async function loadChampionshipData(seasonCode?: string): Promise<LiveCha
   if (matchesResult.error) throw matchesResult.error;
   const rawMatches = (matchesResult.data ?? []) as RawMatch[];
   const teamIds = [...new Set(rawMatches.flatMap((m) => [m.societa_casa_id, m.societa_trasferta_id]))];
-  const teamsResult = await supabase.from("societa").select("id,nome_ufficiale,nome_personalizzato,categoria,girone,logo_path").eq("attiva", true);
-  if (teamsResult.error) throw teamsResult.error;
-  const rawTeams = (teamsResult.data ?? []) as RawTeam[];
-  const toTeam = (row: RawTeam): Team => ({ id: row.id, name: row.nome_personalizzato ?? row.nome_ufficiale, logo: row.logo_path ?? "/logo.png", slug: fallbackSlug.get(row.id) ?? String(row.id) });
+  const rawTeams = await getActiveSocietaCatalog();
+  const toTeam = (row: CurrentSocieta): Team => ({ id: row.id, name: row.nome, logo: row.logo_path ?? "/logo.png", slug: row.slug });
   const teamById = new Map(rawTeams.filter((t) => teamIds.includes(t.id)).map((t) => [t.id, toTeam(t)]));
 
   const leagues = LEAGUES.map((definition): LeagueData => {

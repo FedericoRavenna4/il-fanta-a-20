@@ -238,6 +238,44 @@ test("schedina completa con zero risposte corrette mantiene la streak", () => {
   assert.deepEqual({ streak: row.currentStreak, bonus: row.consistencyBonusPoints, rounds: row.roundsPlayed }, { streak: 5, bonus: 10, rounds: 5 });
 });
 
+test("una e diciannove giornate valutate a zero punti restano visibili", () => {
+  const zeroCorrect = scoreRound(zeroCorrectPlays());
+  for (const count of [1, 19]) {
+    const rows = Array.from({ length: count }, (_, index) => ({
+      profileId: `zero-${count}`, username: "Zero", normalizedUsername: "zero", roundId: index + 1,
+      roundOrder: index + 1, submitted: true, predictionCount: 5, score: zeroCorrect,
+    }));
+    const [row] = calculateGlobalLeaderboard(rows);
+    assert.deepEqual({ rounds: row.roundsPlayed, predictionPoints: row.predictionPoints }, { rounds: count, predictionPoints: 0 });
+  }
+});
+
+test("filtro autorevole esclude zero giornate e ricalcola posizioni consecutive", () => {
+  const zeroCorrect = scoreRound(zeroCorrectPlays());
+  const entries = [
+    { profileId: "open", username: "Open", normalizedUsername: "open", roundId: 1, roundOrder: 1, submitted: true, expired: false, predictionCount: 5, score: zeroCorrect },
+    { profileId: "pending", username: "Pending", normalizedUsername: "pending", roundId: 2, roundOrder: 2, submitted: true, expired: true, predictionCount: 5, score: { evaluable: false, basePoints: null, finalPoints: null, correctPredictions: null, perfect: false } },
+    { profileId: "zero", username: "Zero", normalizedUsername: "zero", roundId: 3, roundOrder: 3, submitted: true, expired: true, predictionCount: 5, score: zeroCorrect },
+    { profileId: "points", username: "Points", normalizedUsername: "points", roundId: 4, roundOrder: 4, submitted: true, expired: true, predictionCount: 5, score: scoreRound(plays(true)) },
+  ];
+  const rows = calculateGlobalLeaderboard(entries);
+  assert.deepEqual(rows.map((row) => ({ id: row.profileId, position: row.position, rounds: row.roundsPlayed })), [
+    { id: "points", position: 1, rounds: 1 },
+    { id: "zero", position: 2, rounds: 1 },
+  ]);
+});
+
+test("migration incrementale filtra la base dopo totals senza cambiare le CTE competitive", async () => {
+  const migration = await readFile(new URL("../../../supabase/migrations/202608100003_fantabet_base_leaderboard_visibility.sql", import.meta.url), "utf8");
+  assert.match(migration, /^begin;/);
+  assert.match(migration, /create or replace function private\.fantabet_base_leaderboard\(\)/);
+  assert.doesNotMatch(migration, /create or replace function public\.fantabet_global_leaderboard/);
+  for (const cte of ["complete_rounds", "scored_slips", "prediction_totals", "expired_rounds", "submitted_participation", "participation_timeline", "streak_positions", "consistency_totals", "current_streaks", "totals"]) assert.match(migration, new RegExp(`\\b${cte} as \\(`));
+  assert.match(migration, /from totals\s+where totals\.giornate_giocate > 0\s+order by posizione;/);
+  assert.match(migration, /row_number\(\) over \([\s\S]*totals\.punti_totali desc[\s\S]*totals\.schedine_perfette desc[\s\S]*totals\.pronostici_corretti desc[\s\S]*totals\.username_normalizzato asc[\s\S]*totals\.profile_id asc/);
+  assert.doesNotMatch(migration, /open valid submission makes the profile visible immediately/i);
+});
+
 test("bonus costanza non viene raddoppiato dalla schedina perfetta", () => {
   const rows = Array.from({ length: 5 }, (_, index) => ({
     profileId: "perfect", username: "Perfect", normalizedUsername: "perfect", roundId: index + 1,

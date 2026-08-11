@@ -5,18 +5,38 @@ import { revalidatePath } from "next/cache";
 import { createAuthenticatedSupabaseClient } from "@/lib/supabase/authenticated.server";
 import { accountRedirectUrl } from "@/lib/account/server";
 import { validateAccountUsername } from "@/lib/account/username";
-import { ACCOUNT_AVATAR_BUCKET, isOwnedAvatarPath, validateAccountAvatar } from "@/lib/account/avatar";
+import { ACCOUNT_AVATAR_BUCKET, ACCOUNT_AVATAR_ORIGINAL_BUCKET, isOwnedAvatarOriginalPath, isOwnedAvatarPath, validateAccountAvatar } from "@/lib/account/avatar";
 import { resolveAccountLoginEmail } from "@/lib/account/login.server";
 
 export type AccountActionState = { message: string; field?: "email" | "password" | "username"; success?: boolean };
 const GENERIC_AUTH_ERROR = "Non è stato possibile completare l’operazione. Controlla i dati e riprova.";
 export type AvatarActionState = { message: string; success?: boolean };
+export type CompleteProfileState = { message: string; success?: boolean };
+
+export async function completeLegacyProfileAction(_state: CompleteProfileState, formData: FormData): Promise<CompleteProfileState> {
+  const validation = validateAccountUsername(String(formData.get("username") ?? ""));
+  if (!validation.ok) return { message: validation.message };
+  const supabase = await createAuthenticatedSupabaseClient();
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) return { message: "Sessione non valida. Accedi nuovamente." };
+  const { data, error } = await supabase.rpc("create_my_legacy_profile", { p_username: validation.username });
+  if (error || !data?.username) {
+    if (/USERNAME_|duplicate|profile_already_exists/i.test(error?.message ?? "")) return { message: "Username non disponibile o non valido." };
+    console.error("[account/profile-completion] failed", { name: error?.name, message: error?.message, code: error?.code });
+    return { message: "Non è stato possibile completare il profilo. Riprova più tardi." };
+  }
+  revalidatePath("/", "layout");
+  redirect(`/user/${encodeURIComponent(data.username)}`);
+}
 
 export async function uploadAvatarAction(_state: AvatarActionState, formData: FormData): Promise<AvatarActionState> {
   const file = formData.get("avatar");
+  const original = formData.get("original");
   if (!(file instanceof File)) return { message: "Seleziona un’immagine." };
   const validation = await validateAccountAvatar(file);
   if (!validation.ok) return { message: validation.message };
+  const originalValidation = original instanceof File ? await validateAccountAvatar(original) : null;
+  if (originalValidation && !originalValidation.ok) return { message: originalValidation.message };
 
   const supabase = await createAuthenticatedSupabaseClient();
   const { data: { user }, error: userError } = await supabase.auth.getUser();
@@ -24,21 +44,59 @@ export async function uploadAvatarAction(_state: AvatarActionState, formData: Fo
   const { data: profile } = await supabase.from("profiles").select("avatar_url").eq("id", user.id).maybeSingle();
   if (!profile) return { message: "Il profilo pubblico non è configurato." };
 
+  if (original instanceof File && originalValidation?.ok) {
+    const originalPath = `${user.id}/original.${originalValidation.extension}`;
+    const { error: originalError } = await supabase.storage.from(ACCOUNT_AVATAR_ORIGINAL_BUCKET).upload(originalPath, original, { contentType: originalValidation.contentType, cacheControl: "0", upsert: true });
+    if (originalError) {
+      console.error("[account/avatar-original] upload failed", { name: originalError.name, message: originalError.message });
+      return { message: "Non è stato possibile salvare l’immagine. Riprova più tardi." };
+    }
+    const { data: originalObjects, error: originalListError } = await supabase.storage.from(ACCOUNT_AVATAR_ORIGINAL_BUCKET).list(user.id, { search: "original." });
+    if (originalListError) console.error("[account/avatar-original] cleanup list failed", { name: originalListError.name, message: originalListError.message });
+    const obsolete = (originalObjects ?? []).map((item) => `${user.id}/${item.name}`).filter((item) => item !== originalPath);
+    if (obsolete.length) {
+      const { error: cleanupError } = await supabase.storage.from(ACCOUNT_AVATAR_ORIGINAL_BUCKET).remove(obsolete);
+      if (cleanupError) console.error("[account/avatar-original] cleanup failed", { name: cleanupError.name, message: cleanupError.message });
+    }
+  } else {
+    const { data: originalObjects, error: originalListError } = await supabase.storage.from(ACCOUNT_AVATAR_ORIGINAL_BUCKET).list(user.id, { search: "original." });
+    if (originalListError) console.error("[account/avatar-original] lookup failed", { name: originalListError.name, message: originalListError.message });
+    if (!(originalObjects ?? []).some((item) => /^original\.(jpg|png|webp)$/.test(item.name))) return { message: "Per ritagliare di nuovo questo avatar, scegli nuovamente l’immagine." };
+  }
+
   const path = `${user.id}/avatar.${validation.extension}`;
   const { error: uploadError } = await supabase.storage.from(ACCOUNT_AVATAR_BUCKET).upload(path, file, { contentType: validation.contentType, cacheControl: "0", upsert: true });
-  if (uploadError) return { message: "Non è stato possibile caricare l’avatar." };
+  if (uploadError) {
+    console.error("[account/avatar-crop] upload failed", { name: uploadError.name, message: uploadError.message });
+    return { message: "Non è stato possibile salvare l’immagine. Riprova più tardi." };
+  }
   const { error: profileError } = await supabase.rpc("set_my_avatar_path", { p_avatar_path: path });
   if (profileError) {
+    console.error("[account/avatar-profile] update failed", { name: profileError.name, message: profileError.message, code: profileError.code });
     if (profile.avatar_url !== path) await supabase.storage.from(ACCOUNT_AVATAR_BUCKET).remove([path]);
     return { message: "Avatar caricato, ma il profilo non è stato aggiornato." };
   }
 
   if (isOwnedAvatarPath(profile.avatar_url, user.id) && profile.avatar_url !== path) {
-    await supabase.storage.from(ACCOUNT_AVATAR_BUCKET).remove([profile.avatar_url!]);
+    const { error: cleanupError } = await supabase.storage.from(ACCOUNT_AVATAR_BUCKET).remove([profile.avatar_url!]);
+    if (cleanupError) console.error("[account/avatar-crop] cleanup failed", { name: cleanupError.name, message: cleanupError.message });
   }
   revalidatePath("/", "layout");
   revalidatePath("/account");
   return { success: true, message: "Avatar aggiornato." };
+}
+
+export async function getMyAvatarOriginalAction(): Promise<{ url: string | null; message?: string }> {
+  const supabase = await createAuthenticatedSupabaseClient();
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) return { url: null, message: "Sessione non valida. Accedi nuovamente." };
+  const { data: objects, error: listError } = await supabase.storage.from(ACCOUNT_AVATAR_ORIGINAL_BUCKET).list(user.id, { search: "original." });
+  if (listError) return { url: null, message: "L'originale non è ancora disponibile. Usa Cambia immagine." };
+  const path = (objects ?? []).map((item) => `${user.id}/${item.name}`).find((item) => isOwnedAvatarOriginalPath(item, user.id));
+  if (!path) return { url: null, message: "L'originale non è disponibile per questo avatar. Usa Cambia immagine per sceglierlo nuovamente." };
+  const { data, error } = await supabase.storage.from(ACCOUNT_AVATAR_ORIGINAL_BUCKET).createSignedUrl(path, 300);
+  if (error || !data?.signedUrl) return { url: null, message: "Non è stato possibile aprire l'immagine originale." };
+  return { url: data.signedUrl };
 }
 
 export async function signUpAction(_state: AccountActionState, formData: FormData): Promise<AccountActionState> {
@@ -73,10 +131,11 @@ export async function loginAction(_state: AccountActionState, formData: FormData
   const email = await resolveAccountLoginEmail(identifier);
   if (!email) return { message: "Credenziali non valide." };
   const supabase = await createAuthenticatedSupabaseClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data: login, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) return { message: "Credenziali non valide." };
+  const { data: profile } = await supabase.from("profiles").select("username").eq("id", login.user.id).maybeSingle();
   revalidatePath("/", "layout");
-  redirect("/account");
+  redirect(profile?.username ? `/user/${encodeURIComponent(profile.username)}` : "/account");
 }
 
 export async function logoutAction() {

@@ -5,12 +5,13 @@ import { redirect } from "next/navigation";
 import { createAuthenticatedSupabaseClient } from "@/lib/supabase/authenticated.server";
 import { ACCOUNT_AVATAR_BUCKET, isOwnedAvatarPath } from "@/lib/account/avatar";
 import type { AccountHubModules } from "@/lib/account/hub";
-import { getSocieta } from "@/lib/societa";
+import { getActiveSocietaById } from "@/lib/societa/catalog.server";
 import { logoutAction } from "./actions";
 import AvatarUpload from "./AvatarUpload";
 import ProfileAvatar from "./ProfileAvatar";
 import ProfileModules from "./ProfileModules";
 import OfficialAccountBadge from "./OfficialAccountBadge";
+import CompleteProfileForm from "./CompleteProfileForm";
 
 export const metadata: Metadata = { title: "Il mio account", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
@@ -26,15 +27,14 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
   if (!user) redirect("/account/accedi");
 
   const { data: profile } = await supabase.from("profiles").select("id,username,societa_id,avatar_url").eq("id", user.id).maybeSingle();
-  if (!profile) return <main className="bg-[linear-gradient(180deg,#f8fbff,#eef5fb)] px-4 py-10 sm:py-16"><section className="mx-auto max-w-3xl rounded-[2rem] border border-slate-200 bg-white p-6 shadow-xl shadow-blue-950/10 sm:p-10"><p className="section-eyebrow">Area riservata</p><h1 className="mt-2 text-3xl font-black uppercase text-blue-950 sm:text-5xl">Account amministratore</h1><p className="mt-4 font-semibold text-slate-500">Profilo pubblico non configurato.</p>{query.admin === "denied" && <p role="alert" className="mt-5 rounded-xl bg-amber-50 p-3 text-sm font-bold text-amber-900">Questo account non è autorizzato ad accedere all’area amministrativa richiesta.</p>}<p className="mt-6 text-sm font-semibold text-slate-500">Registrato il {registrationDate(user.created_at)}</p><form action={logoutAction}><button className="mt-6 min-h-12 rounded-xl border border-slate-300 bg-white px-6 text-sm font-black uppercase tracking-[.12em] text-blue-950 hover:bg-slate-50">Logout</button></form></section></main>;
+  if (!profile) return <main className="bg-[linear-gradient(180deg,#f8fbff,#eef5fb)] px-4 py-10 sm:py-16"><section className="mx-auto max-w-xl rounded-[2rem] border border-slate-200 bg-white p-6 shadow-xl shadow-blue-950/10 sm:p-10"><p className="section-eyebrow">Account Fanta a 20</p><h1 className="mt-2 text-3xl font-black uppercase text-blue-950 sm:text-5xl">Completa il profilo</h1><p className="mt-4 font-semibold text-slate-500">Scegli l’identità pubblica che userai in tutto il portale.</p>{query.admin === "denied" && <p role="alert" className="mt-5 rounded-xl bg-amber-50 p-3 text-sm font-bold text-amber-900">Questo account non è autorizzato ad accedere all’area amministrativa richiesta.</p>}<CompleteProfileForm /><form action={logoutAction}><button className="mt-5 min-h-11 w-full rounded-xl border border-slate-300 bg-white px-6 text-xs font-black uppercase text-blue-950 hover:bg-slate-50">Logout</button></form></section></main>;
 
   const storedAvatarPath = isOwnedAvatarPath(profile.avatar_url, user.id) ? profile.avatar_url : null;
   const avatarUrl = storedAvatarPath ? supabase.storage.from(ACCOUNT_AVATAR_BUCKET).getPublicUrl(storedAvatarPath).data.publicUrl : null;
-  const localSocieta = profile.societa_id ? getSocieta().find((item) => item.id === profile.societa_id) ?? null : null;
-  const { data: registrySocieta } = profile.societa_id ? await supabase.from("societa").select("id,nome_ufficiale,categoria,girone").eq("id", profile.societa_id).maybeSingle() : { data: null };
-  const societyName = registrySocieta?.nome_ufficiale ?? localSocieta?.nome ?? null;
-  const category = registrySocieta?.categoria ?? localSocieta?.legaAttuale.split(" - Girone")[0] ?? null;
-  const group = registrySocieta?.girone ?? localSocieta?.girone ?? null;
+  const officialSocieta = profile.societa_id ? await getActiveSocietaById(profile.societa_id) : null;
+  const societyName = officialSocieta?.nome ?? null;
+  const category = officialSocieta?.categoria ?? null;
+  const group = officialSocieta?.girone ?? null;
 
   // Future systems will populate only their own module. Empty modules render nothing.
   const modules: AccountHubModules = {};
@@ -51,7 +51,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
         </div>
         <aside className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
           <p className="text-xs font-black uppercase tracking-[.18em] text-slate-400">Società ufficiale</p>
-          {societyName ? <div className="mt-4">{localSocieta && <Image src={localSocieta.logo} alt={societyName} width={72} height={72} className="h-16 w-16 object-contain" />}<h2 className="mt-3 text-xl font-black uppercase text-blue-950">{societyName}</h2>{category && <p className="mt-1 text-sm font-bold text-slate-600">{category}{group ? ` · Girone ${group}` : ""}</p>}{localSocieta && <Link href={`/societa/${localSocieta.slug}`} className="mt-4 inline-flex text-sm font-black text-sky-700 hover:text-blue-950">Apri la pagina pubblica →</Link>}</div> : <p className="mt-4 text-sm font-semibold text-slate-500">Nessuna società collegata</p>}
+          {officialSocieta ? <div className="mt-4"><Image src={officialSocieta.logo_path ?? "/logos/logo.png"} alt={societyName ?? "Società ufficiale"} width={72} height={72} className="h-16 w-16 object-contain" /><h2 className="mt-3 text-xl font-black uppercase text-blue-950">{societyName}</h2>{category && <p className="mt-1 text-sm font-bold text-slate-600">{category}{group ? ` · Girone ${group}` : ""}</p>}<Link href={`/societa/${officialSocieta.slug}`} className="mt-4 inline-flex text-sm font-black text-sky-700 hover:text-blue-950">Apri la pagina pubblica →</Link></div> : profile.societa_id ? <p className="mt-4 text-sm font-semibold text-slate-500">Società collegata non disponibile</p> : <p className="mt-4 text-sm font-semibold text-slate-500">Nessuna società collegata</p>}
         </aside>
       </div>
     </section>

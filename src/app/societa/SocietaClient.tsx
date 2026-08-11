@@ -3,7 +3,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import type { Societa } from "@/lib/societa";
+import type { CurrentSocieta } from "@/lib/societa/current.server";
+
+export type SocietaCatalogItem = CurrentSocieta & {
+  ranking: number | null;
+  trofei: number;
+};
 
 function getHighlight() {
   return {
@@ -23,21 +28,31 @@ function normalizeSearchValue(value: string) {
     .trim();
 }
 
-export default function SocietaClient({ societa }: { societa: Societa[] }) {
+function getLeagueLabel(team: Pick<SocietaCatalogItem, "categoria" | "girone">) {
+  return team.girone ? `${team.categoria ?? "Categoria"} - Girone ${team.girone}` : team.categoria;
+}
+
+function getBadge(badge: string | null) {
+  if (badge === "new_entry") return { src: "/badge-societa/new-entry.png", alt: "New entry" };
+  if (badge === "neo_promossa") return { src: "/badge-societa/neo-promossa.png", alt: "Neopromossa" };
+  if (badge === "campione_in_carica") return { src: "/badge-societa/campione-in-carica.png", alt: "Campione in carica" };
+  return null;
+}
+
+export default function SocietaClient({ societa }: { societa: SocietaCatalogItem[] }) {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("Tutte");
 
   const filtered = societa
     .filter((team) => {
       const searchText = normalizeSearchValue(
-        `${team.nome} ${team.squadraReale} ${team.fantallenatore}`
+        `${team.nome} ${team.squadra_associata ?? ""} ${team.fantallenatore ?? ""} ${team.nickname_instagram ?? ""}`
       );
       const matchSearch = searchText.includes(normalizeSearchValue(search));
 
       const matchFilter =
         filter === "Tutte" ||
-        team.legaAttuale === filter ||
-        team.legaAttuale === filter;
+        getLeagueLabel(team) === filter;
 
       return matchSearch && matchFilter;
     })
@@ -57,7 +72,7 @@ export default function SocietaClient({ societa }: { societa: Societa[] }) {
       <div className="mb-12">
         <input
           type="text"
-          placeholder="Cerca società, squadra o fantallenatore..."
+          placeholder="Cerca società, squadra, fantallenatore o nickname..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="mx-auto block min-h-12 w-full max-w-3xl rounded-[1.25rem] border border-slate-200 bg-white px-4 py-4 text-base text-slate-700 shadow-lg outline-none transition-all duration-300 placeholder:text-slate-400 focus:border-blue-900 focus:shadow-xl sm:px-6 sm:py-5 sm:text-lg"
@@ -90,6 +105,7 @@ export default function SocietaClient({ societa }: { societa: Societa[] }) {
       <div className="grid grid-cols-4 gap-x-1.5 gap-y-4 sm:grid-cols-3 sm:gap-x-4 sm:gap-y-10 md:grid-cols-5 lg:grid-cols-8 xl:grid-cols-10">
         {filtered.map((team) => {
           const highlight = getHighlight();
+          const badge = getBadge(team.badge_tipo);
 
           return (
             <Link
@@ -109,8 +125,18 @@ export default function SocietaClient({ societa }: { societa: Societa[] }) {
                   className={`pointer-events-none absolute h-24 w-24 rounded-full bg-amber-300/0 blur-3xl transition-all duration-300 ${highlight.light}`}
                 />
 
+                {badge && (
+                  <Image
+                    src={badge.src}
+                    alt={badge.alt}
+                    width={54}
+                    height={22}
+                    className="absolute right-0.5 top-0.5 z-20 h-auto w-8 object-contain sm:right-1 sm:top-1 sm:w-12"
+                  />
+                )}
+
                 <Image
-                  src={team.logo}
+                  src={team.logo_path ?? "/logos/logo.png"}
                   alt={team.nome}
                   width={90}
                   height={90}

@@ -1,14 +1,20 @@
 import { getPalmares } from "./palmares";
 import { getRanking } from "./ranking";
-import { getSocieta } from "./societa";
+import { getActiveSocietaCatalog } from "./societa/catalog.server";
 
-export function getRankingRows() {
+function currentLeague(category: string | null, group: string | null) {
+  if (!category) return null;
+  return group ? `${category} - Girone ${group.replace(/^girone\s+/i, "")}` : category;
+}
+
+export async function getRankingRows() {
   const ranking = getRanking();
-  const societa = getSocieta();
+  const societa = await getActiveSocietaCatalog();
+  const societaById = new Map(societa.map((team) => [team.id, team]));
   const palmares = getPalmares();
 
   return ranking.map((item) => {
-    const team = societa.find((societaItem) => societaItem.id === item.squadraId);
+    const team = societaById.get(item.squadraId);
     const trofei = palmares.find((palmaresItem) => palmaresItem.squadraId === item.squadraId);
 
     return {
@@ -20,15 +26,15 @@ export function getRankingRows() {
         id: team.id,
         nome: team.nome,
         slug: team.slug,
-        logo: team.logo,
-        legaAttuale: team.legaAttuale,
-        stagioneIngresso: team.stagioneIngresso,
+        logo: team.logo_path ?? "/logo.png",
+        legaAttuale: currentLeague(team.categoria, team.girone),
+        stagioneIngresso: team.stagione_ingresso,
         fantallenatore: team.fantallenatore,
-        nicknameInstagram: team.nicknameInstagram,
+        nicknameInstagram: team.nickname_instagram,
       } : null,
       trofei: { totaleTrofei: trofei?.totaleTrofei ?? 0 },
     };
   });
 }
 
-export type RankingRow = ReturnType<typeof getRankingRows>[number];
+export type RankingRow = Awaited<ReturnType<typeof getRankingRows>>[number];

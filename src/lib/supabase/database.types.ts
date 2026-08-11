@@ -7,6 +7,24 @@ export type Database = {
         Update: { id?: string; username?: string; username_normalizzato?: string; societa_id?: number | null; avatar_url?: string | null; created_at?: string; updated_at?: string };
         Relationships: [{ foreignKeyName: "profiles_societa_id_fkey"; columns: ["societa_id"]; isOneToOne: false; referencedRelation: "societa"; referencedColumns: ["id"] }];
       };
+      profile_verification_requests: {
+        Row: { id: string; profile_id: string; societa_id: number; nome: string; cognome: string; status: "pending" | "approved" | "rejected"; created_at: string; reviewed_at: string | null; reviewed_by: string | null; note_admin: string | null };
+        Insert: { id?: string; profile_id: string; societa_id: number; nome: string; cognome: string; status?: "pending" | "approved" | "rejected"; created_at?: string; reviewed_at?: string | null; reviewed_by?: string | null; note_admin?: string | null };
+        Update: Partial<Database["public"]["Tables"]["profile_verification_requests"]["Row"]>;
+        Relationships: [];
+      };
+      user_emblems: {
+        Row: { id: number; slug: string; nome: string; rarita: "comune" | "raro" | "epico" | "leggendario"; categoria: "fantabet" | "tifo" | "arcade" | "fedelta"; descrizione: string; asset_path: string; nascosto: boolean; ordine: number; attivo: boolean; created_at: string };
+        Insert: Partial<Database["public"]["Tables"]["user_emblems"]["Row"]> & { id: number; slug: string; nome: string; rarita: "comune" | "raro" | "epico" | "leggendario"; categoria: "fantabet" | "tifo" | "arcade" | "fedelta"; descrizione: string; asset_path: string; ordine: number };
+        Update: Partial<Database["public"]["Tables"]["user_emblems"]["Row"]>;
+        Relationships: [];
+      };
+      user_emblem_unlocks: {
+        Row: { profile_id: string; emblem_id: number; unlocked_at: string; stagione_id: number | null; source_type: string; source_ref: string | null; created_at: string };
+        Insert: { profile_id: string; emblem_id: number; unlocked_at: string; stagione_id?: number | null; source_type: string; source_ref?: string | null; created_at?: string };
+        Update: Partial<Database["public"]["Tables"]["user_emblem_unlocks"]["Row"]>;
+        Relationships: [];
+      };
       reserved_usernames: {
         Row: { username_normalizzato: string; created_at: string };
         Insert: { username_normalizzato: string; created_at?: string };
@@ -26,7 +44,7 @@ export type Database = {
         Relationships: [];
       };
       edizioni_competizioni: {
-        Row: { id: number; competizione_id: number; stagione_id: number; nome_edizione: string; formato: string | null; numero_squadre: number | null; stato: string; data_inizio: string | null; data_fine: string | null; attiva: boolean; created_at: string; updated_at: string };
+        Row: { id: number; competizione_id: number; stagione_id: number; nome_edizione: string; formato: string | null; numero_squadre: number | null; stato: string; data_inizio: string | null; data_fine: string | null; attiva: boolean; societa_vincitrice_id: number | null; winner_recorded_at: string | null; created_at: string; updated_at: string };
         Insert: Partial<Database["public"]["Tables"]["edizioni_competizioni"]["Row"]>;
         Update: Partial<Database["public"]["Tables"]["edizioni_competizioni"]["Row"]>;
         Relationships: [{ foreignKeyName: "edizioni_competizioni_competizione_id_fkey"; columns: ["competizione_id"]; isOneToOne: false; referencedRelation: "competizioni"; referencedColumns: ["id"] }];
@@ -70,11 +88,41 @@ export type Database = {
           { foreignKeyName: "fantabet_round_submissions_round_id_fkey"; columns: ["round_id"]; isOneToOne: false; referencedRelation: "fantabet_rounds"; referencedColumns: ["id"] },
         ];
       };
+      profile_supports: {
+        Row: { profile_id: string; stagione_id: number; societa_id: number; selected_at: string; eligible_from_giornata: number; created_at: string };
+        Insert: { profile_id: string; stagione_id: number; societa_id: number; selected_at?: string; eligible_from_giornata: number; created_at?: string };
+        Update: never;
+        Relationships: [];
+      };
+      fantabet_support_match_events: {
+        Row: { id: number; profile_id: string; stagione_id: number; societa_id: number; partita_id: number; punti: number; outcome: "vittoria" | "pareggio" | "sconfitta"; recognized_at: string; created_at: string };
+        Insert: { id?: number; profile_id: string; stagione_id: number; societa_id: number; partita_id: number; punti: number; outcome: "vittoria" | "pareggio" | "sconfitta"; recognized_at?: string; created_at?: string };
+        Update: never;
+        Relationships: [];
+      };
+      profile_support_ineligibilities: {
+        Row: { profile_id: string; stagione_id: number; officialized_at: string; reason: "became_official"; created_at: string };
+        Insert: { profile_id: string; stagione_id: number; officialized_at?: string; reason?: "became_official"; created_at?: string };
+        Update: never;
+        Relationships: [];
+      };
+      fantabet_support_bonus_events: {
+        Row: { id: number; profile_id: string; stagione_id: number; societa_id: number; edizione_competizione_id: number; punti: number; recognized_at: string; created_at: string };
+        Insert: { id?: number; profile_id: string; stagione_id: number; societa_id: number; edizione_competizione_id: number; punti: number; recognized_at?: string; created_at?: string };
+        Update: never;
+        Relationships: [];
+      };
       societa: {
-        Row: { id: number; nome_ufficiale: string; nome_personalizzato: string | null; nome_normalizzato: string; squadra_associata: string | null; fantallenatore: string | null; nickname_instagram: string | null; stagione_ingresso: string | null; categoria: string | null; girone: string | null; logo_path: string | null; storia: string | null; badge_tipo: string | null; attiva: boolean; created_at: string; updated_at: string };
+        Row: { id: number; nome_ufficiale: string; nome_personalizzato: string | null; nome_normalizzato: string; slug: string; squadra_associata: string | null; fantallenatore: string | null; nickname_instagram: string | null; stagione_ingresso: string | null; categoria: string | null; girone: string | null; logo_path: string | null; storia: string | null; storia_tifo: string | null; badge_tipo: string | null; attiva: boolean; created_at: string; updated_at: string };
         Insert: Partial<Database["public"]["Tables"]["societa"]["Row"]>;
         Update: Partial<Database["public"]["Tables"]["societa"]["Row"]>;
         Relationships: [];
+      };
+      societa_slug_aliases: {
+        Row: { slug: string; societa_id: number; created_at: string };
+        Insert: { slug: string; societa_id: number; created_at?: string };
+        Update: { slug?: string; societa_id?: number; created_at?: string };
+        Relationships: [{ foreignKeyName: "societa_slug_aliases_societa_id_fkey"; columns: ["societa_id"]; isOneToOne: false; referencedRelation: "societa"; referencedColumns: ["id"] }];
       };
       lista_attesa: {
         Row: {
@@ -217,6 +265,26 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: {
+      create_my_legacy_profile: {
+        Args: { p_username: string };
+        Returns: Database["public"]["Tables"]["profiles"]["Row"];
+      };
+      request_my_profile_verification: {
+        Args: { p_nome: string; p_cognome: string; p_societa_id: number };
+        Returns: Database["public"]["Tables"]["profile_verification_requests"]["Row"];
+      };
+      public_profile_user_emblems: {
+        Args: { p_profile_id: string };
+        Returns: Array<{ id: number; slug: string; nome: string; rarita: string; categoria: string; descrizione: string; asset_path: string | null; nascosto: boolean; ordine: number; unlocked: boolean; unlocked_at: string | null }>;
+      };
+      admin_review_profile_verification_request: {
+        Args: { p_request_id: string; p_decision: string; p_reviewer_id: string; p_note_admin?: string | null };
+        Returns: Database["public"]["Tables"]["profile_verification_requests"]["Row"];
+      };
+      admin_rename_societa: {
+        Args: { p_societa_id: number; p_nome_ufficiale: string; p_nome_personalizzato?: string | null };
+        Returns: undefined;
+      };
       fantabet_prediction_window_open: {
         Args: { p_bet_id: number };
         Returns: boolean;
@@ -227,7 +295,19 @@ export type Database = {
       };
       fantabet_global_leaderboard: {
         Args: Record<PropertyKey, never>;
-        Returns: Array<{ profile_id: string; username: string; punti_pronostici: number; punti_bonus_costanza: number; punti_totali: number; giornate_giocate: number; pronostici_corretti: number; schedine_perfette: number; streak_attuale: number; posizione: number }>;
+        Returns: Array<{ profile_id: string; username: string; punti_pronostici: number; punti_bonus_costanza: number; punti_tifo: number; punti_bonus_tifo: number; punti_totali: number; giornate_giocate: number; pronostici_corretti: number; schedine_perfette: number; streak_attuale: number; posizione: number }>;
+      };
+      select_my_supported_team: {
+        Args: { p_stagione_id: number; p_societa_id: number };
+        Returns: Database["public"]["Tables"]["profile_supports"]["Row"];
+      };
+      active_supporter_counts: {
+        Args: Record<PropertyKey, never>;
+        Returns: Array<{ societa_id: number; tifosi: number }>;
+      };
+      public_profile_support_summary: {
+        Args: { p_profile_id: string };
+        Returns: Array<{ stagione_id: number; societa_id: number; selected_at: string; punti_tifo: number; punti_bonus_tifo: number; trophy_types: string[]; resolved_trophy_types: string[] }>;
       };
       fantabet_round_leaderboard: {
         Args: { p_round_id: number };

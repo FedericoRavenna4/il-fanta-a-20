@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { getSocieta } from "@/lib/societa";
+import { getActiveSocietaCatalog } from "@/lib/societa/catalog.server";
 import PageHeader from "../components/PageHeader";
 import { redirect } from "next/navigation";
 
@@ -29,17 +29,17 @@ const gironiSerieC = [
   { id: "serie-c-girone-c", nome: "Serie C - Girone C", label: "Girone C" },
 ];
 
-export function CampionatiContent({ embedded = false }: { embedded?: boolean }) {
-  const societa = getSocieta();
+export async function CampionatiContent({ embedded = false }: { embedded?: boolean }) {
+  const societa = await getActiveSocietaCatalog();
 
-  const campioneSerieA = societa.find((team) => team.badgeCampioneSerieA);
+  const campioneSerieA = societa.find((team) => team.badge_tipo === "campione_in_carica");
 
   const neopromosseSerieA = societa.filter(
-    (team) => team.legaAttuale === "Serie A" && team.badgeNeopromossa
+    (team) => team.categoria === "Serie A" && team.badge_tipo === "neo_promossa"
   );
 
   const neopromosseSerieB = societa.filter(
-    (team) => team.legaAttuale === "Serie B" && team.badgeNeopromossa
+    (team) => team.categoria === "Serie B" && team.badge_tipo === "neo_promossa"
   );
 
   return (
@@ -57,7 +57,7 @@ export function CampionatiContent({ embedded = false }: { embedded?: boolean }) 
               ? "hover:bg-sky-500 hover:ring-sky-300"
               : "hover:bg-emerald-500 hover:ring-emerald-300";
           const squadreLega = societa.filter(
-            (team) => team.legaAttuale === lega.nome
+            (team) => team.categoria === lega.nome
           );
 
           const neopromosse =
@@ -110,7 +110,7 @@ export function CampionatiContent({ embedded = false }: { embedded?: boolean }) 
                         className="mt-5 flex items-center gap-4 rounded-2xl bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
                       >
                         <Image
-                          src={campioneSerieA.logo}
+                          src={campioneSerieA.logo_path ?? "/logo.png"}
                           alt={campioneSerieA.nome}
                           width={76}
                           height={76}
@@ -160,7 +160,7 @@ export function CampionatiContent({ embedded = false }: { embedded?: boolean }) 
                           className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-3 transition hover:-translate-y-0.5 hover:border-blue-200 hover:bg-white hover:shadow-md"
                         >
                           <Image
-                            src={team.logo}
+                            src={team.logo_path ?? "/logo.png"}
                             alt={team.nome}
                             width={54}
                             height={54}
@@ -203,7 +203,7 @@ export function CampionatiContent({ embedded = false }: { embedded?: boolean }) 
   className={`group relative flex h-16 items-center justify-center overflow-hidden rounded-xl bg-slate-50 p-1.5 ring-1 ring-slate-100 transition hover:shadow-lg sm:h-28 sm:rounded-2xl sm:p-3 ${hoverClass}`}
 >
   <Image
-    src={team.logo}
+    src={team.logo_path ?? "/logo.png"}
     alt={team.nome}
     width={78}
     height={78}
@@ -254,7 +254,7 @@ export function CampionatiContent({ embedded = false }: { embedded?: boolean }) 
           <div className="grid gap-3 p-4 sm:gap-5 sm:p-6 md:grid-cols-3">
             {gironiSerieC.map((girone) => {
               const squadreGirone = societa.filter(
-                (team) => team.legaAttuale === girone.nome
+                (team) => team.categoria === "Serie C" && team.girone?.replace(/^girone\s+/i, "").toUpperCase() === girone.label.replace(/^Girone\s+/i, "").toUpperCase()
               );
 
               return (
@@ -281,7 +281,7 @@ export function CampionatiContent({ embedded = false }: { embedded?: boolean }) 
   className="group relative flex h-14 items-center justify-center overflow-hidden rounded-lg bg-white p-1 shadow-sm ring-1 ring-violet-100 transition hover:bg-violet-500 hover:shadow-lg hover:ring-violet-300 sm:h-24 sm:rounded-2xl sm:p-2"
 >
   <Image
-    src={team.logo}
+    src={team.logo_path ?? "/logo.png"}
     alt={team.nome}
     width={68}
     height={68}

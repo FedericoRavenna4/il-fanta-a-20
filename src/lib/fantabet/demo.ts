@@ -4,7 +4,7 @@ const names = ["IlProfeta", "Marcolino92", "MisterX", "Fantapazzo", "AleBoss", "
 const totals = [147, 139, 136, 128, 124, 119, 117, 111, 108, 105, 102, 98, 96, 91, 87, 84, 79, 74, 69, 61];
 
 function globalLeaderboard(): FantaBetLeaderboardRow[] {
-  return names.map((username, index) => { const bonus = [20, 10, 20, 0, 10][index % 5]; return { profile_id: `demo-${index + 1}`, username, societa_id: index % 4 === 0 ? index + 1 : null, punti_pronostici: totals[index] - bonus, punti_bonus_costanza: bonus, punti_totali: totals[index], giornate_giocate: 18 - Math.floor(index / 4), pronostici_corretti: 53 - index, schedine_perfette: index % 5, streak_attuale: index % 13, posizione: index + 1 }; });
+  return names.map((username, index) => { const bonus = [20, 10, 20, 0, 10][index % 5]; const team = teams[index % teams.length] ?? null; return { profile_id: `demo-${index + 1}`, username, societa_id: index % 4 === 0 ? team?.id ?? null : null, team_id: team?.id ?? null, team_name: team?.name ?? null, team_logo: team?.logo ?? null, punti_pronostici: totals[index] - bonus, punti_bonus_costanza: bonus, punti_tifo: 0, punti_bonus_tifo: 0, punti_totali: totals[index], giornate_giocate: 18 - Math.floor(index / 4), pronostici_corretti: 53 - index, schedine_perfette: index % 5, streak_attuale: index % 13, posizione: index + 1 }; });
 }
 
 function dailyLeaderboard(roundNumber: number): FantaBetRoundLeaderboardRow[] {

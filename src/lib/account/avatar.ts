@@ -1,4 +1,5 @@
 export const ACCOUNT_AVATAR_BUCKET = "account-avatars";
+export const ACCOUNT_AVATAR_ORIGINAL_BUCKET = "account-avatar-originals";
 export const ACCOUNT_AVATAR_MAX_BYTES = 750 * 1024;
 export const ACCOUNT_AVATAR_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
 
@@ -16,6 +17,10 @@ export function accountInitials(username: string) {
 
 export function isOwnedAvatarPath(path: string | null, userId: string) {
   return Boolean(path && new RegExp(`^${userId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}/avatar\\.(?:jpg|png|webp)$`).test(path));
+}
+
+export function isOwnedAvatarOriginalPath(path: string | null, userId: string) {
+  return Boolean(path && new RegExp(`^${userId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}/original\\.(?:jpg|png|webp)$`).test(path));
 }
 
 function hasSafeImageSignature(bytes: Uint8Array, mime: string) {

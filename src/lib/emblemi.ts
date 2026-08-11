@@ -1,6 +1,5 @@
 import fs from "fs";
 import path from "path";
-import { getSocieta } from "./societa";
 
 export const CATEGORIE_EMBLEMA = [
   "Base",
@@ -38,7 +37,6 @@ export type EmblemiSocieta = {
 };
 
 let catalogoCache: Emblema[] | null = null;
-let societaCache: EmblemiSocieta[] | null = null;
 
 function parseCsvLine(line: string) {
   return line
@@ -166,9 +164,7 @@ export function getCatalogoEmblemi(): Emblema[] {
   return catalogoCache;
 }
 
-export function getEmblemiSocieta(): EmblemiSocieta[] {
-  if (societaCache) return societaCache;
-
+export function getEmblemiSocieta(currentNewEntryIds: ReadonlySet<number>): EmblemiSocieta[] {
   const filePath = path.join(process.cwd(), "data", "societa_emblemi.csv");
   if (!fs.existsSync(filePath)) return [];
 
@@ -182,9 +178,7 @@ export function getEmblemiSocieta(): EmblemiSocieta[] {
   const mappaColonne = intestazioniEmblemi.map((header, index) =>
     trovaEmblemaDaIntestazione(header, index, catalogo)
   );
-  const newEntryIds = new Set(getSocieta().filter((team) => team.badgeNewEntry).map((team) => team.id));
-
-  societaCache = lines.slice(1).map((line) => {
+  const societa = lines.slice(1).map((line) => {
     const values = parseCsvLine(line);
     const emblemi = mappaColonne.flatMap((emblema, index) => {
       if (!emblema) return [];
@@ -199,9 +193,9 @@ export function getEmblemiSocieta(): EmblemiSocieta[] {
     return {
       nomeSocieta: values[0] ?? "",
       squadraId: Number(values[1]),
-      emblemi: newEntryIds.has(Number(values[1])) ? [] : emblemi,
+      emblemi: currentNewEntryIds.has(Number(values[1])) ? [] : emblemi,
     };
   }).filter((societa) => Number.isFinite(societa.squadraId));
 
-  return societaCache;
+  return societa;
 }

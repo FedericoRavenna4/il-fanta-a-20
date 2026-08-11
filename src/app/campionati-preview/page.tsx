@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getSocieta } from "@/lib/societa";
+import { getActiveSocietaCatalog } from "@/lib/societa/catalog.server";
 import ChampionshipPreview from "./preview-client";
 import { createChampionshipMockData } from "./mock-data";
 
@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function CampionatiPreviewPage() {
-  return <ChampionshipPreview leagues={createChampionshipMockData(getSocieta())} />;
+export default async function CampionatiPreviewPage() {
+  const societa = await getActiveSocietaCatalog();
+  return <ChampionshipPreview leagues={createChampionshipMockData(societa)} />;
 }

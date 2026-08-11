@@ -1,25 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { getRanking } from "./ranking";
-
-export type Societa = {
-  id: number;
-  slug: string;
-  nome: string;
-  fantallenatore: string;
-  nicknameInstagram: string;
-  squadraReale: string;
-  stagioneIngresso: string;
-  legaAttuale: string;
-  girone: string;
-  logo: string;
-  ranking: number;
-  puntiRanking: number;
-  leader: boolean;
-  badgeNewEntry: boolean;
-  badgeNeopromossa: boolean;
-  badgeCampioneSerieA: boolean;
-};
+import type { Societa } from "./societa/types";
 
 function parseCsvLine(line: string) {
   return line

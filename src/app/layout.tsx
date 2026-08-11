@@ -19,6 +19,7 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import ScrollToTop from "./components/ScrollToTop";
 import { getCurrentAccount } from "@/lib/account/server";
+import GlobalProfileOnboarding from "./components/GlobalProfileOnboarding";
 
 const manrope = Manrope({
   variable: "--font-manrope",
@@ -119,6 +120,7 @@ export default async function RootLayout({
         />
         <ScrollToTop />
         <Header account={account} />
+        <GlobalProfileOnboarding account={account} />
 
         <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top))] lg:pt-0">{children}</main>
 

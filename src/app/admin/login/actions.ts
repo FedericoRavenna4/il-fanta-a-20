@@ -14,7 +14,7 @@ export async function verifyAdminLoginAction(_state: LoginActionState, formData:
   if (!email || !password) return { message: genericLoginError };
 
   const supabase = await createAuthenticatedSupabaseClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data: login, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) return { message: genericLoginError };
 
   try {
@@ -26,7 +26,8 @@ export async function verifyAdminLoginAction(_state: LoginActionState, formData:
 
   revalidatePath("/admin/login", "page");
   revalidatePath("/admin/importazioni", "page");
-  redirect("/admin/importazioni");
+  const { data: profile } = await supabase.from("profiles").select("username").eq("id", login.user.id).maybeSingle();
+  redirect(profile?.username ? `/user/${encodeURIComponent(profile.username)}` : "/account");
 }
 
 export async function logoutAdminAction() {

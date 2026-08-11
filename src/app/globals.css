@@ -175,6 +175,32 @@ a {
   }
 }
 
+[data-profile-header] {
+  height: 13rem;
+}
+
+[data-support-confirm] {
+  background: #059669;
+  box-shadow: 0 8px 20px -12px rgb(5 150 105 / 0.8);
+}
+
+[data-support-confirm]:hover:not(:disabled) {
+  background: #047857;
+}
+
+@media (max-width: 420px) {
+  [data-support-warning] {
+    font-size: 0.5rem;
+    line-height: 0.75rem;
+  }
+}
+
+@media (min-width: 640px) {
+  [data-profile-header] {
+    height: 13.5rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;

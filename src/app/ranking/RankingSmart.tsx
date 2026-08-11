@@ -17,7 +17,7 @@ export default function RankingSmart({ rows }: { rows: RankingRow[] }) {
   const podio = rows.slice(0, 3);
 
   const classifica = useMemo(() => {
-    return rows.filter((row) => `${row.team?.nome ?? row.nomeRanking} ${row.team?.fantallenatore ?? ""} ${row.team?.nicknameInstagram ?? ""}`.toLowerCase().includes(search.toLowerCase()));
+    return rows.filter((row) => `${row.team?.nome ?? ""} ${row.team?.fantallenatore ?? ""} ${row.team?.nicknameInstagram ?? ""}`.toLowerCase().includes(search.toLowerCase()));
   }, [rows, search]);
 
   useEffect(() => {
@@ -39,7 +39,7 @@ export default function RankingSmart({ rows }: { rows: RankingRow[] }) {
 
   function updateSearch(value: string) {
     setSearch(value);
-    const first = rows.find((row) => `${row.team?.nome ?? row.nomeRanking} ${row.team?.fantallenatore ?? ""} ${row.team?.nicknameInstagram ?? ""}`.toLowerCase().includes(value.toLowerCase()));
+    const first = rows.find((row) => `${row.team?.nome ?? ""} ${row.team?.fantallenatore ?? ""} ${row.team?.nicknameInstagram ?? ""}`.toLowerCase().includes(value.toLowerCase()));
     if (first) setFasciaAttiva(fascia(first.posizione));
   }
 
@@ -59,7 +59,7 @@ export default function RankingSmart({ rows }: { rows: RankingRow[] }) {
           {podio.slice(1).map((row) => (
             <article key={row.posizione} className={`relative grid min-h-0 grid-cols-[36px_minmax(0,1fr)_52px] items-center gap-2 overflow-hidden rounded-[1.25rem] border p-3 sm:min-h-24 sm:grid-cols-[52px_1fr_76px] sm:gap-3 sm:rounded-[1.5rem] sm:p-4 ${row.posizione === 2 ? "border-slate-300 bg-[linear-gradient(145deg,#f8fafc_0%,#cbd5e1_38%,#ffffff_62%,#aeb9c7_100%)] shadow-[0_14px_34px_rgba(100,116,139,.16)]" : "border-orange-300/70 bg-[linear-gradient(145deg,#fff7ed_0%,#c98248_35%,#f6d0aa_58%,#9a542f_100%)] shadow-[0_14px_34px_rgba(154,82,47,.16)]"}`}>
               <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,transparent_20%,rgba(255,255,255,.3)_46%,transparent_68%)] opacity-70" />
-              <p className={`relative text-xl font-black sm:text-3xl ${row.posizione === 2 ? "text-slate-500" : "text-orange-950/65"}`}>0{row.posizione}</p><div className="relative">{row.team ? <Link href={`/societa/${row.team.slug}`} className="group/name inline-block rounded outline-none focus-visible:ring-2 focus-visible:ring-blue-900"><h3 className="line-clamp-2 text-xs font-black uppercase text-blue-950 transition group-hover/name:text-sky-700 sm:text-sm">{row.team.nome}</h3></Link> : <h3 className="line-clamp-2 text-xs font-black uppercase text-blue-950 sm:text-sm">{row.nomeRanking}</h3>}<p className="mt-0.5 text-[10px] font-bold text-slate-600 sm:mt-1 sm:text-xs">{row.puntiRanking} punti</p></div>{row.team && <Link href={`/societa/${row.team.slug}`} aria-label={`Apri la scheda di ${row.team.nome}`} className="group/logo relative rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-blue-900"><Image src={row.team.logo} alt={row.team.nome} width={70} height={70} className="max-h-12 max-w-12 object-contain transition group-hover/logo:scale-105 sm:max-h-16 sm:max-w-16" /></Link>}
+              <p className={`relative text-xl font-black sm:text-3xl ${row.posizione === 2 ? "text-slate-500" : "text-orange-950/65"}`}>0{row.posizione}</p><div className="relative">{row.team ? <Link href={`/societa/${row.team.slug}`} className="group/name inline-block rounded outline-none focus-visible:ring-2 focus-visible:ring-blue-900"><h3 className="line-clamp-2 text-xs font-black uppercase text-blue-950 transition group-hover/name:text-sky-700 sm:text-sm">{row.team.nome}</h3></Link> : <h3 className="line-clamp-2 text-xs font-black uppercase text-slate-500 sm:text-sm">Società non disponibile</h3>}<p className="mt-0.5 text-[10px] font-bold text-slate-600 sm:mt-1 sm:text-xs">{row.puntiRanking} punti</p></div>{row.team && <Link href={`/societa/${row.team.slug}`} aria-label={`Apri la scheda di ${row.team.nome}`} className="group/logo relative rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-blue-900"><Image src={row.team.logo} alt={row.team.nome} width={70} height={70} className="max-h-12 max-w-12 object-contain transition group-hover/logo:scale-105 sm:max-h-16 sm:max-w-16" /></Link>}
             </article>
           ))}
         </div>
@@ -76,7 +76,7 @@ export default function RankingSmart({ rows }: { rows: RankingRow[] }) {
                 <Image src={row.team.logo} alt={row.team.nome} width={42} height={42} className="h-9 w-9 shrink-0 object-contain transition group-hover/team:scale-105 sm:h-10 sm:w-10" />
                 <span className="min-w-0 text-xs font-black uppercase text-blue-950 transition group-hover/team:text-sky-700 sm:text-base"><AutoScrollName name={row.team.nome} index={index} /></span>
               </Link>
-            ) : <span className="min-w-0 text-xs font-black uppercase text-blue-950 sm:text-base"><AutoScrollName name={row.nomeRanking} index={index} /></span>}
+            ) : <span className="min-w-0 text-xs font-black uppercase text-slate-500 sm:text-base">Società non disponibile</span>}
             <span className="hidden text-sm font-bold text-slate-500 lg:block">{row.team?.stagioneIngresso ?? "—"}</span><span className="hidden truncate text-sm font-bold text-slate-500 lg:block">{row.team?.legaAttuale ?? "—"}</span><span className="hidden text-right text-sm font-black text-blue-950 lg:block">{row.trofei.totaleTrofei}</span><span className="text-right text-base font-black text-blue-950">{row.puntiRanking}</span>
           </div>
         ))}
@@ -124,7 +124,7 @@ export default function RankingSmart({ rows }: { rows: RankingRow[] }) {
                         <Image src={row.team.logo} alt={row.team.nome} width={40} height={40} className="h-8 w-8 shrink-0 object-contain transition group-hover/team:scale-105 sm:h-10 sm:w-10" />
                         <span className="min-w-0 text-[11px] font-black uppercase text-blue-950 transition group-hover/team:text-sky-700 sm:text-base"><AutoScrollName name={row.team.nome} index={index + 10} /></span>
                       </Link>
-                    ) : <span className="min-w-0 text-[11px] font-black uppercase text-blue-950 sm:text-base"><AutoScrollName name={row.nomeRanking} index={index + 10} /></span>}
+                    ) : <span className="min-w-0 text-[11px] font-black uppercase text-slate-500 sm:text-base">Società non disponibile</span>}
                     <span className="hidden text-sm font-bold text-slate-500 lg:block">{row.team?.stagioneIngresso ?? "—"}</span>
                     <span className="hidden truncate text-sm font-bold text-slate-500 lg:block">{row.team?.legaAttuale ?? "—"}</span>
                     <span className="text-right text-sm font-black text-blue-950">{row.trofei.totaleTrofei}</span>

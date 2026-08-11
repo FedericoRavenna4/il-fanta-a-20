@@ -69,7 +69,7 @@ export default function RankingClient({ rows, embedded = false, initialLimit }: 
     return rows
       .filter((row) => {
         const searchText = `
-          ${row.team?.nome ?? row.nomeRanking}
+          ${row.team?.nome ?? ""}
           ${row.team?.fantallenatore ?? ""}
           ${row.team?.nicknameInstagram ?? ""}
           ${row.team?.legaAttuale ?? ""}
@@ -85,8 +85,8 @@ export default function RankingClient({ rows, embedded = false, initialLimit }: 
         }
 
         if (sort === "nome") {
-          result = (a.team?.nome ?? a.nomeRanking).localeCompare(
-            b.team?.nome ?? b.nomeRanking
+          result = (a.team?.nome ?? "").localeCompare(
+            b.team?.nome ?? ""
           );
         }
 
@@ -209,7 +209,7 @@ height={300}
 
             <div className="relative mt-4 flex min-h-[50px] items-center justify-center">
               <h3 className="line-clamp-2 text-balance text-[21px] font-extrabold uppercase leading-tight text-blue-950">
-                {row.team?.nome ?? row.nomeRanking}
+                {row.team?.nome ?? "Società non disponibile"}
               </h3>
             </div>
 
@@ -337,7 +337,7 @@ height={300}
 
           <div className="min-w-0">
             <h3 className="truncate font-black uppercase text-blue-950">
-              {row.team?.nome ?? row.nomeRanking}
+              {row.team?.nome ?? "Società non disponibile"}
             </h3>
 
             <p className="text-sm font-semibold text-slate-500">

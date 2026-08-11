@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getCatalogoEmblemi, getEmblemiSocieta } from "@/lib/emblemi";
-import { getSocieta } from "@/lib/societa";
+import { getActiveSocietaCatalog } from "@/lib/societa/catalog.server";
 import { isEmblemaNascosto } from "@/lib/emblemi-ui";
 import EmblemiCatalogo from "./EmblemiCatalogo";
 import { createPageMetadata } from "@/lib/seo";
@@ -11,10 +11,12 @@ export const metadata: Metadata = createPageMetadata({
   path: "/emblemi",
 });
 
-export default function EmblemiPage() {
+export default async function EmblemiPage() {
   const catalogo = getCatalogoEmblemi();
-  const assegnazioni = getEmblemiSocieta();
-  const societa = getSocieta();
+  const societa = await getActiveSocietaCatalog();
+  const societaById = new Map(societa.map((team) => [team.id, team]));
+  const newEntryIds = new Set(societa.filter((team) => team.badge_tipo === "new_entry").map((team) => team.id));
+  const assegnazioni = getEmblemiSocieta(newEntryIds);
 
   const nascosti = catalogo.filter(isEmblemaNascosto).map((emblema) => ({
     id: emblema.id,
@@ -29,7 +31,7 @@ export default function EmblemiPage() {
         )
       )
       .map((assegnazione) => {
-        const team = societa.find((item) => item.id === assegnazione.squadraId);
+        const team = societaById.get(assegnazione.squadraId);
         return {
           nome: team?.nome ?? assegnazione.nomeSocieta,
           slug: team?.slug ?? null,

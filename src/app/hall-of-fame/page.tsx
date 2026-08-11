@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import { getSocieta } from "@/lib/societa";
+import { getActiveSocietaCatalog } from "@/lib/societa/catalog.server";
+import type { CurrentSocieta } from "@/lib/societa/current.server";
 import { getPalmares } from "@/lib/palmares";
 import PageHeader from "../components/PageHeader";
 import { getRisultati } from "@/lib/risultati";
@@ -90,8 +91,21 @@ function trofeoArchivioSize(image: string) {
   return "max-h-32 max-w-32 sm:max-h-40 sm:max-w-36";
 }
 
-export function HallOfFameContent({ embedded = false }: { embedded?: boolean }) {
-  const societa = getSocieta();
+type HallTeam = { id: number; nome: string; slug: string | null; logo: string; historicalName: string };
+
+function resolveHallTeam(team: CurrentSocieta | undefined, id: number, historicalName: string): HallTeam {
+  return team
+    ? { id: team.id, nome: team.nome, slug: team.slug, logo: team.logo_path ?? "/logo.png", historicalName }
+    : { id, nome: historicalName || "Società storica", slug: null, logo: "/logo.png", historicalName };
+}
+
+function hallTeamHref(team: HallTeam) {
+  return team.slug ? `/societa/${team.slug}` : "/statistiche#hall-of-fame";
+}
+
+export async function HallOfFameContent({ embedded = false }: { embedded?: boolean }) {
+  const societa = await getActiveSocietaCatalog();
+  const societaById = new Map(societa.map((team) => [team.id, team]));
   const palmares = getPalmares();
   const risultati = getRisultati();
 
@@ -103,18 +117,17 @@ export function HallOfFameContent({ embedded = false }: { embedded?: boolean }) 
     )
     .map((item) => ({
       stagione: item.stagione,
-      team: societa.find((team) => team.id === item.squadraId),
+      team: resolveHallTeam(societaById.get(item.squadraId), item.squadraId, item.nomeStorico),
     }))
-    .filter((item) => item.team)
     .sort((a, b) => a.stagione.localeCompare(b.stagione));
 
   const societaPiuTitolata = [...palmares].sort(
     (a, b) => b.totaleTrofei - a.totaleTrofei
   )[0];
 
-  const teamPiuTitolato = societa.find(
-    (team) => team.id === societaPiuTitolata?.squadraId
-  );
+  const teamPiuTitolato = societaPiuTitolata
+    ? resolveHallTeam(societaById.get(societaPiuTitolata.squadraId), societaPiuTitolata.squadraId, societaPiuTitolata.nomeSquadra)
+    : null;
 
   const trofeiPiuTitolata = societaPiuTitolata
     ? [
@@ -156,7 +169,7 @@ export function HallOfFameContent({ embedded = false }: { embedded?: boolean }) 
               </div>
             </div>
 
-            <Link href={`/societa/${teamPiuTitolato.slug}`} aria-label={`Apri la scheda di ${teamPiuTitolato.nome}`} className="group/logo relative flex items-center justify-center self-stretch rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-amber-300">
+            <Link href={hallTeamHref(teamPiuTitolato)} aria-label={`Apri la scheda di ${teamPiuTitolato.nome}`} className="group/logo relative flex items-center justify-center self-stretch rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-amber-300">
               <div className="pointer-events-none absolute h-20 w-20 rounded-full bg-white/10 blur-2xl sm:h-40 sm:w-40" />
               <Image src={teamPiuTitolato.logo} alt={teamPiuTitolato.nome} width={300} height={300} className="relative max-h-20 w-auto object-contain drop-shadow-[0_20px_30px_rgba(0,0,0,0.4)] transition duration-500 group-hover/logo:scale-105 sm:max-h-44 lg:max-h-56" />
             </Link>
@@ -207,10 +220,10 @@ export function HallOfFameContent({ embedded = false }: { embedded?: boolean }) 
                 const records = palmares
                   .map((record) => ({
                     record,
-                    team: societa.find((item) => item.id === record.squadraId),
+                    team: resolveHallTeam(societaById.get(record.squadraId), record.squadraId, record.nomeSquadra),
                     count: valore(record, gruppo.campo),
                   }))
-                  .filter((item) => item.team && item.count > 0)
+                  .filter((item) => item.count > 0)
                   .sort((a, b) => b.count - a.count);
 
                 const isDark = gruppo.style.includes("darkCard");
@@ -233,10 +246,10 @@ export function HallOfFameContent({ embedded = false }: { embedded?: boolean }) 
 
                       <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
                         {vincitoriCoppaFanta.length > 0 ? vincitoriCoppaFanta.map(({ stagione, team }) => (
-                          <Link key={`${stagione}-${team!.id}`} href={`/societa/${team!.slug}`} className="group grid grid-cols-[72px_52px_minmax(0,1fr)] items-center gap-3 rounded-[1.4rem] border border-amber-200 bg-white/75 p-3 shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-md sm:grid-cols-[90px_64px_minmax(0,1fr)] sm:gap-4 sm:p-4">
+                          <Link key={`${stagione}-${team.id}`} href={hallTeamHref(team)} className="group grid grid-cols-[72px_52px_minmax(0,1fr)] items-center gap-3 rounded-[1.4rem] border border-amber-200 bg-white/75 p-3 shadow-sm transition hover:-translate-y-0.5 hover:bg-white hover:shadow-md sm:grid-cols-[90px_64px_minmax(0,1fr)] sm:gap-4 sm:p-4">
                             <div><p className="text-[9px] font-black uppercase tracking-[0.18em] text-amber-700">Edizione</p><p className="mt-1 text-lg font-black text-blue-950">{stagione}</p></div>
-                            <div className="flex h-14 w-14 items-center justify-center"><Image src={team!.logo} alt={team!.nome} width={58} height={58} className="max-h-14 max-w-14 object-contain transition group-hover:scale-105" /></div>
-                            <div className="min-w-0"><p className="text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">Campione</p><p className="mt-1 truncate text-xs font-black uppercase text-blue-950 sm:text-base">{team!.nome}</p></div>
+                            <div className="flex h-14 w-14 items-center justify-center"><Image src={team.logo} alt={team.nome} width={58} height={58} className="max-h-14 max-w-14 object-contain transition group-hover:scale-105" /></div>
+                            <div className="min-w-0"><p className="text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">Campione</p><p className="mt-1 truncate text-xs font-black uppercase text-blue-950 sm:text-base">{team.nome}</p></div>
                           </Link>
                         )) : <p className="rounded-2xl bg-white/70 p-4 text-sm font-semibold text-slate-500">Nessun vincitore registrato.</p>}
                         <div className="relative hidden min-h-24 grid-cols-[72px_minmax(0,1fr)] items-center gap-3 overflow-hidden rounded-[1.4rem] border border-dashed border-amber-300/70 bg-[linear-gradient(135deg,rgba(255,255,255,.78),rgba(254,243,199,.55))] p-3 shadow-sm lg:grid">
@@ -263,8 +276,8 @@ export function HallOfFameContent({ embedded = false }: { embedded?: boolean }) 
 
                       <div className="mt-3 flex min-h-0 flex-wrap items-end justify-center gap-3 pb-1 sm:mt-auto sm:min-h-[92px] sm:gap-5">
                         {records.length > 0 ? records.map(({ team, count }) => (
-                          <Link key={team!.id} href={`/societa/${team!.slug}`} title={`${team!.nome} x${count}`} className="group/logo flex flex-col items-center gap-1.5">
-                            <Image src={team!.logo} alt={team!.nome} width={58} height={58} className="h-14 w-14 object-contain drop-shadow-[0_8px_14px_rgba(0,0,0,0.4)] transition duration-300 group-hover/logo:-translate-y-1 group-hover/logo:scale-110" />
+                          <Link key={team.id} href={hallTeamHref(team)} title={`${team.nome} x${count}`} className="group/logo flex flex-col items-center gap-1.5">
+                            <Image src={team.logo} alt={team.nome} width={58} height={58} className="h-14 w-14 object-contain drop-shadow-[0_8px_14px_rgba(0,0,0,0.4)] transition duration-300 group-hover/logo:-translate-y-1 group-hover/logo:scale-110" />
                             <span className={`text-xs font-black uppercase tracking-[0.14em] drop-shadow ${isDark ? "text-white" : "text-blue-950"}`}>x{count}</span>
                           </Link>
                         )) : <p className={`text-sm font-semibold ${isDark ? "text-white/60" : "text-slate-500"}`}>Nessun vincitore registrato.</p>}

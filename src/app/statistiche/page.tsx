@@ -29,8 +29,8 @@ const percorsi = [
   },
 ];
 
-export default function StatistichePage() {
-  const rows = getRankingRows();
+export default async function StatistichePage() {
+  const rows = await getRankingRows();
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-7 sm:px-5 sm:py-12 lg:px-6 lg:py-16">

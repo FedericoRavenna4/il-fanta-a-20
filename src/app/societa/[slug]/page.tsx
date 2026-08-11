@@ -1,12 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { getSocieta } from "@/lib/societa";
+import { notFound, permanentRedirect } from "next/navigation";
+import { getActiveSocietaBySlug } from "@/lib/societa/catalog.server";
 import { getPalmares } from "@/lib/palmares";
+import { getRanking } from "@/lib/ranking";
 import { getRose } from "@/lib/rose";
 import { getRisultati } from "@/lib/risultati";
 import { getStatisticheGiocatori } from "@/lib/statisticheGiocatori";
-import { getStorieSocieta } from "@/lib/storieSocieta";
 import RosaSocieta from "./RosaSocieta";
 import StoriaSocieta from "./StoriaSocieta";
 import { getEmblemiSocieta } from "@/lib/emblemi";
@@ -21,9 +21,10 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const team = getSocieta().find((item) => item.slug === slug);
+  const lookup = await getActiveSocietaBySlug(slug);
 
-  if (!team) return {};
+  if (!lookup) return {};
+  const team = lookup.societa;
   return createPageMetadata({
     title: team.nome,
     description: `Scopri la scheda ufficiale di ${team.nome}: storia, rosa, palmarès, risultati ed emblemi nel Fanta a 20.`,
@@ -31,10 +32,10 @@ export async function generateMetadata({
   });
 }
 
-function getLegaGradient(lega: string) {
+function getLegaGradient(lega: string | null) {
   if (lega === "Serie A") return "from-sky-500 via-sky-600 to-blue-900";
   if (lega === "Serie B") return "from-emerald-500 via-emerald-600 to-blue-900";
-  if (lega.startsWith("Serie C")) return "from-violet-500 via-violet-600 to-blue-900";
+  if (lega?.startsWith("Serie C")) return "from-violet-500 via-violet-600 to-blue-900";
   return "from-blue-950 via-blue-900 to-blue-800";
 }
 export default async function SchedaSocietaPage({
@@ -43,36 +44,37 @@ export default async function SchedaSocietaPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+  const lookup = await getActiveSocietaBySlug(slug);
+  if (!lookup) notFound();
+  if (lookup.isAlias) permanentRedirect(`/societa/${lookup.canonicalSlug}`);
+  const team = lookup.societa;
 
-  const societa = getSocieta();
   const palmares = getPalmares();
+  const ranking = getRanking();
   const rose = getRose();
   const risultati = getRisultati();
-  const storieSocieta = getStorieSocieta();
   const statisticheGiocatori = getStatisticheGiocatori();
-  const emblemi = getEmblemiSocieta();
-  const team = societa.find((item) => item.slug === slug);
+  const emblemi = getEmblemiSocieta(new Set(team.badge_tipo === "new_entry" ? [team.id] : []));
 
-  if (!team) {
-    notFound();
-  }
-
-  const fantallenatori = team.fantallenatore
+  const fantallenatori = (team.fantallenatore ?? "")
     .split(/\s+-\s+/)
     .map((nome) => nome.trim())
     .filter(Boolean);
 
   const trofei = palmares.find((item) => item.squadraId === team.id);
+  const rankingTeam = ranking.find((item) => item.squadraId === team.id);
   const rosaTeam = rose.filter((item) => item.squadraId === team.id);
   const emblemiTeam = emblemi.find(
     (item) => item.squadraId === team.id
   );
   const risultatiTeam = risultati.filter((item) => item.squadraId === team.id);
-  const storiaEditoriale = storieSocieta.find(
-    (item) => item.squadraId === team.id
-  );
-
-  const legaGradient = getLegaGradient(team.legaAttuale);
+  const legaCorrente = team.girone
+    ? `${team.categoria ?? "Categoria"} - Girone ${team.girone}`
+    : team.categoria;
+  const legaGradient = getLegaGradient(team.categoria);
+  const isNewEntry = team.badge_tipo === "new_entry";
+  const isPromoted = team.badge_tipo === "neo_promossa";
+  const isChampion = team.badge_tipo === "campione_in_carica";
 
   const palmaresCards = [
     {
@@ -153,16 +155,16 @@ export default async function SchedaSocietaPage({
           <div className="p-4 text-center sm:p-8 lg:p-10">
             <div className="relative mb-4 min-h-36 sm:mb-8 sm:min-h-72">
               <Image
-                src={team.logo}
+                src={team.logo_path ?? "/logos/logo.png"}
                 alt={team.nome}
                 width={280}
                 height={280}
                 className="mx-auto max-h-36 w-auto object-contain drop-shadow-sm transition hover:scale-105 hover:drop-shadow-[0_22px_30px_rgba(14,116,144,0.35)] sm:max-h-72"
               />
               <div className="absolute right-0 top-0 flex max-w-[42%] flex-col items-end gap-1.5 sm:gap-2">
-                {team.badgeNewEntry && <Image src="/badge-societa/new-entry.png" alt="New entry" width={150} height={55} className="h-12 max-w-full object-contain object-right sm:h-16" />}
-                {team.badgeNeopromossa && <Image src="/badge-societa/neo-promossa.png" alt="Neopromossa" width={150} height={55} className="h-12 max-w-full object-contain object-right sm:h-16" />}
-                {team.badgeCampioneSerieA && <Image src="/badge-societa/campione-in-carica.png" alt="Campione in carica" width={150} height={55} className="h-12 max-w-full object-contain object-right sm:h-16" />}
+                {isNewEntry && <Image src="/badge-societa/new-entry.png" alt="New entry" width={150} height={55} className="h-12 max-w-full object-contain object-right sm:h-16" />}
+                {isPromoted && <Image src="/badge-societa/neo-promossa.png" alt="Neopromossa" width={150} height={55} className="h-12 max-w-full object-contain object-right sm:h-16" />}
+                {isChampion && <Image src="/badge-societa/campione-in-carica.png" alt="Campione in carica" width={150} height={55} className="h-12 max-w-full object-contain object-right sm:h-16" />}
               </div>
             </div>
 
@@ -171,10 +173,10 @@ export default async function SchedaSocietaPage({
             </h1>
 
             <p className="mb-4 text-sm font-semibold text-slate-500 sm:mb-6 sm:text-base">
-              {team.legaAttuale}
+              {legaCorrente ?? "Categoria non disponibile"}
             </p>
 
-            {storiaEditoriale?.descrizione && (
+            {team.storia && (
               <div className="mx-auto mb-9 max-w-4xl rounded-[1.75rem] border border-sky-100 bg-gradient-to-br from-sky-50/80 via-white to-white p-4 text-left shadow-md shadow-sky-100/70 sm:p-6">
                 <p className="mb-3 text-xs font-black uppercase tracking-[0.25em] text-sky-600">
                   Identità storica
@@ -183,7 +185,7 @@ export default async function SchedaSocietaPage({
                 <div className="mb-4 h-[4px] w-40 rounded-full bg-gradient-to-r from-blue-950 via-sky-500 to-transparent" />
 
                 <p className="break-words text-[15px] font-semibold leading-7 text-slate-600 sm:text-[17px] sm:leading-8">
-                  {storiaEditoriale.descrizione}
+                  {team.storia}
                 </p>
               </div>
             )}
@@ -195,7 +197,7 @@ export default async function SchedaSocietaPage({
               >
                 <p className="text-sm font-bold text-slate-500">Ranking</p>
                 <p className="text-3xl font-black text-blue-950">
-                  #{team.ranking}
+                  {rankingTeam ? `#${rankingTeam.posizione}` : "—"}
                 </p>
               </Link>
 
@@ -232,9 +234,9 @@ export default async function SchedaSocietaPage({
 
             <dl className="divide-y divide-slate-100 px-5 sm:px-7">
               {[
-                [fantallenatori.length > 1 ? "Fantallenatori" : "Fantallenatore", team.fantallenatore],
-                ["Lega attuale", team.legaAttuale],
-                ["Presente dal", team.stagioneIngresso],
+                [fantallenatori.length > 1 ? "Fantallenatori" : "Fantallenatore", team.fantallenatore ?? "—"],
+                ["Lega attuale", legaCorrente ?? "—"],
+                ["Presente dal", team.stagione_ingresso ?? "—"],
               ].map(([label, value]) => (
                 <div key={label} className="flex min-w-0 items-start justify-between gap-3 py-4 sm:items-center sm:gap-5">
                   <dt className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-400">
@@ -285,8 +287,8 @@ export default async function SchedaSocietaPage({
     risultati={risultatiTeam}
     nomeSocieta={team.nome}
     squadraId={team.id}
-    isNewEntry={team.badgeNewEntry}
-    descrizioneEditoriale={storiaEditoriale?.descrizione}
+    isNewEntry={isNewEntry}
+    descrizioneEditoriale={team.storia ?? undefined}
   />
 </div>
 
@@ -294,7 +296,7 @@ export default async function SchedaSocietaPage({
 <div id="rose">
   <RosaSocieta
     rosa={rosaTeam}
-    isNewEntry={team.badgeNewEntry}
+    isNewEntry={isNewEntry}
     statistiche={statisticheGiocatori}
   />
 </div>

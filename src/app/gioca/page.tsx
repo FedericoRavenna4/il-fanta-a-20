@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getSocieta } from "@/lib/societa";
+import { getActiveSocietaCatalog } from "@/lib/societa/catalog.server";
 import type { GameTeam } from "@/lib/game/types";
 import { getArcadeLeaderboard } from "@/lib/arcade/server";
 import ArcadeTopThree from "./ArcadeTopThree";
@@ -21,14 +21,14 @@ export default async function GiocaPage({
   const requestedTeam = Array.isArray(params.societa)
     ? params.societa[0]
     : params.societa;
-  const teams: GameTeam[] = getSocieta()
+  const teams: GameTeam[] = (await getActiveSocietaCatalog())
     .map((team) => ({
       id: team.id,
       slug: team.slug,
       nome: team.nome,
-      logo: team.logo,
-      lega: team.legaAttuale,
-      accent: getLeagueAccent(team.legaAttuale),
+      logo: team.logo_path ?? "/logo.png",
+      lega: getLeagueLabel(team.categoria, team.girone),
+      accent: getLeagueAccent(team.categoria ?? ""),
     }))
     .sort((first, second) => first.nome.localeCompare(second.nome, "it"));
   const initialLeaderboard = await getArcadeLeaderboard();
@@ -85,6 +85,11 @@ function getLeagueAccent(league: string): GameTeam["accent"] {
   if (league.startsWith("Serie A")) return "sky";
   if (league.startsWith("Serie B")) return "lime";
   return "violet";
+}
+
+function getLeagueLabel(category: string | null, group: string | null) {
+  if (!category) return "Categoria non disponibile";
+  return group ? `${category} - Girone ${group.replace(/^girone\s+/i, "")}` : category;
 }
 
 function Rule({ title, text, mobileTitle, mobileText, tone }: { title: string; text: string; mobileTitle: string; mobileText: string; tone: "sky" | "amber" }) {

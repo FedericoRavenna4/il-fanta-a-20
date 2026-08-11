@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
-import { getSocieta } from "@/lib/societa";
 import { SITE_URL } from "@/lib/seo";
+import { getActiveSocietaCatalog } from "@/lib/societa/catalog.server";
 
 const publicRoutes = [
   { path: "", priority: 1, changeFrequency: "weekly" as const },
@@ -20,13 +20,13 @@ const publicRoutes = [
   { path: "/privacy", priority: 0.3, changeFrequency: "yearly" as const },
 ];
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const pages = publicRoutes.map((route) => ({
     url: `${SITE_URL}${route.path}`,
     changeFrequency: route.changeFrequency,
     priority: route.priority,
   }));
-  const societa = getSocieta().map((team) => ({
+  const societa = (await getActiveSocietaCatalog()).map((team) => ({
     url: `${SITE_URL}/societa/${team.slug}`,
     changeFrequency: "weekly" as const,
     priority: 0.7,

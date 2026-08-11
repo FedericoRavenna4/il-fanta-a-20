@@ -547,7 +547,20 @@ test("dropdown centra la giornata selezionata all'apertura", async () => {
 
 test("rank leaderboard usa colonna fissa centrata e numeri tabulari", async () => {
   const client = await readFile(new URL("../../app/fantabet/FantaBetClient.tsx", import.meta.url), "utf8");
-  assert.match(client, /grid-cols-\[32px_minmax\(0,1fr\)_24px_38px\]/); assert.match(client, /w-8 text-center tabular-nums/);
+  assert.match(client, /sm:grid-cols-\[32px_minmax\(0,1fr\)_28px_24px_38px\]/); assert.match(client, /w-7[^"`]*tabular-nums[^"`]*sm:w-8/);
+});
+
+test("leaderboard mostra la squadra fra username e giocate senza overflow mobile", async () => {
+  const client = await readFile(new URL("../../app/fantabet/FantaBetClient.tsx", import.meta.url), "utf8");
+  const server = await readFile(new URL("./server.ts", import.meta.url), "utf8");
+  assert.match(client, /data-leaderboard-team-grid/);
+  assert.match(client, /row\.team_logo[\s\S]*row\.team_name[\s\S]*Giornate giocate/);
+  assert.match(client, /alt=\{`Logo \$\{row\.team_name\}`\}/); assert.match(client, /title=\{row\.team_name\}/);
+  assert.match(client, /grid-cols-\[30px_minmax\(0,1fr\)_22px_22px_36px\]/);
+  assert.match(client, /h-5 w-5 object-contain sm:h-6 sm:w-6/);
+  assert.match(server, /const officialId = societyByProfile\.get\(row\.profile_id\) \?\? null/);
+  assert.match(server, /const teamId = officialId \?\? supportByProfile\.get\(row\.profile_id\) \?\? null/);
+  assert.match(server, /team_logo: team\?\.logo_path \?\? null/);
 });
 
 test("valore base delle giocate non usa il prefisso più", async () => {
