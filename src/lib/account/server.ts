@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createAuthenticatedSupabaseClient } from "@/lib/supabase/authenticated.server";
-import { ACCOUNT_AVATAR_BUCKET, isOwnedAvatarPath } from "./avatar";
+import { ACCOUNT_AVATAR_BUCKET, isOwnedAvatarPath, versionAvatarUrl } from "./avatar";
 
 export type AccountViewer = { id: string; username: string | null; avatarUrl: string | null };
 
@@ -12,12 +12,13 @@ export async function getCurrentAccount(): Promise<AccountViewer | null> {
     if (error || !user) return null;
     const { data: profile } = await supabase
       .from("profiles")
-      .select("id,username,avatar_url")
+      .select("id,username,avatar_url,updated_at")
       .eq("id", user.id)
       .maybeSingle();
     if (!profile) return { id: user.id, username: null, avatarUrl: null };
     const avatarPath = isOwnedAvatarPath(profile.avatar_url, user.id) ? profile.avatar_url : null;
-    const avatarUrl = avatarPath ? supabase.storage.from(ACCOUNT_AVATAR_BUCKET).getPublicUrl(avatarPath).data.publicUrl : null;
+    const publicUrl = avatarPath ? supabase.storage.from(ACCOUNT_AVATAR_BUCKET).getPublicUrl(avatarPath).data.publicUrl : null;
+    const avatarUrl = versionAvatarUrl(publicUrl, profile.updated_at);
     return { id: profile.id, username: profile.username, avatarUrl };
   } catch {
     return null;

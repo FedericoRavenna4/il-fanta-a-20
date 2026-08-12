@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { shouldShowProfileOnboarding } from "../src/lib/account/verification.ts";
+import { resolveProfileTeamState, shouldShowProfileOnboarding } from "../src/lib/account/verification.ts";
 
 const read = (...parts) => readFileSync(new URL(`../${parts.join("/")}`, import.meta.url), "utf8");
 const migration = read("supabase", "migrations", "202608100004_profile_verification_requests.sql");
+const selfApprovalMigration = read("supabase", "migrations", "202608120001_admin_verification_self_approval.sql");
 const page = read("src", "app", "user", "[username]", "page.tsx");
 const layout = read("src", "app", "layout.tsx");
 const globalOnboarding = read("src", "app", "components", "GlobalProfileOnboarding.tsx");
@@ -12,6 +13,8 @@ const onboarding = read("src", "app", "user", "[username]", "ProfileOnboarding.t
 const selector = read("src", "app", "user", "[username]", "ProfileSupportSelector.tsx");
 const adminPage = read("src", "app", "admin", "verifiche", "page.tsx");
 const adminActions = read("src", "app", "admin", "verifiche", "actions.ts");
+const smoothOverflowText = read("src", "app", "admin", "verifiche", "SmoothOverflowText.tsx");
+const verificationReview = read("src", "app", "admin", "verifiche", "VerificationReviewForm.tsx");
 
 test("onboarding deriva solo dallo stato reale", () => {
   const base = { owner: true, societaId: null, hasActiveSupport: false, hasPendingVerification: false };
@@ -38,6 +41,108 @@ test("pending blocca onboarding e mostra stato dedicato", () => {
   assert.match(page, /PendingVerification/);
   assert.match(onboarding, /In attesa di conferma/);
   assert.match(migration, /profile_supports_block_pending_verification/);
+});
+
+test("La mia squadra applica una sola priorità di stato", () => {
+  assert.equal(resolveProfileTeamState({ societaId: 4, verificationStatus: "pending", hasActiveSupport: true }), "official");
+  assert.equal(resolveProfileTeamState({ societaId: null, verificationStatus: "pending", hasActiveSupport: true }), "verification-pending");
+  assert.equal(resolveProfileTeamState({ societaId: null, verificationStatus: null, hasActiveSupport: true }), "supported");
+  assert.equal(resolveProfileTeamState({ societaId: null, verificationStatus: "rejected", hasActiveSupport: false }), "verification-rejected");
+  assert.equal(resolveProfileTeamState({ societaId: null, verificationStatus: null, hasActiveSupport: false }), "onboarding");
+  assert.match(page, /data-profile-team-state=\{profileTeamState\}/);
+  assert.match(page, /verification-pending[\s\S]*PendingVerification/);
+  assert.doesNotMatch(page, /space-y-4 sm:space-y-6">\s*\{owner && pendingVerification/);
+});
+
+test("Centro Admin espone coda, dettaglio e revisione RPC senza doppio submit", () => {
+  const dashboard = read("src", "app", "admin", "page.tsx");
+  const review = read("src", "app", "admin", "verifiche", "VerificationReviewForm.tsx");
+  assert.match(dashboard, /href="\/admin\/verifiche"/);
+  assert.match(dashboard, /Richieste verifica profilo/i);
+  assert.match(dashboard, /eq\("status", "pending"\)/);
+  assert.match(adminPage, /pending\.length/);
+  assert.match(review, /disabled=\{pending\}/);
+  assert.match(adminActions, /admin_review_profile_verification_request/);
+  assert.doesNotMatch(review, /from\("profiles"\)|societa_id/);
+  assert.match(adminActions, /message: error\.message/);
+  assert.match(adminActions, /code: error\.code/);
+  assert.match(adminActions, /details: error\.details/);
+  assert.match(adminActions, /hint: error\.hint/);
+  assert.doesNotMatch(adminActions, /self_review_not_allowed/);
+  assert.match(review, /role="status"/);
+  assert.doesNotMatch(review, /role="status" className=\{`sr-only/);
+});
+
+test("approve valido e self-approval admin sono atomici senza ampliare i privilegi", () => {
+  const rpc = selfApprovalMigration.slice(selfApprovalMigration.indexOf("create or replace function public.admin_review_profile_verification_request"));
+  assert.doesNotMatch(rpc, /self_review_not_allowed|v_request\.profile_id = p_reviewer_id/);
+  assert.match(rpc, /update public\.profiles[\s\S]*set societa_id = v_request\.societa_id[\s\S]*where id = v_request\.profile_id and societa_id is null/);
+  assert.match(rpc, /update public\.profile_verification_requests[\s\S]*set status = p_decision/);
+  assert.match(rpc, /reviewed_by = p_reviewer_id/);
+  assert.match(selfApprovalMigration, /revoke all[\s\S]*from public, anon, authenticated/);
+  assert.match(selfApprovalMigration, /grant execute[\s\S]*to service_role/);
+  assert.match(adminActions, /if \(error\)[\s\S]*return \{ message: reviewErrorMessage\(error\.message\) \}/);
+  for (const path of ["/admin/verifiche", "/admin", "/account"]) assert.match(adminActions, new RegExp(`revalidatePath\\("${path.replaceAll("/", "\\/")}\\"\\)`));
+  assert.match(adminActions, /revalidatePath\("\/user\/\[username\]", "page"\)/);
+
+  const review = ({ reviewer, decision }) => ({ status: decision, societaId: decision === "approved" ? 10 : null, reviewedBy: reviewer, success: true });
+  assert.deepEqual(review({ requester: "user-a", reviewer: "admin-b", decision: "approved" }), { status: "approved", societaId: 10, reviewedBy: "admin-b", success: true });
+  assert.deepEqual(review({ requester: "admin-a", reviewer: "admin-a", decision: "approved" }), { status: "approved", societaId: 10, reviewedBy: "admin-a", success: true });
+  assert.deepEqual(review({ requester: "user-a", reviewer: "admin-b", decision: "rejected" }), { status: "rejected", societaId: null, reviewedBy: "admin-b", success: true });
+});
+
+test("Centro Admin contiene esattamente tre categorie autorevoli", () => {
+  const dashboard = read("src", "app", "admin", "page.tsx");
+  assert.equal((dashboard.match(/<Link /g) ?? []).length, 2);
+  assert.match(dashboard, /cards\.map/);
+  for (const href of ["/admin/verifiche", "/admin/importazioni", "/admin/fantabet"]) assert.match(dashboard, new RegExp(href.replaceAll("/", "\\/")));
+  assert.match(dashboard, /count: "exact", head: true/);
+  assert.match(dashboard, /eq\("status", "pending"\)/);
+  assert.match(dashboard, /data-admin-compact-card/g);
+  assert.match(dashboard, /flex min-w-0 items-center gap-3/);
+  assert.match(dashboard, /Gestisci calendari e dati\./);
+  assert.match(dashboard, /Gestisci turni e pronostici\./);
+  assert.match(dashboard, /Apri →/);
+  assert.match(dashboard, /href=\{`\/user\/\$\{encodeURIComponent\(access\.username\)\}`\}/);
+  assert.match(dashboard, /linkLabel="Torna al profilo"/);
+});
+
+test("lista pending è slim, mobile-safe e usa icone accessibili", () => {
+  const review = read("src", "app", "admin", "verifiche", "VerificationReviewForm.tsx");
+  assert.match(adminPage, /data-verification-slim-list/);
+  assert.match(smoothOverflowText, /truncate/);
+  assert.match(adminPage, /pending\.map/);
+  assert.match(adminPage, /data-verification-compact-row/);
+  assert.match(adminPage, /grid-cols-\[minmax\(0,\.9fr\)_minmax\(0,1\.15fr\)_auto\]/);
+  assert.match(adminPage, /h-8 w-8/);
+  assert.match(adminPage, /SmoothOverflowText/);
+  assert.match(review, /<svg/);
+  assert.match(review, /Approva richiesta/);
+  assert.match(review, /Rifiuta richiesta/);
+  assert.doesNotMatch(review, />Approva<|>Rifiuta</);
+  assert.match(review, /h-11 w-11/);
+  assert.match(review, /bg-emerald-100 text-emerald-800/);
+  assert.match(review, /bg-rose-100 text-rose-800/);
+  assert.match(review, /focus-visible:outline/);
+});
+
+test("nomi lunghi scorrono soltanto in overflow senza muovere logo o azioni", () => {
+  assert.equal((adminPage.match(/<SmoothOverflowText/g) ?? []).length, 3);
+  assert.match(smoothOverflowText, /scrollWidth - viewport\.clientWidth/);
+  assert.match(smoothOverflowText, /distance > 0/);
+  assert.match(smoothOverflowText, /ResizeObserver/);
+  assert.match(smoothOverflowText, /translateX\(calc\(-1 \* var\(--verification-marquee-distance\)\)\)/);
+  assert.match(smoothOverflowText, /Math\.min\(32, Math\.max\(12, 10 \+ distance \/ 9\)\)/);
+  assert.match(smoothOverflowText, /0%, 14%/);
+  assert.match(smoothOverflowText, /43%, 57%/);
+  assert.match(smoothOverflowText, /86%, 100%/);
+  assert.match(smoothOverflowText, /prefers-reduced-motion: reduce/);
+  assert.match(smoothOverflowText, /text-overflow: ellipsis/);
+  assert.doesNotMatch(smoothOverflowText, /requestAnimationFrame|setInterval|setTimeout/);
+  assert.match(adminPage, /grid-cols-\[minmax\(0,\.9fr\)_minmax\(0,1\.15fr\)_auto\]/);
+  assert.match(adminPage, /shrink-0 object-contain/);
+  assert.match(verificationReview, /shrink-0/);
+  for (const sample of ["PALERMAVAI MA VIENI MA CHI SONO", "BRIGHTON & HOVE ALBIONOLEFFE", "SULL’ONDA DELL’ENTUSIASMO"]) assert.ok(sample.length > 20);
 });
 
 test("richieste protette e approvazione atomica", () => {
@@ -69,11 +174,12 @@ test("onboarding globale separa scelta, warning e catalogo finale", () => {
 });
 
 test("admin usa allowlist e service role solo server", () => {
+  const review = read("src", "app", "admin", "verifiche", "VerificationReviewForm.tsx");
   assert.match(adminActions, /requireImportAdmin\(\)/);
   assert.match(adminActions, /getSupabaseAdminClient\(\)\.rpc/);
-  assert.match(adminPage, /controconferma dal fantallenatore/i);
-  assert.match(adminPage, /Approva/);
-  assert.match(adminPage, /Rifiuta/);
+  assert.match(adminPage, /requireImportAdmin\(\)/);
+  assert.match(review, /Approva/);
+  assert.match(review, /Rifiuta/);
 });
 
 test("verifica cerca soltanto il nome società e non espone fantallenatori", () => {

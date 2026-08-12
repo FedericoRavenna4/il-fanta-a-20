@@ -24,7 +24,6 @@ export async function refreshSession(request: NextRequest) {
   });
   const { data: { user } } = await supabase.auth.getUser();
   const pathname = request.nextUrl.pathname;
-  const isLogin = pathname === "/admin/login";
   const email = normalizeAdminEmail(user?.email);
   const authorized = evaluateAdminIdentity(email, process.env.ADMIN_IMPORT_EMAILS) === "authorized";
 
@@ -35,16 +34,9 @@ export async function refreshSession(request: NextRequest) {
     developmentProxyLog(pathname, `${target.pathname}${target.search}`);
     return NextResponse.redirect(target);
   }
-  if (pathname.startsWith("/admin") && !user && !isLogin) {
+  if (pathname.startsWith("/admin") && !user) {
     const target = request.nextUrl.clone();
-    target.pathname = "/admin/login";
-    target.search = "";
-    developmentProxyLog(pathname, target.pathname);
-    return NextResponse.redirect(target);
-  }
-  if (pathname.startsWith("/admin") && user && authorized && isLogin) {
-    const target = request.nextUrl.clone();
-    target.pathname = "/admin/importazioni";
+    target.pathname = "/account/accedi";
     target.search = "";
     developmentProxyLog(pathname, target.pathname);
     return NextResponse.redirect(target);

@@ -9,10 +9,10 @@ export const metadata: Metadata = { title: "Importazioni Admin", robots: { index
 export const dynamic = "force-dynamic";
 
 export default async function AdminImportazioniPage() {
-  const access = await requireImportAdmin().catch(() => redirect("/admin/login"));
+  const access = await requireImportAdmin().catch(() => redirect("/account/accedi"));
   const [catalog, history] = await Promise.all([getImportAdminCatalog(), getImportHistory()]);
   return <div className="mx-auto w-full max-w-6xl px-3 py-4 sm:px-6 sm:py-9">
-    <AdminHeader eyebrow="Importazioni" title="Importazioni" username={access.username} href="/admin/fantabet" linkLabel="Vai a gestione FantaBet" />
+    <AdminHeader eyebrow="Importazioni" title="Importazioni" username={access.username} href="/admin" linkLabel="Centro Admin" />
     <ImportazioniClient catalog={catalog} history={history} />
   </div>;
 }

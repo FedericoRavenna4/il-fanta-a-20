@@ -23,6 +23,11 @@ export function isOwnedAvatarOriginalPath(path: string | null, userId: string) {
   return Boolean(path && new RegExp(`^${userId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}/original\\.(?:jpg|png|webp)$`).test(path));
 }
 
+export function versionAvatarUrl(url: string | null, updatedAt: string | null) {
+  if (!url || !updatedAt) return url;
+  return `${url}${url.includes("?") ? "&" : "?"}v=${encodeURIComponent(updatedAt)}`;
+}
+
 function hasSafeImageSignature(bytes: Uint8Array, mime: string) {
   if (mime === "image/jpeg") return bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
   if (mime === "image/png") return [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a].every((value, index) => bytes[index] === value);

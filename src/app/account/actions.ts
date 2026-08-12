@@ -7,6 +7,7 @@ import { accountRedirectUrl } from "@/lib/account/server";
 import { validateAccountUsername } from "@/lib/account/username";
 import { ACCOUNT_AVATAR_BUCKET, ACCOUNT_AVATAR_ORIGINAL_BUCKET, isOwnedAvatarOriginalPath, isOwnedAvatarPath, validateAccountAvatar } from "@/lib/account/avatar";
 import { resolveAccountLoginEmail } from "@/lib/account/login.server";
+import { persistAvatarFiles, profileCompletionMessage, safeBackendError } from "@/lib/account/persistence";
 
 export type AccountActionState = { message: string; field?: "email" | "password" | "username"; success?: boolean };
 const GENERIC_AUTH_ERROR = "Non è stato possibile completare l’operazione. Controlla i dati e riprova.";
@@ -21,9 +22,8 @@ export async function completeLegacyProfileAction(_state: CompleteProfileState, 
   if (userError || !user) return { message: "Sessione non valida. Accedi nuovamente." };
   const { data, error } = await supabase.rpc("create_my_legacy_profile", { p_username: validation.username });
   if (error || !data?.username) {
-    if (/USERNAME_|duplicate|profile_already_exists/i.test(error?.message ?? "")) return { message: "Username non disponibile o non valido." };
-    console.error("[account/profile-completion] failed", { name: error?.name, message: error?.message, code: error?.code });
-    return { message: "Non è stato possibile completare il profilo. Riprova più tardi." };
+    console.error("[account/profile-completion] failed", safeBackendError(error));
+    return { message: profileCompletionMessage(error) };
   }
   revalidatePath("/", "layout");
   redirect(`/user/${encodeURIComponent(data.username)}`);
@@ -44,45 +44,47 @@ export async function uploadAvatarAction(_state: AvatarActionState, formData: Fo
   const { data: profile } = await supabase.from("profiles").select("avatar_url").eq("id", user.id).maybeSingle();
   if (!profile) return { message: "Il profilo pubblico non è configurato." };
 
+  let originalPath: string | null = null;
   if (original instanceof File && originalValidation?.ok) {
-    const originalPath = `${user.id}/original.${originalValidation.extension}`;
-    const { error: originalError } = await supabase.storage.from(ACCOUNT_AVATAR_ORIGINAL_BUCKET).upload(originalPath, original, { contentType: originalValidation.contentType, cacheControl: "0", upsert: true });
-    if (originalError) {
-      console.error("[account/avatar-original] upload failed", { name: originalError.name, message: originalError.message });
-      return { message: "Non è stato possibile salvare l’immagine. Riprova più tardi." };
-    }
-    const { data: originalObjects, error: originalListError } = await supabase.storage.from(ACCOUNT_AVATAR_ORIGINAL_BUCKET).list(user.id, { search: "original." });
-    if (originalListError) console.error("[account/avatar-original] cleanup list failed", { name: originalListError.name, message: originalListError.message });
-    const obsolete = (originalObjects ?? []).map((item) => `${user.id}/${item.name}`).filter((item) => item !== originalPath);
-    if (obsolete.length) {
-      const { error: cleanupError } = await supabase.storage.from(ACCOUNT_AVATAR_ORIGINAL_BUCKET).remove(obsolete);
-      if (cleanupError) console.error("[account/avatar-original] cleanup failed", { name: cleanupError.name, message: cleanupError.message });
-    }
+    originalPath = `${user.id}/original.${originalValidation.extension}`;
   } else {
     const { data: originalObjects, error: originalListError } = await supabase.storage.from(ACCOUNT_AVATAR_ORIGINAL_BUCKET).list(user.id, { search: "original." });
-    if (originalListError) console.error("[account/avatar-original] lookup failed", { name: originalListError.name, message: originalListError.message });
+    if (originalListError) console.error("[account/avatar-original] lookup failed", safeBackendError(originalListError));
     if (!(originalObjects ?? []).some((item) => /^original\.(jpg|png|webp)$/.test(item.name))) return { message: "Per ritagliare di nuovo questo avatar, scegli nuovamente l’immagine." };
   }
 
   const path = `${user.id}/avatar.${validation.extension}`;
-  const { error: uploadError } = await supabase.storage.from(ACCOUNT_AVATAR_BUCKET).upload(path, file, { contentType: validation.contentType, cacheControl: "0", upsert: true });
-  if (uploadError) {
-    console.error("[account/avatar-crop] upload failed", { name: uploadError.name, message: uploadError.message });
-    return { message: "Non è stato possibile salvare l’immagine. Riprova più tardi." };
+  const persistence = await persistAvatarFiles({
+    uploadOriginal: originalPath && original instanceof File && originalValidation?.ok ? async () => (await supabase.storage.from(ACCOUNT_AVATAR_ORIGINAL_BUCKET).upload(originalPath!, original, { contentType: originalValidation.contentType, cacheControl: "0", upsert: true })).error : undefined,
+    uploadCrop: async () => (await supabase.storage.from(ACCOUNT_AVATAR_BUCKET).upload(path, file, { contentType: validation.contentType, cacheControl: "0", upsert: true })).error,
+    updateProfile: async () => (await supabase.rpc("set_my_avatar_path", { p_avatar_path: path })).error,
+  });
+  if (!persistence.ok) {
+    console.error(`[account/avatar-${persistence.step}] failed`, safeBackendError(persistence.error));
+    if (persistence.step === "profile-update" && profile.avatar_url !== path) {
+      const { error: rollbackError } = await supabase.storage.from(ACCOUNT_AVATAR_BUCKET).remove([path]);
+      if (rollbackError) console.error("[account/avatar-crop] rollback failed", safeBackendError(rollbackError));
+    }
+    return { message: persistence.step === "profile-update" ? "Avatar caricato, ma il profilo non è stato aggiornato." : "Non è stato possibile salvare l’immagine. Riprova più tardi." };
   }
-  const { error: profileError } = await supabase.rpc("set_my_avatar_path", { p_avatar_path: path });
-  if (profileError) {
-    console.error("[account/avatar-profile] update failed", { name: profileError.name, message: profileError.message, code: profileError.code });
-    if (profile.avatar_url !== path) await supabase.storage.from(ACCOUNT_AVATAR_BUCKET).remove([path]);
-    return { message: "Avatar caricato, ma il profilo non è stato aggiornato." };
+
+  if (originalPath) {
+    const { data: originalObjects, error: originalListError } = await supabase.storage.from(ACCOUNT_AVATAR_ORIGINAL_BUCKET).list(user.id, { search: "original." });
+    if (originalListError) console.error("[account/avatar-original] cleanup list failed", safeBackendError(originalListError));
+    const obsolete = (originalObjects ?? []).map((item) => `${user.id}/${item.name}`).filter((item) => item !== originalPath);
+    if (obsolete.length) {
+      const { error: cleanupError } = await supabase.storage.from(ACCOUNT_AVATAR_ORIGINAL_BUCKET).remove(obsolete);
+      if (cleanupError) console.error("[account/avatar-original] cleanup failed", safeBackendError(cleanupError));
+    }
   }
 
   if (isOwnedAvatarPath(profile.avatar_url, user.id) && profile.avatar_url !== path) {
     const { error: cleanupError } = await supabase.storage.from(ACCOUNT_AVATAR_BUCKET).remove([profile.avatar_url!]);
-    if (cleanupError) console.error("[account/avatar-crop] cleanup failed", { name: cleanupError.name, message: cleanupError.message });
+    if (cleanupError) console.error("[account/avatar-crop] cleanup failed", safeBackendError(cleanupError));
   }
   revalidatePath("/", "layout");
   revalidatePath("/account");
+  revalidatePath("/user/[username]", "page");
   return { success: true, message: "Avatar aggiornato." };
 }
 

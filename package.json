@@ -16,6 +16,7 @@
     "test:user-emblems": "node --test scripts/user-emblems.test.mjs",
     "test:runtime-encoding": "node --test scripts/runtime-encoding.test.mjs",
     "test:admin-profile": "node --test scripts/admin-profile-multi-officials.test.mjs",
+    "test:account-persistence": "node --experimental-strip-types --test src/lib/account/persistence.test.ts",
     "test:societa-foundation": "node --test scripts/societa-foundation.test.mjs",
     "test:societa-catalog": "node --test scripts/societa-catalog.test.mjs",
     "test:societa-detail": "node --test scripts/societa-detail.test.mjs",

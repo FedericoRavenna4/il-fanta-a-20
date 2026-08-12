@@ -8,7 +8,8 @@ const baseline = read("supabase", "migrations", "202608100004_profile_verificati
 const profilesMigration = read("supabase", "migrations", "202608070001_account_profiles.sql");
 const account = read("src", "app", "account", "page.tsx");
 const actions = read("src", "app", "account", "actions.ts");
-const adminLogin = read("src", "app", "admin", "login", "actions.ts");
+const selfApprovalMigration = read("supabase", "migrations", "202608120001_admin_verification_self_approval.sql");
+const proxy = read("src", "lib", "supabase", "proxy.ts");
 const profile = read("src", "app", "user", "[username]", "page.tsx");
 const adminAuth = read("src", "lib", "admin-import", "auth.server.ts");
 const emblemMigration = read("supabase", "migrations", "202608100005_user_emblems.sql");
@@ -23,15 +24,16 @@ test("admin legacy completa un normale profilo sul proprio auth uid", () => {
   assert.doesNotMatch(account, /Account amministratore|Profilo pubblico non configurato/);
 });
 
-test("login admin torna al profilo normale o al completamento username", () => {
-  assert.match(adminLogin, /from\("profiles"\)\.select\("username"\)/);
-  assert.match(adminLogin, /profile\?\.username \? `\/user\/\$\{encodeURIComponent\(profile\.username\)\}` : "\/account"/);
-  assert.match(adminLogin, /requireImportAdmin\(\)/);
+test("admin usa esclusivamente il login account normale", () => {
+  assert.match(actions, /export async function loginAction/);
+  assert.match(actions, /redirect\(profile\?\.username \? `\/user\/\$\{encodeURIComponent\(profile\.username\)\}` : "\/account"\)/);
+  assert.match(proxy, /target\.pathname = "\/account\/accedi"/);
+  assert.doesNotMatch(proxy, /\/admin\/login/);
 });
 
 test("Centro Admin è deciso server-side e visibile soltanto all'owner autorizzato", () => {
   assert.match(profile, /const adminAccess = owner \? await getAdminImportAccess\(\) : null/);
-  assert.match(profile, /owner && adminAccess\?\.allowed && <Link data-admin-center href="\/admin\/importazioni"/);
+  assert.match(profile, /owner && adminAccess\?\.allowed && <Link data-admin-center href="\/admin"/);
   assert.match(adminAuth, /evaluateAdminIdentity\(email, process\.env\.ADMIN_IMPORT_EMAILS\)/);
   assert.doesNotMatch(profile, /localStorage|NEXT_PUBLIC_ADMIN|process\.env\.ADMIN_IMPORT_EMAILS/);
 });
@@ -40,7 +42,7 @@ test("admin resta eleggibile per onboarding, Tifo, verifica ed emblemi", () => {
   assert.doesNotMatch(profile, /adminAccess.*ProfileSupportSelector|adminAccess.*ProfileEmblems/);
   assert.doesNotMatch(emblemMigration, /ADMIN_IMPORT_EMAILS|admin.*exclude|exclude.*admin/i);
   assert.match(profile, /profile\.societa_id === null/);
-  assert.match(profile, /ProfileSupportSelector/);
+  assert.match(profile, /ProfilePathActions/);
   assert.match(profile, /ProfileEmblems/);
 });
 
@@ -57,7 +59,8 @@ test("richieste sono indipendenti per società ma una sola pending per profilo",
   assert.match(baseline, /unique index profile_verification_one_pending_per_profile[\s\S]*\(profile_id\)[\s\S]*status = 'pending'/);
   assert.doesNotMatch(baseline, /unique index[^;]*\(societa_id\)/i);
   assert.doesNotMatch(migration, /pg_advisory_xact_lock\(v_request\.societa_id/);
-  assert.match(migration, /v_request\.profile_id = p_reviewer_id[\s\S]*self_review_not_allowed/);
+  assert.doesNotMatch(selfApprovalMigration, /self_review_not_allowed|v_request\.profile_id = p_reviewer_id/);
+  assert.match(selfApprovalMigration, /grant execute[\s\S]*to service_role/);
 });
 
 test("un profilo mantiene al massimo una società e approvare non tocca altri profili", () => {

@@ -1,9 +1,13 @@
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import test from "node:test";
+import { parseNotifiedEmblemIds, pendingEmblemNotifications } from "../src/lib/account/emblem-notifications.ts";
 
 const read = (...parts) => readFileSync(new URL(`../${parts.join("/")}`, import.meta.url), "utf8");
 const migration = read("supabase", "migrations", "202608100005_user_emblems.sql");
+const notification = read("src", "app", "components", "GlobalEmblemNotifications.tsx");
+const popupInspection = read("supabase", "manual", "test_only_inspect_testesterno_emblem_popup.sql");
+const destructiveReset = read("supabase", "manual", "test_only_destructive_reset_testesterno_emblem_unlock.sql");
 const profile = read("src", "app", "user", "[username]", "page.tsx");
 const ui = read("src", "app", "user", "[username]", "ProfileEmblems.tsx");
 const rows = [...migration.matchAll(/\((\d+), '([a-z0-9-]+)', '[^']+', '(comune|raro|epico|leggendario)', '(fantabet|tifo|arcade|fedelta)', '[^']+', '(\/emblemi-utenti\/[a-z0-9-]+\.png)', (true|false), (\d+)\)/g)];
@@ -13,6 +17,44 @@ test("catalogo contiene 20 emblemi ordinati, univoci e con asset reali", () => {
   assert.equal(new Set(rows.map((row) => row[2])).size, 20);
   assert.deepEqual(rows.map((row) => Number(row[7])), Array.from({ length: 20 }, (_, index) => index + 1));
   for (const row of rows) assert.equal(existsSync(new URL(`../public${row[5]}`, import.meta.url)), true, row[5]);
+});
+
+test("notifiche emblemi fanno bootstrap storico e mostrano solo unlock successivi", () => {
+  const emblems = [{ id: 1, name: "A", rarity: "comune", description: "A", imageUrl: "/a.png" }, { id: 2, name: "B", rarity: "raro", description: "B", imageUrl: "/b.png" }];
+  assert.equal(parseNotifiedEmblemIds(null), null);
+  assert.deepEqual(pendingEmblemNotifications(emblems, new Set([1])).map((item) => item.id), [2]);
+  assert.match(notification, /localStorage\.setItem\(storageKey, JSON\.stringify\(emblems\.map/);
+  assert.match(notification, /setQueue/);
+  assert.match(notification, /items\.slice\(1\)/);
+});
+
+test("reset TEST testesterno distingue localStorage da unlock reale e limita lo scope", () => {
+  assert.match(popupInspection, /SOLO TEST \/ DEV\. READ-ONLY/);
+  assert.match(popupInspection, /public\.normalize_account_username\('testesterno'\)/);
+  assert.match(popupInspection, /'prima-bet'::text as emblem_slug/);
+  assert.match(popupInspection, /fanta20:emblem-notifications:v1:/);
+  assert.doesNotMatch(popupInspection, /delete|update|insert/i);
+  assert.match(destructiveReset, /RESET DISTRUTTIVO UNLOCK TESTESTERNO/);
+  assert.match(destructiveReset, /public\.normalize_account_username\('testesterno'\)/);
+  assert.match(destructiveReset, /join public\.user_emblems emblem on emblem\.slug = params\.emblem_slug/);
+  assert.match(destructiveReset, /if v_target_count <> 1/);
+  assert.match(destructiveReset, /delete from public\.user_emblem_unlocks/);
+  assert.doesNotMatch(destructiveReset, /delete from public\.user_emblems/);
+});
+
+test("popup globale rivela hidden unlock, aspetta onboarding ed è accessibile", () => {
+  const server = read("src", "app", "components", "GlobalEmblemNotifications.server.tsx");
+  assert.match(server, /row\.unlocked && row\.asset_path/);
+  assert.match(server, /row\.nome/);
+  assert.match(notification, /data-global-onboarding/);
+  assert.match(notification, /MutationObserver/);
+  assert.match(notification, /Nuovo emblema sbloccato!/i);
+  assert.match(notification, /role="dialog"/);
+  assert.match(notification, /aria-modal="true"/);
+  assert.doesNotMatch(notification, /rounded-full bg-white\/65|shadow-\[0_0_55px_currentColor\]/);
+  assert.match(notification, /drop-shadow-\[0_0_24px_currentColor\]/);
+  assert.match(notification, /event\.key === "Escape"/);
+  assert.match(notification, /min-h-0 overflow-y-auto/);
 });
 
 test("rarità, categorie e quattro segreti sono vincolati", () => {

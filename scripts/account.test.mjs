@@ -165,7 +165,7 @@ test("il badge non introduce modifiche client a societa_id", () => {
 
 test("fallimento RPC pulisce soltanto il nuovo oggetto avatar", () => {
   const actions = read("src", "app", "account", "actions.ts");
-  assert.match(actions, /if \(profileError\) \{[\s\S]*?profile\.avatar_url !== path[\s\S]*?remove\(\[path\]\)/);
+  assert.match(actions, /persistence\.step === "profile-update" && profile\.avatar_url !== path[\s\S]*?remove\(\[path\]\)/);
   assert.match(actions, /profile\.avatar_url !== path/);
 });
 
@@ -248,7 +248,7 @@ test("profilo mostra società associata o squadra tifata con link reale", () => 
 test("solo owner esterno senza supporto vede selezione e conferma stagionale", () => {
   const page = read("src", "app", "user", "[username]", "page.tsx");
   const selector = read("src", "app", "user", "[username]", "ProfileSupportSelector.tsx");
-  assert.match(page, /myTeam \?[\s\S]*: owner && season && selectableTeams\.length \? <ProfileSupportSelector/);
+  assert.match(page, /profileTeamState === "verification-pending"[\s\S]*ProfilePathActions/);
   assert.match(page, /from\("profile_supports"\)[\s\S]*eq\("profile_id", profile\.id\)/);
   assert.match(selector, /selectSupportedTeamAction/);
   assert.match(selector, /essere modificata/);
@@ -326,8 +326,25 @@ test("editor avatar usa un nuovo originale, consente zoom bidirezionale e riusa 
   assert.match(editor, />Reset</);
   assert.match(editor, />Annulla</);
   assert.match(editor, /getMyAvatarOriginalAction/);
+  assert.match(editor, /requestAnimationFrame/);
+  assert.match(editor, /translate3d/);
+  assert.match(editor, /defaultValue="1"/);
+  assert.match(editor, /onInput=/);
+  assert.doesNotMatch(editor, /setZoom/);
+  assert.match(editor, /createCroppedFile/);
   assert.match(editor, /formData\.set\("original", originalFile\)/);
   assert.doesNotMatch(editor, /source \?\? avatarUrl/);
+});
+
+test("avatar pubblico invalida deterministicamente la cache dopo update", () => {
+  const avatar = read("src", "lib", "account", "avatar.ts");
+  const server = read("src", "lib", "account", "server.ts");
+  const profile = read("src", "app", "user", "[username]", "page.tsx");
+  assert.match(avatar, /versionAvatarUrl/);
+  assert.match(server, /select\("id,username,avatar_url,updated_at"\)/);
+  assert.match(profile, /avatar_url,updated_at/);
+  assert.match(server + profile, /versionAvatarUrl\(public(?:Avatar)?Url, profile\.updated_at\)/);
+  assert.doesNotMatch(avatar, /Math\.random|Date\.now/);
 });
 
 test("originale avatar resta privato, isolato per utente e limitato a 750 KB", () => {
@@ -344,7 +361,8 @@ test("originale avatar resta privato, isolato per utente e limitato a 750 KB", (
   assert.match(action, /ACCOUNT_AVATAR_ORIGINAL_BUCKET/);
   assert.match(action, /createSignedUrl\(path, 300\)/);
   assert.match(action, /isOwnedAvatarOriginalPath\(item, user\.id\)/);
-  assert.match(action, /console\.error\("\[account\/avatar-original\] upload failed"/);
+  assert.match(action, /console\.error\(`\[account\/avatar-\$\{persistence\.step\}\] failed`/);
+  assert.match(action, /safeBackendError\(persistence\.error\)/);
   assert.doesNotMatch(action, /return \{ message: "[^"]*(?:migration|bucket|policy|SQL|service role)/i);
   assert.doesNotMatch(read("src", "app", "user", "[username]", "AvatarEditorModal.tsx"), /aria-label="Chiudi"|migration avatar|bucket|policy/);
 });

@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createAuthenticatedSupabaseClient } from "@/lib/supabase/authenticated.server";
-import { ACCOUNT_AVATAR_BUCKET, isOwnedAvatarPath } from "@/lib/account/avatar";
+import { ACCOUNT_AVATAR_BUCKET, isOwnedAvatarPath, versionAvatarUrl } from "@/lib/account/avatar";
 import type { AccountHubModules } from "@/lib/account/hub";
 import { getActiveSocietaById } from "@/lib/societa/catalog.server";
 import { logoutAction } from "./actions";
@@ -26,11 +26,12 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/account/accedi");
 
-  const { data: profile } = await supabase.from("profiles").select("id,username,societa_id,avatar_url").eq("id", user.id).maybeSingle();
+  const { data: profile } = await supabase.from("profiles").select("id,username,societa_id,avatar_url,updated_at").eq("id", user.id).maybeSingle();
   if (!profile) return <main className="bg-[linear-gradient(180deg,#f8fbff,#eef5fb)] px-4 py-10 sm:py-16"><section className="mx-auto max-w-xl rounded-[2rem] border border-slate-200 bg-white p-6 shadow-xl shadow-blue-950/10 sm:p-10"><p className="section-eyebrow">Account Fanta a 20</p><h1 className="mt-2 text-3xl font-black uppercase text-blue-950 sm:text-5xl">Completa il profilo</h1><p className="mt-4 font-semibold text-slate-500">Scegli l’identità pubblica che userai in tutto il portale.</p>{query.admin === "denied" && <p role="alert" className="mt-5 rounded-xl bg-amber-50 p-3 text-sm font-bold text-amber-900">Questo account non è autorizzato ad accedere all’area amministrativa richiesta.</p>}<CompleteProfileForm /><form action={logoutAction}><button className="mt-5 min-h-11 w-full rounded-xl border border-slate-300 bg-white px-6 text-xs font-black uppercase text-blue-950 hover:bg-slate-50">Logout</button></form></section></main>;
 
   const storedAvatarPath = isOwnedAvatarPath(profile.avatar_url, user.id) ? profile.avatar_url : null;
-  const avatarUrl = storedAvatarPath ? supabase.storage.from(ACCOUNT_AVATAR_BUCKET).getPublicUrl(storedAvatarPath).data.publicUrl : null;
+  const publicAvatarUrl = storedAvatarPath ? supabase.storage.from(ACCOUNT_AVATAR_BUCKET).getPublicUrl(storedAvatarPath).data.publicUrl : null;
+  const avatarUrl = versionAvatarUrl(publicAvatarUrl, profile.updated_at);
   const officialSocieta = profile.societa_id ? await getActiveSocietaById(profile.societa_id) : null;
   const societyName = officialSocieta?.nome ?? null;
   const category = officialSocieta?.categoria ?? null;
