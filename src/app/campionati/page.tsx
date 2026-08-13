@@ -43,7 +43,7 @@ export async function CampionatiContent({ embedded = false }: { embedded?: boole
   );
 
   return (
-    <section id="campionati" className={embedded ? "scroll-mt-28" : "mx-auto max-w-7xl px-4 py-7 sm:px-5 sm:py-12 lg:px-6 lg:py-16"}>
+    <section id={embedded ? undefined : "campionati"} className={embedded ? undefined : "mx-auto max-w-7xl scroll-mt-28 px-4 py-7 sm:px-5 sm:py-12 lg:px-6 lg:py-16"}>
       {!embedded && <PageHeader
         eyebrow="Sistema competitivo"
         title="Campionati"

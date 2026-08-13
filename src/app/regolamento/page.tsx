@@ -33,9 +33,10 @@ export default function RegolamentoPage() {
   return (
     <main className="mx-auto max-w-7xl px-4 py-7 sm:px-5 sm:py-12 lg:px-6 lg:py-16">
       <PageHeader
-        eyebrow="Documentazione ufficiale"
+        eyebrow="Le regole ufficiali"
         title="Il Regolamento"
         onderTitle
+        compact
         description="Il Regolamento 3.0 raccoglie aste, mercato, competizioni e calcolo dei risultati, definendo il funzionamento completo della stagione."
       />
 

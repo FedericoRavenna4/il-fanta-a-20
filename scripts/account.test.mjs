@@ -175,33 +175,32 @@ test("username e badge non causano overflow mobile", () => {
   assert.match(page, /<span className="min-w-0 break-all">\{profile\.username\}<\/span>/);
 });
 
-test("header espone solo Home Campionati Società e FantaBet", () => {
+test("header espone la navigazione principale con Home e Coppa Fanta a 20", () => {
   const header = read("src", "app", "components", "Header.tsx");
-  assert.match(header, /href: "\/".*title: "Home"/s);
-  assert.match(header, /href: "\/campionati-live-preview".*title: "Campionati"/s);
-  assert.match(header, /href: "\/societa".*title: "Società"/s);
-  assert.match(header, /href: "\/fantabet".*title: "FantaBet"/s);
-  assert.doesNotMatch(header, /href: "\/(?:emblemi|statistiche|gioca)"|title: "(?:Emblemi|Statistiche|Gioca|Arcade)"/);
+  assert.match(header, /<Link href="\/" aria-label="Vai alla Home"/);
+  assert.match(header, /label: "Home"/); assert.match(header, /label: "Campionati"/); assert.match(header, /label: "Coppa Fanta a 20"/); assert.match(header, /label: "Società"/);
+  assert.match(header, /play: \{ label: "Gioca"/); assert.match(header, /records: \{ label: "Record"/); assert.match(header, /rules: \{ label: "Regolamento"/);
 });
 
 test("header autenticato usa avatar reale o fallback senza username testuale", () => {
   const header = read("src", "app", "components", "Header.tsx");
   const server = read("src", "lib", "account", "server.ts");
-  assert.match(header, /<ProfileAvatar username=\{username \?\? "Account"\} avatarUrl=\{account\.avatarUrl\} size="header"/);
-  assert.match(header, /aria-label="Apri il tuo profilo"/);
-  assert.match(header, /`\/user\/\$\{encodeURIComponent\(username\)\}` : "\/account"/);
-  assert.doesNotMatch(header, />\{account\.username\}</);
+  assert.match(header, /<ProfileAvatar username=\{account\.username \?\? "Account"\} avatarUrl=\{account\.avatarUrl\} size="header"/);
+  assert.match(header, /aria-label="Apri il profilo"/);
+  assert.match(header, /const profileHref = account\?\.username \? `\/user\/\$\{encodeURIComponent\(account\.username\)\}` : "\/account"/);
+  assert.doesNotMatch(header, /account-menu|Apri menu account/);
+  assert.doesNotMatch(header, /<nav[^>]*>[\s\S]*>\{account\.username\}<\/nav>/);
   assert.match(server, /isOwnedAvatarPath/); assert.match(server, /getPublicUrl\(avatarPath\)/);
-  assert.match(server, /username: null, avatarUrl: null/);
+  assert.match(server, /username: null, avatarUrl: null, isAdmin/);
 });
 
 test("mobile mantiene avatar accanto hamburger e fuori dal drawer", () => {
   const header = read("src", "app", "components", "Header.tsx");
   const controls = header.slice(header.indexOf('<div className="flex shrink-0 items-center gap-2">'), header.indexOf('</header>'));
   const drawer = header.slice(header.indexOf('aria-label="Navigazione mobile"'));
-  assert.match(controls, /<ProfileButton[\s\S]*aria-label=\{mobileOpen \? "Chiudi menu" : "Apri menu"\}/);
-  assert.doesNotMatch(drawer, /<ProfileButton|ProfileAvatar/);
-  assert.match(drawer, /mainLinks\.map/); assert.match(drawer, /min-w-0/);
+  assert.match(controls, /aria-label=\{mobileOpen \? "Chiudi menu" : "Apri menu"\}[\s\S]*<ProfileAvatar/);
+  assert.doesNotMatch(drawer, /ProfileAvatar/);
+  assert.match(drawer, /mobileLinks\.map/);
 });
 
 test("profilo pubblico risolve lo username reale senza leggere colonne non pubbliche", () => {
@@ -211,19 +210,20 @@ test("profilo pubblico risolve lo username reale senza leggere colonne non pubbl
   assert.match(page, /if \(!profile\) notFound\(\)/);
 });
 
-test("menu mobile separa le azioni account e usa il logout server-side esistente", () => {
+test("logout usa il flusso server-side su desktop e in fondo al menu mobile", () => {
   const header = read("src", "app", "components", "Header.tsx");
   const drawer = header.slice(header.indexOf('aria-label="Navigazione mobile"'));
   assert.match(header, /import \{ logoutAction \} from "@\/app\/account\/actions"/);
-  assert.match(drawer, /data-mobile-account-menu[\s\S]*mt-auto[\s\S]*border-t/);
-  assert.match(drawer, /account \? <form action=\{logoutAction\}>[\s\S]*Logout/);
-  assert.match(drawer, /: <div className="grid grid-cols-2 gap-3">[\s\S]*Accedi[\s\S]*Registrati/);
+  assert.equal((header.match(/<form action=\{logoutAction\}/g) ?? []).length, 2);
+  assert.match(header, /<form action=\{logoutAction\} className="hidden lg:block"/);
+  assert.match(drawer, /<form action=\{logoutAction\} className="mt-auto border-t border-slate-200 pt-4"[\s\S]*Logout/);
+  assert.doesNotMatch(drawer, /Il mio profilo|Centro Admin/);
 });
 
-test("anonimo vede Accedi e Registrati senza avatar fake", () => {
+test("anonimo vede la sola CTA Accedi senza avatar fake o Accesso Admin", () => {
   const header = read("src", "app", "components", "Header.tsx");
-  assert.match(header, /account \? <ProfileButton[\s\S]*Accedi[\s\S]*Registrati/);
-  assert.match(header, /account \? <form action=\{logoutAction\}>[\s\S]*: <div[\s\S]*Accedi[\s\S]*Registrati/);
+  assert.match(header, /account \? <>[\s\S]*: <Link href="\/account\/accedi"[\s\S]*Accedi/);
+  assert.doesNotMatch(header, /Accesso Admin|Registrati/);
 });
 
 test("profilo definitivo apre l'editor avatar e limita Modifica e Logout all'owner", () => {

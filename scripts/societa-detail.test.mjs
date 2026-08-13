@@ -8,6 +8,8 @@ const read = (...parts) => fs.readFileSync(path.join(root, ...parts), "utf8");
 const page = read("src", "app", "societa", "[slug]", "page.tsx");
 const catalog = read("src", "lib", "societa", "catalog.server.ts");
 const current = read("src", "lib", "societa", "current.server.ts");
+const supporters = read("src", "app", "societa", "[slug]", "TifosiSocieta.tsx");
+const supportServer = read("src", "lib", "account", "support.server.ts");
 
 test("slug canonico usa la società Supabase e alias effettua redirect permanente", () => {
   assert.match(page, /const lookup = await getActiveSocietaBySlug\(slug\)/);
@@ -59,4 +61,22 @@ test("pagina dinamica eredita no-store e non genera slug dal CSV", () => {
 test("metadata usa identità e URL canonici Supabase", () => {
   assert.match(page, /generateMetadata[\s\S]*getActiveSocietaBySlug\(slug\)/);
   assert.match(page, /path: `\/societa\/\$\{team\.slug\}`/);
+});
+
+test("scheda società sostituisce Gioca con il conteggio Tifosi stagionale autorevole", () => {
+  assert.match(page, /getActiveSupporterCounts\(\)/);
+  assert.match(page, /supporterCounts\.get\(team\.id\) \?\? 0/);
+  assert.match(page, /<TifosiSocieta count=\{supporterCount\} usernames=\{supporterCount === 0 \? \[\] : null\} \/>/);
+  assert.doesNotMatch(page, /Scendi in campo|\/gioca\?societa=/);
+  assert.match(supportServer, /rpc\("active_supporter_counts"\)/);
+});
+
+test("popup Tifosi è responsive, accessibile e non espone dati privati", () => {
+  assert.match(supporters, /role="dialog" aria-modal="true"/);
+  assert.match(supporters, />I tifosi<\/h2>/i);
+  assert.match(supporters, /Chiudi elenco tifosi/);
+  assert.match(supporters, /Nessun tifoso al momento\./);
+  assert.match(supporters, /`\/user\/\$\{encodeURIComponent\(username\)\}`/);
+  assert.match(supporters, /overflow-y-auto overflow-x-hidden/);
+  assert.doesNotMatch(supporters, /email|nome_cognome|auth\.users|service.role/i);
 });

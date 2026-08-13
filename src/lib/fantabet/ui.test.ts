@@ -311,12 +311,12 @@ test("storico mette punti e Tipster prima delle giocate", async () => {
   assert.match(client, /<PastRoundSummary.*<RoundTipsters.*initial\.bets\.map/s);
 });
 
-test("cambio round rimonta lo snapshot e ripristina submission e cinque giocate", async () => {
+test("cambio round rimonta lo snapshot e ripristina submission con giocate compatte", async () => {
   const page = await readFile(new URL("../../app/fantabet/page.tsx", import.meta.url), "utf8");
   const client = await readFile(new URL("../../app/fantabet/FantaBetClient.tsx", import.meta.url), "utf8");
   assert.match(page, /key=\{initial\.round\?\.id \?\? "fantabet-empty"\}/);
   assert.match(client, /initial\.submission \? new Set\(initial\.bets\.map/);
-  assert.match(client, /initial\.submission \? new Set\(\) : new Set\(initial\.bets\.map/);
+  assert.match(client, /useState<Set<number>>\(\(\) => new Set\(\)\)/);
   assert.match(client, /GIOCATA EFFETTUATA/);
 });
 
@@ -357,9 +357,16 @@ test("storico usa colonne stabili, una riga mobile e nomi completi accessibili",
 
 test("submitted usa lo slot finale, accordion e controlli read-only", async () => {
   const client = await readFile(new URL("../../app/fantabet/FantaBetClient.tsx", import.meta.url), "utf8");
-  assert.match(client, /role="status"[\s\S]*GIOCATA EFFETTUATA ✓/); assert.match(client, /onClick=\{submitted \? onToggle : undefined\}/);
-  assert.match(client, /aria-expanded=\{submitted \? true : undefined\}/); assert.match(client, /controlsDisabled: boolean = Boolean\(!writable \|\| pending \|\| submitted\)/);
+  assert.match(client, /role="status"[\s\S]*GIOCATA EFFETTUATA ✓/); assert.match(client, /onClick=\{onToggle\}/);
+  assert.match(client, /aria-expanded=\{true\}/); assert.match(client, /controlsDisabled: boolean = Boolean\(!writable \|\| pending \|\| submitted\)/);
   assert.doesNotMatch(client, /GIOCATA EFFETTUATA ✓ ·/);
+});
+
+test("una bet aperta si richiude senza giocare e aprirne un'altra chiude la precedente", async () => {
+  const client = await readFile(new URL("../../app/fantabet/FantaBetClient.tsx", import.meta.url), "utf8");
+  assert.match(client, /current\.has\(bet\.id\) \? new Set\(\) : new Set\(\[bet\.id\]\)/);
+  assert.match(client, /aria-label=\{`Richiudi \$\{meta\[0\]\}`\}/);
+  assert.match(client, /if \(!expanded\)[\s\S]*complete \? predictionLabel\(bet\.type, prediction\) : "GIOCA"/);
 });
 
 test("demo G36 perfetta implica 5 su 5 e G37 non è giocata", () => {
@@ -408,12 +415,13 @@ test("Giocata effettuata resta nello slot senza bordo", async () => {
   assert.ok(status); assert.match(status[1], /min-h-11 w-full/); assert.match(status[1], /rounded-xl/); assert.doesNotMatch(status[1], /\bborder\b/);
 });
 
-test("collassata separa tipo e PT dalla partita e mostra spunta solo se confermata", async () => {
+test("tutte le giocate partono compatte e distinguono GIOCA dal valore salvato", async () => {
   const client = await readFile(new URL("../../app/fantabet/FantaBetClient.tsx", import.meta.url), "utf8");
-  const collapsed = client.slice(client.indexOf("if (complete && !expanded)"), client.indexOf("return <article"));
+  const collapsed = client.slice(client.indexOf("if (!expanded)"), client.indexOf("return <article"));
   const compact = client.slice(client.indexOf("function CompactBetCard"), client.indexOf("function FantasyValues"));
   assert.match(collapsed, /<CompactBetCard/); assert.match(collapsed, /\{bet\.points\} PT/); assert.doesNotMatch(collapsed, />\+\{bet\.points\} PT/);
-  assert.match(collapsed, /confirmed=\{playConfirmed\}/); assert.match(compact, /bet\.home\.logo/); assert.match(collapsed, /predictionLabel/);
+  assert.match(collapsed, /confirmed=\{playConfirmed\}/); assert.match(compact, /bet\.home\.logo/); assert.match(collapsed, /complete \? predictionLabel\(bet\.type, prediction\) : "GIOCA"/);
+  assert.match(client, /setExpanded\(\(current\)[\s\S]*next\.delete\(betId\)/);
 });
 
 test("storico replica la geometria compatta senza label o punti singoli", async () => {

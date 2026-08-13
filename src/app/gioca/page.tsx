@@ -44,10 +44,10 @@ export default async function GiocaPage({
           <div className="relative">
             <div>
               <p className="section-eyebrow">
-                Arcade Room
+                Divertiti e scala le classifiche
               </p>
               <h1 className="font-onder-title mt-2.5 break-words text-3xl uppercase text-blue-950 sm:mt-4 sm:text-5xl lg:text-7xl">
-                La Sala Giochi
+                L&apos;Arcade
               </h1>
               <p className="mt-3 max-w-2xl text-[13px] font-semibold leading-5 text-slate-500 sm:mt-6 sm:text-base sm:leading-8">
                 Scegli il tuo stemma, entra in campo e trasforma ogni corsa in un nuovo record.

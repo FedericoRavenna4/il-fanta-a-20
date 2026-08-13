@@ -2,8 +2,9 @@ import "server-only";
 
 import { createAuthenticatedSupabaseClient } from "@/lib/supabase/authenticated.server";
 import { ACCOUNT_AVATAR_BUCKET, isOwnedAvatarPath, versionAvatarUrl } from "./avatar";
+import { evaluateAdminIdentity } from "@/lib/admin-import/auth-logic";
 
-export type AccountViewer = { id: string; username: string | null; avatarUrl: string | null };
+export type AccountViewer = { id: string; username: string | null; avatarUrl: string | null; isAdmin: boolean };
 
 export async function getCurrentAccount(): Promise<AccountViewer | null> {
   try {
@@ -15,11 +16,12 @@ export async function getCurrentAccount(): Promise<AccountViewer | null> {
       .select("id,username,avatar_url,updated_at")
       .eq("id", user.id)
       .maybeSingle();
-    if (!profile) return { id: user.id, username: null, avatarUrl: null };
+    const isAdmin = evaluateAdminIdentity(user.email, process.env.ADMIN_IMPORT_EMAILS) === "authorized";
+    if (!profile) return { id: user.id, username: null, avatarUrl: null, isAdmin };
     const avatarPath = isOwnedAvatarPath(profile.avatar_url, user.id) ? profile.avatar_url : null;
     const publicUrl = avatarPath ? supabase.storage.from(ACCOUNT_AVATAR_BUCKET).getPublicUrl(avatarPath).data.publicUrl : null;
     const avatarUrl = versionAvatarUrl(publicUrl, profile.updated_at);
-    return { id: profile.id, username: profile.username, avatarUrl };
+    return { id: profile.id, username: profile.username, avatarUrl, isAdmin };
   } catch {
     return null;
   }

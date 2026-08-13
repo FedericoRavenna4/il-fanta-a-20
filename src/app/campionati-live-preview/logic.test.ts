@@ -194,3 +194,13 @@ test("correzioni finali: testata desktop stabile, cambio giornata senza flash e 
   assert.ok(css.includes("box-shadow:none; pointer-events:auto; cursor:grab; transition:none"));
   assert.ok(css.includes(".rangeInput:focus-visible::-webkit-slider-thumb")); assert.ok(css.includes(".rangeInput:focus-visible::-moz-range-thumb"));
 });
+
+test("highlight globali hanno tre palette premium coerenti e record integrato", async () => {
+  const source = await readFile(new URL("./live-client.tsx", import.meta.url), "utf8");
+  assert.match(source, /#5b3505_0%[\s\S]*#b7790b_48%[\s\S]*#6e4208_100%/);
+  assert.match(source, /#071f45_0%[\s\S]*#123b6a_58%[\s\S]*#081a38_100%/);
+  assert.match(source, /#170b16_0%[\s\S]*#4b142b_58%[\s\S]*#210b18_100%/);
+  assert.match(source, /text-\[11px\] font-black uppercase[\s\S]*MVP di giornata/);
+  assert.doesNotMatch(source, /font-onder-title[\s\S]{0,200}(?:MVP|GOLEADA|DISASTRO)/);
+  assert.match(source, /rounded-xl border-t[\s\S]*Record stagionale/);
+});

@@ -14,6 +14,8 @@ import EmblemiSocieta from "./EmblemiSocieta";
 import PalmaresSocieta from "./PalmaresSocieta";
 import type { Metadata } from "next";
 import { createPageMetadata } from "@/lib/seo";
+import { getActiveSupporterCounts } from "@/lib/account/support.server";
+import TifosiSocieta from "./TifosiSocieta";
 
 export async function generateMetadata({
   params,
@@ -55,6 +57,8 @@ export default async function SchedaSocietaPage({
   const risultati = getRisultati();
   const statisticheGiocatori = getStatisticheGiocatori();
   const emblemi = getEmblemiSocieta(new Set(team.badge_tipo === "new_entry" ? [team.id] : []));
+  const supporterCounts = await getActiveSupporterCounts();
+  const supporterCount = supporterCounts.get(team.id) ?? 0;
 
   const fantallenatori = (team.fantallenatore ?? "")
     .split(/\s+-\s+/)
@@ -211,15 +215,7 @@ export default async function SchedaSocietaPage({
                 </p>
               </Link>
 
-              <Link
-                href={`/gioca?societa=${encodeURIComponent(team.slug)}`}
-                className="rounded-2xl bg-slate-50 p-3 transition hover:-translate-y-0.5 hover:bg-sky-50 hover:shadow-md sm:p-6"
-              >
-                <p className="text-sm font-bold text-slate-500">Gioca</p>
-                <p className="text-2xl font-black text-blue-950">
-                  Scendi in campo
-                </p>
-              </Link>
+              <TifosiSocieta count={supporterCount} usernames={supporterCount === 0 ? [] : null} />
             </div>
           </div>
         </div>

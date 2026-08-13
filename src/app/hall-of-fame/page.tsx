@@ -142,10 +142,10 @@ export async function HallOfFameContent({ embedded = false }: { embedded?: boole
     : [];
 
   return (
-    <section id="hall-of-fame" className={embedded ? "scroll-mt-28" : "mx-auto max-w-7xl px-4 py-7 sm:px-5 sm:py-12 lg:px-6 lg:py-16"}>
+    <section id={embedded ? undefined : "hall-of-fame"} className={embedded ? undefined : "mx-auto max-w-7xl scroll-mt-28 px-4 py-7 sm:px-5 sm:py-12 lg:px-6 lg:py-16"}>
       {!embedded && <PageHeader
-        eyebrow="Trofei e memoria storica"
-        title="Hall of Fame"
+        eyebrow="I vincitori del passato"
+        title="L'Hall of Fame"
         description="La vetrina più prestigiosa del Fanta a 20, dove trofei, vittorie e società leggendarie compongono la storia della competizione."
       />}
 

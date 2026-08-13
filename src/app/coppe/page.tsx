@@ -1,11 +1,11 @@
 import CoppaFanta from "./CoppaFanta";
 import CoppeEuropee from "./CoppeEuropee";
 import PageHeader from "../components/PageHeader";
-import { redirect } from "next/navigation";
+import MobileCoppeHub from "./MobileCoppeHub";
 
 export function CoppeContent({ embedded = false }: { embedded?: boolean }) {
   return (
-    <section id="coppe" className={embedded ? "scroll-mt-28" : "mx-auto max-w-7xl px-4 py-7 sm:px-5 sm:py-12 lg:px-6 lg:py-16"}>
+    <section id={embedded ? undefined : "coppe"} className={embedded ? undefined : "mx-auto max-w-7xl scroll-mt-28 px-4 py-7 sm:px-5 sm:py-12 lg:px-6 lg:py-16"}>
       {!embedded && <PageHeader
         eyebrow="Il palcoscenico dei trofei"
         title="Le Coppe"
@@ -20,5 +20,5 @@ export function CoppeContent({ embedded = false }: { embedded?: boolean }) {
 }
 
 export default function CoppePage() {
-  redirect("/competizioni#coppe");
+  return <MobileCoppeHub />;
 }

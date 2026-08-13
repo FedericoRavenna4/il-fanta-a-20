@@ -24,7 +24,7 @@ const puntiGiornata = [
 export function ScattoPromozioneContent({ embedded = false }: { embedded?: boolean }) {
   return (
     
-    <main id="scatto-promozione" className={embedded ? "scroll-mt-28" : "mx-auto max-w-7xl px-4 py-7 sm:px-5 sm:py-12 lg:px-6 lg:py-16"}>
+    <main id={embedded ? undefined : "scatto-promozione"} className={embedded ? undefined : "mx-auto max-w-7xl scroll-mt-28 px-4 py-7 sm:px-5 sm:py-12 lg:px-6 lg:py-16"}>
       {!embedded && <PageHeader
         eyebrow="La corsa finale della Serie C"
         title="Lo Scatto Promozione"

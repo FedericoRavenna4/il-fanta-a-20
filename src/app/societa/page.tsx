@@ -26,7 +26,7 @@ export default async function SocietaPage() {
     <section className="bg-[linear-gradient(180deg,#f8fbff_0%,#f3f8fc_48%,#f8fafc_100%)]">
     <div className="mx-auto max-w-7xl px-4 py-7 sm:px-5 sm:py-12 lg:px-6 lg:py-16">
       <PageHeader
-        eyebrow="Archivio ufficiale"
+        eyebrow="Le protagoniste"
         title="Le Societa'"
         onderTitle
         description="Le 100 società del Fanta a 20: identità, protagonisti e storie che hanno costruito la competizione stagione dopo stagione."

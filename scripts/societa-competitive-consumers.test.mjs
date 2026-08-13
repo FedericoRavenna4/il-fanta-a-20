@@ -61,8 +61,10 @@ test("Preview simulata usa categoria e girone Supabase senza posizione nell'arra
   ]);
 
   assert.match(page, /await getActiveSocietaCatalog\(\)/);
-  assert.match(data, /team\.categoria === sourceCategory/);
-  assert.match(data, /normalizeGroup\(team\.girone\) === sourceGroup/);
+  assert.match(data, /const embeddedGroup = team\.categoria\?\.match/);
+  assert.match(data, /const actualCategory = embeddedGroup \? "Serie C" : team\.categoria/);
+  assert.match(data, /normalizeGroup\(embeddedGroup \?\? team\.girone\)/);
+  assert.match(data, /actualCategory === category && actualGroup === expectedGroup/);
   assert.match(data, /slug: team\.slug/);
   assert.doesNotMatch(data, /const fallback|leagueIndex \* 20|getSocieta/);
 });

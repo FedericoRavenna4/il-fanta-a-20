@@ -18,6 +18,14 @@ const leagueDefinitions: Array<{
 
 const normalizeGroup = (value: string | null) => value?.replace(/^girone\s+/i, "").trim().toUpperCase() ?? null;
 
+function belongsToLeague(team: CurrentSocieta, sourceName: string) {
+  const [category, expectedGroup = null] = sourceName.split(" - Girone ");
+  const embeddedGroup = team.categoria?.match(/^Serie C\s*-\s*Girone\s+(.+)$/i)?.[1] ?? null;
+  const actualCategory = embeddedGroup ? "Serie C" : team.categoria;
+  const actualGroup = normalizeGroup(embeddedGroup ?? team.girone);
+  return actualCategory === category && actualGroup === expectedGroup;
+}
+
 function toMockTeam(team: CurrentSocieta): MockTeam {
   return { id: team.id, name: team.nome, logo: team.logo_path ?? "/logo.png", slug: team.slug };
 }
@@ -31,7 +39,7 @@ function goals(fantasyScore: number) {
   return 1 + Math.floor((fantasyScore - 66) / 6);
 }
 
-function createSchedule(teams: MockTeam[], leagueOffset: number) {
+function createSchedule(teams: MockTeam[], leagueOffset: number, seed: number, filled: boolean) {
   const rotating = [...teams];
   const firstLeg: MockTeam[][] = [];
 
@@ -49,9 +57,9 @@ function createSchedule(teams: MockTeam[], leagueOffset: number) {
       const second = roundTeams[19 - index];
       const home = secondLeg ? second : first;
       const away = secondLeg ? first : second;
-      const played = day <= 3;
-      const homeScore = played ? score(home.id + day * 11 + leagueOffset) : null;
-      const awayScore = played ? score(away.id + day * 13 + leagueOffset + 7) : null;
+      const played = filled || day <= 3;
+      const homeScore = played ? score(home.id + day * 11 + leagueOffset + seed) : null;
+      const awayScore = played ? score(away.id + day * 13 + leagueOffset + seed + 7) : null;
       return {
         id: `${leagueOffset}-${day}-${index}`,
         home,
@@ -66,20 +74,19 @@ function createSchedule(teams: MockTeam[], leagueOffset: number) {
   return matchdays;
 }
 
-export function createChampionshipMockData(societa: CurrentSocieta[]): LeagueMock[] {
+export function createChampionshipMockData(societa: CurrentSocieta[], seed = 20260813, filled = false): LeagueMock[] {
   return leagueDefinitions.map((league, leagueIndex) => {
-    const [sourceCategory, sourceGroup = null] = league.sourceName.split(" - Girone ");
     const teams = societa
-      .filter((team) => team.categoria === sourceCategory && normalizeGroup(team.girone) === sourceGroup)
+      .filter((team) => belongsToLeague(team, league.sourceName))
       .slice(0, 20)
       .map(toMockTeam);
     return {
       id: league.id,
       name: league.name,
       shortName: league.shortName,
-      currentMatchday: 3,
+      currentMatchday: filled ? 38 : 3,
       teams,
-      matchdays: teams.length === 20 ? createSchedule(teams, leagueIndex * 101) : {},
+      matchdays: teams.length === 20 ? createSchedule(teams, leagueIndex * 101, seed, filled) : {},
     };
   });
 }

@@ -1,11 +1,19 @@
 import type { Metadata } from "next";
 import ChampionshipLive from "./live-client";
 import { loadChampionshipData } from "./data";
+import { getDemoSeed, isGlobalFakeDataEnabled } from "@/lib/demo-data/config";
+import { getActiveSocietaCatalog } from "@/lib/societa/catalog.server";
+import ChampionshipPreview from "../campionati-preview/preview-client";
+import { createChampionshipMockData } from "../campionati-preview/mock-data";
 
 export const metadata: Metadata = { title: "Campionati Live Preview", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
 
 export default async function CampionatiLivePreviewPage({ searchParams }: { searchParams: Promise<{ stagione?: string }> }) {
+  if (isGlobalFakeDataEnabled()) {
+    const societa = await getActiveSocietaCatalog();
+    return <ChampionshipPreview leagues={createChampionshipMockData(societa, getDemoSeed(), true)} />;
+  }
   let data = null;
   try {
     const { stagione } = await searchParams;
