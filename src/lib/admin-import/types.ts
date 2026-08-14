@@ -21,6 +21,7 @@ export type ImportPreview = {
   fileHash: string;
   seasonLabel: string;
   competitionLabel: string;
+  competitionCode: string;
   importType: ImportType;
   summary: {
     giornate: number;
@@ -31,6 +32,8 @@ export type ImportPreview = {
     insert: number;
     update: number;
     unchanged: number;
+    existing: number;
+    replace: number;
     warning: number;
     error: number;
   };
@@ -47,6 +50,7 @@ export type AdminCatalog = {
     edizioneCompetizioneId: string;
     seasonId: string;
     competitionId: string;
+    code: string;
     label: string;
     importType: ImportType;
   }>;
@@ -57,10 +61,12 @@ export type ImportHistoryItem = {
   createdAt: string;
   type: string;
   competition: string;
+  season: string;
   fileName: string;
   status: string;
   inserted: number;
   updated: number;
+  total: number;
   warnings: number;
   errors: number;
   summary: unknown;

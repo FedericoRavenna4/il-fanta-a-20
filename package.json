@@ -12,6 +12,7 @@
     "test:importazioni-schema": "node --test scripts/importazioni-migration.test.mjs",
     "test:admin-import": "node --test scripts/admin-import.test.mjs",
     "test:account": "node --test scripts/account.test.mjs",
+    "test:account-return": "node --experimental-strip-types --test src/lib/account/return-url.test.ts",
     "test:navigation": "node --test scripts/navigation.test.mjs",
     "test:demo-data": "node --experimental-strip-types --test src/lib/demo-data/*.test.ts src/app/coppe/coppa-fanta-fixture.test.ts src/app/campionati-preview/mock-data.test.ts",
     "test:profile-verification": "node --experimental-strip-types --test scripts/profile-verification.test.mjs",
@@ -34,7 +35,8 @@
     "audit:societa-db-csv": "node scripts/audit-societa-db-vs-csv.mjs",
     "test:fantabet": "node --experimental-strip-types --test src/lib/fantabet/*.test.ts",
     "test:campionati-live": "node --experimental-strip-types --test src/app/campionati-live-preview/logic.test.ts",
-    "test:arcade": "node --experimental-strip-types --test src/lib/arcade/*.test.ts"
+    "test:arcade": "node --experimental-strip-types --test src/lib/arcade/*.test.ts",
+    "test:home": "node --experimental-strip-types --test src/lib/home/*.test.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",

@@ -52,7 +52,8 @@ test("login porta al profilo pubblico e mantiene account solo come fallback lega
   const callback = read("src", "app", "account", "callback", "route.ts");
   const login = actions.slice(actions.indexOf("export async function loginAction"), actions.indexOf("export async function logoutAction"));
   assert.match(login, /select\("username"\)\.eq\("id", login\.user\.id\)\.maybeSingle\(\)/);
-  assert.match(login, /redirect\(profile\?\.username \? `\/user\/\$\{encodeURIComponent\(profile\.username\)\}` : "\/account"\)/);
+  assert.match(login, /redirect\(returnTo \|\| \(profile\?\.username \? `\/user\/\$\{encodeURIComponent\(profile\.username\)\}` : "\/account"\)\)/);
+  assert.match(login, /safeAccountReturnUrl/);
   assert.doesNotMatch(login, /redirect\("\/account"\)/);
   assert.match(callback, /destination === "\/account"[\s\S]*session\.user[\s\S]*`\/user\/\$\{encodeURIComponent\(profile\.username\)\}`/);
 });

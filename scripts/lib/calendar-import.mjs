@@ -15,6 +15,7 @@ const PHASES = new Map([
 
 const LAYOUTS = {
   campionato: { name: "campionato", sideOffsets: [0, 6], seriesDay: 2, grouping: null, home: 0, homeFantasy: 1, awayFantasy: 2, away: 3, result: 4 },
+  coppaQualificazione: { name: "competizione", sideOffsets: [0, 6], seriesDay: 2, grouping: null, home: 0, homeFantasy: 1, awayFantasy: 2, away: 3, result: 4 },
   competizione: { name: "competizione", sideOffsets: [0, 7], seriesDay: 3, grouping: 0, home: 1, homeFantasy: 2, awayFantasy: 3, away: 4, result: 5 },
 };
 
@@ -125,9 +126,12 @@ function grouping(value) {
   };
 }
 
-function detectLayout(rows) {
+function detectLayout(rows, calendarType) {
   const hasCompetitionPhase = rows.some((row) => row.some((value) => PHASES.has(normalizeSocietaName(value))));
   const hasWideDayHeader = rows.some((row) => dayNumber(row[7], "lega") !== null);
+  const pairedLeagueDays = new Set(rows.flatMap((row) => [dayNumber(row[0], "lega"), dayNumber(row[6], "lega")]).filter((value) => value !== null));
+  if (calendarType === "calendario_coppa" && !hasCompetitionPhase && !hasWideDayHeader && pairedLeagueDays.size > 0) return LAYOUTS.coppaQualificazione;
+  if (!calendarType && pairedLeagueDays.size === 14) return LAYOUTS.coppaQualificazione;
   return hasCompetitionPhase || hasWideDayHeader ? LAYOUTS.competizione : LAYOUTS.campionato;
 }
 
@@ -138,7 +142,7 @@ function parseCalendarData(data, readOptions, options = {}) {
   const sheet = workbook.Sheets[sheetName];
   if (!sheet) throw new Error("Il workbook non contiene fogli leggibili.");
   const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: true, defval: null, blankrows: true });
-  const layout = options.layout ?? detectLayout(rows);
+  const layout = options.layout ?? detectLayout(rows, options.calendarType);
   const expectedDays = options.expectedDays ?? (layout.name === "campionato" ? 38 : null);
   const phaseMarkers = rows.flatMap((row, rowIndex) => row.map((value) => ({ rowIndex, phase: PHASES.get(normalizeSocietaName(value)) })).filter((entry) => entry.phase));
   const headers = [];
@@ -259,6 +263,55 @@ export function parseCalendarWorkbook(filePath, options = {}) {
 
 export function parseCalendarBuffer(buffer, options = {}) {
   return parseCalendarData(buffer, { type: "buffer" }, options);
+}
+
+export function validateCampionatoCalendarStructure(parsed) {
+  const errors = [];
+  const expectedDays = Array.from({ length: 38 }, (_, index) => index + 1);
+  const actualDays = [...new Set(parsed.days)].sort((a, b) => a - b);
+  if (actualDays.length !== 38) errors.push({ codice: "CAMPIONATO_NUMERO_GIORNATE", messaggio: `Calendario campionato incompleto: trovate ${actualDays.length} giornate su 38.` });
+  for (const day of actualDays.filter((value) => value < 1 || value > 38)) errors.push({ codice: "CAMPIONATO_GIORNATA_FUORI_RANGE", messaggio: `Giornata ${day}: il valore deve essere compreso tra 1 e 38.` });
+  for (const day of expectedDays) {
+    const matches = parsed.matches.filter((match) => match.giornataLega === day);
+    if (matches.length !== 10) errors.push({ codice: "CAMPIONATO_PARTITE_GIORNATA", messaggio: `Giornata ${day}: previste 10 partite, trovate ${matches.length}.` });
+    const appearances = new Set(matches.flatMap((match) => [match.casa.societaId, match.trasferta.societaId]).filter((id) => id !== null));
+    if (appearances.size !== 20) errors.push({ codice: "CAMPIONATO_PARTECIPANTI_GIORNATA", messaggio: `Giornata ${day}: previste 20 società distinte, trovate ${appearances.size}.` });
+  }
+  if (parsed.matches.length !== 380) errors.push({ codice: "CAMPIONATO_PARTITE_TOTALI", messaggio: `Calendario campionato: previste 380 partite, trovate ${parsed.matches.length}.` });
+  return errors;
+}
+
+export function validateCoppaCalendarStructure(parsed) {
+  const errors = [];
+  const expectedDays = Array.from({ length: 14 }, (_, index) => index + 1);
+  const actualDays = [...new Set(parsed.days)].sort((a, b) => a - b);
+  if (actualDays.length !== 14) errors.push({ codice: "COPPA_NUMERO_GIORNATE", messaggio: `Calendario incompleto: trovate ${actualDays.length} giornate su 14.` });
+  for (const day of actualDays.filter((value) => value < 1 || value > 14)) errors.push({ codice: "COPPA_GIORNATA_FUORI_RANGE", messaggio: `Giornata ${day}: il valore deve essere compreso tra 1 e 14.` });
+  for (const day of expectedDays) {
+    const matches = parsed.matches.filter((match) => match.giornataLega === day);
+    if (matches.length !== 50) errors.push({ codice: "COPPA_PARTITE_GIORNATA", messaggio: `Giornata ${day}: previste 50 partite, trovate ${matches.length}.` });
+    const appearances = new Map();
+    const pairings = new Set();
+    for (const match of matches) {
+      const homeId = match.casa.societaId;
+      const awayId = match.trasferta.societaId;
+      if (homeId !== null && awayId !== null && homeId === awayId) errors.push({ codice: "COPPA_AUTOPARTITA", messaggio: `Giornata ${day}: la società ${match.casa.name} non può giocare contro se stessa.`, riga: match.source.row });
+      const pairing = homeId !== null && awayId !== null ? [homeId, awayId].sort((a, b) => a - b).join(":") : [match.casa.normalized, match.trasferta.normalized].sort().join(":");
+      if (pairings.has(pairing)) errors.push({ codice: "COPPA_PARTITA_DUPLICATA", messaggio: `Giornata ${day}: partita duplicata tra ${match.casa.name} e ${match.trasferta.name}.`, riga: match.source.row });
+      pairings.add(pairing);
+      for (const team of [match.casa, match.trasferta]) {
+        if (team.societaId === null) continue;
+        const count = (appearances.get(team.societaId) ?? 0) + 1;
+        appearances.set(team.societaId, count);
+        if (count === 2) errors.push({ codice: "COPPA_SOCIETA_DUPLICATA_GIORNATA", messaggio: `La società ${team.name} compare due volte nella giornata ${day}.`, riga: match.source.row });
+      }
+    }
+    if (appearances.size !== 100) errors.push({ codice: "COPPA_PARTECIPANTI_GIORNATA", messaggio: `Giornata ${day}: previste 100 società distinte, trovate ${appearances.size}.` });
+  }
+  if (parsed.matches.length !== 700) errors.push({ codice: "COPPA_PARTITE_TOTALI", messaggio: `Calendario Coppa: previste 700 partite, trovate ${parsed.matches.length}.` });
+  const participants = new Set(parsed.matches.flatMap((match) => [match.casa.societaId, match.trasferta.societaId]).filter((id) => id !== null));
+  if (participants.size !== 100) errors.push({ codice: "COPPA_PARTECIPANTI_TOTALI", messaggio: `Prevista la partecipazione di 100 società, trovate ${participants.size}.` });
+  return errors;
 }
 
 export function buildUpsertPayload(parsed, options) {

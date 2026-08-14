@@ -58,14 +58,16 @@ test("società mancante conserva assegnazione e nome storico senza slug fittizio
   assert.doesNotMatch(source, /\.filter\([^)]*societaById/);
 });
 
-test("tutti i consumer Emblemi passano esplicitamente lo stato New Entry corrente", async () => {
+test("i consumer assegnazioni passano lo stato New Entry corrente e la Home usa il catalogo", async () => {
   const [home, detail, profile] = await Promise.all([
     read("src/app/page.tsx"),
     read("src/app/societa/[slug]/page.tsx"),
     read("src/app/user/[username]/page.tsx"),
   ]);
 
-  assert.match(home, /getEmblemiSocieta\(newEntryIds\)/);
+  assert.match(home, /getCatalogoEmblemi\(\)/);
+  assert.match(home, /<HomeEmblemShowcase emblems=\{emblemiVetrina\}/);
+  assert.doesNotMatch(home, /getEmblemiSocieta\(/);
   assert.match(detail, /getEmblemiSocieta\(new Set\(team\.badge_tipo === "new_entry"/);
   assert.match(profile, /getEmblemiSocieta\(newEntryIds\)/);
 });

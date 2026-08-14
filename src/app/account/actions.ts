@@ -7,6 +7,7 @@ import { accountRedirectUrl } from "@/lib/account/server";
 import { validateAccountUsername } from "@/lib/account/username";
 import { ACCOUNT_AVATAR_BUCKET, ACCOUNT_AVATAR_ORIGINAL_BUCKET, isOwnedAvatarOriginalPath, isOwnedAvatarPath, validateAccountAvatar } from "@/lib/account/avatar";
 import { resolveAccountLoginEmail } from "@/lib/account/login.server";
+import { safeAccountReturnUrl } from "@/lib/account/return-url";
 import { persistAvatarFiles, profileCompletionMessage, safeBackendError } from "@/lib/account/persistence";
 
 export type AccountActionState = { message: string; field?: "email" | "password" | "username"; success?: boolean };
@@ -129,6 +130,7 @@ export async function signUpAction(_state: AccountActionState, formData: FormDat
 export async function loginAction(_state: AccountActionState, formData: FormData): Promise<AccountActionState> {
   const identifier = String(formData.get("identifier") ?? "").trim();
   const password = String(formData.get("password") ?? "");
+  const returnTo = safeAccountReturnUrl(formData.get("returnTo"), "");
   if (!identifier || !password) return { message: "Credenziali non valide." };
   const email = await resolveAccountLoginEmail(identifier);
   if (!email) return { message: "Credenziali non valide." };
@@ -137,7 +139,7 @@ export async function loginAction(_state: AccountActionState, formData: FormData
   if (error) return { message: "Credenziali non valide." };
   const { data: profile } = await supabase.from("profiles").select("username").eq("id", login.user.id).maybeSingle();
   revalidatePath("/", "layout");
-  redirect(profile?.username ? `/user/${encodeURIComponent(profile.username)}` : "/account");
+  redirect(returnTo || (profile?.username ? `/user/${encodeURIComponent(profile.username)}` : "/account"));
 }
 
 export async function logoutAction() {

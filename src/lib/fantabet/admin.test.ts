@@ -17,3 +17,70 @@ test("UI admin inizia con Compila la schedina e termina con Schedine pubblicate"
 test("Visualizza usa id round e storico è a selezione singola", async () => { const client = await readFile(new URL("../../app/admin/fantabet/AdminFantaBetClient.tsx", import.meta.url), "utf8"); assert.match(client, /href=\{`\/fantabet\?round=\$\{round\.id\}`\}/); assert.match(client, /selectedId.*onSelect/s); assert.doesNotMatch(client, /rounds\.map\(\(round\) => <article/); });
 test("monitoraggio usa prediction e submission senza email", async () => { const server = await readFile(new URL("./admin.server.ts", import.meta.url), "utf8"); assert.match(server, /grouped\.set/); assert.match(server, /fantabet_round_submissions/); assert.match(server, /competizioni.*divisione_riferimento/s); assert.doesNotMatch(server, /auth\.users|select\([^)]*email/i); });
 test("migrazione correttiva congela configurazione da opens_at", async () => { const sql = await readFile(new URL("../../../supabase/migrations/202608090001_fantabet_preopen_editing.sql", import.meta.url), "utf8"); assert.match(sql, /statement_timestamp\(\) < old\.opens_at/); assert.match(sql, /round_status = 'pubblicata' and statement_timestamp\(\) < round_opens_at/); assert.match(sql, /FANTABET_CONFIGURAZIONE_APERTA_IMMUTABILE/); assert.match(sql, /revoke all.*authenticated/is); });
+
+test("eliminazione admin usa preview reale, conferma rafforzata e aggiornamento immediato", async () => {
+  const client = await readFile(new URL("../../app/admin/fantabet/AdminFantaBetClient.tsx", import.meta.url), "utf8");
+  for (const text of ["ELIMINA", "ELIMINA GIORNATA FANTABET", "Pronostici", "Utenti", "Submission", "ATTENZIONE", "Ho capito che verranno eliminate anche tutte le giocate collegate", "ELIMINA DEFINITIVAMENTE"]) assert.match(client, new RegExp(text, "i"));
+  assert.match(client, /inspectFantaBetRoundDeletionAction/);
+  assert.match(client, /setDeletedRoundIds/);
+  assert.match(client, /router\.refresh\(\)/);
+  assert.doesNotMatch(client, /window\.confirm\([^)]*[Ee]limina/);
+});
+
+test("RPC elimina qualunque stato con scope sul solo round e cascade atomica", async () => {
+  const sql = await readFile(new URL("../../../supabase/migrations/202608140003_admin_delete_fantabet_round.sql", import.meta.url), "utf8");
+  assert.match(sql, /create or replace function public\.admin_delete_fantabet_round\(p_round_id bigint\)/i);
+  assert.match(sql, /for update/);
+  assert.match(sql, /delete from public\.fantabet_rounds round\s+where round\.id = p_round_id/i);
+  assert.doesNotMatch(sql, /where[^;]*status\s*(=|in)/i);
+  assert.doesNotMatch(sql, /delete from public\.(partite|user_emblem_unlocks|profile_supports|fantabet_support)/i);
+  assert.match(sql, /set_config\('f20\.admin_delete_fantabet_round', p_round_id::text, true\)/i);
+  assert.match(sql, /^begin;[\s\S]*commit;\s*$/i);
+});
+
+test("preview conta giocate pronostici partecipanti e submission sul server", async () => {
+  const sql = await readFile(new URL("../../../supabase/migrations/202608140003_admin_delete_fantabet_round.sql", import.meta.url), "utf8");
+  assert.match(sql, /count\(distinct bet\.id\)/);
+  assert.match(sql, /count\(distinct prediction\.id\)/);
+  assert.match(sql, /count\(distinct prediction\.profile_id\)/);
+  assert.match(sql, /count\(distinct \(submission\.profile_id, submission\.round_id\)\)/);
+});
+
+test("delete e preview sono service-role only e la Server Action verifica sempre l'admin", async () => {
+  const sql = await readFile(new URL("../../../supabase/migrations/202608140003_admin_delete_fantabet_round.sql", import.meta.url), "utf8");
+  const actions = await readFile(new URL("../../app/admin/fantabet/actions.ts", import.meta.url), "utf8");
+  assert.match(sql, /revoke all on function public\.admin_delete_fantabet_round\(bigint\) from public, anon, authenticated/i);
+  assert.match(sql, /grant execute on function public\.admin_delete_fantabet_round\(bigint\) to service_role/i);
+  assert.match(actions, /deleteFantaBetRoundAction[\s\S]*await requireImportAdmin\(\)/);
+  assert.match(actions, /inspectFantaBetRoundDeletionAction[\s\S]*await requireImportAdmin\(\)/);
+  assert.doesNotMatch(actions, /service_role|SUPABASE_SERVICE_ROLE/);
+});
+
+test("round eliminata durante una sessione restituisce un errore pubblico controllato", async () => {
+  const actions = await readFile(new URL("../../app/fantabet/actions.ts", import.meta.url), "utf8");
+  assert.match(actions, /Questa giornata FantaBet non è più disponibile\./);
+  assert.match(actions, /NON_CONFERMABILE/);
+  assert.match(actions, /NON_MODIFICABILE/);
+});
+
+test("round futura, in corso e conclusa usano la stessa cancellazione senza vincoli di stato", async () => {
+  const sql = await readFile(new URL("../../../supabase/migrations/202608140003_admin_delete_fantabet_round.sql", import.meta.url), "utf8");
+  for (const status of ["bozza", "pubblicata", "chiusa", "valutata"]) assert.doesNotMatch(sql, new RegExp(`p_round_id[^;]+status\\s*=\\s*'${status}'`, "is"));
+  assert.match(sql, /delete from public\.fantabet_rounds round where round\.id = p_round_id/);
+});
+
+test("cancellazione preserva calendario, altri round, emblemi e Tifo", async () => {
+  const sql = await readFile(new URL("../../../supabase/migrations/202608140003_admin_delete_fantabet_round.sql", import.meta.url), "utf8");
+  assert.doesNotMatch(sql, /delete from public\.partite/i);
+  assert.doesNotMatch(sql, /delete from public\.user_emblem_unlocks/i);
+  assert.doesNotMatch(sql, /delete from public\.(profile_supports|fantabet_support_bonus_events|fantabet_support_match_events)/i);
+  assert.doesNotMatch(sql, /stagione_id\s*=|numero_giornata\s*=/i);
+});
+
+test("scoring resta derivato dalle righe core eliminate e non crea un ledger persistito", async () => {
+  const core = await readFile(new URL("../../../supabase/migrations/202608070003_fantabet.sql", import.meta.url), "utf8");
+  const visibility = await readFile(new URL("../../../supabase/migrations/202608100003_fantabet_base_leaderboard_visibility.sql", import.meta.url), "utf8");
+  assert.match(core + visibility, /fantabet_prediction_results/);
+  assert.match(core + visibility, /fantabet_round_evaluation/);
+  assert.doesNotMatch(core + visibility, /create table public\.fantabet_(scores|scoring|leaderboard)/i);
+});

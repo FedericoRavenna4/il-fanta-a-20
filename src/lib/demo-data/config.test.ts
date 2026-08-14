@@ -17,7 +17,9 @@ test("le pagine demo sono reversibili e non invocano scritture Supabase", async 
   ]);
   assert.match(campionati, /isGlobalFakeDataEnabled\(\)[\s\S]*createChampionshipMockData/);
   assert.match(fantabet, /globalDemo \? empty : await loadFantaBetPageData/);
-  assert.match(coppa, /demo=\{isGlobalFakeDataEnabled\(\)\}/);
+  assert.match(coppa, /if \(isGlobalFakeDataEnabled\(\)\)[\s\S]*<CoppaFantaPrototype teams=\{teams\} demo/);
+  assert.match(coppa, /loadActiveCoppaData\(\)/);
+  assert.match(coppa, /loadError=\{loadError\}/);
   for (const source of [campionati, fantabet, coppa]) assert.doesNotMatch(source, /\.insert\(|\.update\(|\.upsert\(|\.delete\(/);
 });
 

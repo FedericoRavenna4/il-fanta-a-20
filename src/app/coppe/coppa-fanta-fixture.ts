@@ -1,10 +1,11 @@
 export type CoppaTeam = { id: number; name: string; slug: string; logo: string };
-export type CoppaMatch = { id: string; day: number; home: CoppaTeam; away: CoppaTeam; homeGoals: number; awayGoals: number; homeScore: number; awayScore: number };
+export type CoppaMatch = { id: string; day: number; home: CoppaTeam; away: CoppaTeam; homeGoals: number | null; awayGoals: number | null; homeScore: number | null; awayScore: number | null; status: string };
 export type CoppaStanding = CoppaTeam & { position: number; movement: number; points: number; totalPoints: number; won: number; drawn: number; lost: number; goalsFor: number; goalsAgainst: number };
 
 function standingsForMatches(teams: CoppaTeam[], matches: CoppaMatch[], previousPositions?: Map<number, number>) {
   const totals = new Map(teams.map((team) => [team.id, { ...team, points: 0, totalPoints: 0, won: 0, drawn: 0, lost: 0, goalsFor: 0, goalsAgainst: 0 }]));
   for (const match of matches) {
+    if (!isCalculatedCoppaMatch(match)) continue;
     const home = totals.get(match.home.id); const away = totals.get(match.away.id);
     if (!home || !away) continue;
     home.totalPoints += match.homeScore; away.totalPoints += match.awayScore;
@@ -16,7 +17,11 @@ function standingsForMatches(teams: CoppaTeam[], matches: CoppaMatch[], previous
   }
   return [...totals.values()]
     .sort((a, b) => b.points - a.points || b.totalPoints - a.totalPoints || b.goalsFor - a.goalsFor || a.name.localeCompare(b.name, "it"))
-    .map((row, index): CoppaStanding => ({ ...row, totalPoints: Number(row.totalPoints.toFixed(1)), position: index + 1, movement: previousPositions ? (previousPositions.get(row.id) ?? index + 1) - (index + 1) : 0 }));
+    .map((row, index): CoppaStanding => ({ ...row, totalPoints: Number(row.totalPoints.toFixed(2)), position: index + 1, movement: previousPositions ? (previousPositions.get(row.id) ?? index + 1) - (index + 1) : 0 }));
+}
+
+export function isCalculatedCoppaMatch(match: CoppaMatch): match is CoppaMatch & { homeGoals: number; awayGoals: number; homeScore: number; awayScore: number } {
+  return match.status === "calcolata" && match.homeGoals !== null && match.awayGoals !== null && match.homeScore !== null && match.awayScore !== null;
 }
 
 export function coppaStandingsForRange(teams: CoppaTeam[], matches: CoppaMatch[], from: number, to: number) {
@@ -36,7 +41,7 @@ export function buildCoppaPrototype(teams: CoppaTeam[], seed = 20260813) {
       if (home.id === away.id) continue;
       const homeScore = 58 + ((home.id * 7 + day * 3 + seed) % 34) / 2;
       const awayScore = 58 + ((away.id * 5 + day * 2 + seed) % 34) / 2;
-      matches.push({ id: `${day}-${index}`, day, home, away, homeGoals: Math.max(0, Math.floor((homeScore - 60) / 6)), awayGoals: Math.max(0, Math.floor((awayScore - 60) / 6)), homeScore, awayScore });
+      matches.push({ id: `${day}-${index}`, day, home, away, homeGoals: Math.max(0, Math.floor((homeScore - 60) / 6)), awayGoals: Math.max(0, Math.floor((awayScore - 60) / 6)), homeScore, awayScore, status: "calcolata" });
     }
   }
   const standingsByDay: Record<number, CoppaStanding[]> = {};

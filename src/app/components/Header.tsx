@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type MouseEvent } from "react";
 import ProfileAvatar from "@/app/account/ProfileAvatar";
 import { logoutAction } from "@/app/account/actions";
 import type { AccountViewer } from "@/lib/account/server";
@@ -73,6 +73,7 @@ export default function Header({ account }: { account: AccountViewer | null }) {
   const navClass = "rounded-full px-4 py-2 text-sm font-bold text-slate-600 transition hover:bg-blue-950 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500";
   const profileHref = account?.username ? `/user/${encodeURIComponent(account.username)}` : "/account";
   const closeMobileMenuForNavigation = () => { skipMobileScrollRestore.current = true; setMobileOpen(false); };
+  const beginLogin = (event: MouseEvent<HTMLAnchorElement>) => { event.preventDefault(); const returnTo=`${window.location.pathname}${window.location.search}${window.location.hash}`; window.location.assign(`/account/accedi?returnTo=${encodeURIComponent(returnTo)}`); };
 
   return <>
     <header ref={rootRef} className={`fixed inset-x-0 top-0 z-[90] border-b border-white/50 bg-white/90 pt-[env(safe-area-inset-top)] shadow-sm shadow-slate-200/40 backdrop-blur-2xl transition-transform duration-300 lg:sticky lg:bg-white/75 lg:pt-0 ${hidden ? "translate-y-0 lg:-translate-y-full" : "translate-y-0"}`}>
@@ -84,7 +85,7 @@ export default function Header({ account }: { account: AccountViewer | null }) {
           {(Object.entries(menus) as [MenuKey, (typeof menus)[MenuKey]][]).map(([key, menu]) => <div key={key} className="relative" onMouseEnter={() => setOpenMenu(key)} onMouseLeave={() => setOpenMenu((current) => current === key ? null : current)}><Link href={menu.hub} aria-expanded={openMenu === key} aria-controls={`desktop-${key}-menu`} onClick={() => setOpenMenu(null)} className={navClass}>{menu.label}</Link><div id={`desktop-${key}-menu`} className={`absolute left-1/2 top-full z-50 ${key === "records" ? "w-[280px]" : "w-[260px]"} -translate-x-1/2 pt-2 transition-all duration-200 ${openMenu === key ? "pointer-events-auto translate-y-0 opacity-100" : "pointer-events-none -translate-y-1 opacity-0"}`}><div className="overflow-hidden rounded-[1.25rem] border border-slate-200 bg-white/95 p-2 shadow-2xl shadow-blue-950/10 backdrop-blur-xl">{menu.links.map((item) => <Link key={item.href} href={item.href} onClick={() => setOpenMenu(null)} className="block rounded-[1rem] px-4 py-3 transition hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"><p className="text-sm font-black uppercase tracking-tight text-blue-950">{item.label}</p><p className="mt-0.5 text-xs font-semibold text-slate-500">{item.description}</p></Link>)}</div></div></div>)}
         </nav>
           <button type="button" aria-label={mobileOpen ? "Chiudi menu" : "Apri menu"} aria-expanded={mobileOpen} aria-controls="mobile-main-menu" onClick={() => setMobileOpen((value) => !value)} className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white/80 text-blue-950 shadow-sm lg:hidden"><span className="flex w-5 flex-col gap-1.5">{[0,1,2].map((line) => <span key={line} className={`h-0.5 w-full bg-current transition ${mobileOpen && line === 0 ? "translate-y-2 rotate-45" : mobileOpen && line === 1 ? "opacity-0" : mobileOpen && line === 2 ? "-translate-y-2 -rotate-45" : ""}`} />)}</span></button>
-          {account ? <><Link href={profileHref} aria-label="Apri il profilo" className="rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"><ProfileAvatar username={account.username ?? "Account"} avatarUrl={account.avatarUrl} size="header" /></Link><form action={logoutAction} className="hidden lg:block"><button className="rounded-full px-2 py-2 text-[11px] font-black uppercase text-slate-600 transition hover:text-blue-950">Logout</button></form></> : <Link href="/account/accedi" className="inline-flex min-h-11 items-center rounded-full bg-blue-950 px-4 text-xs font-black uppercase text-white">Accedi</Link>}
+          {account ? <><Link href={profileHref} aria-label="Apri il profilo" className="rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500"><ProfileAvatar username={account.username ?? "Account"} avatarUrl={account.avatarUrl} size="header" /></Link><form action={logoutAction} className="hidden lg:block"><button className="rounded-full px-2 py-2 text-[11px] font-black uppercase text-slate-600 transition hover:text-blue-950">Logout</button></form></> : <Link href="/account/accedi" onClick={beginLogin} className="inline-flex min-h-11 items-center rounded-full bg-blue-950 px-4 text-xs font-black uppercase text-white">Accedi</Link>}
         </div>
       </div>
     </header>

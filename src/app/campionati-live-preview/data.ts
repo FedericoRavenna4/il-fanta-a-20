@@ -19,7 +19,7 @@ type RawMatch = { id: number; edizione_competizione_id: number; giornata_lega: n
 
 const normalizeGroup = (value: string | null) => value?.replace(/^girone\s+/i, "").trim().toUpperCase() ?? null;
 
-export async function loadChampionshipData(seasonCode?: string): Promise<LiveChampionshipData | null> {
+export async function loadChampionshipData(seasonCode?: string, catalogOverride?: CurrentSocieta[]): Promise<LiveChampionshipData | null> {
   const supabase = await createAuthenticatedSupabaseClient();
   const seasonsResult = await supabase.from("stagioni").select("id,codice,nome,attiva").order("anno_inizio", { ascending: false });
   if (seasonsResult.error) throw seasonsResult.error;
@@ -38,7 +38,7 @@ export async function loadChampionshipData(seasonCode?: string): Promise<LiveCha
   if (matchesResult.error) throw matchesResult.error;
   const rawMatches = (matchesResult.data ?? []) as RawMatch[];
   const teamIds = [...new Set(rawMatches.flatMap((m) => [m.societa_casa_id, m.societa_trasferta_id]))];
-  const rawTeams = await getActiveSocietaCatalog();
+  const rawTeams = catalogOverride ?? await getActiveSocietaCatalog();
   const toTeam = (row: CurrentSocieta): Team => ({ id: row.id, name: row.nome, logo: row.logo_path ?? "/logo.png", slug: row.slug });
   const teamById = new Map(rawTeams.filter((t) => teamIds.includes(t.id)).map((t) => [t.id, toTeam(t)]));
 

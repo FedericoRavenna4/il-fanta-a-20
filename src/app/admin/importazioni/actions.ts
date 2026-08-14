@@ -7,6 +7,16 @@ import { revalidatePath } from "next/cache";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ActionResult } from "@/lib/admin-import/types";
 
+type SupabaseLikeError = { message?: unknown; code?: unknown; details?: unknown; hint?: unknown };
+
+function actionError(error: unknown, fallback: string) {
+  if (error instanceof Error) return error.message;
+  const value = error && typeof error === "object" ? error as SupabaseLikeError : null;
+  const message = typeof value?.message === "string" ? value.message : fallback;
+  if (process.env.NODE_ENV === "development") console.error("[admin/importazioni] Operazione fallita", { message, code: value?.code ?? null, details: value?.details ?? null, hint: value?.hint ?? null });
+  return message;
+}
+
 export async function createImportPreviewAction(formData: FormData): Promise<ActionResult> {
   try {
     const access = await requireImportAdmin();
@@ -22,7 +32,36 @@ export async function publishImportAction(formData: FormData): Promise<{ ok: boo
     await publishAuthenticatedImport(formData);
     return { ok: true, message: "Importazione pubblicata correttamente." };
   } catch (error) {
-    return { ok: false, message: error instanceof Error ? error.message : "Pubblicazione non autorizzata." };
+    return { ok: false, message: actionError(error, "Pubblicazione non riuscita.") };
+  }
+}
+
+export async function inspectCalendarDeletionAction(importId: string) {
+  try {
+    await requireImportAdmin();
+    const db = getSupabaseAdminClient() as unknown as SupabaseClient;
+    const { data, error } = await db.rpc("admin_inspect_calendar_import", { p_import_id: importId });
+    if (error) throw error;
+    const row = Array.isArray(data) ? data[0] : data;
+    if (!row) return { ok: false as const, message: "Calendario pubblicato non trovato." };
+    return { ok: true as const, importId, matches: Number(row.matches), calculated: Number(row.calculated), rests: Number(row.rests), fantabetDependencies: Number(row.fantabet_dependencies) };
+  } catch (error) {
+    return { ok: false as const, message: actionError(error, "Eliminazione non autorizzata.") };
+  }
+}
+
+export async function deletePublishedCalendarAction(importId: string, acknowledgeCalculated: boolean) {
+  try {
+    const access = await requireImportAdmin();
+    const db = getSupabaseAdminClient() as unknown as SupabaseClient;
+    const { data, error } = await db.rpc("admin_delete_calendar_import", { p_import_id: importId, p_deleted_by: access.userId, p_acknowledge_calculated: acknowledgeCalculated });
+    if (error) throw error;
+    revalidatePath("/admin/importazioni");
+    revalidatePath("/campionati");
+    revalidatePath("/coppe");
+    return { ok: true as const, message: "Calendario eliminato con successo.", result: data };
+  } catch (error) {
+    return { ok: false as const, message: actionError(error, "Eliminazione non riuscita.") };
   }
 }
 

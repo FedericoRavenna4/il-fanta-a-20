@@ -33,7 +33,8 @@ test("Coppe usa il catalogo reale e separa il prototipo competitivo locale", () 
   const server = read("src", "app", "coppe", "MobileCoppeHub.tsx");
   const client = read("src", "app", "coppe", "CoppaFantaPrototype.tsx");
   assert.match(server, /getActiveSocietaCatalog/); assert.match(server, /catalog\.slice\(0, 100\)/);
-  assert.match(client, />La Coppa<\/span>[\s\S]*>Fanta a 20<\/span>/); assert.match(client, /Dati competitivi simulati/);
+  assert.match(client, />La Coppa<\/span>[\s\S]*>Fanta a 20<\/span>/); assert.match(client, /Dati demo · nessuna scrittura Supabase/);
+  assert.doesNotMatch(client, /Dati competitivi simulati/);
   assert.match(client, /Cerca squadra\.\.\./); assert.match(client, /Espandi classifica/);
 });
 

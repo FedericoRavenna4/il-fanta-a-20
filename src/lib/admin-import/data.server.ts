@@ -34,7 +34,7 @@ export async function getImportAdminCatalog(): Promise<AdminCatalog> {
   const [{ data: seasons, error: seasonError }, { data: editions, error: editionError }, { data: competitions, error: competitionError }] = await Promise.all([
     supabase.from("stagioni").select("id,codice").order("id", { ascending: false }),
     supabase.from("edizioni_competizioni").select("id,nome_edizione,stagione_id,competizione_id,stato,attiva").eq("attiva", true),
-    supabase.from("competizioni").select("id,nome,tipo"),
+    supabase.from("competizioni").select("id,nome,codice,tipo"),
   ]);
   logCatalogError("stagioni", seasonError);
   logCatalogError("edizioni_competizioni", editionError);
@@ -53,7 +53,8 @@ export async function getImportAdminCatalog(): Promise<AdminCatalog> {
         edizioneCompetizioneId: String(edition.id),
         seasonId: String(edition.stagione_id),
         competitionId: String(edition.competizione_id),
-        label: `${String(competition.nome)} · ${String(season.codice)}`,
+        code: String(competition.codice),
+        label: String(competition.nome),
         importType,
       }];
     }),
@@ -63,14 +64,14 @@ export async function getImportAdminCatalog(): Promise<AdminCatalog> {
 export async function getImportHistory(): Promise<ImportHistoryItem[]> {
   await requireImportAdmin();
   const supabase = admin();
-  const { data: imports, error: importError } = await supabase.from("importazioni").select("id,created_at,tipo,edizione_competizione_id,nome_file,stato,righe_inserite,righe_aggiornate,warning_count,error_count,riepilogo,errori,warning").order("created_at", { ascending: false }).limit(20);
+  const { data: imports, error: importError } = await supabase.from("importazioni").select("id,created_at,tipo,stagione_id,edizione_competizione_id,nome_file,stato,righe_inserite,righe_aggiornate,righe_totali,warning_count,error_count,riepilogo,errori,warning").order("created_at", { ascending: false }).limit(50);
   logCatalogError("storico importazioni", importError);
   assertHistoryQuerySucceeded(importError);
   if (!imports?.length) return [];
 
   const editionIds = [...new Set(imports.map((item) => item.edizione_competizione_id).filter((id) => id != null))];
   const { data: editions, error: editionError } = editionIds.length
-    ? await supabase.from("edizioni_competizioni").select("id,nome_edizione,competizione_id").in("id", editionIds)
+    ? await supabase.from("edizioni_competizioni").select("id,nome_edizione,competizione_id,stagione_id").in("id", editionIds)
     : { data: [], error: null };
   logCatalogError("edizioni dello storico", editionError);
   assertHistoryQuerySucceeded(editionError);
@@ -81,5 +82,9 @@ export async function getImportHistory(): Promise<ImportHistoryItem[]> {
     : { data: [], error: null };
   logCatalogError("competizioni dello storico", competitionError);
   assertHistoryQuerySucceeded(competitionError);
-  return buildImportHistory(imports, editions ?? [], competitions ?? []);
+  const seasonIds = [...new Set(imports.map((item) => item.stagione_id).filter((id) => id != null))];
+  const { data: seasons, error: seasonHistoryError } = seasonIds.length ? await supabase.from("stagioni").select("id,codice").in("id", seasonIds) : { data: [], error: null };
+  logCatalogError("stagioni dello storico", seasonHistoryError);
+  assertHistoryQuerySucceeded(seasonHistoryError);
+  return buildImportHistory(imports, editions ?? [], competitions ?? [], seasons ?? []);
 }

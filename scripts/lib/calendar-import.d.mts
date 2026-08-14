@@ -59,7 +59,9 @@ export type CalendarParseResult = {
 
 export function normalizeSocietaName(value: unknown): string;
 export function createProjectSocietaResolver(root?: string): SocietaResolver;
-export function parseCalendarBuffer(buffer: Buffer | Uint8Array, options?: { resolver?: SocietaResolver; expectedDays?: number | null; edizioneCompetizioneId?: number; sheetName?: string }): CalendarParseResult;
+export function parseCalendarBuffer(buffer: Buffer | Uint8Array, options?: { resolver?: SocietaResolver; expectedDays?: number | null; edizioneCompetizioneId?: number; sheetName?: string; calendarType?: "calendario_campionato" | "calendario_coppa" }): CalendarParseResult;
+export function validateCampionatoCalendarStructure(parsed: CalendarParseResult): Array<{ codice: string; messaggio: string; riga?: number }>;
+export function validateCoppaCalendarStructure(parsed: CalendarParseResult): Array<{ codice: string; messaggio: string; riga?: number }>;
 export function parseCalendarWorkbook(filePath: string, options?: { resolver?: SocietaResolver; expectedDays?: number | null; edizioneCompetizioneId?: number; sheetName?: string }): CalendarParseResult;
 export function buildUpsertPayload(parsed: CalendarParseResult, options: { edizioneCompetizioneId: number; fonteImportazione?: string; importBatchId?: string }): Array<Record<string, unknown>>;
 export function buildRestsUpsertPayload(parsed: CalendarParseResult, options: { edizioneCompetizioneId: number }): Array<Record<string, unknown>>;

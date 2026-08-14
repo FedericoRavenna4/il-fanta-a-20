@@ -5,10 +5,11 @@ import { getPalmares } from "@/lib/palmares";
 import { getRanking } from "@/lib/ranking";
 import { getActiveSocietaCatalog } from "@/lib/societa/catalog.server";
 import type { CurrentSocieta } from "@/lib/societa/current.server";
-import { getCatalogoEmblemi, getEmblemiSocieta } from "@/lib/emblemi";
+import { getCatalogoEmblemi } from "@/lib/emblemi";
 import { isEmblemaNascosto } from "@/lib/emblemi-ui";
 import HomeEmblemShowcase from "./components/HomeEmblemShowcase";
-import { getRisultati } from "@/lib/risultati";
+import { loadHomeLiveData } from "@/lib/home/data.server";
+import HomeLiveSections from "./HomeLiveSections";
 
 const HOME_CARD_CTA_CLASS = "inline-flex min-h-11 items-center justify-center rounded-full border border-blue-800 bg-blue-950 px-5 text-center text-[9px] font-black uppercase tracking-[0.13em] text-white shadow-[0_9px_22px_rgba(15,23,42,.18)] transition duration-300 hover:-translate-y-0.5 hover:border-blue-700 hover:bg-blue-800 hover:text-white hover:shadow-[0_12px_28px_rgba(30,64,175,.24)]";
 
@@ -146,14 +147,13 @@ function SectionHeading({
 }
 
 export default async function Home() {
-  const societa = (await getActiveSocietaCatalog()).map(toHomeTeam);
+  const currentSocieta = await getActiveSocietaCatalog();
+  const homeLiveData = await loadHomeLiveData(currentSocieta);
+  const societa = currentSocieta.map(toHomeTeam);
   const societaById = new Map(societa.map((team) => [team.id, team]));
-  const newEntryIds = new Set(societa.filter((team) => team.badgeTipo === "new_entry").map((team) => team.id));
   const ranking = getRanking();
   const palmares = getPalmares();
   const catalogoEmblemi = getCatalogoEmblemi();
-  const assegnazioniEmblemi = getEmblemiSocieta(newEntryIds);
-  const risultati = getRisultati();
 
   const podioRanking = ranking.slice(0, 3).flatMap((item) => {
     const team = societaById.get(item.squadraId) ?? historicalHomeTeam(item.squadraId, item.nomeRanking);
@@ -163,56 +163,13 @@ export default async function Home() {
   const teamPiuTitolato = piuTitolata
     ? societaById.get(piuTitolata.squadraId) ?? historicalHomeTeam(piuTitolata.squadraId, piuTitolata.nomeSquadra)
     : null;
-  const primaRanking = [...ranking].sort((a, b) => a.posizione - b.posizione)[0];
-  const collezionista = [...assegnazioniEmblemi].sort((a, b) => {
-    const emblemiA = a.emblemi.filter(
-      (emblema) => emblema.stato === "Sbloccato" && !isEmblemaNascosto(emblema)
-    ).length;
-    const emblemiB = b.emblemi.filter(
-      (emblema) => emblema.stato === "Sbloccato" && !isEmblemaNascosto(emblema)
-    ).length;
-    return emblemiB - emblemiA || a.squadraId - b.squadraId;
-  })[0];
-  const ultimaCoppa = risultati
-    .filter(
-      (risultato) =>
-        risultato.competizione === "Coppa Fanta a 20" &&
-        risultato.risultatoTesto.trim().toLocaleLowerCase("it") === "vincitore"
-    )
-    .sort((a, b) => b.stagioneId - a.stagioneId)[0];
-  const teamCollezionista = collezionista
-    ? societaById.get(collezionista.squadraId) ?? historicalHomeTeam(collezionista.squadraId, "Società storica")
-    : null;
-  const societaCampioni = [
-    {
-      team: primaRanking ? societaById.get(primaRanking.squadraId) ?? historicalHomeTeam(primaRanking.squadraId, primaRanking.nomeRanking) : null,
-      label: "Ranking Leader",
-      tone: "text-sky-300",
-      descrizione: "Protagonista fin dalla prima edizione, conquista la vetta del Ranking Storico grazie allo storico double.",
-    },
-    {
-      team: teamCollezionista,
-      label: "Il Collezionista",
-      tone: "text-amber-300",
-      descrizione: "In appena due stagioni conquista uno storico triplete e costruisce la collezione di emblemi più prestigiosa.",
-    },
-    {
-      team: ultimaCoppa ? societaById.get(ultimaCoppa.squadraId) ?? historicalHomeTeam(ultimaCoppa.squadraId, ultimaCoppa.nomeStorico) : null,
-      label: "Campione in carica · Coppa Fanta a 20",
-      tone: "text-emerald-300",
-      descrizione: "All’esordio conquista la Coppa Fanta a 20, scrivendo subito il proprio nome nella storia della competizione.",
-    },
-  ].flatMap((item) => item.team ? [{
-    ...item,
-    team: item.team,
-  }] : []);
   const societaMarquee = [...societa].sort((a, b) => a.id - b.id);
   const emblemiVetrina = catalogoEmblemi
     .filter((emblema) => !isEmblemaNascosto(emblema))
     .sort((a, b) => emblemOrder(a.id) - emblemOrder(b.id));
 
   return (
-    <div className="overflow-hidden bg-[linear-gradient(180deg,#f8fbff_0%,#eef5fb_36%,#f8fafc_100%)]">
+    <div className="home-unified overflow-hidden bg-[linear-gradient(180deg,#f8fbff_0%,#eef5fb_36%,#f8fafc_100%)]">
       <section className="relative mx-auto max-w-7xl px-4 pb-4 pt-8 sm:px-6 sm:pb-10 sm:pt-14 lg:pb-12 lg:pt-20">
         <div className="pointer-events-none absolute left-1/2 top-0 hidden h-[34rem] w-[50rem] -translate-x-1/2 rounded-full bg-sky-200/35 blur-3xl sm:block" />
         <div className="relative grid grid-cols-1 items-center gap-y-4 sm:gap-12">
@@ -220,18 +177,16 @@ export default async function Home() {
             <p className="section-eyebrow order-1 col-span-2">Il portale ufficiale</p>
             <h1 className="font-onder-hero order-2 mt-0 flex w-fit max-w-full flex-col items-start gap-[0.3em] text-[1.05rem] text-blue-950 sm:mt-6 sm:text-[clamp(1.2rem,3.8vw,3rem)]">
               <span className="block whitespace-nowrap">NON E&apos; SOLO</span>
-              <span className="block whitespace-nowrap">FANTACALCIO.</span>
+              <span className="block whitespace-nowrap">FANTACALCIO</span>
               <span className="block whitespace-nowrap text-blue-700">E&apos; IL FANTA A 20</span>
             </h1>
-            <p className="order-4 col-span-2 mt-0 max-w-2xl border-l-2 border-amber-400 pl-3 text-sm font-semibold leading-6 text-slate-600 sm:mt-8 sm:pl-6 sm:text-lg sm:leading-8">
-              Venti partecipanti per lega, nessun giocatore doppione: ogni rosa è davvero unica. Nato nel 2023 come un gioco tra amici, oggi è un ecosistema di cinque leghe e cento società, con promozioni, retrocessioni, coppe e una memoria che cresce stagione dopo stagione.
-              <span className="mt-2 block text-blue-950 sm:mt-4">Dove il gioco non finisce, la storia continua.</span>
-            </p>
           </div>
 
         </div>
 
       </section>
+
+      <HomeLiveSections data={homeLiveData} />
 
       <section className="mx-auto max-w-7xl px-4 py-5 sm:px-6 sm:pb-10 sm:pt-8 lg:pb-12 lg:pt-9">
         <SectionHeading eyebrow="Le protagoniste" title="Le societa'" text="Cento identità, cento storie: il cuore del Fanta a 20." onderTitle />
@@ -243,37 +198,22 @@ export default async function Home() {
           </div>
           <span className="pointer-events-none absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 rounded-full border border-blue-950/10 bg-white/90 px-6 py-3 text-xs font-black uppercase tracking-[0.16em] text-blue-950 opacity-0 shadow-xl backdrop-blur transition duration-300 group-hover:opacity-100">Esplora tutte le società</span>
         </Link>
-        <div className="grid gap-3 sm:gap-5 lg:grid-cols-3">
-          {societaCampioni.map(({ team, label, tone, descrizione }) => (
-            <Link key={team.id} href={homeTeamHref(team)} className="group relative grid h-full grid-rows-[auto_auto_1fr_auto] gap-y-2 overflow-hidden rounded-[1.6rem] bg-blue-950 p-3 text-white shadow-xl shadow-blue-950/10 transition duration-300 hover:-translate-y-1 hover:shadow-2xl sm:gap-y-2.5 sm:rounded-[1.75rem] sm:p-4 lg:grid-rows-[1.75rem_7rem_1fr_auto] lg:gap-y-0">
-              <div className="pointer-events-none absolute right-0 top-0 h-52 w-52 bg-sky-400/10 blur-3xl" />
-              <p className={`relative self-start text-[10px] font-black uppercase leading-5 tracking-[0.22em] ${tone}`}>{label}</p>
-              <div className="relative grid min-w-0 grid-cols-[minmax(0,1fr)_4.5rem] items-start gap-2 sm:flex sm:items-center sm:justify-between sm:gap-4">
-                <div className="min-w-0">
-                  <h3 className="break-words text-lg font-black uppercase leading-tight sm:max-w-48 sm:text-2xl">{team.nome}</h3>
-                  <p className="mt-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-white/45 sm:mt-3 sm:text-xs">{team.legaAttuale}</p>
-                </div>
-                <div className="flex h-[4.5rem] w-[4.5rem] shrink-0 items-center justify-center justify-self-end p-0.5 sm:h-28 sm:w-28 sm:self-center sm:p-1"><TeamLogo team={team} size={112} /></div>
-              </div>
-              <p className="relative line-clamp-2 border-t border-white/10 pt-2.5 text-xs font-semibold leading-5 text-white/60 sm:pt-3 sm:text-[13px]">{descrizione}</p>
-              <p className="relative pt-2 text-[9px] font-black uppercase tracking-[0.14em] text-white/85 sm:pt-3 sm:text-[10px] sm:tracking-[0.17em]">Visualizza la scheda completa <span className="ml-1 inline-block transition-transform group-hover:translate-x-1">→</span></p>
-            </Link>
-          ))}
-        </div>
       </section>
 
-      <section className="w-full pb-6 pt-3 sm:pb-11 sm:pt-5 lg:pb-8">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <p className="section-eyebrow">Archivio degli emblemi</p>
-          <h2 className="font-onder-title mt-2 flex flex-col gap-[0.25em] text-blue-950 sm:block"><span>La collezione</span><span className="sm:ml-2">ufficiale</span></h2>
+      <section className="mx-auto w-full max-w-7xl px-4 py-7 sm:px-6 sm:py-12">
+        <SectionHeading eyebrow="Mettiti alla prova" title="I giochi" text="Due esperienze, un solo mondo." onderTitle />
+        <div className="grid grid-cols-2 gap-3 sm:gap-10">
+          {[
+            { href: "/fantabet", image: "/images/gioca/fantabet.png", cta: "Entra nel FantaBet" },
+            { href: "/gioca", image: "/images/gioca/arcade.png", cta: "Gioca ora" },
+          ].map((item) => <Link key={item.href} href={item.href} className="group flex min-w-0 flex-col items-center px-1 py-3 text-center text-blue-950 transition hover:-translate-y-1"><Image src={item.image} alt="" width={520} height={420} className="h-32 w-full object-contain drop-shadow-xl transition duration-500 group-hover:scale-105 sm:h-64" /><p className="mt-3 text-[8px] font-black uppercase tracking-[.1em] text-blue-950 sm:text-[10px] sm:tracking-[.14em]">{item.cta} →</p></Link>)}
         </div>
-        <HomeEmblemShowcase emblems={emblemiVetrina} />
       </section>
 
       <div className="flex flex-col">
-      <section className="order-2 border-b border-slate-200/80 bg-white/65 py-7 sm:py-12 lg:py-14">
+      <section className="bg-white/45 py-7 sm:py-12 lg:py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <SectionHeading eyebrow={<><span className="sm:hidden">Numeri e storia</span><span className="hidden sm:inline">Numeri e storia</span></>} title="Le statistiche" text="Il valore delle società prende forma attraverso ranking, record e trofei conquistati nel tempo." onderTitle />
+          <SectionHeading eyebrow="Storia e prestigio" title="I record" text="Ranking Storico e Hall of Fame raccontano chi ha lasciato il segno." onderTitle />
           <div className="grid gap-3 sm:gap-5 lg:grid-cols-[1.45fr_0.75fr]">
             <div className="relative flex flex-col overflow-hidden rounded-[2rem] bg-blue-950 p-4 text-white shadow-xl shadow-blue-950/15 sm:p-9">
               <div className="pointer-events-none absolute left-1/3 top-0 h-72 w-72 bg-sky-400/10 blur-[90px]" />
@@ -309,12 +249,20 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="order-1 mx-auto w-full max-w-7xl px-4 py-7 max-sm:py-5 sm:px-6 sm:py-12 lg:pb-14 lg:pt-9">
+      <section className="w-full pb-6 pt-7 sm:pb-11 sm:pt-12 lg:pb-12">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+          <p className="section-eyebrow">I simboli più prestigiosi</p>
+          <h2 className="font-onder-title mt-2 text-3xl uppercase text-blue-950 sm:text-5xl">Gli Emblemi</h2>
+        </div>
+        <HomeEmblemShowcase emblems={emblemiVetrina} />
+      </section>
+
+      <section className="mx-auto w-full max-w-7xl px-4 py-7 max-sm:py-5 sm:px-6 sm:py-12 lg:pb-14 lg:pt-9">
         <div className="mb-6 grid items-center gap-4 max-sm:mb-4 sm:mb-11 sm:gap-8 md:grid-cols-[1fr_290px] lg:grid-cols-[1fr_380px]">
             <div className="max-w-3xl lg:max-w-none">
-              <p className="section-eyebrow">Il sistema sportivo</p>
-              <h2 className="font-onder-title mt-2 text-3xl uppercase text-blue-950 sm:mt-3 sm:text-5xl">Le competizioni</h2>
-              <p className="mt-3 text-sm font-semibold leading-5 text-slate-500 sm:mt-5 sm:text-lg sm:leading-7"><span className="sm:hidden">Le diverse strade per conquistare un posto nella storia.</span><span className="hidden sm:inline">Campionati e coppe: strade diverse per conquistare un posto nella storia.</span></p>
+              <p className="section-eyebrow">Come funziona</p>
+              <h2 className="font-onder-title mt-2 text-3xl uppercase text-blue-950 sm:mt-3 sm:text-5xl">Il regolamento</h2>
+              <p className="mt-3 text-sm font-semibold leading-5 text-slate-500 sm:mt-5 sm:text-lg sm:leading-7">Campionati, coppe e Scatto Promozione: entra rapidamente nelle regole del Fanta a 20.</p>
             </div>
             <div className="hidden h-36 md:block" aria-hidden="true" />
           </div>
@@ -340,10 +288,9 @@ export default async function Home() {
       </div>
 
       <section className="mx-auto w-full max-w-7xl px-4 pb-8 pt-2 sm:px-6 sm:pb-14 lg:pb-16">
-        <div className="grid auto-rows-fr gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+        <div className="grid auto-rows-fr gap-3 sm:grid-cols-2 sm:gap-4">
           {[
-            { title: "La Sala Giochi", description: "Metti alla prova riflessi e strategia nell’arcade ufficiale del Fanta a 20.", href: "/gioca", cta: "Gioca ora" },
-            { title: "Il Regolamento", description: "Scopri tutte le regole che governano la competizione.", href: "/regolamento", cta: "Consulta il regolamento" },
+            { title: "Il Regolamento", description: "Porta con te il regolamento ufficiale completo del Fanta a 20.", href: "/documenti/regolamento-f20-3-0.pdf", cta: "Scarica il regolamento" },
             { title: "La Lista di Attesa", description: "Candidati per entrare nella prossima stagione del Fanta a 20.", href: "/lista-attesa", cta: "Entra nella lista di attesa" },
           ].map((item) => (
             <article key={item.href} className="relative flex min-h-[12.5rem] flex-col overflow-hidden rounded-[1.6rem] border border-sky-200/70 bg-[linear-gradient(145deg,rgba(255,255,255,.9),rgba(224,242,254,.76)_58%,rgba(219,234,254,.68))] p-5 text-blue-950 shadow-[0_16px_38px_rgba(30,64,175,.11),inset_0_1px_0_rgba(255,255,255,.9)] sm:min-h-[13rem] sm:p-6">
@@ -357,6 +304,17 @@ export default async function Home() {
           ))}
         </div>
       </section>
+
+      <section className="mx-auto w-full max-w-7xl px-4 pb-8 pt-1 sm:px-6 sm:pb-14">
+        <Link href="/storia" className="group relative block overflow-hidden rounded-[1.8rem] bg-[linear-gradient(135deg,#071f45,#123b6a)] p-6 text-white shadow-xl sm:p-9">
+          <span className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-amber-300/10 blur-3xl" />
+          <p className="relative text-[9px] font-black uppercase tracking-[.22em] text-amber-300">Dal 2023</p>
+          <h2 className="font-onder-title relative mt-3 text-3xl uppercase sm:text-5xl">La storia</h2>
+          <p className="relative mt-4 max-w-2xl text-sm font-semibold leading-6 text-white/60">Da un gioco tra amici a cinque leghe e cento società. Il racconto del Fanta a 20 continua.</p>
+          <p className="relative mt-5 text-[9px] font-black uppercase tracking-[.16em]">Scopri la storia <span className="inline-block transition group-hover:translate-x-1">→</span></p>
+        </Link>
+      </section>
+
     </div>
   );
 }

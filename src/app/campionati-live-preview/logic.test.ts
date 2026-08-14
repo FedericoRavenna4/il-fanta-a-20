@@ -109,7 +109,7 @@ test("ordinamento PT/Pttot preserva posizione ufficiale e confine retrocessione"
 test("UI condivisa, selettore compatto, Da giocare e popup semplificato", async () => {
   const source = await readFile(new URL("./live-client.tsx", import.meta.url), "utf8");
   const mockClient = await readFile(new URL("../campionati-preview/preview-client.tsx", import.meta.url), "utf8");
-  assert.ok(source.includes("Seleziona giornata")); assert.ok(source.includes("Da giocare"));
+  assert.ok(source.includes("Seleziona giornata")); assert.ok(source.includes("ScheduledMatchStatus"));
   assert.equal(source.includes('["played","G"]'),false); assert.equal(source.includes('["goalDifference","DR"]'),false);
   assert.ok(mockClient.includes("<ChampionshipView data={normalized} mock />"));
 });

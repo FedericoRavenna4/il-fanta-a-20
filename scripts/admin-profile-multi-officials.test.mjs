@@ -26,7 +26,7 @@ test("admin legacy completa un normale profilo sul proprio auth uid", () => {
 
 test("admin usa esclusivamente il login account normale", () => {
   assert.match(actions, /export async function loginAction/);
-  assert.match(actions, /redirect\(profile\?\.username \? `\/user\/\$\{encodeURIComponent\(profile\.username\)\}` : "\/account"\)/);
+  assert.match(actions, /redirect\(returnTo \|\| \(profile\?\.username \? `\/user\/\$\{encodeURIComponent\(profile\.username\)\}` : "\/account"\)\)/);
   assert.match(proxy, /target\.pathname = "\/account\/accedi"/);
   assert.doesNotMatch(proxy, /\/admin\/login/);
 });

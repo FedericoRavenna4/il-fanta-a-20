@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import XLSX from "xlsx";
-import { buildRestsUpsertPayload, buildUpsertPayload, classifyUpsertChanges, normalizeSocietaName, parseCalendarWorkbook, parseGoalResult } from "./lib/calendar-import.mjs";
+import { buildRestsUpsertPayload, buildUpsertPayload, classifyUpsertChanges, normalizeSocietaName, parseCalendarWorkbook, parseGoalResult, validateCampionatoCalendarStructure, validateCoppaCalendarStructure } from "./lib/calendar-import.mjs";
 
 function fixture(rows) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), "calendar-import-"));
@@ -41,6 +41,33 @@ test("parsa giornate dispari e pari, decimali e partite future", () => {
   assert.equal(parsed.matches[1].stato, "programmata");
   assert.equal(parsed.matches[1].fantapuntiCasa, null);
   assert.equal(parsed.matches[1].golCasa, null);
+});
+
+test("riconosce dinamicamente il layout ufficiale Coppa A:E e G:K 14x50x100", () => {
+  const rows = [["Girone di qualificazione"]];
+  for (let pair = 0; pair < 7; pair += 1) {
+    rows.push([`${pair * 2 + 1}ª Giornata lega`, null, `${pair * 2 + 3}ª Giornata serie a`, null, null, null, `${pair * 2 + 2}ª Giornata lega`, null, `${pair * 2 + 4}ª Giornata serie a`]);
+    for (let index = 0; index < 50; index += 1) rows.push([`Team ${index + 1}`, 0, 0, `Team ${index + 51}`, "-", null, `Team ${index + 1}`, 0, 0, `Team ${index + 51}`, "-"]);
+    rows.push(["Riga informativa variabile"]);
+  }
+  const teamResolver = { resolve(name) { const societaId = Number(String(name).replace("Team ", "")); return { input: name, normalized: normalizeSocietaName(name), matches: [{ societaId }], societaId }; } };
+  const parsed = parseCalendarWorkbook(fixture(rows), { resolver: teamResolver, calendarType: "calendario_coppa" });
+  assert.equal(parsed.layout.type, "competizione");
+  assert.equal(parsed.layout.headerRows.length, 7);
+  assert.deepEqual(parsed.days, Array.from({ length: 14 }, (_, index) => index + 1));
+  assert.equal(parsed.matches.length, 700);
+  assert.equal(parsed.matches.every((match) => match.stato === "programmata" && match.fantapuntiCasa === null && match.golCasa === null), true);
+  assert.deepEqual(validateCoppaCalendarStructure(parsed), []);
+});
+
+test("distingue il placeholder 0/0 con trattino da un vero 0-0 esplicito", () => {
+  const parsed = parseCalendarWorkbook(fixture([
+    ["1ª Giornata lega", null, "3ª Giornata serie a"],
+    ["Casa", 0, 0, "Ospite", "-"],
+    ["Casa Due", 66.5, 65, "Ospite Due", "0-0"],
+  ]), { resolver: { resolve(name) { const societaId = name.includes("Due") ? (name.startsWith("Casa") ? 3 : 4) : (name === "Casa" ? 1 : 2); return { input: name, normalized: normalizeSocietaName(name), matches: [{ societaId }], societaId }; } }, expectedDays: 1 });
+  assert.deepEqual({ stato: parsed.matches[0].stato, fp: parsed.matches[0].fantapuntiCasa, gol: parsed.matches[0].golCasa }, { stato: "programmata", fp: null, gol: null });
+  assert.deepEqual({ stato: parsed.matches[1].stato, fp: parsed.matches[1].fantapuntiCasa, gol: parsed.matches[1].golCasa }, { stato: "calcolata", fp: 66.5, gol: 0 });
 });
 
 test("segnala righe incomplete e non crea falsi 0-0", () => {
@@ -104,4 +131,47 @@ test("payload e piano upsert non cancellano e distinguono insert/update/identici
   const inserted = classifyUpsertChanges(payload, []);
   assert.equal(inserted.insert.length, 1);
   assert.equal(Object.hasOwn(inserted, "delete"), false);
+});
+
+function validCoppa() {
+  const days = Array.from({ length: 14 }, (_, index) => index + 1);
+  const matches = days.flatMap((day) => Array.from({ length: 50 }, (_, index) => {
+    const homeId = index + 1; const awayId = index + 51;
+    return { giornataLega: day, source: { row: day * 100 + index }, casa: { name: `Società ${homeId}`, normalized: `societa${homeId}`, societaId: homeId }, trasferta: { name: `Società ${awayId}`, normalized: `societa${awayId}`, societaId: awayId } };
+  }));
+  return { days, matches };
+}
+
+test("valida i campionati a 38 giornate, 10 partite e 20 società", () => {
+  const days = Array.from({ length: 38 }, (_, index) => index + 1);
+  const matches = days.flatMap((giornataLega) => Array.from({ length: 10 }, (_, index) => ({ giornataLega, casa: { societaId: index + 1 }, trasferta: { societaId: index + 11 } })));
+  assert.deepEqual(validateCampionatoCalendarStructure({ days, matches }), []);
+  assert.ok(validateCampionatoCalendarStructure({ days, matches: matches.slice(0, -1) }).some((issue) => issue.codice === "CAMPIONATO_PARTITE_TOTALI"));
+});
+
+test("valida il calendario Coppa ufficiale 14x50 con 100 società", () => {
+  assert.deepEqual(validateCoppaCalendarStructure(validCoppa()), []);
+});
+
+test("rifiuta numero giornate, range e conteggi Coppa errati", () => {
+  const thirteen = validCoppa(); thirteen.days.pop(); thirteen.matches = thirteen.matches.filter((match) => match.giornataLega <= 13);
+  assert.ok(validateCoppaCalendarStructure(thirteen).some((issue) => issue.codice === "COPPA_NUMERO_GIORNATE"));
+  const fifteen = validCoppa(); fifteen.days.push(15); fifteen.matches.push(...fifteen.matches.slice(0, 50).map((match) => ({ ...match, giornataLega: 15 })));
+  assert.ok(validateCoppaCalendarStructure(fifteen).some((issue) => issue.codice === "COPPA_GIORNATA_FUORI_RANGE"));
+  const fortyNine = validCoppa(); fortyNine.matches.splice(0, 1);
+  assert.ok(validateCoppaCalendarStructure(fortyNine).some((issue) => issue.messaggio === "Giornata 1: previste 50 partite, trovate 49."));
+  const fiftyOne = validCoppa(); fiftyOne.matches.push({ ...fiftyOne.matches[0], source: { row: 9999 } });
+  assert.ok(validateCoppaCalendarStructure(fiftyOne).some((issue) => issue.messaggio === "Giornata 1: previste 50 partite, trovate 51."));
+});
+
+test("rifiuta duplicati, assenze, autopartite e società sconosciute prima del write", () => {
+  const duplicated = validCoppa(); duplicated.matches[1] = { ...duplicated.matches[0], source: { row: 2 } };
+  const duplicateIssues = validateCoppaCalendarStructure(duplicated);
+  assert.ok(duplicateIssues.some((issue) => issue.codice === "COPPA_PARTITA_DUPLICATA"));
+  assert.ok(duplicateIssues.some((issue) => issue.codice === "COPPA_SOCIETA_DUPLICATA_GIORNATA"));
+  assert.ok(duplicateIssues.some((issue) => issue.codice === "COPPA_PARTECIPANTI_GIORNATA"));
+  const self = validCoppa(); self.matches[0] = { ...self.matches[0], trasferta: self.matches[0].casa };
+  assert.ok(validateCoppaCalendarStructure(self).some((issue) => issue.codice === "COPPA_AUTOPARTITA"));
+  const unresolved = validCoppa(); unresolved.matches[0] = { ...unresolved.matches[0], casa: { ...unresolved.matches[0].casa, societaId: null } };
+  assert.ok(validateCoppaCalendarStructure(unresolved).some((issue) => issue.codice === "COPPA_PARTECIPANTI_GIORNATA"));
 });

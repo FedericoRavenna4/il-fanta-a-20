@@ -15,9 +15,9 @@ export async function saveFantaBetPrediction(input: SavePredictionInput): Promis
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { ok: false, message: "Accedi per giocare." };
   const betResult = await supabase.from("fantabet_bets").select("round_id").eq("id", input.betId).maybeSingle();
-  if (betResult.error || !betResult.data) return { ok: false, message: "Giocata non disponibile." };
+  if (betResult.error || !betResult.data) return { ok: false, message: "Questa giornata FantaBet non è più disponibile." };
   const roundResult = await supabase.from("fantabet_rounds").select("status,opens_at,deadline_at").eq("id", betResult.data.round_id).maybeSingle();
-  if (roundResult.error || !roundResult.data) return { ok: false, message: "Giornata non disponibile." };
+  if (roundResult.error || !roundResult.data) return { ok: false, message: "Questa giornata FantaBet non è più disponibile." };
   const now = Date.now();
   if (roundResult.data.status !== "pubblicata" || now < new Date(roundResult.data.opens_at).getTime()) return { ok: false, message: "La schedina non è ancora aperta." };
   if (now >= new Date(roundResult.data.deadline_at).getTime()) return { ok: false, message: "La schedina è chiusa: la deadline è scaduta." };
@@ -40,8 +40,9 @@ export async function confirmFantaBetSubmission(roundId: number): Promise<Submis
   if (error) {
     const closed = error.message.includes("FANTABET_DEADLINE_SCADUTA");
     const incomplete = error.message.includes("FANTABET_SCHEDINA_INCOMPLETA");
+    const unavailable = /FANTABET_ROUND_(NON_TROVATA|NON_DISPONIBILE|NON_CONFERMABILE)/i.test(error.message);
     const missingMigration = error.code === "PGRST202" || /confirm_my_fantabet_round|schema cache/i.test(error.message);
-    return { ok: false, message: closed ? "La deadline è scaduta." : incomplete ? "Completa tutte le giocate prima di confermare." : missingMigration ? "Conferma non disponibile: manca la migrazione FantaBet submissions." : "Conferma non riuscita. Riprova." };
+    return { ok: false, message: unavailable ? "Questa giornata FantaBet non è più disponibile." : closed ? "La deadline è scaduta." : incomplete ? "Completa tutte le giocate prima di confermare." : missingMigration ? "Conferma non disponibile: manca la migrazione FantaBet submissions." : "Conferma non riuscita. Riprova." };
   }
   revalidatePath("/fantabet");
   return { ok: true, message: "Schedina confermata", submittedAt: String(data) };
@@ -54,7 +55,8 @@ export async function reopenFantaBetSubmission(roundId: number): Promise<Submiss
   if (!user) return { ok: false, message: "Accedi per modificare la schedina." };
   const { error } = await supabase.rpc("reopen_my_fantabet_round", { p_round_id: roundId });
   if (error) {
-    return { ok: false, message: error.message.includes("FANTABET_DEADLINE_SCADUTA") ? "La deadline è scaduta: la schedina è definitiva." : "Non è stato possibile riaprire la schedina." };
+    const unavailable = /FANTABET_ROUND_(NON_TROVATA|NON_DISPONIBILE|NON_MODIFICABILE)/i.test(error.message);
+    return { ok: false, message: unavailable ? "Questa giornata FantaBet non è più disponibile." : error.message.includes("FANTABET_DEADLINE_SCADUTA") ? "La deadline è scaduta: la schedina è definitiva." : "Non è stato possibile riaprire la schedina." };
   }
   revalidatePath("/fantabet");
   return { ok: true, message: "Schedina riaperta" };

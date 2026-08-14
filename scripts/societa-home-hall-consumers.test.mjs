@@ -11,8 +11,8 @@ test("Home usa identità Supabase e dati competitivi legacy collegati per ID", a
   assert.match(source, /new Map\(societa\.map\(\(team\) => \[team\.id, team\]\)\)/);
   assert.match(source, /getRanking\(\)/);
   assert.match(source, /getPalmares\(\)/);
-  assert.match(source, /getEmblemiSocieta\(newEntryIds\)/);
-  assert.match(source, /getRisultati\(\)/);
+  assert.match(source, /societaMarquee/);
+  assert.doesNotMatch(source, /getEmblemiSocieta|getRisultati/);
   assert.match(source, /logo: team\.logo_path/);
   assert.match(source, /slug: team\.slug/);
   assert.match(source, /badgeTipo: team\.badge_tipo/);
@@ -25,7 +25,7 @@ test("Home conserva i record se manca l'identità attiva", async () => {
 
   assert.match(source, /historicalHomeTeam/);
   assert.match(source, /historicalHomeTeam\(item\.squadraId, item\.nomeRanking\)/);
-  assert.match(source, /historicalHomeTeam\(ultimaCoppa\.squadraId, ultimaCoppa\.nomeStorico\)/);
+  assert.match(source, /historicalHomeTeam\(piuTitolata\.squadraId, piuTitolata\.nomeSquadra\)/);
   assert.doesNotMatch(source, /podioRanking[\s\S]{0,400}filter\(.*team/);
 });
 

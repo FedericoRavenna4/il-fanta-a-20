@@ -64,7 +64,7 @@ export default function FantaBetClient({ initial, demo = false, demoAvailable = 
       <RoundNavigation rounds={initial.availableRounds} previous={previousRound} current={round.number} currentId={currentRound?.id ?? null} selectedId={round.id} next={nextRound} demo={demo} />
       {preOpen && <div role="status" className="mb-5 rounded-2xl border border-sky-200 bg-sky-50 p-4 text-center"><strong className="text-sm font-black uppercase text-blue-950">Schedina non ancora aperta</strong><p className="mt-1 text-xs font-bold text-slate-600">Le giocate apriranno il {new Date(round.opensAt).toLocaleString("it-IT")}.</p></div>}
       {!readOnlyRound && <div className="mb-5"><CurrentStreak streak={own?.streak_attuale ?? 0} /></div>}
-      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(290px,1fr)]">
+      <span id="classifica-fantabet" className="block scroll-mt-24" aria-hidden="true" /><div className="grid items-start gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(290px,1fr)]">
         <section aria-label="Schedina FantaBet" className="min-w-0 space-y-3">
           {readOnlyRound && !preOpen && <PastRoundSummary bets={initial.bets} predictions={predictionByBet} played={Boolean(submission)} demo={demo} roundNumber={round.number} streak={demo ? round.number % 5 : own?.streak_attuale ?? 0} roundResult={initial.roundLeaderboard.find((row) => row.profile_id === initial.viewerId)} />}
           {readOnlyRound && !preOpen && <RoundTipsters rows={initial.roundLeaderboard} />}
