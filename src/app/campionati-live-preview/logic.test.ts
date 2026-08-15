@@ -111,7 +111,7 @@ test("UI condivisa, selettore compatto, Da giocare e popup semplificato", async 
   const mockClient = await readFile(new URL("../campionati-preview/preview-client.tsx", import.meta.url), "utf8");
   assert.ok(source.includes("Seleziona giornata")); assert.ok(source.includes("ScheduledMatchStatus"));
   assert.equal(source.includes('["played","G"]'),false); assert.equal(source.includes('["goalDifference","DR"]'),false);
-  assert.ok(mockClient.includes("<ChampionshipView data={normalized} mock />"));
+  assert.ok(mockClient.includes("<ChampionshipView data={normalized} mock initialLeague={initialLeague} initialTab={initialTab} />"));
 });
 
 test("rifiniture PR1.1: pallino, slider doppio, stagione e marquee", async () => {

@@ -10,7 +10,9 @@ import { getSupabaseAdminClient } from "@/lib/supabase/server";
 import { planCalendarSynchronization } from "./calendar-sync";
 import { getCompetitionImportConfig } from "./competition-config";
 
-function issues(parsed: ReturnType<typeof parseCalendarBuffer>, importType: ImportType, competitionCode: string) {
+type CalendarImportType = Exclude<ImportType, "rose">;
+
+function issues(parsed: ReturnType<typeof parseCalendarBuffer>, importType: CalendarImportType, competitionCode: string) {
   const competitionConfig = getCompetitionImportConfig(competitionCode);
   const errors: ImportIssue[] = [
     ...parsed.diagnostics.unknownNames.map((value) => ({ codice: "SOCIETA_NON_RICONOSCIUTA", messaggio: `Società non riconosciuta: ${value}`, valore: value })),
@@ -50,7 +52,7 @@ async function databaseResolver() {
   return { resolve(name: string) { const normalized = normalizeSocietaName(name); const matches = values.get(normalized) ?? []; return { input: name, normalized, matches, societaId: matches.length === 1 ? matches[0].societaId : null }; } };
 }
 
-async function prepare(buffer: Uint8Array, importType: ImportType, editionId: number, competitionCode: string) {
+async function prepare(buffer: Uint8Array, importType: CalendarImportType, editionId: number, competitionCode: string) {
   const parsed = parseCalendarBuffer(buffer, { resolver: await databaseResolver(), edizioneCompetizioneId: editionId, calendarType: importType });
   if (importType === "calendario_campionato" && parsed.layout.type !== "campionato") throw new Error("Il file non è compatibile con un calendario di campionato.");
   if (importType === "calendario_coppa" && parsed.layout.type !== "competizione") throw new Error("Il file non è compatibile con un calendario di coppa.");
@@ -92,7 +94,7 @@ async function prepare(buffer: Uint8Array, importType: ImportType, editionId: nu
 export async function createAuthenticatedPreview(formData: FormData, userId: string): Promise<ImportPreview> {
   const fileValue = formData.get("file");
   const file = validateImportFile(fileValue instanceof File ? fileValue : null);
-  const importType = String(formData.get("importType")) as ImportType;
+  const importType = String(formData.get("importType")) as CalendarImportType;
   if (importType !== "calendario_campionato" && importType !== "calendario_coppa") throw new Error("Tipo di importazione non supportato.");
   const receivedSeasonId = formData.get("seasonId");
   const receivedEditionId = formData.get("editionCompetitionId");
@@ -176,7 +178,7 @@ export async function publishAuthenticatedImport(formData: FormData) {
     const edition = await admin().from("edizioni_competizioni").select("competizioni!inner(codice)").eq("id", record.edizione_competizione_id).single();
     if (edition.error || !edition.data) throw new Error("Impossibile identificare la competizione dell’importazione.");
     const competition = Array.isArray(edition.data.competizioni) ? edition.data.competizioni[0] : edition.data.competizioni;
-    const prepared = await prepare(bytes, record.tipo as ImportType, Number(record.edizione_competizione_id), String(competition?.codice ?? ""));
+    const prepared = await prepare(bytes, record.tipo as CalendarImportType, Number(record.edizione_competizione_id), String(competition?.codice ?? ""));
     if (prepared.errors.length) throw new Error("La nuova validazione contiene errori bloccanti.");
     const matchWrites = [...prepared.matchPlan.insert, ...prepared.matchPlan.update].map((row) => ({ ...row, import_batch_id: importId }));
     const restWrites = [...prepared.restPlan.insert, ...prepared.restPlan.update].map((row) => ({ ...row, import_batch_id: importId }));

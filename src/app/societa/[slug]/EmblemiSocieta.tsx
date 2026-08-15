@@ -166,20 +166,18 @@ export default function EmblemiSocieta({
 
         <div className="mt-3 border-t border-slate-200/80 pt-3">
           <h3 className="text-base font-black uppercase tracking-tight text-blue-950">
-            Emblemi sbloccati <span className="font-semibold text-slate-400">— {ordinati.length}</span>
+            Emblemi <span className="font-semibold text-slate-400">— {ordinati.length}</span>
           </h3>
 
           {ordinati.length > 0 ? (
             <div className="mt-3 grid grid-cols-3 gap-2">
-              {ordinati.slice(0, 6).map((emblema) => (
-                <EmblemaIcona key={emblema.id} emblema={emblema} />
-              ))}
+              {ordinati.slice(0, 6).map((emblema) => <EmblemaIcona key={emblema.id} emblema={emblema} />)}
             </div>
           ) : (
             <p className="mt-2 text-xs font-semibold text-slate-400">Nessun emblema sbloccato.</p>
           )}
 
-          {ordinati.length > 6 && (
+          {ordinati.length + daDifendere.length > 6 && (
             <button
               type="button"
               onClick={() => setOpen(true)}
@@ -188,22 +186,13 @@ export default function EmblemiSocieta({
               Vedi tutti <span aria-hidden="true">→</span>
             </button>
           )}
+
         </div>
       </section>
 
       <section className="rounded-[2rem] border border-violet-300/60 bg-[linear-gradient(145deg,rgba(250,248,255,.96),rgba(255,255,255,.94))] p-4 shadow-[0_16px_40px_rgba(109,40,217,.1)] sm:p-5">
-        <h2 className="text-base font-black uppercase tracking-tight text-blue-950">
-          Emblemi da difendere <span className="font-semibold text-slate-400">— {daDifendere.length}</span>
-        </h2>
-        {daDifendere.length > 0 ? (
-          <div className="mt-3 grid grid-cols-3 gap-2">
-            {daDifendere.map((emblema) => (
-              <EmblemaIcona key={emblema.id} emblema={emblema} />
-            ))}
-          </div>
-        ) : (
-          <p className="mt-2 text-xs font-semibold text-slate-400">Nessun emblema da difendere.</p>
-        )}
+        <h2 className="text-base font-black uppercase tracking-tight text-blue-950">Emblemi da difendere <span className="font-semibold text-slate-400">— {daDifendere.length}</span></h2>
+        {daDifendere.length > 0 ? <div className="mt-3 grid grid-cols-3 gap-2">{daDifendere.map((emblema) => <EmblemaIcona key={emblema.id} emblema={emblema}/>)}</div> : <p className="mt-2 text-xs font-semibold text-slate-400">Nessun emblema da difendere.</p>}
       </section>
 
       <Link
@@ -235,16 +224,15 @@ export default function EmblemiSocieta({
               <div className="min-w-0">
                 <h2 className="text-lg font-black uppercase tracking-tight text-blue-950 sm:text-2xl">Collezione della società</h2>
                 <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.13em] text-slate-400">
-                  Emblemi sbloccati — {ordinati.length}
+                  Emblemi — {ordinati.length + daDifendere.length}
                 </p>
               </div>
             </div>
 
             <div className="mt-4 grid grid-cols-5 gap-x-1 gap-y-2 sm:grid-cols-7 sm:gap-3 md:grid-cols-8 lg:grid-cols-10">
-              {ordinati.map((emblema) => (
-                <EmblemaIcona key={emblema.id} emblema={emblema} vetrina />
-              ))}
+              {ordinati.map((emblema) => <EmblemaIcona key={emblema.id} emblema={emblema} vetrina />)}
             </div>
+            {daDifendere.length > 0 && <div className="mt-5 rounded-2xl border border-violet-200 bg-violet-50/60 p-3"><p className="text-[9px] font-black uppercase tracking-[.13em] text-violet-700">Emblemi da difendere — {daDifendere.length}</p><div className="mt-2 grid grid-cols-5 gap-x-1 gap-y-2 sm:grid-cols-7 sm:gap-3 md:grid-cols-8 lg:grid-cols-10">{daDifendere.map((emblema) => <EmblemaIcona key={emblema.id} emblema={emblema} vetrina />)}</div></div>}
             </div>
           </div>
         </div>

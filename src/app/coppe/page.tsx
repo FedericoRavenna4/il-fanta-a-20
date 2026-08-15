@@ -19,6 +19,7 @@ export function CoppeContent({ embedded = false }: { embedded?: boolean }) {
   );
 }
 
-export default function CoppePage() {
-  return <MobileCoppeHub />;
+export default async function CoppePage({ searchParams }: { searchParams: Promise<{ vista?: string }> }) {
+  const { vista } = await searchParams;
+  return <MobileCoppeHub initialTab={vista === "classifica" ? "table" : "results"} />;
 }

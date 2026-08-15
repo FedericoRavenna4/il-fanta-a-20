@@ -19,7 +19,7 @@ export function buildImportHistory(rows: ImportRow[], editions: EditionRow[], co
     const competition = edition?.competizione_id == null ? undefined : competitionMap.get(String(edition.competizione_id));
     return {
       id: String(item.id), createdAt: String(item.created_at), type: String(item.tipo),
-      competition: String(competition?.nome ?? edition?.nome_edizione ?? "—"),
+      competition: String(item.tipo === "rose" ? "Rose" : competition?.nome ?? edition?.nome_edizione ?? "—"),
       season: String(seasonMap.get(String(item.stagione_id))?.codice ?? "—"),
       fileName: String(item.nome_file), status: String(item.stato),
       inserted: Number(item.righe_inserite), updated: Number(item.righe_aggiornate),

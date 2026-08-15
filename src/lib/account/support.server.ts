@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createAuthenticatedSupabaseClient } from "@/lib/supabase/authenticated.server";
+import { getCatalogoEmblemi, type EmblemaPosseduto } from "@/lib/emblemi";
 
 export type AccountSupportHubData = {
   kind: "official" | "supporter" | "selectable";
@@ -53,4 +54,22 @@ export async function getActiveSupporterCounts() {
   const { data, error } = await supabase.rpc("active_supporter_counts");
   if (error) return new Map<number, number>();
   return new Map((data ?? []).map((row) => [Number(row.societa_id), Number(row.tifosi)]));
+}
+
+type SocietaSupportEmblemRow = {
+  emblem_key: string;
+  stato: "Sbloccato" | "Da difendere";
+  unlocked_at: string;
+  stagione: string | null;
+};
+
+export async function getSocietaSupportEmblems(societaId: number): Promise<EmblemaPosseduto[]> {
+  const supabase = await createAuthenticatedSupabaseClient();
+  const { data, error } = await supabase.rpc("public_societa_support_emblems", { p_societa_id: societaId });
+  if (error) return [];
+  const catalog = new Map(getCatalogoEmblemi().map((emblem) => [emblem.chiave, emblem]));
+  return ((data ?? []) as SocietaSupportEmblemRow[]).flatMap((row) => {
+    const emblem = catalog.get(row.emblem_key);
+    return emblem ? [{ ...emblem, stato: row.stato } satisfies EmblemaPosseduto] : [];
+  });
 }

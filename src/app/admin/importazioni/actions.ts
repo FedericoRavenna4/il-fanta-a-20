@@ -6,6 +6,7 @@ import { getSupabaseAdminClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ActionResult } from "@/lib/admin-import/types";
+import { createRosePreview, publishRoseImport } from "@/lib/admin-import/rose-preview.server";
 
 type SupabaseLikeError = { message?: unknown; code?: unknown; details?: unknown; hint?: unknown };
 
@@ -20,7 +21,7 @@ function actionError(error: unknown, fallback: string) {
 export async function createImportPreviewAction(formData: FormData): Promise<ActionResult> {
   try {
     const access = await requireImportAdmin();
-    return { ok: true, preview: await createAuthenticatedPreview(formData, access.userId!) };
+    return { ok: true, preview: String(formData.get("importType")) === "rose" ? await createRosePreview(formData, access.userId!) : await createAuthenticatedPreview(formData, access.userId!) };
   } catch (error) {
     return { ok: false, message: error instanceof Error ? error.message : "Impossibile creare l’anteprima." };
   }
@@ -29,10 +30,43 @@ export async function createImportPreviewAction(formData: FormData): Promise<Act
 export async function publishImportAction(formData: FormData): Promise<{ ok: boolean; message: string }> {
   try {
     await requireImportAdmin();
-    await publishAuthenticatedImport(formData);
+    const db = getSupabaseAdminClient() as unknown as SupabaseClient;
+    const { data: record } = await db.from("importazioni").select("tipo").eq("id", String(formData.get("importId") ?? "")).maybeSingle();
+    if (record?.tipo === "rose") await publishRoseImport(formData); else await publishAuthenticatedImport(formData);
+    revalidatePath("/societa");
+    revalidatePath("/societa/[slug]", "page");
     return { ok: true, message: "Importazione pubblicata correttamente." };
   } catch (error) {
     return { ok: false, message: actionError(error, "Pubblicazione non riuscita.") };
+  }
+}
+
+export async function inspectRoseDeletionAction(importId: string) {
+  try {
+    await requireImportAdmin();
+    const db = getSupabaseAdminClient() as unknown as SupabaseClient;
+    const { data, error } = await db.rpc("admin_inspect_rose_import", { p_import_id: importId });
+    if (error) throw error;
+    const row = Array.isArray(data) ? data[0] : data;
+    if (!row) return { ok: false as const, message: "La fotografia Rose selezionata non è quella corrente oppure è già vuota." };
+    return { ok: true as const, importId, seasonId: Number(row.stagione_id), season: String(row.stagione), players: Number(row.players) };
+  } catch (error) {
+    return { ok: false as const, message: actionError(error, "Eliminazione Rose non autorizzata.") };
+  }
+}
+
+export async function deletePublishedRoseAction(importId: string) {
+  try {
+    const access = await requireImportAdmin();
+    const db = getSupabaseAdminClient() as unknown as SupabaseClient;
+    const { data, error } = await db.rpc("admin_delete_rose_import", { p_import_id: importId, p_deleted_by: access.userId });
+    if (error) throw error;
+    revalidatePath("/admin/importazioni");
+    revalidatePath("/societa");
+    revalidatePath("/societa/[slug]", "page");
+    return { ok: true as const, message: "Fotografia Rose eliminata con successo.", result: data };
+  } catch (error) {
+    return { ok: false as const, message: actionError(error, "Eliminazione Rose non riuscita.") };
   }
 }
 

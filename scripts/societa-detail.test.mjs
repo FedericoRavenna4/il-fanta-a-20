@@ -22,7 +22,7 @@ test("slug sconosciuto o società inattiva produce 404 senza fallback CSV", () =
   assert.match(page, /if \(!lookup\) notFound\(\)/);
   assert.match(catalog, /\.eq\("attiva", true\)/);
   assert.match(catalog, /if \(!alias\.data\) return null/);
-  assert.doesNotMatch(page, /getSocieta|societa\.csv|cachedSocieta/);
+  assert.doesNotMatch(page, /getSocieta(?!SupportEmblems)|societa\.csv|cachedSocieta/);
 });
 
 test("nome corrente resta centralizzato e non viene ricostruito dalla pagina", () => {
@@ -46,7 +46,8 @@ test("fantallenatore storia logo categoria e girone arrivano dal record Supabase
 test("ranking trofei risultati rose ed emblemi legacy si uniscono soltanto per ID", () => {
   assert.match(page, /ranking\.find\(\(item\) => item\.squadraId === team\.id\)/);
   assert.match(page, /palmares\.find\(\(item\) => item\.squadraId === team\.id\)/);
-  assert.match(page, /rose\.filter\(\(item\) => item\.squadraId === team\.id\)/);
+  assert.match(page, /loadRoseForSocieta\(team\.id\)/);
+  assert.doesNotMatch(page, /getRose\(\)|rose\.filter\(\(item\) => item\.squadraId === team\.id\)/);
   assert.match(page, /risultati\.filter\(\(item\) => item\.squadraId === team\.id\)/);
   assert.match(page, /emblemi\.find\([\s\S]*item\.squadraId === team\.id/);
   assert.doesNotMatch(page, /nomeSquadra\s*===|nomeRanking\s*===|\.find\([^)]*team\.nome/);

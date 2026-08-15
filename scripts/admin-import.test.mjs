@@ -41,7 +41,7 @@ test("impedisce doppia pubblicazione ed errori bloccanti", () => {
 test("storico vuoto, record senza edizione e colonna warning singolare", () => {
   assert.deepEqual(buildImportHistory([], [], []), []);
   const result = buildImportHistory([{ id: "1", created_at: "2026-08-05", tipo: "rose", edizione_competizione_id: null, nome_file: "rose.xlsx", stato: "pubblicata", righe_inserite: 2, righe_aggiornate: 0, warning_count: 1, error_count: 0, riepilogo: {}, warning: [{ codice: "W" }], errori: [] }], [], []);
-  assert.equal(result[0].competition, "—");
+  assert.equal(result[0].competition, "Rose");
   assert.deepEqual(result[0].warningItems, [{ codice: "W" }]);
 });
 
@@ -86,7 +86,9 @@ test("azioni, pagina, storico e logout sono protetti e il client non espone serv
   const accountActions = read("src", "app", "account", "actions.ts");
   const proxy = read("src", "lib", "supabase", "proxy.ts");
   assert.doesNotMatch(client, /SUPABASE_SERVICE_ROLE_KEY|sb_secret_/);
-  assert.equal((actions.match(/requireImportAdmin\(\)/g) ?? []).length, 5);
+  assert.equal((actions.match(/requireImportAdmin\(\)/g) ?? []).length, 7);
+  assert.match(actions, /inspectRoseDeletionAction[\s\S]*requireImportAdmin/);
+  assert.match(actions, /deletePublishedRoseAction[\s\S]*requireImportAdmin/);
   assert.match(page, /redirect\("\/account\/accedi"\)/);
   assert.doesNotMatch(authServer, /auth\.signOut\(\)/);
   assert.equal((data.match(/requireImportAdmin\(\)/g) ?? []).length, 2);

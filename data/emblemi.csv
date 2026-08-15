@@ -61,3 +61,8 @@ ID,Nome,Categoria,Tipo,Descrizione,Record
 60,Dominatore,da difendere,Difendibile,Detenuto dalla squadra che ha totalizzato più punti in una singola stagione di campionato.,ND
 61,Mercante,da difendere,Difendibile,Detenuto dalla squadra che ha totalizzato il maggior numero di scambi in una singola stagione.,21
 62,Sovrano,da difendere,Difendibile,Detenuto dalla squadra con il maggior numero di titoli ufficiali conquistati.,3
+63,Primo tifoso,base,Sbloccabile,Raggiungi almeno un tifoso ufficiale.,
+64,La curva cresce,comune,Sbloccabile,Raggiungi almeno 10 tifosi ufficiali.,
+65,Un popolo,mitico,Sbloccabile,Raggiungi almeno 100 tifosi ufficiali.,
+66,Sold out,leggenda,Sbloccabile,Raggiungi almeno 500 tifosi ufficiali.,
+67,Idolo,da difendere,Difendibile,Detenuto dalla società con il maggior numero di tifosi ufficiali.,ND

@@ -77,7 +77,7 @@ function StatItem({
   value: string;
 }) {
   return (
-    <span className="flex min-w-0 items-center justify-center gap-0.5 rounded-md bg-white/55 px-0.5 py-1 sm:shrink-0 sm:justify-start sm:gap-1 sm:rounded-none sm:border-r sm:border-slate-300/60 sm:bg-transparent sm:px-0 sm:py-0 sm:pr-2 sm:last:border-r-0 sm:last:pr-0">
+    <span className="flex min-w-0 items-center justify-start gap-0.5 rounded-md bg-white/55 px-1 py-0.5 sm:shrink-0 sm:gap-1 sm:rounded-none sm:border-r sm:border-slate-300/60 sm:bg-transparent sm:px-0 sm:py-0 sm:pr-2 sm:last:border-r-0 sm:last:pr-0">
       {icon && <span className="text-[10px] leading-none sm:text-[15px]">{icon}</span>}
       {label && (
         <span className="text-[8px] font-black uppercase text-slate-500 sm:text-[11px]">
@@ -184,71 +184,119 @@ export default function RosaSocieta({
                     return (
                       <div
                         key={`${player.giocatore}-${index}`}
-                          className={`min-w-0 rounded-xl border p-2 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg sm:rounded-2xl sm:px-4 sm:py-3 ${
+                          className={`min-w-0 rounded-xl border shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg sm:rounded-2xl ${stats ? "p-2 sm:px-4 sm:py-3" : "px-2 py-1.5 sm:px-4 sm:py-2"} ${
                           acquistoPiuCaro
                             ? "border-yellow-300 bg-gradient-to-br from-yellow-100 via-white to-white ring-2 ring-yellow-100"
                             : ruolo.card
                         }`}
                       >
-                        <div className="grid min-w-0 grid-cols-[30px_minmax(0,1fr)_auto] items-start gap-x-2 gap-y-1.5 sm:flex sm:items-center sm:justify-between sm:gap-4">
-                          <div className="contents sm:flex sm:min-w-0 sm:items-center sm:gap-3">
-                            <span
-                              className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-black text-white shadow-md sm:h-9 sm:w-9 sm:text-base ${ruolo.color}`}
-                            >
-                              {ruolo.short}
-                            </span>
+                        {!stats ? (
+  /* 2026/27 — card slim: RUOLO | NOME | COSTO */
+  <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+    <span
+      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-black text-white shadow-md sm:h-9 sm:w-9 sm:text-base ${ruolo.color}`}
+    >
+      {ruolo.short}
+    </span>
 
-                            <div className="contents min-w-0 sm:block">
-                              <p className="min-w-0 self-center truncate text-sm font-black leading-tight text-blue-950 sm:text-[18px]">
-                                <span>{player.giocatore}</span>
-                                <span className="ml-1 inline text-[9px] font-black uppercase leading-tight text-blue-950/60 sm:ml-2 sm:text-[14px] sm:text-blue-950/80">
-                                  ({player.squadraReale})
-                                </span>
-                              </p>
+    <p className="min-w-0 flex-1 text-sm font-black leading-tight text-blue-950 sm:text-[18px]">
+      <span>{player.giocatore}</span>
 
-                              {stats && (
-                                <div className="order-4 col-span-3 grid grid-cols-6 gap-0.5 sm:mt-2 sm:flex sm:flex-nowrap sm:items-center sm:overflow-x-auto sm:whitespace-nowrap sm:pr-2">
-                                  <StatItem label="PG" value={formatStat(stats.partite)} />
+      {player.squadraReale.trim() && (
+        <span className="ml-1 whitespace-nowrap text-[10px] font-black uppercase text-blue-950/60 sm:ml-2 sm:text-[14px] sm:text-blue-950/80">
+          ({player.squadraReale.trim()})
+        </span>
+      )}
+    </p>
 
-                                  {isPortiere ? (
-                                    <>
-                                      <StatItem icon="🧤" value={formatStat(stats.cleanSheet)} />
-                                      <StatItem icon="🥅" value={formatStat(stats.golSubiti)} />
-                                      <StatItem icon="🧱" value={formatStat(stats.rigoriParati)} />
-                                    </>
-                                  ) : (
-                                    <>
-                                      <StatItem icon="⚽" value={formatStat(stats.golFatti)} />
-                                      <StatItem icon="👟" value={formatStat(stats.assist)} />
-                                      <StatItem icon="🟨" value={formatStat(stats.ammonizioni)} />
-                                      <StatItem icon="🟥" value={formatStat(stats.espulsioni)} />
-                                    </>
-                                  )}
+    <div className="flex shrink-0 items-center gap-1.5">
+      {acquistoPiuCaro && (
+        <div className="flex items-center gap-1 whitespace-nowrap text-yellow-700">
+          <span
+            role="img"
+            aria-label="Giocatore più pagato"
+            title="Giocatore più pagato"
+            className="text-xs sm:text-base"
+          >
+            ⭐
+          </span>
 
-                                  <StatItem label="FM" value={formatStat(stats.fantaMedia)} />
-                                </div>
-                              )}
-                            </div>
-                          </div>
+          <span className="hidden text-[8px] font-black uppercase sm:inline">
+            Più caro
+          </span>
+        </div>
+      )}
 
-                          <div className="order-3 flex shrink-0 items-center justify-end gap-1 self-center sm:gap-2">
-  {acquistoPiuCaro && (
-    <div className="flex w-5 items-center justify-center sm:-ml-2 sm:w-[46px] sm:flex-col sm:leading-none">
-      <span role="img" aria-label="Giocatore più pagato" title="Giocatore più pagato" className="text-sm drop-shadow-[0_0_8px_rgba(251,191,36,0.95)] sm:text-base">
-        ⭐
-      </span>
-
-      <span className="mt-0.5 hidden text-[8px] font-black uppercase tracking-[0.04em] text-yellow-700 sm:block">
-        Più caro
-      </span>
+      <p className="text-lg font-black leading-none text-blue-950 sm:text-2xl">
+        {player.costo}
+      </p>
     </div>
-  )}
+  </div>
+) : (
+ <>
+  <div className="grid min-w-0 grid-cols-[28px_minmax(0,1fr)_auto] items-center gap-x-1 sm:grid-cols-[36px_minmax(0,1fr)_auto] sm:gap-x-1.5">
+    <span
+      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-black text-white shadow-md sm:h-9 sm:w-9 sm:text-base ${ruolo.color}`}
+    >
+      {ruolo.short}
+    </span>
 
-  <p className="w-7 text-right text-lg font-black leading-none text-blue-950 sm:w-10 sm:text-2xl">
-    {player.costo}
-  </p>
-</div>
-                        </div>
+    <p className="min-w-0 justify-self-start text-sm font-black leading-tight text-blue-950 sm:text-[18px]">
+      <span>{player.giocatore}</span>
+
+      {player.squadraReale.trim() && (
+        <span className="ml-1 whitespace-nowrap text-[10px] font-black uppercase text-blue-950/60 sm:ml-2 sm:text-[14px] sm:text-blue-950/80">
+          ({player.squadraReale.trim()})
+        </span>
+      )}
+    </p>
+
+    <div className="flex shrink-0 items-center justify-end gap-1.5">
+      {acquistoPiuCaro && (
+        <div className="flex items-center gap-1 whitespace-nowrap text-yellow-700">
+          <span
+            role="img"
+            aria-label="Giocatore più pagato"
+            title="Giocatore più pagato"
+            className="text-xs sm:text-base"
+          >
+            ⭐
+          </span>
+
+          <span className="hidden text-[8px] font-black uppercase sm:inline">
+            Più caro
+          </span>
+        </div>
+      )}
+
+      <p className="text-lg font-black leading-none text-blue-950 sm:text-2xl">
+        {player.costo}
+      </p>
+    </div>
+
+    <div className="col-start-2 col-span-2 mt-1 flex min-w-0 flex-wrap items-center gap-x-1 gap-y-0.5 sm:gap-x-2">
+      <StatItem label="PG" value={formatStat(stats.partite)} />
+
+      {isPortiere ? (
+        <>
+          <StatItem icon="🧤" value={formatStat(stats.cleanSheet)} />
+          <StatItem icon="🥅" value={formatStat(stats.golSubiti)} />
+          <StatItem icon="🧱" value={formatStat(stats.rigoriParati)} />
+        </>
+      ) : (
+        <>
+          <StatItem icon="⚽" value={formatStat(stats.golFatti)} />
+          <StatItem icon="👟" value={formatStat(stats.assist)} />
+          <StatItem icon="🟨" value={formatStat(stats.ammonizioni)} />
+          <StatItem icon="🟥" value={formatStat(stats.espulsioni)} />
+        </>
+      )}
+
+      <StatItem label="FM" value={formatStat(stats.fantaMedia)} />
+    </div>
+  </div>
+</>
+)}
                       </div>
                     );
                   })}

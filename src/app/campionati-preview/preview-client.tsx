@@ -5,7 +5,7 @@ import type { LiveChampionshipData } from "../campionati-live-preview/types";
 import type { LeagueMock } from "./types";
 
 /** Mock and live deliberately converge here on the same normalized UI model. */
-export default function ChampionshipPreview({ leagues }: { leagues: LeagueMock[] }) {
+export default function ChampionshipPreview({ leagues, initialLeague, initialTab }: { leagues: LeagueMock[]; initialLeague?: string; initialTab?: "results" | "table" }) {
   const normalized: LiveChampionshipData = {
     season: { id: 0, code: "mock", name: "Stagione mock" },
     seasons: [],
@@ -26,5 +26,5 @@ export default function ChampionshipPreview({ leagues }: { leagues: LeagueMock[]
       }))),
     })),
   };
-  return <ChampionshipView data={normalized} mock />;
+  return <ChampionshipView data={normalized} mock initialLeague={initialLeague} initialTab={initialTab} />;
 }

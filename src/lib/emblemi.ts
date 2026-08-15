@@ -109,6 +109,15 @@ function distanzaLevenshtein(a: string, b: string) {
 }
 
 function risolviImmagine(nome: string, categoriaOriginale: string, tipo: TipoEmblema) {
+  const assetSpeciali: Record<string, string> = {
+    "primo tifoso": "/emblemi/base/primo-tifoso.png",
+    "la curva cresce": "/emblemi/comune/la-curva-cresce.png",
+    "un popolo": "/emblemi/mitico/un-popolo.png",
+    "sold out": "/emblemi/leggenda/sold-out.png",
+    idolo: "/emblemi/da difendere/idolo.png",
+  };
+  const assetSpeciale = assetSpeciali[normalizzaTesto(nome)];
+  if (assetSpeciale) return assetSpeciale;
   const categoria = normalizzaTesto(categoriaOriginale);
   const cartella = tipo === "Difendibile"
     ? "da difendere"

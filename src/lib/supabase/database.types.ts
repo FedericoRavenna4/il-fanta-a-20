@@ -305,6 +305,10 @@ export type Database = {
         Args: Record<PropertyKey, never>;
         Returns: Array<{ societa_id: number; tifosi: number }>;
       };
+      public_societa_support_emblems: {
+        Args: { p_societa_id: number };
+        Returns: Array<{ emblem_key: string; stato: "Sbloccato" | "Da difendere"; unlocked_at: string; stagione: string | null }>;
+      };
       public_profile_support_summary: {
         Args: { p_profile_id: string };
         Returns: Array<{ stagione_id: number; societa_id: number; selected_at: string; punti_tifo: number; punti_bonus_tifo: number; trophy_types: string[]; resolved_trophy_types: string[] }>;

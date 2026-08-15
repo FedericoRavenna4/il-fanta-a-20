@@ -4,7 +4,7 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { getActiveSocietaBySlug } from "@/lib/societa/catalog.server";
 import { getPalmares } from "@/lib/palmares";
 import { getRanking } from "@/lib/ranking";
-import { getRose } from "@/lib/rose";
+import { loadRoseForSocieta } from "@/lib/rose-current.server";
 import { getRisultati } from "@/lib/risultati";
 import { getStatisticheGiocatori } from "@/lib/statisticheGiocatori";
 import RosaSocieta from "./RosaSocieta";
@@ -15,7 +15,11 @@ import PalmaresSocieta from "./PalmaresSocieta";
 import type { Metadata } from "next";
 import { createPageMetadata } from "@/lib/seo";
 import { getActiveSupporterCounts } from "@/lib/account/support.server";
+import { getSocietaSupportEmblems } from "@/lib/account/support.server";
 import TifosiSocieta from "./TifosiSocieta";
+import { deriveSocietaSeasonSnapshot } from "@/lib/societa/season-snapshot";
+import { loadSocietaSeasonData } from "@/lib/societa/season-data.server";
+import StagioneCorrenteSocieta from "./StagioneCorrenteSocieta";
 
 export async function generateMetadata({
   params,
@@ -53,12 +57,17 @@ export default async function SchedaSocietaPage({
 
   const palmares = getPalmares();
   const ranking = getRanking();
-  const rose = getRose();
   const risultati = getRisultati();
   const statisticheGiocatori = getStatisticheGiocatori();
   const emblemi = getEmblemiSocieta(new Set(team.badge_tipo === "new_entry" ? [team.id] : []));
-  const supporterCounts = await getActiveSupporterCounts();
+  const [supporterCounts, supportEmblems, seasonData, rosaTeam] = await Promise.all([
+    getActiveSupporterCounts(),
+    getSocietaSupportEmblems(team.id),
+    loadSocietaSeasonData(),
+    loadRoseForSocieta(team.id),
+  ]);
   const supporterCount = supporterCounts.get(team.id) ?? 0;
+  const seasonSnapshot = deriveSocietaSeasonSnapshot(team.id, seasonData.championships?.leagues ?? [], seasonData.coppa);
 
   const fantallenatori = (team.fantallenatore ?? "")
     .split(/\s+-\s+/)
@@ -67,7 +76,6 @@ export default async function SchedaSocietaPage({
 
   const trofei = palmares.find((item) => item.squadraId === team.id);
   const rankingTeam = ranking.find((item) => item.squadraId === team.id);
-  const rosaTeam = rose.filter((item) => item.squadraId === team.id);
   const emblemiTeam = emblemi.find(
     (item) => item.squadraId === team.id
   );
@@ -140,12 +148,14 @@ export default async function SchedaSocietaPage({
       glow: "drop-shadow-[0_0_34px_rgba(251,191,36,1)]",
     },
   ].filter((item) => item.value > 0);
-  const emblemiSbloccatiVisuali = emblemiTeam?.emblemi.filter(
+  const emblemiSbloccatiVisuali = [...(emblemiTeam?.emblemi.filter(
     (emblema) => emblema.stato === "Sbloccato"
-  ) ?? [];
-  const emblemiDaDifendereVisuali = emblemiTeam?.emblemi.filter(
+  ) ?? []), ...supportEmblems.filter((emblema) => emblema.stato === "Sbloccato")]
+    .filter((emblema, index, all) => all.findIndex((item) => item.id === emblema.id) === index);
+  const emblemiDaDifendereVisuali = [...(emblemiTeam?.emblemi.filter(
     (emblema) => emblema.stato === "Da difendere"
-  ) ?? [];
+  ) ?? []), ...supportEmblems.filter((emblema) => emblema.stato === "Da difendere")]
+    .filter((emblema, index, all) => all.findIndex((item) => item.id === emblema.id) === index);
   return (
     <section className="mx-auto max-w-7xl px-4 py-7 sm:px-5 sm:py-12 lg:px-6 lg:py-16">
       <div className="grid gap-5 sm:gap-8 lg:grid-cols-[1fr_360px] lg:items-start">
@@ -278,15 +288,7 @@ export default async function SchedaSocietaPage({
         </aside>
       </div>
 
-      <div id="storia">
-  <StoriaSocieta
-    risultati={risultatiTeam}
-    nomeSocieta={team.nome}
-    squadraId={team.id}
-    isNewEntry={isNewEntry}
-    descrizioneEditoriale={team.storia ?? undefined}
-  />
-</div>
+      <StagioneCorrenteSocieta snapshot={seasonSnapshot} />
 
 <span id="rosa" className="block scroll-mt-24" aria-hidden="true" />
 <div id="rose">
@@ -294,6 +296,16 @@ export default async function SchedaSocietaPage({
     rosa={rosaTeam}
     isNewEntry={isNewEntry}
     statistiche={statisticheGiocatori}
+  />
+</div>
+
+<div id="storia">
+  <StoriaSocieta
+    risultati={risultatiTeam}
+    nomeSocieta={team.nome}
+    squadraId={team.id}
+    isNewEntry={isNewEntry}
+    descrizioneEditoriale={team.storia ?? undefined}
   />
 </div>
     </section>

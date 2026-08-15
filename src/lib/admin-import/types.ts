@@ -1,4 +1,4 @@
-export type ImportType = "calendario_campionato" | "calendario_coppa";
+export type ImportType = "calendario_campionato" | "calendario_coppa" | "rose";
 export type ChangeKind = "insert" | "update" | "unchanged" | "warning" | "error";
 
 export type AdminAccess = { allowed: boolean; canPublish: boolean; mode: "denied" | "development" | "authenticated"; email: string | null; username: string; userId: string | null; reason: string };
@@ -7,8 +7,8 @@ export type ImportIssue = { codice: string; messaggio: string; riga?: number; va
 
 export type ImportChange = {
   kind: ChangeKind;
-  entity: "partita" | "riposo";
-  giornata: number;
+  entity: "partita" | "riposo" | "rosa";
+  giornata?: number;
   title: string;
   detail: string[];
 };
@@ -36,10 +36,14 @@ export type ImportPreview = {
     replace: number;
     warning: number;
     error: number;
+    calciatori?: number;
+    trasferimenti?: number;
+    rimossi?: number;
   };
   changes: ImportChange[];
   warnings: ImportIssue[];
   errors: ImportIssue[];
+  roseRows?: Array<{ societa: string; giocatore: string; squadraReale: string | null; ruolo: string; prezzo: number; stato: string }>;
 };
 
 export type ActionResult = { ok: true; preview: ImportPreview } | { ok: false; message: string };

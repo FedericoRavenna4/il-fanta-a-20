@@ -38,6 +38,20 @@ test("Coppe usa il catalogo reale e separa il prototipo competitivo locale", () 
   assert.match(client, /Cerca squadra\.\.\./); assert.match(client, /Espandi classifica/);
 });
 
+test("scheda società apre direttamente le classifiche live con lega e vista corrette", () => {
+  const snapshot = read("src", "lib", "societa", "season-snapshot.ts");
+  const championshipPage = read("src", "app", "campionati-live-preview", "page.tsx");
+  const championshipClient = read("src", "app", "campionati-live-preview", "live-client.tsx");
+  const coppaPage = read("src", "app", "coppe", "page.tsx");
+  const coppaClient = read("src", "app", "coppe", "CoppaFantaPrototype.tsx");
+  assert.match(snapshot, /\/campionati-live-preview\?lega=\$\{league\.id\}&vista=classifica/);
+  assert.match(snapshot, /\/coppe\?vista=classifica/);
+  assert.match(championshipPage, /query\.lega[\s\S]*query\.vista === "classifica"/);
+  assert.match(championshipClient, /selectedInitialLeague[\s\S]*useState<LeagueId>\(selectedInitialLeague\)[\s\S]*useState<"results"\|"table">\(initialTab\)/);
+  assert.match(coppaPage, /vista === "classifica" \? "table" : "results"/);
+  assert.match(coppaClient, /useState<"results" \| "table">\(initialTab\)/);
+});
+
 test("Gioca e un hub responsive con due card cliccabili e asset approvati", () => {
   const source = read("src", "app", "giochi", "page.tsx");
   assert.match(source, /PageHeader eyebrow="Mettiti alla prova" title="I Giochi"/);

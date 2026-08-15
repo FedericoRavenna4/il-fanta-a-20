@@ -10,10 +10,10 @@ import { buildCoppaPrototype, coppaStandingsForRange, isCalculatedCoppaMatch, qu
 
 const days = Array.from({ length: 14 }, (_, index) => index + 1);
 
-export default function CoppaFantaPrototype({ teams, matches: realMatches = [], demo = false, seed = 20260813, initialDay = 1, hasCalendar = false, loadError = false }: { teams: CoppaTeam[]; matches?: CoppaMatch[]; demo?: boolean; seed?: number; initialDay?: number; hasCalendar?: boolean; loadError?: boolean }) {
+export default function CoppaFantaPrototype({ teams, matches: realMatches = [], demo = false, seed = 20260813, initialDay = 1, hasCalendar = false, loadError = false, initialTab = "results" }: { teams: CoppaTeam[]; matches?: CoppaMatch[]; demo?: boolean; seed?: number; initialDay?: number; hasCalendar?: boolean; loadError?: boolean; initialTab?: "results" | "table" }) {
   const demoMatches = useMemo(() => demo ? buildCoppaPrototype(teams, seed).matches : [], [demo, teams, seed]);
   const sourceMatches = demo ? demoMatches : realMatches;
-  const [day, setDay] = useState(initialDay); const [tab, setTab] = useState<"results" | "table">("results");
+  const [day, setDay] = useState(initialDay); const [tab, setTab] = useState<"results" | "table">(initialTab);
   const [matchSearch, setMatchSearch] = useState(""); const [standingSearch, setStandingSearch] = useState(""); const [modal, setModal] = useState(false);
   const modalOpener = useRef<HTMLButtonElement>(null);
   const normalizedMatchSearch = matchSearch.trim().toLocaleLowerCase("it"); const normalizedStandingSearch = standingSearch.trim().toLocaleLowerCase("it");

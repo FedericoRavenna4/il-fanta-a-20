@@ -10,17 +10,21 @@ test("fake data è opt-in e fail closed in produzione", () => {
 });
 
 test("le pagine demo sono reversibili e non invocano scritture Supabase", async () => {
-  const [campionati, fantabet, coppa] = await Promise.all([
+  const [campionati, fantabet, coppa, societaSeason] = await Promise.all([
     readFile(new URL("../../app/campionati-live-preview/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../../app/fantabet/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../../app/coppe/MobileCoppeHub.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../societa/season-data.server.ts", import.meta.url), "utf8"),
   ]);
   assert.match(campionati, /isGlobalFakeDataEnabled\(\)[\s\S]*createChampionshipMockData/);
   assert.match(fantabet, /globalDemo \? empty : await loadFantaBetPageData/);
   assert.match(coppa, /if \(isGlobalFakeDataEnabled\(\)\)[\s\S]*<CoppaFantaPrototype teams=\{teams\} demo/);
   assert.match(coppa, /loadActiveCoppaData\(\)/);
   assert.match(coppa, /loadError=\{loadError\}/);
-  for (const source of [campionati, fantabet, coppa]) assert.doesNotMatch(source, /\.insert\(|\.update\(|\.upsert\(|\.delete\(/);
+  assert.match(societaSeason, /if \(!isGlobalFakeDataEnabled\(\)\)[\s\S]*loadChampionshipData\(\)[\s\S]*loadActiveCoppaData\(\)/);
+  assert.match(societaSeason, /createChampionshipMockData\(catalog, getDemoSeed\(\), false\)/);
+  assert.match(societaSeason, /buildCoppaPrototype\(teams, getDemoSeed\(\)\)/);
+  for (const source of [campionati, fantabet, coppa, societaSeason]) assert.doesNotMatch(source, /\.insert\(|\.update\(|\.upsert\(|\.delete\(/);
 });
 
 test("seed demo è deterministico e ha fallback stabile", () => {

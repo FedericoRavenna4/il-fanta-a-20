@@ -11,6 +11,8 @@
     "test:calendar-parser": "node --test scripts/calendar-import.test.mjs",
     "test:importazioni-schema": "node --test scripts/importazioni-migration.test.mjs",
     "test:admin-import": "node --test scripts/admin-import.test.mjs",
+    "test:rose-import": "node --experimental-strip-types --test src/lib/admin-import/rose-parser.test.ts scripts/rose-import-migration.test.mjs",
+    "test:rose-runtime": "node --test scripts/rose-runtime.test.mjs",
     "test:account": "node --test scripts/account.test.mjs",
     "test:account-return": "node --experimental-strip-types --test src/lib/account/return-url.test.ts",
     "test:navigation": "node --test scripts/navigation.test.mjs",
@@ -32,11 +34,16 @@
     "test:societa-fantabet-consumer": "node --test scripts/societa-fantabet-consumer.test.mjs",
     "test:societa-sitemap": "node --test scripts/societa-sitemap.test.mjs",
     "test:societa-runtime-guard": "node --test scripts/societa-runtime-source-guard.test.mjs",
+    "test:societa-support-emblems": "node --test scripts/societa-support-emblems.test.mjs",
+    "test:societa-emblems-upgrade": "node --test scripts/societa-emblems-upgrade.test.mjs",
+    "test:societa-competitive-emblems": "node --test scripts/societa-competitive-emblems.test.mjs",
+    "test:societa-season": "node --experimental-strip-types --test src/lib/societa/season-snapshot.test.ts",
     "audit:societa-db-csv": "node scripts/audit-societa-db-vs-csv.mjs",
     "test:fantabet": "node --experimental-strip-types --test src/lib/fantabet/*.test.ts",
     "test:campionati-live": "node --experimental-strip-types --test src/app/campionati-live-preview/logic.test.ts",
     "test:arcade": "node --experimental-strip-types --test src/lib/arcade/*.test.ts",
-    "test:home": "node --experimental-strip-types --test src/lib/home/*.test.ts"
+    "test:home": "node --experimental-strip-types --test src/lib/home/*.test.ts",
+    "test:prelaunch-integrated": "node --test scripts/prelaunch-integrated.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",
