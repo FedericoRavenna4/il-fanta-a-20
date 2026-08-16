@@ -7,7 +7,7 @@ const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 test("pagina Emblemi usa l'identità corrente Supabase tramite ID", async () => {
   const source = await read("src/app/emblemi/page.tsx");
 
-  assert.match(source, /await getActiveSocietaCatalog\(\)/);
+  assert.match(source, /getActiveSocietaCatalog\(\)/);
   assert.match(source, /new Map\(societa\.map\(\(team\) => \[team\.id, team\]\)\)/);
   assert.match(source, /societaById\.get\(assegnazione\.squadraId\)/);
   assert.match(source, /nome: team\?\.nome \?\? assegnazione\.nomeSocieta/);

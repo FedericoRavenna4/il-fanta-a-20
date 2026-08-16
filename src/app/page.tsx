@@ -261,7 +261,7 @@ export default async function Home() {
         <div className="mb-6 grid items-center gap-4 max-sm:mb-4 sm:mb-11 sm:gap-8 md:grid-cols-[1fr_290px] lg:grid-cols-[1fr_380px]">
             <div className="max-w-3xl lg:max-w-none">
               <p className="section-eyebrow">Come funziona</p>
-              <h2 className="font-onder-title mt-2 text-3xl uppercase text-blue-950 sm:mt-3 sm:text-5xl">Il regolamento</h2>
+              <h2 className="font-onder-title mt-2 text-3xl uppercase text-blue-950 sm:mt-3 sm:text-5xl">La struttura</h2>
               <p className="mt-3 text-sm font-semibold leading-5 text-slate-500 sm:mt-5 sm:text-lg sm:leading-7">Campionati, coppe e Scatto Promozione: entra rapidamente nelle regole del Fanta a 20.</p>
             </div>
             <div className="hidden h-36 md:block" aria-hidden="true" />

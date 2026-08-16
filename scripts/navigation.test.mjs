@@ -114,7 +114,7 @@ test("titoli definitivi e ordine delle card Gioca sono applicati senza logica nu
   assert.match(fantabet, /section-eyebrow">Pronostica e sfida gli altri<[\s\S]*>Il FantaBet</);
   assert.match(games, /<h2[\s\S]*\{game\.title\}<\/h2>[\s\S]*<Image[\s\S]*\{game\.eyebrow\}<\/p>/);
   assert.match(emblems, /I simboli pi\\u00f9 prestigiosi[\s\S]*Gli Emblemi/);
-  assert.match(rules, /eyebrow="Le regole ufficiali"[\s\S]*title="Il Regolamento"/);
+  assert.match(rules, /eyebrow="Le regole ufficiali"[\s\S]*title="La Struttura"/);
 });
 
 test("header conserva struttura classi e comportamento anonimo preesistenti", () => {

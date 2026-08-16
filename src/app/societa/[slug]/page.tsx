@@ -15,7 +15,7 @@ import PalmaresSocieta from "./PalmaresSocieta";
 import type { Metadata } from "next";
 import { createPageMetadata } from "@/lib/seo";
 import { getActiveSupporterCounts } from "@/lib/account/support.server";
-import { getSocietaSupportEmblems } from "@/lib/account/support.server";
+import { getSocietaDefendingEmblems, getSocietaSupportEmblems } from "@/lib/account/support.server";
 import TifosiSocieta from "./TifosiSocieta";
 import { deriveSocietaSeasonSnapshot } from "@/lib/societa/season-snapshot";
 import { loadSocietaSeasonData } from "@/lib/societa/season-data.server";
@@ -60,13 +60,23 @@ export default async function SchedaSocietaPage({
   const risultati = getRisultati();
   const statisticheGiocatori = getStatisticheGiocatori();
   const emblemi = getEmblemiSocieta(new Set(team.badge_tipo === "new_entry" ? [team.id] : []));
-  const [supporterCounts, supportEmblems, seasonData, rosaTeam] = await Promise.all([
+  const [supporterCounts, supportEmblems, defendingEmblems, seasonData, rosaTeam] = await Promise.all([
     getActiveSupporterCounts(),
     getSocietaSupportEmblems(team.id),
+    getSocietaDefendingEmblems(team.id),
     loadSocietaSeasonData(),
     loadRoseForSocieta(team.id),
   ]);
   const supporterCount = supporterCounts.get(team.id) ?? 0;
+  const legacySupportEmblemsWithRecords = supportEmblems.map((emblema) =>
+    emblema.chiave === "idolo" && emblema.stato === "Da difendere"
+      ? { ...emblema, record: String(supporterCount) }
+      : emblema
+  );
+  const dynamicDefendingKeys = new Set(["titano", "abisso", "mecenate", "idolo"]);
+  const effectiveSupportEmblems = defendingEmblems === null
+    ? legacySupportEmblemsWithRecords
+    : [...supportEmblems.filter((emblema) => !dynamicDefendingKeys.has(emblema.chiave)), ...defendingEmblems];
   const seasonSnapshot = deriveSocietaSeasonSnapshot(team.id, seasonData.championships?.leagues ?? [], seasonData.coppa);
 
   const fantallenatori = (team.fantallenatore ?? "")
@@ -148,13 +158,16 @@ export default async function SchedaSocietaPage({
       glow: "drop-shadow-[0_0_34px_rgba(251,191,36,1)]",
     },
   ].filter((item) => item.value > 0);
-  const emblemiSbloccatiVisuali = [...(emblemiTeam?.emblemi.filter(
+  const legacyEmblems = emblemiTeam?.emblemi.filter(
+    (emblema) => defendingEmblems === null || !dynamicDefendingKeys.has(emblema.chiave)
+  ) ?? [];
+  const emblemiSbloccatiVisuali = [...legacyEmblems.filter(
     (emblema) => emblema.stato === "Sbloccato"
-  ) ?? []), ...supportEmblems.filter((emblema) => emblema.stato === "Sbloccato")]
+  ), ...effectiveSupportEmblems.filter((emblema) => emblema.stato === "Sbloccato")]
     .filter((emblema, index, all) => all.findIndex((item) => item.id === emblema.id) === index);
-  const emblemiDaDifendereVisuali = [...(emblemiTeam?.emblemi.filter(
+  const emblemiDaDifendereVisuali = [...legacyEmblems.filter(
     (emblema) => emblema.stato === "Da difendere"
-  ) ?? []), ...supportEmblems.filter((emblema) => emblema.stato === "Da difendere")]
+  ), ...effectiveSupportEmblems.filter((emblema) => emblema.stato === "Da difendere")]
     .filter((emblema, index, all) => all.findIndex((item) => item.id === emblema.id) === index);
   return (
     <section className="mx-auto max-w-7xl px-4 py-7 sm:px-5 sm:py-12 lg:px-6 lg:py-16">

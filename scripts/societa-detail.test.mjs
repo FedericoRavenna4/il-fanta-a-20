@@ -22,7 +22,10 @@ test("slug sconosciuto o società inattiva produce 404 senza fallback CSV", () =
   assert.match(page, /if \(!lookup\) notFound\(\)/);
   assert.match(catalog, /\.eq\("attiva", true\)/);
   assert.match(catalog, /if \(!alias\.data\) return null/);
-  assert.doesNotMatch(page, /getSocieta(?!SupportEmblems)|societa\.csv|cachedSocieta/);
+  assert.doesNotMatch(
+  page,
+  /getSocieta(?!SupportEmblems|DefendingEmblems)|societa\.csv|cachedSocieta/
+);
 });
 
 test("nome corrente resta centralizzato e non viene ricostruito dalla pagina", () => {

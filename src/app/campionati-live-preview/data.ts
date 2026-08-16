@@ -34,9 +34,17 @@ export async function loadChampionshipData(seasonCode?: string, catalogOverride?
   const editionByCode = new Map(editions.map((e) => [Array.isArray(e.competizioni) ? e.competizioni[0]?.codice : e.competizioni?.codice, e]));
   const editionIds = editions.map((e) => e.id);
 
-  const matchesResult = editionIds.length ? await supabase.from("partite").select("id,edizione_competizione_id,giornata_lega,giornata_serie_a,societa_casa_id,societa_trasferta_id,fantapunti_casa,fantapunti_trasferta,gol_casa,gol_trasferta,stato").in("edizione_competizione_id", editionIds).order("giornata_lega") : { data: [], error: null };
-  if (matchesResult.error) throw matchesResult.error;
-  const rawMatches = (matchesResult.data ?? []) as RawMatch[];
+  const rawMatches: RawMatch[] = [];
+  if (editionIds.length) {
+    const pageSize = 1000;
+    for (let from = 0; ; from += pageSize) {
+      const matchesResult = await supabase.from("partite").select("id,edizione_competizione_id,giornata_lega,giornata_serie_a,societa_casa_id,societa_trasferta_id,fantapunti_casa,fantapunti_trasferta,gol_casa,gol_trasferta,stato").in("edizione_competizione_id", editionIds).order("giornata_lega").order("id").range(from, from + pageSize - 1);
+      if (matchesResult.error) throw matchesResult.error;
+      const page = (matchesResult.data ?? []) as RawMatch[];
+      rawMatches.push(...page);
+      if (page.length < pageSize) break;
+    }
+  }
   const teamIds = [...new Set(rawMatches.flatMap((m) => [m.societa_casa_id, m.societa_trasferta_id]))];
   const rawTeams = catalogOverride ?? await getActiveSocietaCatalog();
   const toTeam = (row: CurrentSocieta): Team => ({ id: row.id, name: row.nome, logo: row.logo_path ?? "/logo.png", slug: row.slug });

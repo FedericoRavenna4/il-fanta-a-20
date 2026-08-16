@@ -4,6 +4,7 @@ import { getActiveSocietaCatalog } from "@/lib/societa/catalog.server";
 import { isEmblemaNascosto } from "@/lib/emblemi-ui";
 import EmblemiCatalogo from "./EmblemiCatalogo";
 import { createPageMetadata } from "@/lib/seo";
+import { getAllSocietaDefendingEmblems } from "@/lib/account/support.server";
 
 export const metadata: Metadata = createPageMetadata({
   title: "Collezione ufficiale",
@@ -13,10 +14,15 @@ export const metadata: Metadata = createPageMetadata({
 
 export default async function EmblemiPage() {
   const catalogo = getCatalogoEmblemi();
-  const societa = await getActiveSocietaCatalog();
+  const [societa, defendingEmblems] = await Promise.all([
+    getActiveSocietaCatalog(),
+    getAllSocietaDefendingEmblems(),
+  ]);
   const societaById = new Map(societa.map((team) => [team.id, team]));
   const newEntryIds = new Set(societa.filter((team) => team.badge_tipo === "new_entry").map((team) => team.id));
   const assegnazioni = getEmblemiSocieta(newEntryIds);
+  const dynamicDefendingKeys = new Set(["titano", "abisso", "mecenate", "idolo"]);
+  const dynamicByKey = new Map((defendingEmblems ?? []).map((emblema) => [emblema.chiave, emblema]));
 
   const nascosti = catalogo.filter(isEmblemaNascosto).map((emblema) => ({
     id: emblema.id,
@@ -24,7 +30,8 @@ export default async function EmblemiPage() {
     immagine: emblema.immagine,
   }));
   const emblemi = catalogo.filter((emblema) => !isEmblemaNascosto(emblema)).map((emblema) => {
-    const detentori = assegnazioni
+    const dynamic = dynamicByKey.get(emblema.chiave);
+    const legacyDetentori = assegnazioni
       .filter((team) =>
         team.emblemi.some(
           (posseduto) => posseduto.id === emblema.id && posseduto.stato === "Da difendere"
@@ -37,9 +44,15 @@ export default async function EmblemiPage() {
           slug: team?.slug ?? null,
         };
       });
+    const detentori = defendingEmblems !== null && dynamicDefendingKeys.has(emblema.chiave)
+      ? dynamic
+        ? [{ nome: societaById.get(dynamic.societaId)?.nome ?? "Società", slug: societaById.get(dynamic.societaId)?.slug ?? null }]
+        : []
+      : legacyDetentori;
 
     return {
       ...emblema,
+      record: dynamic?.record ?? emblema.record,
       detentori,
     };
   });

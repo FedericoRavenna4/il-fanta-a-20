@@ -63,6 +63,15 @@ type SocietaSupportEmblemRow = {
   stagione: string | null;
 };
 
+type SocietaDefendingEmblemRow = {
+  societa_id?: number;
+  emblem_key: string;
+  stato: "Da difendere";
+  record_value: number | string | null;
+};
+
+export type SocietaDefendingEmblem = EmblemaPosseduto & { societaId: number };
+
 export async function getSocietaSupportEmblems(societaId: number): Promise<EmblemaPosseduto[]> {
   const supabase = await createAuthenticatedSupabaseClient();
   const { data, error } = await supabase.rpc("public_societa_support_emblems", { p_societa_id: societaId });
@@ -71,5 +80,29 @@ export async function getSocietaSupportEmblems(societaId: number): Promise<Emble
   return ((data ?? []) as SocietaSupportEmblemRow[]).flatMap((row) => {
     const emblem = catalog.get(row.emblem_key);
     return emblem ? [{ ...emblem, stato: row.stato } satisfies EmblemaPosseduto] : [];
+  });
+}
+
+export async function getSocietaDefendingEmblems(societaId: number): Promise<EmblemaPosseduto[] | null> {
+  const supabase = await createAuthenticatedSupabaseClient();
+  const { data, error } = await supabase.rpc("public_societa_defending_emblems", { p_societa_id: societaId });
+  if (error) return null;
+  const catalog = new Map(getCatalogoEmblemi().map((emblem) => [emblem.chiave, emblem]));
+  return ((data ?? []) as SocietaDefendingEmblemRow[]).flatMap((row) => {
+    const emblem = catalog.get(row.emblem_key);
+    if (!emblem || row.record_value === null) return [];
+    return [{ ...emblem, stato: row.stato, record: String(Number(row.record_value)) } satisfies EmblemaPosseduto];
+  });
+}
+
+export async function getAllSocietaDefendingEmblems(): Promise<SocietaDefendingEmblem[] | null> {
+  const supabase = await createAuthenticatedSupabaseClient();
+  const { data, error } = await supabase.rpc("public_all_societa_defending_emblems");
+  if (error) return null;
+  const catalog = new Map(getCatalogoEmblemi().map((emblem) => [emblem.chiave, emblem]));
+  return ((data ?? []) as SocietaDefendingEmblemRow[]).flatMap((row) => {
+    const emblem = catalog.get(row.emblem_key);
+    if (!emblem || row.societa_id === undefined || row.record_value === null) return [];
+    return [{ ...emblem, societaId: Number(row.societa_id), stato: row.stato, record: String(Number(row.record_value)) } satisfies SocietaDefendingEmblem];
   });
 }

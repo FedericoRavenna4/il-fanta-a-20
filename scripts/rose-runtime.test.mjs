@@ -70,7 +70,10 @@ test("nomi giocatori restano identici e la colonna testo non collassa", () => {
   const mapped = names.map((giocatore) => ({ giocatore: String(giocatore) }));
   assert.deepEqual(mapped.map((row) => row.giocatore), names);
   assert.match(loader, /giocatore: String\(row\.giocatore\)/);
-  assert.match(ui, /<span className="break-words">\{player\.giocatore\}<\/span>/);
+ assert.match(
+  ui,
+  /<p className="min-w-0[^"]*">[\s\S]*?<span>\{player\.giocatore\}<\/span>/
+);
   assert.doesNotMatch(ui, /truncate[^\n]*player\.giocatore|player\.giocatore[^\n]*truncate/);
   assert.doesNotMatch(ui, /player\.giocatore\.(?:split|replace|match)\(/);
 });
@@ -79,9 +82,9 @@ test("card Rosa gestisce squadra opzionale statistiche prezzo e più caro senza 
   assert.match(ui, /player\.squadraReale\.trim\(\) &&/);
   assert.match(ui, /\(\{player\.squadraReale\.trim\(\)\}\)/);
   assert.match(ui, /grid-cols-\[28px_minmax\(0,1fr\)_auto\]/);
-  assert.match(ui, /shrink-0 flex-col items-end/);
+  assert.match(ui, /flex shrink-0 items-center/);
   assert.match(ui, /Più caro/);
-  assert.match(ui, /col-span-2 col-start-2 grid min-w-0 grid-cols-3/);
-  assert.match(ui, /sm:flex sm:flex-wrap/);
+assert.match(ui, /grid min-w-0 grid-cols-\[28px_minmax\(0,1fr\)_auto\]/);
+ assert.match(ui, /col-start-2 col-span-2 mt-1 flex min-w-0 flex-wrap/);
   assert.doesNotMatch(ui, /overflow-x-auto|grid-cols-6/);
 });

@@ -85,6 +85,13 @@ test("scheda integra i nuovi unlock nella sezione esistente senza spostarla", ()
   assert.match(existingEmblems, /ordinati\.map\(\(emblema\)[\s\S]*daDifendere\.length > 0[\s\S]*daDifendere\.map/);
 });
 
+test("Idolo mostra soltanto il conteggio autorevole dei tifosi attivi del detentore", () => {
+  assert.match(page, /getActiveSupporterCounts\(\)/);
+  assert.match(page, /emblema\.chiave === "idolo"[\s\S]*record: String\(supporterCount\)/);
+  assert.doesNotMatch(page, /record: `Tifosi:/);
+  assert.match(existingEmblems, /RECORD: \{valoreRecord\}/);
+});
+
 test("nuova sezione è mobile-first e non introduce scorrimento orizzontale", () => {
   assert.match(seasonUi, /min-w-0/); assert.match(seasonUi, /truncate/); assert.match(seasonUi, /grid-cols-\[minmax\(0,1fr\)_auto_minmax\(0,1fr\)\]/);
   assert.doesNotMatch(seasonUi, /overflow-x-auto|w-screen|min-w-\[[4-9][0-9]{2}px\]/);

@@ -309,6 +309,14 @@ export type Database = {
         Args: { p_societa_id: number };
         Returns: Array<{ emblem_key: string; stato: "Sbloccato" | "Da difendere"; unlocked_at: string; stagione: string | null }>;
       };
+      public_societa_defending_emblems: {
+        Args: { p_societa_id: number };
+        Returns: Array<{ emblem_key: string; stato: "Da difendere"; record_value: number | null }>;
+      };
+      public_all_societa_defending_emblems: {
+        Args: Record<PropertyKey, never>;
+        Returns: Array<{ societa_id: number; emblem_key: string; stato: "Da difendere"; record_value: number | null }>;
+      };
       public_profile_support_summary: {
         Args: { p_profile_id: string };
         Returns: Array<{ stagione_id: number; societa_id: number; selected_at: string; punti_tifo: number; punti_bonus_tifo: number; trophy_types: string[]; resolved_trophy_types: string[] }>;

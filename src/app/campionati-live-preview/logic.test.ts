@@ -23,11 +23,24 @@ test("giornate disponibili provengono dalle partite, ordinate e anche non consec
   assert.deepEqual(deriveAvailableMatchdays([{ matchday: 9 }, { matchday: 1 }, { matchday: 4 }, { matchday: 9 }]), [1, 4, 9]);
 });
 
+test("calendario completo espone tutte le 38 giornate incluse 26 30 e 38", () => {
+  const days = deriveAvailableMatchdays(Array.from({ length: 38 }, (_, index) => ({ matchday: index + 1 })));
+  assert.equal(days.length, 38);
+  for (const day of [26, 30, 38]) assert.equal(days.includes(day), true);
+});
+
 test("query e tipi live non fanno riferimento alla colonna rimossa", async () => {
   const dataSource = await readFile(new URL("./data.ts", import.meta.url), "utf8");
   const databaseTypes = await readFile(new URL("../../lib/supabase/database.types.ts", import.meta.url), "utf8");
   assert.equal(dataSource.includes("numero_giornate"), false);
   assert.equal(/edizioni_competizioni:[\s\S]*?numero_giornate/.test(databaseTypes), false);
+});
+
+test("loader pagina tutte le partite oltre il limite massimo della singola risposta", async () => {
+  const dataSource = await readFile(new URL("./data.ts", import.meta.url), "utf8");
+  assert.match(dataSource, /\.range\(from, from \+ pageSize - 1\)/);
+  assert.match(dataSource, /rawMatches\.push\(\.\.\.page\)/);
+  assert.match(dataSource, /if \(page\.length < pageSize\) break/);
 });
 
 test("una giornata calcola vittoria, pareggio, sconfitta, gol, DR e fantapunti", () => {

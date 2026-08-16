@@ -34,7 +34,7 @@ export default function RegolamentoPage() {
     <main className="mx-auto max-w-7xl px-4 py-7 sm:px-5 sm:py-12 lg:px-6 lg:py-16">
       <PageHeader
         eyebrow="Le regole ufficiali"
-        title="Il Regolamento"
+        title="La Struttura"
         onderTitle
         compact
         description="Il Regolamento 3.0 raccoglie aste, mercato, competizioni e calcolo dei risultati, definendo il funzionamento completo della stagione."
@@ -559,7 +559,7 @@ export default function RegolamentoPage() {
 <section className="mt-10 overflow-hidden rounded-[2rem] border border-slate-200 bg-gradient-to-br from-blue-950 via-[#142b69] to-slate-950 px-5 py-9 text-white shadow-xl max-sm:mt-8 max-sm:rounded-[1.5rem] max-sm:px-4 max-sm:py-6 sm:mt-14 sm:px-8 sm:py-12 lg:px-10 lg:py-14">
   <div className="mx-auto max-w-4xl text-center">
     <h2 className="text-3xl font-black uppercase tracking-[0.02em] max-sm:text-2xl sm:text-4xl lg:text-5xl">
-      Il Regolamento
+      La Struttura
     </h2>
 
     <p className="mt-3 text-sm font-semibold leading-5 text-white/75 sm:hidden">
