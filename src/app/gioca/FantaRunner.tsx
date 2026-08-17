@@ -231,10 +231,37 @@ const POWER_UP_KINDS: readonly PowerUpKind[] = [
   "nico-paz",
   "gimenez",
 ];
-const RAFFICA_OVERLAY_CACHE = new Map<string, HTMLCanvasElement>();
-const BACKGROUND_TILE_CACHE = new Map<string, HTMLCanvasElement>();
-const GROUND_TILE_CACHE = new Map<string, HTMLCanvasElement>();
-const MIRRORED_TILE_CACHE = new WeakMap<HTMLCanvasElement, HTMLCanvasElement>();
+class PixelBudgetCanvasCache {
+  private readonly entries = new Map<string, HTMLCanvasElement>();
+  private pixels = 0;
+  constructor(private readonly maximumPixels: number) {}
+  get(key: string) { return this.entries.get(key); }
+  set(key: string, value: HTMLCanvasElement) {
+    const previous = this.entries.get(key);
+    if (previous) {
+      this.pixels -= previous.width * previous.height;
+      this.entries.delete(key);
+    }
+    const valuePixels = value.width * value.height;
+    while (this.entries.size && this.pixels + valuePixels > this.maximumPixels) {
+      const oldestKey = this.entries.keys().next().value;
+      if (oldestKey === undefined) break;
+      const oldest = this.entries.get(oldestKey);
+      if (oldest) this.pixels -= oldest.width * oldest.height;
+      this.entries.delete(oldestKey);
+    }
+    if (valuePixels <= this.maximumPixels) {
+      this.entries.set(key, value);
+      this.pixels += valuePixels;
+    }
+  }
+  clear() { this.entries.clear(); this.pixels = 0; }
+}
+
+const RAFFICA_OVERLAY_CACHE = new PixelBudgetCanvasCache(2_000_000);
+const BACKGROUND_TILE_CACHE = new PixelBudgetCanvasCache(3_000_000);
+const GROUND_TILE_CACHE = new PixelBudgetCanvasCache(3_000_000);
+let MIRRORED_TILE_CACHE = new WeakMap<HTMLCanvasElement, HTMLCanvasElement>();
 const POWER_UP_AURA_CACHE = new Map<PowerUpKind, HTMLCanvasElement>();
 const MOBILE_EVENT_RENDER_CACHE = new Map<EventKind, HTMLCanvasElement>();
 const MOBILE_OBSTACLE_RENDER_CACHE = new Map<PhysicalObstacleKind, HTMLCanvasElement>();
@@ -275,6 +302,8 @@ type CanvasRenderState = {
   dprLimit: number;
   logicalWidth: number;
   logicalHeight: number;
+  frameStateSaved: boolean;
+  viewportSignature: string;
 };
 
 type PerformanceMonitor = {
@@ -519,6 +548,8 @@ function FantaRunner({
     dprLimit: MOBILE_DPR_HIGH,
     logicalWidth: GAME_WIDTH,
     logicalHeight: GAME_HEIGHT,
+    frameStateSaved: false,
+    viewportSignature: "",
   });
   const performanceRef = useRef<PerformanceMonitor>({
     windowStartedAt: 0,
@@ -980,21 +1011,49 @@ function FantaRunner({
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const observer = new ResizeObserver(() => {
-      renderStateRef.current.dirty = true;
-      if (statusRef.current === "running") return;
-      const context = prepareCanvas(canvas, renderStateRef.current);
-      drawGame(
-        context,
-        runtimeRef.current,
-        logoRef.current,
-        assetsRef.current,
-        performance.now(),
-        reducedMotionRef.current
-      );
-    });
+    let scheduledFrame = 0;
+    const synchronizeViewport = (forceRedraw = false) => {
+      window.cancelAnimationFrame(scheduledFrame);
+      scheduledFrame = window.requestAnimationFrame(() => {
+        const rect = canvas.getBoundingClientRect();
+        const mobile = window.matchMedia("(max-width: 639px)").matches;
+        const pixelRatio = Math.min(window.devicePixelRatio || 1, renderStateRef.current.dprLimit);
+        const signature = `${Math.round(rect.width)}x${Math.round(rect.height)}@${pixelRatio.toFixed(2)}:${mobile ? "m" : "d"}`;
+        const viewportChanged = signature !== renderStateRef.current.viewportSignature;
+        if (viewportChanged) {
+          configureMobileRuntime(runtimeRef.current, renderStateRef.current, mobile);
+          invalidateViewportRenderCaches();
+          renderStateRef.current.viewportSignature = signature;
+        }
+        renderStateRef.current.dirty = true;
+        if (statusRef.current === "running" && !forceRedraw) return;
+        const context = prepareCanvas(canvas, renderStateRef.current, true);
+        drawGame(context, runtimeRef.current, logoRef.current, assetsRef.current, performance.now(), reducedMotionRef.current);
+      });
+    };
+    const observer = new ResizeObserver(() => synchronizeViewport());
+    const onViewportResize = () => synchronizeViewport();
+    const onResume = () => {
+      invalidateViewportRenderCaches();
+      synchronizeViewport(true);
+    };
+    const onVisibility = () => { if (!document.hidden) onResume(); };
     observer.observe(canvas);
-    return () => observer.disconnect();
+    window.addEventListener("resize", onViewportResize);
+    window.addEventListener("orientationchange", onViewportResize);
+    window.addEventListener("pageshow", onResume);
+    window.visualViewport?.addEventListener("resize", onViewportResize);
+    document.addEventListener("visibilitychange", onVisibility);
+    synchronizeViewport(true);
+    return () => {
+      window.cancelAnimationFrame(scheduledFrame);
+      observer.disconnect();
+      window.removeEventListener("resize", onViewportResize);
+      window.removeEventListener("orientationchange", onViewportResize);
+      window.removeEventListener("pageshow", onResume);
+      window.visualViewport?.removeEventListener("resize", onViewportResize);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, []);
 
   return (
@@ -1125,7 +1184,7 @@ function prepareCanvas(
   state: CanvasRenderState,
   force = false
 ) {
-  if (!force && !state.dirty && state.context) return state.context;
+  if (force) state.dirty = true;
   const rect = canvas.getBoundingClientRect();
   const pixelRatio = Math.min(window.devicePixelRatio || 1, state.dprLimit);
   const pixelWidth = Math.max(1, Math.round(rect.width * pixelRatio));
@@ -1134,10 +1193,19 @@ function prepareCanvas(
   if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
     canvas.width = pixelWidth;
     canvas.height = pixelHeight;
+    state.frameStateSaved = false;
   }
 
   const context = state.context ?? canvas.getContext("2d", { alpha: false });
   if (!context) throw new Error("Canvas 2D non disponibile");
+  if (state.frameStateSaved) context.restore();
+  context.setTransform(1, 0, 0, 1, 0, 0);
+  context.globalAlpha = 1;
+  context.globalCompositeOperation = "source-over";
+  context.filter = "none";
+  context.shadowBlur = 0;
+  context.shadowColor = "rgba(0,0,0,0)";
+  context.beginPath();
   context.setTransform(
     pixelWidth / state.logicalWidth,
     0,
@@ -1148,6 +1216,8 @@ function prepareCanvas(
   );
   context.imageSmoothingEnabled = true;
   context.imageSmoothingQuality = "high";
+  context.save();
+  state.frameStateSaved = true;
   state.context = context;
   state.dirty = false;
   return context;
@@ -3612,7 +3682,9 @@ function drawAssetBackground(
 ) {
   const currentStage = runtime.backgroundStage;
   const currentConfig = BACKGROUND_STAGE_CONFIG[currentStage];
-  if (!assets.get(currentConfig.stadium) || !assets.get(currentConfig.ground)) {
+  const stadium = assets.get(currentConfig.stadium);
+  const ground = assets.get(currentConfig.ground);
+  if (!isDecodedImage(stadium) || !isDecodedImage(ground)) {
     return false;
   }
 
@@ -3640,7 +3712,7 @@ function drawStageLayers(
   drawBackgroundTiles(context, stadium, runtime.stadiumOffset, viewport);
   context.save();
   context.globalAlpha = alpha * (1 - runtime.visualComfort * 0.1);
-  drawGroundTiles(context, ground, runtime.groundOffset, viewport, stage);
+  drawGroundTiles(context, ground, runtime.groundOffset, viewport);
   context.restore();
   context.restore();
 }
@@ -3673,8 +3745,7 @@ function drawGroundTiles(
   context: CanvasRenderingContext2D,
   image: HTMLImageElement,
   offset: number,
-  viewport: { width: number; height: number },
-  _stage: GameBackgroundStage
+  viewport: { width: number; height: number }
 ) {
   const tile = getCachedGroundTile(image, viewport);
   const tileWidth = tile.width;
@@ -3711,6 +3782,7 @@ function getCachedBackgroundTile(
   image: HTMLImageElement,
   viewport: { width: number; height: number }
 ) {
+  if (!isDecodedImage(image)) return createEmptyCanvas();
   const key = `${image.src}|${Math.round(viewport.width)}x${Math.round(viewport.height)}`;
   const cached = BACKGROUND_TILE_CACHE.get(key);
   if (cached) return cached;
@@ -3719,7 +3791,7 @@ function getCachedBackgroundTile(
   canvas.width = Math.max(1, Math.ceil(image.naturalWidth * scale));
   canvas.height = Math.max(1, Math.ceil(image.naturalHeight * scale));
   canvas.getContext("2d")?.drawImage(image, 0, 0, canvas.width, canvas.height);
-  setBoundedCanvasCache(BACKGROUND_TILE_CACHE, key, canvas, 12);
+  BACKGROUND_TILE_CACHE.set(key, canvas);
   return canvas;
 }
 
@@ -3727,6 +3799,7 @@ function getCachedGroundTile(
   image: HTMLImageElement,
   viewport: { width: number; height: number }
 ) {
+  if (!isDecodedImage(image)) return createEmptyCanvas();
   const key = `${image.src}|${Math.round(viewport.width)}x${Math.round(viewport.height)}`;
   const cached = GROUND_TILE_CACHE.get(key);
   if (cached) return cached;
@@ -3745,7 +3818,7 @@ function getCachedGroundTile(
     canvas.width,
     canvas.height
   );
-  setBoundedCanvasCache(GROUND_TILE_CACHE, key, canvas, 12);
+  GROUND_TILE_CACHE.set(key, canvas);
   return canvas;
 }
 
@@ -3806,21 +3879,26 @@ function getRafficaStaticOverlay(
       overlay.fillRect(0, 0, width, height * 0.58);
     }
   }
-  setBoundedCanvasCache(RAFFICA_OVERLAY_CACHE, key, canvas, 8);
+  RAFFICA_OVERLAY_CACHE.set(key, canvas);
   return canvas;
 }
 
-function setBoundedCanvasCache(
-  cache: Map<string, HTMLCanvasElement>,
-  key: string,
-  value: HTMLCanvasElement,
-  maximumEntries: number
-) {
-  if (!cache.has(key) && cache.size >= maximumEntries) {
-    const oldestKey = cache.keys().next().value;
-    if (oldestKey !== undefined) cache.delete(oldestKey);
-  }
-  cache.set(key, value);
+function isDecodedImage(image: HTMLImageElement | undefined): image is HTMLImageElement {
+  return Boolean(image?.complete && image.naturalWidth > 0 && image.naturalHeight > 0);
+}
+
+function createEmptyCanvas() {
+  const canvas = document.createElement("canvas");
+  canvas.width = 1;
+  canvas.height = 1;
+  return canvas;
+}
+
+function invalidateViewportRenderCaches() {
+  BACKGROUND_TILE_CACHE.clear();
+  GROUND_TILE_CACHE.clear();
+  RAFFICA_OVERLAY_CACHE.clear();
+  MIRRORED_TILE_CACHE = new WeakMap<HTMLCanvasElement, HTMLCanvasElement>();
 }
 
 function prewarmRenderCaches(
@@ -3829,11 +3907,7 @@ function prewarmRenderCaches(
   stage: GameBackgroundStage
 ) {
   const currentViewport = getLogicalCanvasViewport(context);
-  const viewports = [
-    currentViewport,
-    { width: GAME_WIDTH, height: GAME_HEIGHT },
-    { width: MOBILE_GAME_WIDTH, height: MOBILE_GAME_HEIGHT },
-  ];
+  const viewports = [currentViewport];
   for (const viewport of viewports) {
     getRafficaStaticOverlay("bonus", viewport.width, viewport.height);
     getRafficaStaticOverlay("malus", viewport.width, viewport.height);

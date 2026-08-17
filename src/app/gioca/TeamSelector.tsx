@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { GameTeam } from "@/lib/game/types";
 import {
@@ -8,14 +9,6 @@ import {
   type ClubProgress,
 } from "@/lib/game/progression";
 import LevelJourney from "./LevelJourney";
-import { verifyArcadeNickname } from "./actions";
-import {
-  PLAYER_NICKNAME_MAX_LENGTH,
-  getOrCreatePlayerId,
-  readPlayerNickname,
-  validatePlayerNickname,
-  writePlayerNickname,
-} from "@/lib/game/nickname";
 
 const LEAGUE_FILTERS = [
   ["all", "Tutte", "Tutte"], ["serie-a", "Serie A", "A"], ["serie-b", "Serie B", "B"],
@@ -29,13 +22,15 @@ function TeamSelector({
   initialTeamSlug,
   progressByClub,
   keyboardEnabled = true,
+  accountUsername,
   onSelect,
 }: {
   teams: GameTeam[];
   initialTeamSlug?: string;
   progressByClub: Record<string, ClubProgress>;
   keyboardEnabled?: boolean;
-  onSelect: (team: GameTeam, playerName: string, playerId: string) => void;
+  accountUsername: string | null;
+  onSelect: (team: GameTeam) => void;
 }) {
   const initialTeam = teams.find((team) => team.slug === initialTeamSlug) ?? null;
   const [isMobileFlow, setIsMobileFlow] = useState(false);
@@ -48,10 +43,6 @@ function TeamSelector({
   const [isRandomizing, setIsRandomizing] = useState(false);
   const [randomResultTeam, setRandomResultTeam] = useState<GameTeam | null>(null);
   const [isLaunching, setIsLaunching] = useState(false);
-  const [playerName, setPlayerName] = useState("");
-  const [savedPlayerName, setSavedPlayerName] = useState("");
-  const [isEditingPlayerName, setIsEditingPlayerName] = useState(true);
-  const [playerNameError, setPlayerNameError] = useState("");
   const buttonRefs = useRef(new Map<string, HTMLButtonElement>());
   const ribbonRef = useRef<HTMLDivElement>(null);
   const scrollTrackRef = useRef<HTMLDivElement>(null);
@@ -95,17 +86,6 @@ function TeamSelector({
     null;
 
   const isInfinite = search.trim().length === 0 && filteredTeams.length > 1;
-
-  useEffect(() => {
-    const frame = window.requestAnimationFrame(() => {
-      const saved = readPlayerNickname();
-      if (!saved) return;
-      setPlayerName(saved);
-      setSavedPlayerName(saved);
-      setIsEditingPlayerName(false);
-    });
-    return () => window.cancelAnimationFrame(frame);
-  }, []);
 
   useEffect(() => () => {
     randomRollIdRef.current += 1;
@@ -303,32 +283,11 @@ function TeamSelector({
     randomAnimationFrameRef.current = requestAnimationFrame(animateRoll);
   }
 
-  async function confirmSelectedTeam() {
-    if (!confirmationTeam || isLaunching) return;
-    const validation = validatePlayerNickname(playerName);
-    if (!validation.ok) {
-      setPlayerNameError(validation.message);
-      return;
-    }
-    const normalizedName = validation.nickname;
-    setPlayerNameError("");
+  function confirmSelectedTeam() {
+    if (!confirmationTeam || isLaunching || !accountUsername) return;
     setIsLaunching(true);
-    const playerId = getOrCreatePlayerId();
-    const claim = await verifyArcadeNickname(playerId, normalizedName);
-    if (!claim.ok) {
-      const canUsePersistedIdentity = claim.status === "unavailable" && savedPlayerName === normalizedName;
-      if (!canUsePersistedIdentity) {
-        setIsLaunching(false);
-        setPlayerNameError(claim.message ?? "Impossibile verificare il nickname. Riprova.");
-        return;
-      }
-    }
-    writePlayerNickname(normalizedName);
-    setPlayerName(normalizedName);
-    setSavedPlayerName(normalizedName);
-    setIsEditingPlayerName(false);
     window.clearTimeout(launchTimerRef.current);
-    launchTimerRef.current = window.setTimeout(() => onSelect(confirmationTeam, normalizedName, playerId), 260);
+    launchTimerRef.current = window.setTimeout(() => onSelect(confirmationTeam), 260);
   }
 
   function beginDrag(event: React.PointerEvent<HTMLDivElement>) {
@@ -756,36 +715,18 @@ function TeamSelector({
             <LevelJourney
               progress={progressByClub[String(confirmationTeam.id)] ?? createDefaultClubProgress()}
             />
-            {savedPlayerName && !isEditingPlayerName ? (
+            {accountUsername ? (
               <div className="relative mx-auto mt-2 max-w-xs rounded-xl border border-white/10 bg-slate-950/35 px-3 py-2 text-left sm:mt-3">
-                <span className="block text-[7px] font-black uppercase tracking-[.14em] text-sky-200/70">Nome del giocatore</span>
-                <div className="mt-0.5 flex min-w-0 items-center justify-between gap-3">
-                  <strong className="min-w-0 truncate text-xs text-white sm:text-sm">{savedPlayerName}</strong>
-                  <button type="button" onClick={() => setIsEditingPlayerName(true)} className="shrink-0 text-[7px] font-black uppercase tracking-[.1em] text-amber-300 transition hover:text-amber-200">Modifica nickname</button>
-                </div>
+                <span className="block text-[7px] font-black uppercase tracking-[.14em] text-sky-200/70">Account Fanta a 20</span>
+                <strong className="mt-0.5 block min-w-0 truncate text-xs text-white sm:text-sm">{accountUsername}</strong>
               </div>
-            ) : <label className="relative mx-auto mt-2 block max-w-xs text-left sm:mt-3">
-              <span className="mb-1 block text-[7px] font-black uppercase tracking-[.14em] text-sky-200/70">Nome del giocatore</span>
-              <input
-                type="text"
-                required
-                minLength={2}
-                maxLength={PLAYER_NICKNAME_MAX_LENGTH}
-                autoComplete="name"
-                value={playerName}
-                onChange={(event) => {
-                  setPlayerName(event.target.value);
-                  if (playerNameError) setPlayerNameError("");
-                }}
-                placeholder="Inserisci il tuo nome"
-                aria-invalid={Boolean(playerNameError)}
-                aria-describedby={playerNameError ? "player-name-error" : undefined}
-                className="min-h-10 w-full rounded-full border border-white/15 bg-slate-950/55 px-4 text-xs font-bold text-white outline-none placeholder:text-white/25 focus:border-sky-300 sm:min-h-11 sm:text-sm"
-              />
-              {playerNameError && <span id="player-name-error" className="mt-1 block text-[8px] font-bold text-rose-300">{playerNameError}</span>}
-            </label>}
+            ) : (
+              <div className="relative mx-auto mt-2 max-w-xs rounded-xl border border-amber-300/25 bg-amber-300/10 px-3 py-2 text-left sm:mt-3">
+                <p className="text-[9px] font-bold leading-4 text-white/80">Accedi al tuo Account Fanta a 20 per iniziare una corsa valida.</p>
+              </div>
+            )}
             <div className="relative mx-auto mt-2 grid max-w-xs gap-1 sm:mt-4 sm:gap-1.5">
-              <button
+              {accountUsername ? <button
                 ref={confirmButtonRef}
                 type="button"
                 onClick={confirmSelectedTeam}
@@ -793,7 +734,7 @@ function TeamSelector({
                 className="min-h-11 rounded-full bg-amber-300 px-6 text-[9px] font-black uppercase tracking-[0.15em] text-blue-950 shadow-[0_12px_32px_rgba(251,191,36,0.18)] transition hover:-translate-y-0.5 hover:bg-amber-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-300/45"
               >
                 {isMobileFlow ? "Conferma squadra" : "Scendi in campo"}
-              </button>
+              </button> : <Link href="/account/accedi?returnTo=%2Fgioca" className="flex min-h-11 items-center justify-center rounded-full bg-amber-300 px-6 text-[9px] font-black uppercase tracking-[0.15em] text-blue-950">Accedi per giocare</Link>}
               <button
                 type="button"
                 onClick={() => setConfirmationTeam(null)}

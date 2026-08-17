@@ -11,6 +11,7 @@ export type AssetProgressCallback = (progress: number) => void;
 const entryMap = new Map(GAME_ASSET_ENTRIES);
 const images = new Map<GameAssetKey, HTMLImageElement>();
 const requests = new Map<GameAssetKey, Promise<void>>();
+const failedLoads = new Map<GameAssetKey, { attempts: number; retryAfter: number }>();
 const teamLogos = new Map<string, HTMLImageElement>();
 const teamLogoRequests = new Map<string, Promise<HTMLImageElement>>();
 const overlayImages: HTMLImageElement[] = [];
@@ -71,6 +72,7 @@ export function preloadLevelGameAssets(
     preloadOverlayAssets(),
   ]).then(() => {
     onProgress?.(1);
+    if (!stageKeys.every((key) => images.has(key))) levelAssetPromises.delete(stage);
     return images;
   });
   levelAssetPromises.set(stage, promise);
@@ -205,6 +207,8 @@ function loadAsset(key: GameAssetKey) {
   if (images.has(key)) return Promise.resolve();
   const pending = requests.get(key);
   if (pending) return pending;
+  const failure = failedLoads.get(key);
+  if (failure && Date.now() < failure.retryAfter) return Promise.resolve();
   const path = entryMap.get(key);
   if (!path) return Promise.resolve();
 
@@ -213,10 +217,18 @@ function loadAsset(key: GameAssetKey) {
     image.decoding = "async";
     image.onload = async () => {
       try { await image.decode?.(); } catch { /* onload è sufficiente come fallback. */ }
-      images.set(key, image);
+      if (image.naturalWidth > 0 && image.naturalHeight > 0) {
+        images.set(key, image);
+        failedLoads.delete(key);
+      }
       resolve();
     };
     image.onerror = () => {
+      const attempts = (failedLoads.get(key)?.attempts ?? 0) + 1;
+      failedLoads.set(key, {
+        attempts,
+        retryAfter: Date.now() + Math.min(30_000, 1_000 * 2 ** Math.min(attempts - 1, 5)),
+      });
       if (process.env.NODE_ENV !== "production") {
         console.warn(`[FantaRunner] Asset non disponibile: ${key}`);
       }

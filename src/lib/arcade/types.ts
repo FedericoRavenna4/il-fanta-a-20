@@ -1,6 +1,6 @@
 export type ArcadeLeaderboardEntry = {
   id: string;
-  playerId?: string | null;
+  identityKey?: string;
   nomeGiocatore: string;
   societaId: number;
   livello: 1 | 2 | 3;
@@ -21,11 +21,5 @@ export type ArcadeSaveResult = {
 export type ArcadeRunProofResult = {
   ok: boolean;
   proof?: string;
-  message?: string;
-};
-
-export type ArcadeNicknameClaimResult = {
-  ok: boolean;
-  status: "assigned" | "nickname_taken" | "invalid" | "unavailable";
   message?: string;
 };

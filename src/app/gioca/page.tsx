@@ -5,6 +5,7 @@ import { getArcadeLeaderboard } from "@/lib/arcade/server";
 import ArcadeTopThree from "./ArcadeTopThree";
 import GameClient from "./GameClient";
 import { createPageMetadata } from "@/lib/seo";
+import { getCurrentAccount } from "@/lib/account/server";
 
 export const metadata: Metadata = createPageMetadata({
   title: "Sala Giochi",
@@ -31,7 +32,10 @@ export default async function GiocaPage({
       accent: getLeagueAccent(team.categoria ?? ""),
     }))
     .sort((first, second) => first.nome.localeCompare(second.nome, "it"));
-  const initialLeaderboard = await getArcadeLeaderboard();
+  const [initialLeaderboard, account] = await Promise.all([
+    getArcadeLeaderboard(),
+    getCurrentAccount(),
+  ]);
 
   return (
     <main className="relative isolate overflow-hidden bg-[linear-gradient(180deg,#eef3f9_0%,#ffffff_38%,#f8fafc_100%)] text-blue-950">
@@ -75,7 +79,7 @@ export default async function GiocaPage({
           />
         </section>
 
-        <GameClient teams={teams} initialTeamSlug={requestedTeam} initialLeaderboard={initialLeaderboard} />
+        <GameClient teams={teams} initialTeamSlug={requestedTeam} initialLeaderboard={initialLeaderboard} accountUsername={account?.username ?? null} />
       </div>
     </main>
   );

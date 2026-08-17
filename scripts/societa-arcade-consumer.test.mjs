@@ -35,24 +35,20 @@ test("record storici non vengono filtrati in base al catalogo società", async (
   assert.doesNotMatch(loader, /isValidTeam|getActiveSocieta|societaById/);
 });
 
-test("Player ID, nickname, token e record mantengono le RPC esistenti", async () => {
-  const [server, identityMigration, tokenMigration] = await Promise.all([
+test("Account, token e record usano le RPC account-based senza identità client", async () => {
+  const [server, accountMigration] = await Promise.all([
     read("src/lib/arcade/server.ts"),
-    read("supabase/migrations/202608020002_arcade_player_identity.sql"),
-    read("supabase/migrations/202608020003_arcade_player_identity_token_validation.sql"),
+    read("supabase/migrations/202608170001_arcade_account_identity.sql"),
   ]);
 
-  assert.match(server, /rpc\("assegna_nickname_arcade"/);
-  assert.match(server, /rpc\("consuma_arcade_run_token_v2"/);
-  assert.match(server, /rpc\("salva_record_arcade_v3"/);
-  assert.match(identityMigration, /found and v_owner <> p_player_id/);
-  assert.match(identityMigration, /'nickname_taken'/);
-  assert.match(identityMigration, /on conflict \(player_id\) do update/);
-  assert.match(tokenMigration, /where nonce = p_nonce\s+and used_at is null/);
-  assert.match(tokenMigration, /if not found then\s+return query select 'invalid'/);
-  assert.match(tokenMigration, /p_livello not between 1 and 3/);
-  assert.match(tokenMigration, /p_livello > coalesce\(v_record\.livello, 1\)/);
-  assert.match(tokenMigration, /p_metri > v_record\.metri/);
+  assert.match(server, /auth\.getUser\(\)/);
+  assert.match(server, /rpc\("consuma_arcade_run_token_v3"/);
+  assert.match(server, /rpc\("salva_record_arcade_v4"/);
+  assert.doesNotMatch(server, /input\.(?:playerId|nomeGiocatore)/);
+  assert.match(accountMigration, /where nonce = p_nonce\s+and used_at is null/);
+  assert.match(accountMigration, /p_livello not between 1 and 3/);
+  assert.match(accountMigration, /p_livello > coalesce\(v_record\.livello, 1\)/);
+  assert.match(accountMigration, /p_metri > v_record\.metri/);
 });
 
 test("la fase identità non modifica scoring, deduplicazione o migrazioni Arcade", async () => {
@@ -63,5 +59,5 @@ test("la fase identità non modifica scoring, deduplicazione o migrazioni Arcade
 
   assert.match(runner, /teamRating|recordCelebrationDistance/);
   assert.match(leaderboard, /deduplicateArcadeLeaderboard/);
-  assert.match(leaderboard, /candidate\.playerId/);
+  assert.match(leaderboard, /candidate\.identityKey/);
 });

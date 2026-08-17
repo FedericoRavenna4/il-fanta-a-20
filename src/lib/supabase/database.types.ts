@@ -174,6 +174,7 @@ export type Database = {
           created_at: string;
           updated_at: string;
           player_id: string | null;
+          profile_id: string | null;
         };
         Insert: {
           id?: string | number;
@@ -185,6 +186,7 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
           player_id?: string | null;
+          profile_id?: string | null;
         };
         Update: {
           id?: string | number;
@@ -196,6 +198,7 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
           player_id?: string | null;
+          profile_id?: string | null;
         };
         Relationships: [];
       };
@@ -230,6 +233,7 @@ export type Database = {
           used_at: string | null;
           created_at: string;
           player_id: string | null;
+          profile_id: string | null;
           consumed_valid: boolean;
         };
         Insert: {
@@ -241,6 +245,7 @@ export type Database = {
           used_at?: string | null;
           created_at?: string;
           player_id?: string | null;
+          profile_id?: string | null;
           consumed_valid?: boolean;
         };
         Update: {
@@ -252,6 +257,7 @@ export type Database = {
           used_at?: string | null;
           created_at?: string;
           player_id?: string | null;
+          profile_id?: string | null;
           consumed_valid?: boolean;
         };
         Relationships: [];
@@ -353,6 +359,14 @@ export type Database = {
       assegna_nickname_arcade: {
         Args: { p_player_id: string; p_nickname: string; p_nickname_normalized: string };
         Returns: Array<{ accepted: boolean; status: string; nickname: string | null; nickname_normalized: string | null }>;
+      };
+      consuma_arcade_run_token_v3: {
+        Args: { p_nonce: string; p_profile_id: string; p_societa_id: number };
+        Returns: Array<{ stato: string; started_at: string | null }>;
+      };
+      salva_record_arcade_v4: {
+        Args: { p_nonce: string; p_profile_id: string; p_societa_id: number; p_livello: number; p_metri: number };
+        Returns: Array<{ salvato: boolean; livello_record: number; metri_record: number }>;
       };
       consuma_rate_limit: {
         Args: {
