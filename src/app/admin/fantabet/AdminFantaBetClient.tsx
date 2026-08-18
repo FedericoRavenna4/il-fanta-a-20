@@ -45,7 +45,17 @@ export default function AdminFantaBetClient({ initial }: { initial: FantaBetAdmi
     <section className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-5"><h2 className="text-lg font-black uppercase text-blue-950">Compila la schedina</h2>
       <div className="mt-4 grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3"><Field label="Stagione"><strong className="block min-h-11 rounded-xl bg-slate-50 px-3 py-3 text-sm text-blue-950">{initial.season.label}</strong></Field><DayPicker day={day} onChange={changeDay} /></div>
       <div className="mt-3 grid grid-cols-2 gap-3"><Field label="Apertura"><input type="datetime-local" value={opensAt} onChange={(event) => { setOpensAt(event.target.value); if (deadlineAt && deadlineAt <= event.target.value) setDeadlineAt(""); }} className="admin-input" /></Field><Field label="Chiusura"><input type="datetime-local" min={opensAt || undefined} value={deadlineAt} onChange={(event) => setDeadlineAt(event.target.value)} className="admin-input" /></Field></div>
-      <div className="mt-4"><Field label="Lega"><select value={league} onChange={(event) => { setLeague(event.target.value); setBets([]); }} className="admin-input">{leagues.map((item) => <option key={item} value={item}>{leagueLabel(item)}</option>)}</select></Field></div>
+      <div className="mt-4"><Field label="Lega"><select
+  value={league}
+  onChange={(event) => setLeague(event.target.value)}
+  className="admin-input"
+>
+  {leagues.map((item) => (
+    <option key={item} value={item}>
+      {leagueLabel(item)}
+    </option>
+  ))}
+</select></Field></div>
       <h3 className="mt-5 text-sm font-black uppercase text-blue-950">Seleziona 5 partite <span className="text-sky-700">({bets.length}/5)</span></h3>
       <div className="mt-2 grid gap-2 sm:grid-cols-2">{matches.length ? matches.map((match) => <MatchChoice key={match.id} match={match} selected={bets.some((bet) => bet.partitaId === match.id)} disabled={bets.length >= 5 && !bets.some((bet) => bet.partitaId === match.id)} onClick={() => toggleMatch(match.id)} />) : <p className="text-sm font-semibold text-slate-500">Nessuna partita reale per lega e giornata selezionate.</p>}</div>
       {bets.length > 0 && <div className="mt-4 space-y-2">{bets.map((bet, index) => { const match = initial.matches.find((item) => item.id === bet.partitaId); return <div key={bet.partitaId} className="grid grid-cols-[24px_minmax(0,1fr)_110px_72px] items-center gap-2 rounded-xl border border-slate-200 p-2"><strong>{index + 1}</strong><span className="truncate text-[11px] font-black">{match ? `${match.home.name} – ${match.away.name}` : bet.partitaId}</span><select value={bet.type} onChange={(event) => changeType(index, event.target.value as FantaBetType)} className="admin-input">{Object.entries(typeLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select><span className="flex gap-1"><button aria-label="Sposta su" disabled={index === 0} onClick={() => move(index, -1)} className="admin-move">↑</button><button aria-label="Sposta giù" disabled={index === bets.length - 1} onClick={() => move(index, 1)} className="admin-move">↓</button></span></div>; })}</div>}

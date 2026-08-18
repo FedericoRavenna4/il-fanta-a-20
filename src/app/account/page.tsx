@@ -7,6 +7,7 @@ import { ACCOUNT_AVATAR_BUCKET, isOwnedAvatarPath, versionAvatarUrl } from "@/li
 import type { AccountHubModules } from "@/lib/account/hub";
 import { getActiveSocietaById } from "@/lib/societa/catalog.server";
 import { logoutAction } from "./actions";
+import UsernameForm from "./UsernameForm";
 import AvatarUpload from "./AvatarUpload";
 import ProfileAvatar from "./ProfileAvatar";
 import ProfileModules from "./ProfileModules";
@@ -47,7 +48,15 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
         <div className="flex flex-col items-center gap-5 text-center sm:flex-row sm:text-left"><ProfileAvatar username={profile.username} avatarUrl={avatarUrl} /><div className="min-w-0 flex-1"><p className="text-xs font-black uppercase tracking-[.24em] text-sky-200">Account Fanta a 20</p><h1 className="mt-2 flex min-w-0 items-center justify-center gap-2 text-3xl font-black sm:justify-start sm:text-5xl"><span className="min-w-0 break-all">{profile.username}</span><OfficialAccountBadge societaId={profile.societa_id} /></h1><p className="mt-3 text-sm font-semibold text-white/65">Registrato il {registrationDate(user.created_at)}</p>{societyName ? <p className="mt-2 font-bold text-white/90">{societyName}</p> : <p className="mt-2 font-semibold text-white/70">Nessuna società collegata</p>}</div></div>
       </div>
       <div className="grid gap-6 p-5 sm:p-8 lg:grid-cols-[minmax(0,1fr)_330px]">
+       
         <div>
+          <div className="mb-8 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
+  <p className="section-eyebrow">Identità pubblica</p>
+  <h2 className="mt-2 text-2xl font-black text-blue-950">
+    Cambia username
+  </h2>
+  <UsernameForm currentUsername={profile.username} />
+</div>
           <p className="section-eyebrow">Immagine profilo</p><h2 className="mt-2 text-2xl font-black text-blue-950">Il tuo avatar</h2><p className="mt-2 text-sm font-semibold text-slate-500">Se non carichi un’immagine, useremo le iniziali del tuo username.</p><AvatarUpload />
         </div>
         <aside className="rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">

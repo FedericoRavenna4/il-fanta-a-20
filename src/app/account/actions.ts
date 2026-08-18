@@ -14,6 +14,7 @@ export type AccountActionState = { message: string; field?: "email" | "password"
 const GENERIC_AUTH_ERROR = "Non è stato possibile completare l’operazione. Controlla i dati e riprova.";
 export type AvatarActionState = { message: string; success?: boolean };
 export type CompleteProfileState = { message: string; success?: boolean };
+export type UsernameActionState = { message: string; success?: boolean };
 
 export async function completeLegacyProfileAction(_state: CompleteProfileState, formData: FormData): Promise<CompleteProfileState> {
   const validation = validateAccountUsername(String(formData.get("username") ?? ""));
@@ -26,8 +27,65 @@ export async function completeLegacyProfileAction(_state: CompleteProfileState, 
     console.error("[account/profile-completion] failed", safeBackendError(error));
     return { message: profileCompletionMessage(error) };
   }
+  
   revalidatePath("/", "layout");
   redirect(`/user/${encodeURIComponent(data.username)}`);
+}
+
+export async function updateUsernameAction(
+  _state: UsernameActionState,
+  formData: FormData
+): Promise<UsernameActionState> {
+  const validation = validateAccountUsername(
+    String(formData.get("username") ?? "")
+  );
+
+  if (!validation.ok) {
+    return { message: validation.message };
+  }
+
+  const supabase = await createAuthenticatedSupabaseClient();
+
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    return { message: "Sessione non valida. Accedi nuovamente." };
+  }
+
+  const { error } = await supabase.rpc("update_my_username", {
+    p_username: validation.username,
+  });
+
+  if (error) {
+    console.error("[account/username-update] failed", safeBackendError(error));
+
+    if (
+      /USERNAME_GIA_IN_USO|duplicate key|profiles_username/i.test(error.message)
+    ) {
+      return { message: "Questo username è già utilizzato." };
+    }
+
+    if (/USERNAME_RISERVATO/i.test(error.message)) {
+      return { message: "Questo username è riservato." };
+    }
+
+    if (/USERNAME_NON_VALIDO/i.test(error.message)) {
+      return {
+        message:
+          "Usa 3-24 caratteri: inizia con una lettera e usa solo lettere, numeri o underscore.",
+      };
+    }
+
+    return { message: "Non è stato possibile aggiornare lo username." };
+  }
+
+  revalidatePath("/", "layout");
+revalidatePath("/user/[username]", "page");
+
+redirect(`/user/${encodeURIComponent(validation.username)}`);
 }
 
 export async function uploadAvatarAction(_state: AvatarActionState, formData: FormData): Promise<AvatarActionState> {

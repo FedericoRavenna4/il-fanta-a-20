@@ -272,10 +272,14 @@ export type Database = {
     Views: Record<string, never>;
     Functions: {
       create_my_legacy_profile: {
-        Args: { p_username: string };
-        Returns: Database["public"]["Tables"]["profiles"]["Row"];
-      };
-      request_my_profile_verification: {
+  Args: { p_username: string };
+  Returns: Database["public"]["Tables"]["profiles"]["Row"];
+};
+update_my_username: {
+  Args: { p_username: string };
+  Returns: Database["public"]["Tables"]["profiles"]["Row"];
+};
+request_my_profile_verification: {
         Args: { p_nome: string; p_cognome: string; p_societa_id: number };
         Returns: Database["public"]["Tables"]["profile_verification_requests"]["Row"];
       };
