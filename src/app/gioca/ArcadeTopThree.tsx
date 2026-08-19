@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import OfficialAccountBadge from "@/app/account/OfficialAccountBadge";
 import { useEffect, useMemo, useState } from "react";
 import type { ArcadeLeaderboardEntry } from "@/lib/arcade/types";
 import type { GameTeam } from "@/lib/game/types";
@@ -35,9 +36,30 @@ export default function ArcadeTopThree({ entries, teams }: { entries: ArcadeLead
                 {team && <Image src={team.logo} alt={`Stemma ${team.nome}`} width={34} height={34} sizes="(max-width: 639px) 16px, 32px" className="max-h-full max-w-full object-contain" />}
               </span>
               <span className="min-w-0">
-                <strong className="block truncate text-[8px] font-black text-blue-950 [text-shadow:none] sm:text-xs">{entry.nomeGiocatore.toLocaleUpperCase("it-IT")}</strong>
-                <span className="mt-1 block truncate text-[8px] font-black uppercase tracking-[.045em] text-blue-950 [text-shadow:none] sm:text-[11px] sm:tracking-[.07em]">Livello {romanLevel(entry.livello)}</span>
-              </span>
+  {entry.profileId ? (
+    <Link
+      href={`/user/${encodeURIComponent(entry.nomeGiocatore)}`}
+      className="flex min-w-0 items-center gap-1 text-blue-950 hover:underline [text-shadow:none]"
+    >
+      <strong className="truncate text-[8px] font-black sm:text-xs">
+        {entry.nomeGiocatore.toLocaleUpperCase("it-IT")}
+      </strong>
+
+      <OfficialAccountBadge
+        societaId={entry.officialSocietaId ?? null}
+        className="!h-3.5 !w-3.5 shrink-0"
+      />
+    </Link>
+  ) : (
+    <strong className="block truncate text-[8px] font-black text-blue-950 [text-shadow:none] sm:text-xs">
+      {entry.nomeGiocatore.toLocaleUpperCase("it-IT")}
+    </strong>
+  )}
+
+  <span className="mt-1 block truncate text-[8px] font-black uppercase tracking-[.045em] text-blue-950 [text-shadow:none] sm:text-[11px] sm:tracking-[.07em]">
+    Livello {romanLevel(entry.livello)}
+  </span>
+</span>
               <strong className="col-span-3 text-right text-[11px] font-black leading-none tabular-nums sm:col-span-1 sm:text-base">{entry.metri.toLocaleString("it-IT")} m</strong>
             </article>
           );

@@ -124,17 +124,34 @@ async function loadDeduplicatedLeaderboard(): Promise<ArcadeLeaderboardEntry[]> 
   if (error) throw error;
   const profileIds = [...new Set((data ?? []).flatMap((row) => row.profile_id ? [row.profile_id] : []))];
   const profileNames = new Map<string, string>();
-  if (profileIds.length) {
-    const { data: profiles, error: profilesError } = await admin.from("profiles").select("id,username").in("id", profileIds);
-    if (profilesError) throw profilesError;
-    for (const profile of profiles ?? []) profileNames.set(profile.id, profile.username);
+const officialSocietaByProfile = new Map<string, number | null>();
+
+if (profileIds.length) {
+  const { data: profiles, error: profilesError } = await admin
+    .from("profiles")
+    .select("id,username,societa_id")
+    .in("id", profileIds);
+
+  if (profilesError) throw profilesError;
+
+  for (const profile of profiles ?? []) {
+    profileNames.set(profile.id, profile.username);
+    officialSocietaByProfile.set(
+      profile.id,
+      profile.societa_id == null ? null : Number(profile.societa_id)
+    );
   }
+}
   const entries: ArcadeLeaderboardEntry[] = [];
   for (const row of data ?? []) {
     const displayName = normalizeArcadePlayerName((row.profile_id ? profileNames.get(row.profile_id) : null) ?? row.nome_giocatore);
     if (!displayName || !Number.isInteger(row.societa_id) || !Number.isFinite(row.metri)) continue;
     entries.push({
       id: leaderboardEntryId(row.id),
+      profileId: row.profile_id ?? undefined,
+officialSocietaId: row.profile_id
+  ? officialSocietaByProfile.get(row.profile_id) ?? null
+  : null,
       identityKey: row.profile_id ? `account:${row.profile_id}` : row.player_id ? `legacy-player:${row.player_id}` : `legacy-name:${normalizeArcadePlayerNameForLookup(displayName)}`,
       nomeGiocatore: displayName,
       societaId: row.societa_id,

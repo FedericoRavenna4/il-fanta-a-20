@@ -1,6 +1,8 @@
 export type ArcadeLeaderboardEntry = {
   id: string;
   identityKey?: string;
+  profileId?: string;
+  officialSocietaId?: number | null;
   nomeGiocatore: string;
   societaId: number;
   livello: 1 | 2 | 3;
