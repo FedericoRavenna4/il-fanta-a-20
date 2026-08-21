@@ -1,7 +1,8 @@
 -- Diagnostica read-only da eseguire prima della migration Rose.
 select
   pg_catalog.to_regclass('public.rose_giocatori') as rose_giocatori_table,
-  pg_catalog.to_regprocedure('public.admin_publish_rose_snapshot(bigint, uuid, jsonb)') as publish_rpc;
+  pg_catalog.to_regprocedure('public.admin_publish_rose_snapshot(bigint, text, uuid, jsonb)') as publish_rpc,
+  pg_catalog.to_regprocedure('public.admin_publish_rose_snapshot(bigint, uuid, jsonb)') as unsafe_legacy_publish_rpc;
 
 select
   namespace.nspname as table_schema,

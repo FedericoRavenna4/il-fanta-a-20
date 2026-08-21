@@ -7,7 +7,7 @@ const page = await readFile(new URL("../src/app/societa/[slug]/page.tsx", import
 const ui = await readFile(new URL("../src/app/societa/[slug]/RosaSocieta.tsx", import.meta.url), "utf8");
 const actions = await readFile(new URL("../src/app/admin/importazioni/actions.ts", import.meta.url), "utf8");
 const client = await readFile(new URL("../src/app/admin/importazioni/ImportazioniClient.tsx", import.meta.url), "utf8");
-const deletion = await readFile(new URL("../supabase/migrations/202608150003_admin_delete_rose_import.sql", import.meta.url), "utf8");
+const deletion = await readFile(new URL("../supabase/migrations/202608200001_fix_rose_import_scope.sql", import.meta.url), "utf8");
 
 const seasons = new Map([[26, "2025/26"], [27, "2026/27"]]);
 const rows = [
@@ -36,28 +36,57 @@ test("fake OFF non usa fallback legacy e la UI mostra vuoto soltanto senza righe
   assert.match(ui, /Rosa \{stagione\} ancora da costruire/);
 });
 
-test("eliminazione cancella soltanto la stagione selezionata e consente un nuovo import", () => {
-  const remaining = rows.filter((row) => row.stagione_id !== 27);
-  assert.equal(remaining.filter((row) => row.stagione_id === 27).length, 0);
-  assert.equal(remaining.filter((row) => row.stagione_id === 26).length, 1);
-  assert.match(deletion, /delete from public\.rose_giocatori\s+where stagione_id = target\.stagione_id/i);
+test("eliminazione cancella soltanto stagione e lega selezionate", () => {
+  const leagueRows = [
+    ...Array.from({ length: 420 }, () => ({ stagione_id: 4, lega_codice: "serie-a" })),
+    ...Array.from({ length: 420 }, () => ({ stagione_id: 4, lega_codice: "serie-c-girone-a" })),
+    ...Array.from({ length: 420 }, () => ({ stagione_id: 4, lega_codice: "serie-c-girone-c" })),
+  ];
+  const remainingAfterC = leagueRows.filter((row) => !(row.stagione_id === 4 && row.lega_codice === "serie-c-girone-c"));
+  assert.equal(remainingAfterC.filter((row) => row.lega_codice === "serie-c-girone-c").length, 0);
+  assert.equal(remainingAfterC.filter((row) => row.lega_codice === "serie-a").length, 420);
+  assert.equal(remainingAfterC.filter((row) => row.lega_codice === "serie-c-girone-a").length, 420);
+  const remainingAfterA = leagueRows.filter((row) => !(row.stagione_id === 4 && row.lega_codice === "serie-a"));
+  assert.equal(remainingAfterA.filter((row) => row.lega_codice.startsWith("serie-c-")).length, 840);
+  assert.match(deletion, /delete from public\.rose_giocatori\s+where stagione_id = target\.stagione_id\s+and lega_codice = target_lega/i);
   assert.doesNotMatch(deletion, /delete from public\.rose_giocatori\s+where import_batch_id/i);
   assert.match(deletion, /set stato = 'eliminata'/i);
 });
 
 test("solo la fotografia pubblicata corrente può essere eliminata", () => {
-  assert.match(deletion, /latest\.stato in \('pubblicata', 'pubblicata_con_warning'\)/i);
+  assert.match(deletion, /latest\.stato in \('pubblicata', 'pubblicata_con_warning', 'eliminata'\)/i);
+  assert.match(deletion, /latest\.riepilogo ->> 'legaCodice'\)\) = target_lega/i);
   assert.match(deletion, /latest_import_id is distinct from target\.id/i);
   assert.match(deletion, /pg_advisory_xact_lock/i);
   assert.match(actions, /deletePublishedRoseAction[\s\S]*requireImportAdmin/);
   assert.match(client, /ELIMINA IMPORT/);
-  assert.match(client, /Le altre stagioni non verranno toccate/);
+  assert.match(client, /Le altre leghe e le altre stagioni non verranno toccate/);
+  assert.match(client, /currentRoseImportIds\.has\(item\.id\)/);
+});
+
+test("import più recente di altra lega non rende obsoleto quello corrente della lega target", () => {
+  const imports = [
+    { id: "a-old", season: 4, league: "serie-a", published: 1 },
+    { id: "a-current", season: 4, league: "serie-a", published: 2 },
+    { id: "c-current", season: 4, league: "serie-c-girone-c", published: 3 },
+  ];
+  const latest = (league) => imports.filter((item) => item.season === 4 && item.league === league).sort((a, b) => b.published - a.published)[0]?.id;
+  assert.equal(latest("serie-a"), "a-current");
+  assert.notEqual(latest("serie-a"), "a-old");
+  assert.equal(latest("serie-c-girone-c"), "c-current");
+});
+
+test("publish e delete della stessa lega usano la stessa advisory lock", () => {
+  const locks = [...deletion.matchAll(/hashtextextended\('rose-snapshot-' \|\| ([^,]+), 0\)/g)].map((match) => match[1].replace(/\s+/g, " "));
+  assert.ok(locks.length >= 2);
+  assert.ok(locks.some((lock) => lock.includes("p_stagione_id::text || '-' || v_lega_codice")));
+  assert.ok(locks.some((lock) => lock.includes("target.stagione_id::text || '-' || target_lega")));
 });
 
 test("RPC eliminazione Rose è service-role only e non espone DELETE client", () => {
   assert.match(deletion, /security definer[\s\S]*set search_path = ''/i);
-  assert.match(deletion, /revoke all on function public\.admin_delete_rose_import\(uuid, uuid\) from public, anon, authenticated/i);
-  assert.match(deletion, /grant execute on function public\.admin_delete_rose_import\(uuid, uuid\) to service_role/i);
+  assert.match(deletion, /revoke all on function public\.admin_delete_rose_import\(uuid, uuid\)\s+from public, anon, authenticated/i);
+  assert.match(deletion, /grant execute on function public\.admin_delete_rose_import\(uuid, uuid\)\s+to service_role/i);
   assert.doesNotMatch(client, /\.from\("rose_giocatori"\)\.delete/);
 });
 

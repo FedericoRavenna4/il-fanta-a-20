@@ -8,10 +8,14 @@ const ROLES = new Set(["P", "D", "C", "A"]);
 const LEAGUES = new Set(["default", "serie-a", "serie-b", "serie-c-girone-a", "serie-c-girone-b", "serie-c-girone-c"]);
 
 export type RoseResolverResult = { societaId: number | null; legaCodice?: string | null; ambiguous?: boolean };
-export type RoseResolver = { resolve(name: string): RoseResolverResult; resolveId?(id: number): RoseResolverResult };
+export type RoseResolver = {
+  resolve(name: string): RoseResolverResult;
+  resolveId?(id: number): RoseResolverResult;
+  expectedSocietaIds?(legaCodice: string): number[];
+};
 export type ParsedRoseRow = { row: number; legaCodice: string; societaId: number; societa: string; giocatore: string; giocatoreNormalizzato: string; squadraReale: string | null; ruolo: string; prezzo: number };
 export type RoseIssue = { code: string; message: string; row?: number; value?: string };
-export type ParsedRose = { rows: ParsedRoseRow[]; errors: RoseIssue[]; warnings: RoseIssue[]; totalRows: number; headers: string[]; recognizedTeams: number; unknownTeams: string[] };
+export type ParsedRose = { rows: ParsedRoseRow[]; errors: RoseIssue[]; warnings: RoseIssue[]; totalRows: number; headers: string[]; recognizedTeams: number; unknownTeams: string[]; targetLeagueCode: string | null };
 
 export function normalizePlayerName(value: string) {
   return value.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("it").replace(/[^a-z0-9]+/g, " ").trim().replace(/\s+/g, " ");
@@ -45,7 +49,7 @@ function readRoseWorkbook(buffer: Uint8Array) {
 export function parseRoseBuffer(buffer: Uint8Array, resolver: RoseResolver, expectedSeason?: string): ParsedRose {
   const workbook = readRoseWorkbook(buffer);
   const sheet = workbook.Sheets[workbook.SheetNames[0] ?? ""];
-  if (!sheet) return { rows: [], errors: [{ code: "FILE_VUOTO", message: "Il file Rose è vuoto." }], warnings: [], totalRows: 0, headers: [], recognizedTeams: 0, unknownTeams: [] };
+  if (!sheet) return { rows: [], errors: [{ code: "FILE_VUOTO", message: "Il file Rose è vuoto." }], warnings: [], totalRows: 0, headers: [], recognizedTeams: 0, unknownTeams: [], targetLeagueCode: null };
   const matrix = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: "", raw: true });
   const headers = (matrix[0] ?? []).map((value) => text(value));
   const index = new Map(headers.map((header, position) => [header, position]));
@@ -53,7 +57,7 @@ export function parseRoseBuffer(buffer: Uint8Array, resolver: RoseResolver, expe
   const legacy = ROSE_LEGACY_COLUMNS.every((column) => index.has(column));
   const requiredColumns = legacy ? ROSE_LEGACY_COLUMNS : ROSE_REQUIRED_COLUMNS;
   for (const required of requiredColumns) if (!index.has(required)) errors.push({ code: "COLONNA_MANCANTE", message: `Colonna obbligatoria mancante: ${required}.`, value: required });
-  if (errors.length) return { rows: [], errors, warnings: [], totalRows: Math.max(0, matrix.length - 1), headers, recognizedTeams: 0, unknownTeams: [] };
+  if (errors.length) return { rows: [], errors, warnings: [], totalRows: Math.max(0, matrix.length - 1), headers, recognizedTeams: 0, unknownTeams: [], targetLeagueCode: null };
 
   const rows: ParsedRoseRow[] = []; const unknown = new Set<string>(); const seen = new Map<string, ParsedRoseRow>();
   for (let offset = 1; offset < matrix.length; offset++) {
@@ -99,7 +103,20 @@ export function parseRoseBuffer(buffer: Uint8Array, resolver: RoseResolver, expe
     seen.set(playerKey, parsed); rows.push(parsed);
   }
   if (!rows.length && !errors.length) errors.push({ code: "FILE_VUOTO", message: "Il file non contiene calciatori." });
-  return { rows, errors, warnings: [], totalRows: matrix.slice(1).filter((row) => !row.every((value) => text(value) === "")).length, headers, recognizedTeams: new Set(rows.map((row) => row.societaId)).size, unknownTeams: [...unknown] };
+  const leagues = [...new Set(rows.map((row) => row.legaCodice))];
+  const targetLeagueCode = leagues.length === 1 ? leagues[0] : null;
+  if (leagues.length > 1) errors.push({ code: "LEGA_MULTIPLA", message: `Il file contiene società di più leghe (${leagues.join(", ")}). Ogni import Rose deve contenere una sola lega completa.` });
+  if (targetLeagueCode && resolver.expectedSocietaIds) {
+    const expected = new Set(resolver.expectedSocietaIds(targetLeagueCode));
+    const present = new Set(rows.map((row) => row.societaId));
+    const missing = [...expected].filter((id) => !present.has(id)).sort((a, b) => a - b);
+    const unexpected = [...present].filter((id) => !expected.has(id)).sort((a, b) => a - b);
+    if (missing.length || unexpected.length) errors.push({
+      code: "SNAPSHOT_LEGA_INCOMPLETO",
+      message: `Snapshot ${targetLeagueCode} incompleto: attese ${expected.size} società, presenti ${present.size}. ID mancanti: ${missing.join(", ") || "nessuno"}. ID inattesi: ${unexpected.join(", ") || "nessuno"}.`,
+    });
+  }
+  return { rows, errors, warnings: [], totalRows: matrix.slice(1).filter((row) => !row.every((value) => text(value) === "")).length, headers, recognizedTeams: new Set(rows.map((row) => row.societaId)).size, unknownTeams: [...unknown], targetLeagueCode };
 }
 
 export type ExistingRoseRow = { lega_codice: string; societa_id: number; giocatore: string; giocatore_normalizzato: string; squadra_reale: string | null; ruolo: string; prezzo: number };

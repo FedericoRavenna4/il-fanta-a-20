@@ -65,7 +65,7 @@ test("CSV UTF-8 con e senza BOM e XLSX preservano Unicode fino al runtime", () =
   }
 });
 
-test("file normale senza Lega deriva scope autorevoli e consente lo stesso giocatore in leghe diverse", () => {
+test("file normale senza Lega deriva scope autorevoli e blocca più leghe", () => {
   const leagueResolver = {
     resolve(name: string) {
       if (name === "Societa A") return { societaId: 1, legaCodice: "serie-a" };
@@ -78,8 +78,62 @@ test("file normale senza Lega deriva scope autorevoli e consente lo stesso gioca
     ["Societa B", "Lautaro", "Inter", "A", "", 45, "", "", ""],
   ]), leagueResolver);
   assert.equal(columns.includes("Lega"), false);
-  assert.equal(parsed.errors.length, 0);
+  assert.ok(parsed.errors.some((error) => error.code === "LEGA_MULTIPLA"));
   assert.deepEqual(parsed.rows.map((row) => row.legaCodice), ["serie-a", "serie-b"]);
+});
+
+test("snapshot Rose blocca società appartenenti a leghe diverse", () => {
+  const scopedResolver = {
+    resolve(name: string) {
+      if (name === "Societa A") return { societaId: 1, legaCodice: "serie-a" };
+      if (name === "Societa B") return { societaId: 2, legaCodice: "serie-b" };
+      return { societaId: null, legaCodice: null };
+    },
+    expectedSocietaIds(code: string) { return code === "serie-a" ? [1] : [2]; },
+  };
+  const parsed = parseRoseBuffer(file("xlsx", [
+    ["Societa A", "Lautaro", "Inter", "A", "", 50, "", "", ""],
+    ["Societa B", "Barella", "Inter", "C", "", 30, "", "", ""],
+  ]), scopedResolver);
+  assert.equal(parsed.targetLeagueCode, null);
+  assert.ok(parsed.errors.some((error) => error.code === "LEGA_MULTIPLA"));
+});
+
+test("snapshot Rose blocca 19 società quando la lega autorevole ne contiene 20", () => {
+  const expectedIds = Array.from({ length: 20 }, (_, index) => index + 1);
+  const scopedResolver = {
+    resolve(name: string) {
+      const id = Number(name.replace("Societa ", ""));
+      return { societaId: Number.isSafeInteger(id) ? id : null, legaCodice: "serie-a" };
+    },
+    expectedSocietaIds() { return expectedIds; },
+  };
+  const rows = expectedIds.slice(0, 19).map((id) => [`Societa ${id}`, `Player ${id}`, "ITA", "C", "", 1, "", "", ""]);
+  const parsed = parseRoseBuffer(file("xlsx", rows), scopedResolver);
+  assert.equal(parsed.targetLeagueCode, "serie-a");
+  assert.ok(parsed.errors.some((error) => error.code === "SNAPSHOT_LEGA_INCOMPLETO" && error.message.includes("20 società, presenti 19")));
+});
+
+test("diff per lega copre identico, prezzo, sostituzione e preserva le altre leghe", () => {
+  const serieA: ExistingRoseRow[] = Array.from({ length: 420 }, (_, index) => ({
+    lega_codice: "serie-a", societa_id: (index % 20) + 1, giocatore: `Player ${index}`,
+    giocatore_normalizzato: `player ${index}`, squadra_reale: "ITA", ruolo: "C", prezzo: 1,
+  }));
+  const serieC: ExistingRoseRow[] = Array.from({ length: 420 }, (_, index) => ({
+    ...serieA[index], lega_codice: "serie-c-girone-a", societa_id: 41 + (index % 20),
+  }));
+  const incoming = serieA.map((row, index) => ({
+    row: index + 2, legaCodice: row.lega_codice, societaId: row.societa_id, societa: `Societa ${row.societa_id}`,
+    giocatore: row.giocatore, giocatoreNormalizzato: row.giocatore_normalizzato,
+    squadraReale: row.squadra_reale, ruolo: row.ruolo, prezzo: row.prezzo,
+  }));
+  assert.deepEqual(diffRoseSnapshot(incoming, serieA), { insert: 0, update: 0, transfer: 0, unchanged: 420, remove: 0 });
+  const priceChanged = incoming.map((row, index) => index === 0 ? { ...row, prezzo: 2 } : row);
+  assert.deepEqual(diffRoseSnapshot(priceChanged, serieA), { insert: 0, update: 1, transfer: 0, unchanged: 419, remove: 0 });
+  const replaced = incoming.map((row, index) => index === 0 ? { ...row, giocatore: "Replacement", giocatoreNormalizzato: "replacement" } : row);
+  assert.deepEqual(diffRoseSnapshot(replaced, serieA), { insert: 1, update: 0, transfer: 0, unchanged: 419, remove: 1 });
+  assert.equal(serieC.length, 420);
+  assert.ok(serieC.every((row) => row.lega_codice === "serie-c-girone-a"));
 });
 
 test("stesso giocatore due volte nella stessa lega e mismatch tecnico società-lega sono bloccati", () => {
@@ -117,7 +171,7 @@ test("snapshot legacy 2025/26 usa ID autorevoli, ignora slot vuoti e non tocca a
     resolveId(id: number) { return { societaId: id >= 1 && id <= 100 ? id : null, legaCodice: legacy.memberships.get(id) ?? null }; },
   };
   const parsed = parseRoseBuffer(legacy.bytes, legacyResolver, "2025/26");
-  assert.equal(parsed.errors.length, 0);
+  assert.ok(parsed.errors.some((error) => error.code === "LEGA_MULTIPLA"));
   assert.equal(parsed.rows.length, 1975);
   assert.equal(new Set(parsed.rows.map((row) => row.societaId)).size, 83);
   assert.equal(legacy.memberships.size, 100);

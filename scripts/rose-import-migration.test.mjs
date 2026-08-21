@@ -6,6 +6,7 @@ const sql = readFileSync("supabase/migrations/202608150002_rose_import.sql", "ut
 const leagueSql = readFileSync("supabase/migrations/202608150004_rose_league_scope.sql", "utf8");
 const previewServer = readFileSync("src/lib/admin-import/rose-preview.server.ts", "utf8");
 const deletionSql = readFileSync("supabase/migrations/202608150003_admin_delete_rose_import.sql", "utf8");
+const scopedSql = readFileSync("supabase/migrations/202608200001_fix_rose_import_scope.sql", "utf8");
 
 test("Rose persistence is seasonal, normalized and snapshot based", () => {
   assert.match(sql, /create table public\.rose_giocatori/i);
@@ -131,4 +132,41 @@ test("league-aware RPC remains service-role only", () => {
 test("003 deletes every league of the target season and no other season", () => {
   assert.match(deletionSql, /delete from public\.rose_giocatori\s+where stagione_id = target\.stagione_id/i);
   assert.doesNotMatch(deletionSql, /delete from public\.rose_giocatori[\s\S]*lega_codice/i);
+});
+
+test("new Rose RPC requires one explicit league and removes the unsafe three-argument signature", () => {
+  assert.match(scopedSql, /drop function if exists public\.admin_publish_rose_snapshot\(bigint, uuid, jsonb\)/i);
+  assert.match(scopedSql, /p_stagione_id bigint, p_lega_codice text, p_import_id uuid, p_rows jsonb/i);
+  assert.match(scopedSql, /riepilogo ->> 'legaCodice' = v_lega_codice/i);
+  assert.match(scopedSql, /where lega_codice is distinct from v_lega_codice/i);
+});
+
+test("new Rose RPC counts, upserts and deletes only the declared league", () => {
+  assert.match(scopedSql, /current\.stagione_id = p_stagione_id and current\.lega_codice = v_lega_codice/g);
+  assert.match(scopedSql, /delete from public\.rose_giocatori current[\s\S]*?current\.stagione_id = p_stagione_id and current\.lega_codice = v_lega_codice/i);
+  assert.doesNotMatch(scopedSql, /current\.lega_codice in\s*\(\s*select distinct/i);
+  assert.match(scopedSql, /grant execute on function public\.admin_publish_rose_snapshot\(bigint, text, uuid, jsonb\)[\s\S]*to service_role/i);
+});
+
+test("preview and publish share the explicit league scope and compare all counters", () => {
+  assert.match(previewServer, /\.eq\("stagione_id", seasonId\)[\s\S]*?\.eq\("lega_codice", targetLeagueCode\)/);
+  assert.match(previewServer, /p_lega_codice: targetLeagueCode/);
+  for (const counter of ["insert", "update", "rimossi", "unchanged"]) assert.ok(previewServer.includes(`previewSummary?.${counter}`));
+  for (const counter of ["insert", "update", "rimossi", "unchanged"]) assert.match(scopedSql, new RegExp(`riepilogo ->> '${counter}'`));
+  assert.ok(scopedSql.indexOf("riepilogo ->> 'insert'") < scopedSql.indexOf("insert into public.rose_giocatori"));
+});
+
+test("inspect Rose validates league and counts only the current import of that league", () => {
+  assert.match(scopedSql, /create function public\.admin_inspect_rose_import\(p_import_id uuid\)/i);
+  assert.match(scopedSql, /player\.stagione_id = target\.stagione_id[\s\S]*player\.lega_codice = target\.target_lega/i);
+  assert.match(scopedSql, /latest\.stagione_id = target\.stagione_id[\s\S]*latest\.riepilogo ->> 'legaCodice'\)\) = target\.target_lega/i);
+  assert.match(scopedSql, /target\.target_lega in \('serie-a', 'serie-b', 'serie-c-girone-a', 'serie-c-girone-b', 'serie-c-girone-c'\)/i);
+});
+
+test("delete Rose scopes latest check, lock, count and delete to one league", () => {
+  assert.match(scopedSql, /target_lega := pg_catalog\.lower\(pg_catalog\.btrim\(target\.riepilogo ->> 'legaCodice'\)\)/i);
+  assert.match(scopedSql, /latest\.stagione_id = target\.stagione_id[\s\S]*latest\.riepilogo ->> 'legaCodice'\)\) = target_lega/i);
+  assert.match(scopedSql, /'rose-snapshot-' \|\| target\.stagione_id::text \|\| '-' \|\| target_lega/i);
+  assert.match(scopedSql, /delete from public\.rose_giocatori\s+where stagione_id = target\.stagione_id\s+and lega_codice = target_lega/i);
+  assert.match(scopedSql, /latest\.stato in \('pubblicata', 'pubblicata_con_warning', 'eliminata'\)/i);
 });
