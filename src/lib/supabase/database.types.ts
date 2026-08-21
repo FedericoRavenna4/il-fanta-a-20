@@ -315,6 +315,10 @@ request_my_profile_verification: {
         Args: Record<PropertyKey, never>;
         Returns: Array<{ societa_id: number; tifosi: number }>;
       };
+      public_profile_competitive_positions: {
+        Args: { p_profile_id: string };
+        Returns: Array<{ fantabet_position: number | null; fantabet_points: number | null; arcade_position: number | null; arcade_level: number | null; arcade_meters: number | null }>;
+      };
       active_supporters: {
         Args: { p_societa_id: number };
         Returns: Array<{ username: string; avatar_url: string | null; avatar_updated_at: string }>;
