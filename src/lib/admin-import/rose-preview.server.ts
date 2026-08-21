@@ -57,18 +57,20 @@ async function resolver(seasonCode: string, activeSeason: boolean) {
   return {
     resolve(value: string) { const ids = [...(names.get(normalizeSocietaName(value)) ?? [])]; const id = ids.length === 1 ? ids[0] : null; return { societaId: id, legaCodice: id ? leagueByTeam.get(id) ?? null : null, ambiguous: ids.length > 1 }; },
     resolveId(id: number) { return { societaId: validIds.has(id) ? id : null, legaCodice: leagueByTeam.get(id) ?? null }; },
+    expectedSocietaIds(legaCodice: string) { return [...leagueByTeam.entries()].filter(([, league]) => league === legaCodice).map(([id]) => id); },
   };
 }
 
 async function prepare(bytes: Uint8Array, seasonId: number) {
-  const [{ data, error }, { data: season, error: seasonError }] = await Promise.all([
-    admin().from("rose_giocatori").select("lega_codice,societa_id,giocatore,giocatore_normalizzato,squadra_reale,ruolo,prezzo").eq("stagione_id", seasonId),
-    admin().from("stagioni").select("codice,attiva").eq("id", seasonId).single(),
-  ]);
-  if (error || seasonError || !season) throw new Error("Impossibile confrontare la rosa corrente. Verifica che la migration Rose sia stata applicata.");
+  const { data: season, error: seasonError } = await admin().from("stagioni").select("codice,attiva").eq("id", seasonId).single();
+  if (seasonError || !season) throw new Error("Impossibile confrontare la rosa corrente. Verifica che la migration Rose sia stata applicata.");
   const parsed = parseRoseBuffer(bytes, await resolver(String(season.codice), Boolean(season.attiva)), String(season.codice));
+  const targetLeagueCode = parsed.targetLeagueCode;
+  const existingQuery = admin().from("rose_giocatori").select("lega_codice,societa_id,giocatore,giocatore_normalizzato,squadra_reale,ruolo,prezzo").eq("stagione_id", seasonId);
+  const { data, error } = targetLeagueCode ? await existingQuery.eq("lega_codice", targetLeagueCode) : { data: [], error: null };
+  if (error) throw new Error("Impossibile confrontare la rosa corrente. Verifica che la migration Rose sia stata applicata.");
   const existing = (data ?? []) as ExistingRoseRow[];
-  return { parsed, existing, diff: diffRoseSnapshot(parsed.rows, existing) };
+  return { parsed, existing, diff: diffRoseSnapshot(parsed.rows, existing), targetLeagueCode };
 }
 
 export async function createRosePreview(formData: FormData, userId: string): Promise<ImportPreview> {
@@ -81,7 +83,7 @@ export async function createRosePreview(formData: FormData, userId: string): Pro
   const { data: importRow, error: importError } = await admin().from("importazioni").insert({ tipo: "rose", stagione_id: seasonId, edizione_competizione_id: null, nome_file: file.name, file_hash: hash, dimensione_file: file.size, stato: "anteprima", importato_da: userId }).select("id").single();
   if (importError || !importRow) throw new Error("Impossibile creare il record di importazione Rose.");
   try {
-    const { parsed, existing, diff } = await prepare(bytes, seasonId);
+    const { parsed, existing, diff, targetLeagueCode } = await prepare(bytes, seasonId);
     const currentByPlayer = new Map(existing.map((row) => [`${row.lega_codice}:${row.giocatore_normalizzato}`, row]));
     const statusByPlayer = new Map<string, "nuovo" | "trasferito" | "aggiornato" | "invariato">();
     const changes: ImportChange[] = parsed.rows.map((row) => {
@@ -102,9 +104,9 @@ export async function createRosePreview(formData: FormData, userId: string): Pro
         detail: [row.squadraReale ?? "Squadra reale non indicata", `Ruolo ${row.ruolo}`, `Prezzo ${row.prezzo}`, `Stato ${status}`],
       };
     });
-    const summary = { giornate: 0, partite: 0, riposi: 0, societaRiconosciute: parsed.recognizedTeams, societaNonRiconosciute: parsed.unknownTeams, insert: diff.insert, update: diff.update, unchanged: diff.unchanged, existing: parsed.rows.length - diff.insert, replace: 0, warning: parsed.warnings.length, error: parsed.errors.length, calciatori: parsed.rows.length, trasferimenti: diff.transfer, rimossi: diff.remove };
+    const summary = { giornate: 0, partite: 0, riposi: 0, societaRiconosciute: parsed.recognizedTeams, societaNonRiconosciute: parsed.unknownTeams, insert: diff.insert, update: diff.update, unchanged: diff.unchanged, existing: parsed.rows.length - diff.insert, replace: 0, warning: parsed.warnings.length, error: parsed.errors.length, calciatori: parsed.rows.length, trasferimenti: diff.transfer, rimossi: diff.remove, legaCodice: targetLeagueCode };
     await admin().from("importazioni").update({ righe_totali: parsed.totalRows, righe_valide: parsed.rows.length, righe_inserite: diff.insert, righe_aggiornate: diff.update, righe_invariate: diff.unchanged, righe_scartate: parsed.errors.length, warning_count: parsed.warnings.length, error_count: parsed.errors.length, riepilogo: summary, warning: parsed.warnings, errori: parsed.errors }).eq("id", importRow.id);
-    return { importId: String(importRow.id), developmentOnly: false, publishEnabled: parsed.errors.length === 0 && parsed.rows.length > 0, fileName: file.name, fileHash: hash, seasonLabel, competitionLabel: "Rose", competitionCode: "rose", importType: "rose", summary, changes, warnings: parsed.warnings.map((issue) => ({ codice: issue.code, messaggio: issue.message, riga: issue.row, valore: issue.value })), errors: parsed.errors.map((issue) => ({ codice: issue.code, messaggio: issue.message, riga: issue.row, valore: issue.value })), roseRows: parsed.rows.map((row) => ({ societa: row.societa, giocatore: row.giocatore, squadraReale: row.squadraReale, ruolo: row.ruolo, prezzo: row.prezzo, stato: statusByPlayer.get(`${row.legaCodice}:${row.giocatoreNormalizzato}`) ?? "invariato" })) };
+    return { importId: String(importRow.id), developmentOnly: false, publishEnabled: parsed.errors.length === 0 && parsed.rows.length > 0 && Boolean(targetLeagueCode), fileName: file.name, fileHash: hash, seasonLabel, competitionLabel: targetLeagueCode ? `Rose · ${targetLeagueCode}` : "Rose", competitionCode: "rose", importType: "rose", targetLeagueCode: targetLeagueCode ?? undefined, summary, changes, warnings: parsed.warnings.map((issue) => ({ codice: issue.code, messaggio: issue.message, riga: issue.row, valore: issue.value })), errors: parsed.errors.map((issue) => ({ codice: issue.code, messaggio: issue.message, riga: issue.row, valore: issue.value })), roseRows: parsed.rows.map((row) => ({ societa: row.societa, giocatore: row.giocatore, squadraReale: row.squadraReale, ruolo: row.ruolo, prezzo: row.prezzo, stato: statusByPlayer.get(`${row.legaCodice}:${row.giocatoreNormalizzato}`) ?? "invariato" })) };
   } catch (error) {
     await admin().from("importazioni").update({ stato: "errore", completata_il: new Date().toISOString(), error_count: 1 }).eq("id", importRow.id);
     throw error;
@@ -116,12 +118,15 @@ export async function publishRoseImport(formData: FormData) {
   const { data: record, error } = await admin().from("importazioni").select("*").eq("id", importId).eq("tipo", "rose").single();
   if (error || !record) throw new Error("Importazione Rose non trovata.");
   if (record.stato !== "anteprima" || Number(record.error_count) > 0 || sha256(bytes) !== record.file_hash) throw new Error("L’importazione Rose non corrisponde all’anteprima validata.");
-  const { parsed } = await prepare(bytes, Number(record.stagione_id)); if (parsed.errors.length || !parsed.rows.length) throw new Error("La nuova validazione Rose contiene errori bloccanti.");
+  const { parsed, diff, targetLeagueCode } = await prepare(bytes, Number(record.stagione_id)); if (parsed.errors.length || !parsed.rows.length || !targetLeagueCode) throw new Error("La nuova validazione Rose contiene errori bloccanti.");
+  const previewSummary = record.riepilogo as Record<string, unknown> | null;
+  if (previewSummary?.legaCodice !== targetLeagueCode || Number(previewSummary?.insert) !== diff.insert || Number(previewSummary?.update) !== diff.update || Number(previewSummary?.rimossi) !== diff.remove || Number(previewSummary?.unchanged) !== diff.unchanged) throw new Error("Lo stato delle Rose è cambiato dopo l’anteprima. Crea una nuova anteprima prima di pubblicare.");
   const { data: lock } = await admin().from("importazioni").update({ stato: "validata" }).eq("id", importId).eq("stato", "anteprima").select("id").maybeSingle(); if (!lock) throw new Error("Importazione già elaborata.");
   const payload = parsed.rows.map((row) => ({ lega_codice: row.legaCodice, societa_id: row.societaId, giocatore: row.giocatore, giocatore_normalizzato: row.giocatoreNormalizzato, squadra_reale: row.squadraReale, ruolo: row.ruolo, prezzo: row.prezzo }));
-  const { data: result, error: publishError } = await admin().rpc("admin_publish_rose_snapshot", { p_stagione_id: Number(record.stagione_id), p_import_id: importId, p_rows: payload });
+  const { data: result, error: publishError } = await admin().rpc("admin_publish_rose_snapshot", { p_stagione_id: Number(record.stagione_id), p_lega_codice: targetLeagueCode, p_import_id: importId, p_rows: payload });
   if (publishError) { await admin().from("importazioni").update({ stato: "errore", completata_il: new Date().toISOString(), error_count: 1 }).eq("id", importId); throw publishError; }
   const row = Array.isArray(result) ? result[0] : result;
+  if (Number(row?.inserted ?? 0) !== diff.insert || Number(row?.updated ?? 0) !== diff.update || Number(row?.removed ?? 0) !== diff.remove || Number(row?.unchanged ?? 0) !== diff.unchanged) throw new Error("Il risultato pubblicato non coincide con l’anteprima Rose.");
   await admin().from("importazioni").update({ stato: "pubblicata", completata_il: new Date().toISOString(), righe_inserite: Number(row?.inserted ?? 0), righe_aggiornate: Number(row?.updated ?? 0), righe_invariate: Number(row?.unchanged ?? 0) }).eq("id", importId);
   return row;
 }

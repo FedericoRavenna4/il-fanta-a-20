@@ -49,7 +49,7 @@ export async function inspectRoseDeletionAction(importId: string) {
     if (error) throw error;
     const row = Array.isArray(data) ? data[0] : data;
     if (!row) return { ok: false as const, message: "La fotografia Rose selezionata non è quella corrente oppure è già vuota." };
-    return { ok: true as const, importId, seasonId: Number(row.stagione_id), season: String(row.stagione), players: Number(row.players) };
+    return { ok: true as const, importId, seasonId: Number(row.stagione_id), season: String(row.stagione), league: String(row.lega_codice), players: Number(row.players) };
   } catch (error) {
     return { ok: false as const, message: actionError(error, "Eliminazione Rose non autorizzata.") };
   }

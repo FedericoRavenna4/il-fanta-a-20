@@ -22,6 +22,7 @@ export type ImportPreview = {
   seasonLabel: string;
   competitionLabel: string;
   competitionCode: string;
+  targetLeagueCode?: string;
   importType: ImportType;
   summary: {
     giornate: number;
