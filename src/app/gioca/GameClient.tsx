@@ -120,6 +120,7 @@ export default function GameClient({
   const [leaderboard, setLeaderboard] = useState(initialLeaderboard);
   const [highlightedRecordId, setHighlightedRecordId] = useState<string | null>(null);
   const dialogRef = useRef<HTMLElement>(null);
+  const gameBackdropRef = useRef<HTMLDivElement>(null);
   const selectionRootRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const startTransitionTimerRef = useRef<number | null>(null);
@@ -425,16 +426,36 @@ export default function GameClient({
     };
   }, [modalOpen, returnToGameHome, status]);
 
+  useLayoutEffect(() => {
+    if (!modalOpen) return;
+    const backdrop = gameBackdropRef.current;
+    if (!backdrop) return;
+    const viewport = window.visualViewport;
+    const syncViewport = () => {
+      backdrop.style.setProperty("--arcade-viewport-width", `${Math.round(viewport?.width ?? window.innerWidth)}px`);
+      backdrop.style.setProperty("--arcade-viewport-height", `${Math.round(viewport?.height ?? window.innerHeight)}px`);
+    };
+    syncViewport();
+    window.addEventListener("resize", syncViewport);
+    window.addEventListener("orientationchange", syncViewport);
+    viewport?.addEventListener("resize", syncViewport);
+    return () => {
+      window.removeEventListener("resize", syncViewport);
+      window.removeEventListener("orientationchange", syncViewport);
+      viewport?.removeEventListener("resize", syncViewport);
+    };
+  }, [modalOpen]);
+
   const gameModal = typeof document !== "undefined" && modalOpen && team
     ? createPortal(
-        <div className="game-modal-backdrop fixed inset-0 z-[120] flex items-center justify-center bg-[#020817] p-[max(.35rem,env(safe-area-inset-top))_max(.35rem,env(safe-area-inset-right))_max(.35rem,env(safe-area-inset-bottom))_max(.35rem,env(safe-area-inset-left))]">
+        <div ref={gameBackdropRef} className="game-modal-backdrop fixed inset-0 z-[120] flex items-center justify-center overflow-hidden bg-[#020817] p-[max(.35rem,env(safe-area-inset-top))_max(.35rem,env(safe-area-inset-right))_max(.35rem,env(safe-area-inset-bottom))_max(.35rem,env(safe-area-inset-left))]">
           <section
             ref={dialogRef}
             role="dialog"
             aria-modal="true"
             aria-label={`Partita con ${team.nome}`}
             tabIndex={-1}
-            className="game-modal-panel relative max-w-full overflow-hidden rounded-[1rem] border border-white/15 bg-[linear-gradient(180deg,#06162d,#020817)] shadow-[0_35px_110px_rgba(2,8,23,.68),0_0_48px_rgba(56,189,248,.1)] outline-none max-sm:flex max-sm:flex-col sm:rounded-[1.6rem]"
+            className="game-modal-panel relative max-h-full max-w-full overflow-hidden rounded-[1rem] border border-white/15 bg-[linear-gradient(180deg,#06162d,#020817)] shadow-[0_35px_110px_rgba(2,8,23,.68),0_0_48px_rgba(56,189,248,.1)] outline-none max-sm:flex max-sm:flex-col sm:rounded-[1.6rem]"
           >
             <div className="absolute right-3 top-3 z-30 hidden items-center gap-1.5 sm:flex lg:right-2 lg:top-2">
               {(status === "running" || status === "paused") && (
@@ -626,8 +647,8 @@ export default function GameClient({
             }
             @media (max-width:639px) {
               .game-modal-panel {
-                width:min(calc(100vw - .7rem),calc((100dvh - .7rem) * 9 / 16));
-                height:min(calc(100dvh - .7rem),calc((100vw - .7rem) * 16 / 9));
+                width:min(calc(var(--arcade-viewport-width,100vw) - .7rem),calc((var(--arcade-viewport-height,100vh) - .7rem) * 9 / 16));
+                height:min(calc(var(--arcade-viewport-height,100vh) - .7rem),calc((var(--arcade-viewport-width,100vw) - .7rem) * 16 / 9));
               }
             }
             @media (prefers-reduced-motion:reduce) { .game-modal-backdrop,.game-modal-panel { animation-duration:1ms; } .game-loading-screen { transition-duration:1ms; } }
