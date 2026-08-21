@@ -11,7 +11,6 @@ export const GRUPPI_EMBLEMI: GruppoEmblema[] = [
 ];
 
 export const NOMI_EMBLEMI_NASCOSTI = new Set([
-  "primo scambio",
   "salvezza raggiunta",
   "senza paura",
   "schiacciasassi",

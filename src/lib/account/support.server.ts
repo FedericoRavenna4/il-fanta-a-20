@@ -59,6 +59,17 @@ export async function getActiveSupporterCounts() {
 
 export type ActiveSupporter = { username: string; avatarUrl: string | null };
 
+export async function getVerifiedSocietaUsernames(societaId: number): Promise<string[]> {
+  const supabase = await createAuthenticatedSupabaseClient();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("username")
+    .eq("societa_id", societaId)
+    .order("username_normalizzato");
+  if (error) return [];
+  return (data ?? []).map((profile) => profile.username);
+}
+
 export async function getActiveSupporters(societaId: number): Promise<ActiveSupporter[]> {
   const supabase = await createAuthenticatedSupabaseClient();
   const { data, error } = await supabase.rpc("active_supporters", { p_societa_id: societaId });

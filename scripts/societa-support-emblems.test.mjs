@@ -86,7 +86,8 @@ test("scheda integra i nuovi unlock nella sezione esistente senza spostarla", ()
 });
 
 test("Idolo mostra soltanto il conteggio autorevole dei tifosi attivi del detentore", () => {
-  assert.match(page, /getActiveSupporterCounts\(\)/);
+  assert.match(page, /getActiveSupporters\(team\.id\)/);
+  assert.match(page, /const supporterCount = supporters\.length/);
   assert.match(page, /emblema\.chiave === "idolo"[\s\S]*record: String\(supporterCount\)/);
   assert.doesNotMatch(page, /record: `Tifosi:/);
   assert.match(existingEmblems, /RECORD: \{valoreRecord\}/);

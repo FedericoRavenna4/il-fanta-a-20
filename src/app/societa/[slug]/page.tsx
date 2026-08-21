@@ -14,7 +14,7 @@ import EmblemiSocieta from "./EmblemiSocieta";
 import PalmaresSocieta from "./PalmaresSocieta";
 import type { Metadata } from "next";
 import { createPageMetadata } from "@/lib/seo";
-import { getActiveSupporters } from "@/lib/account/support.server";
+import { getActiveSupporters, getVerifiedSocietaUsernames } from "@/lib/account/support.server";
 import { getSocietaDefendingEmblems, getSocietaSupportEmblems } from "@/lib/account/support.server";
 import TifosiSocieta from "./TifosiSocieta";
 import { deriveSocietaSeasonSnapshot } from "@/lib/societa/season-snapshot";
@@ -60,8 +60,9 @@ export default async function SchedaSocietaPage({
   const risultati = getRisultati();
   const statisticheGiocatori = getStatisticheGiocatori();
   const emblemi = getEmblemiSocieta(new Set(team.badge_tipo === "new_entry" ? [team.id] : []));
-  const [supporters, supportEmblems, defendingEmblems, seasonData, rosaTeam] = await Promise.all([
+  const [supporters, verifiedUsernames, supportEmblems, defendingEmblems, seasonData, rosaTeam] = await Promise.all([
     getActiveSupporters(team.id),
+    getVerifiedSocietaUsernames(team.id),
     getSocietaSupportEmblems(team.id),
     getSocietaDefendingEmblems(team.id),
     loadSocietaSeasonData(),
@@ -253,16 +254,21 @@ export default async function SchedaSocietaPage({
 
             <dl className="divide-y divide-slate-100 px-5 sm:px-7">
               {[
-                [fantallenatori.length > 1 ? "Fantallenatori" : "Fantallenatore", team.fantallenatore ?? "—"],
-                ["Lega attuale", legaCorrente ?? "—"],
-                ["Presente dal", team.stagione_ingresso ?? "—"],
-              ].map(([label, value]) => (
+                [fantallenatori.length > 1 ? "Fantallenatori" : "Fantallenatore", team.fantallenatore ?? "—", null],
+                ...verifiedUsernames.map((username, index) => [verifiedUsernames.length > 1 ? `Account F20 ${index + 1}` : "Account F20", username, username]),
+                ["Lega attuale", legaCorrente ?? "—", null],
+                ["Presente dal", team.stagione_ingresso ?? "—", null],
+              ].map(([label, value, username]) => (
                 <div key={label} className="flex min-w-0 items-start justify-between gap-3 py-4 sm:items-center sm:gap-5">
                   <dt className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-400">
                     {label}
                   </dt>
                   <dd className="min-w-0 break-words text-right text-sm font-black text-blue-950">
-                    {label === "Fantallenatori" ? (
+                    {username ? (
+                      <Link href={`/user/${encodeURIComponent(username)}`} className="inline-block max-w-full break-all text-sky-700 underline decoration-sky-300 underline-offset-2 hover:text-blue-950 focus-visible:rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500">
+                        {value}
+                      </Link>
+                    ) : label === "Fantallenatori" ? (
                       <span className="flex flex-col items-end">
                         {fantallenatori.map((nome) => <span key={nome}>{nome}</span>)}
                       </span>

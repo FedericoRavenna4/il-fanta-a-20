@@ -319,6 +319,14 @@ request_my_profile_verification: {
         Args: { p_societa_id: number };
         Returns: Array<{ username: string; avatar_url: string | null; avatar_updated_at: string }>;
       };
+      my_pending_societa_emblem_notifications: {
+        Args: Record<PropertyKey, never>;
+        Returns: Array<{ notification_id: number; societa_id: number; emblem_key: string; audience: "official" | "supporter"; unlocked_at: string }>;
+      };
+      mark_my_societa_emblem_notification_seen: {
+        Args: { p_notification_id: number };
+        Returns: boolean;
+      };
       public_societa_support_emblems: {
         Args: { p_societa_id: number };
         Returns: Array<{ emblem_key: string; stato: "Sbloccato" | "Da difendere"; unlocked_at: string; stagione: string | null }>;
