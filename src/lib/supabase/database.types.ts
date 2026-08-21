@@ -315,6 +315,10 @@ request_my_profile_verification: {
         Args: Record<PropertyKey, never>;
         Returns: Array<{ societa_id: number; tifosi: number }>;
       };
+      active_supporters: {
+        Args: { p_societa_id: number };
+        Returns: Array<{ username: string; avatar_url: string | null; avatar_updated_at: string }>;
+      };
       public_societa_support_emblems: {
         Args: { p_societa_id: number };
         Returns: Array<{ emblem_key: string; stato: "Sbloccato" | "Da difendere"; unlocked_at: string; stagione: string | null }>;

@@ -14,7 +14,7 @@ import EmblemiSocieta from "./EmblemiSocieta";
 import PalmaresSocieta from "./PalmaresSocieta";
 import type { Metadata } from "next";
 import { createPageMetadata } from "@/lib/seo";
-import { getActiveSupporterCounts } from "@/lib/account/support.server";
+import { getActiveSupporters } from "@/lib/account/support.server";
 import { getSocietaDefendingEmblems, getSocietaSupportEmblems } from "@/lib/account/support.server";
 import TifosiSocieta from "./TifosiSocieta";
 import { deriveSocietaSeasonSnapshot } from "@/lib/societa/season-snapshot";
@@ -60,14 +60,14 @@ export default async function SchedaSocietaPage({
   const risultati = getRisultati();
   const statisticheGiocatori = getStatisticheGiocatori();
   const emblemi = getEmblemiSocieta(new Set(team.badge_tipo === "new_entry" ? [team.id] : []));
-  const [supporterCounts, supportEmblems, defendingEmblems, seasonData, rosaTeam] = await Promise.all([
-    getActiveSupporterCounts(),
+  const [supporters, supportEmblems, defendingEmblems, seasonData, rosaTeam] = await Promise.all([
+    getActiveSupporters(team.id),
     getSocietaSupportEmblems(team.id),
     getSocietaDefendingEmblems(team.id),
     loadSocietaSeasonData(),
     loadRoseForSocieta(team.id),
   ]);
-  const supporterCount = supporterCounts.get(team.id) ?? 0;
+  const supporterCount = supporters.length;
   const legacySupportEmblemsWithRecords = supportEmblems.map((emblema) =>
     emblema.chiave === "idolo" && emblema.stato === "Da difendere"
       ? { ...emblema, record: String(supporterCount) }
@@ -238,7 +238,7 @@ export default async function SchedaSocietaPage({
                 </p>
               </Link>
 
-              <TifosiSocieta count={supporterCount} usernames={supporterCount === 0 ? [] : null} />
+              <TifosiSocieta supporters={supporters} />
             </div>
           </div>
         </div>

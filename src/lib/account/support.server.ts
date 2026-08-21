@@ -2,6 +2,7 @@ import "server-only";
 
 import { createAuthenticatedSupabaseClient } from "@/lib/supabase/authenticated.server";
 import { getCatalogoEmblemi, type EmblemaPosseduto } from "@/lib/emblemi";
+import { versionAvatarUrl } from "@/lib/account/avatar";
 
 export type AccountSupportHubData = {
   kind: "official" | "supporter" | "selectable";
@@ -54,6 +55,22 @@ export async function getActiveSupporterCounts() {
   const { data, error } = await supabase.rpc("active_supporter_counts");
   if (error) return new Map<number, number>();
   return new Map((data ?? []).map((row) => [Number(row.societa_id), Number(row.tifosi)]));
+}
+
+export type ActiveSupporter = { username: string; avatarUrl: string | null };
+
+export async function getActiveSupporters(societaId: number): Promise<ActiveSupporter[]> {
+  const supabase = await createAuthenticatedSupabaseClient();
+  const { data, error } = await supabase.rpc("active_supporters", { p_societa_id: societaId });
+  if (error) return [];
+  return (data ?? []).map((row) => {
+    const avatarPath = typeof row.avatar_url === "string" && row.avatar_url ? row.avatar_url : null;
+    const publicAvatarUrl = avatarPath ? supabase.storage.from("account-avatars").getPublicUrl(avatarPath).data.publicUrl : null;
+    return {
+      username: String(row.username),
+      avatarUrl: versionAvatarUrl(publicAvatarUrl, row.avatar_updated_at ?? null),
+    };
+  });
 }
 
 type SocietaSupportEmblemRow = {

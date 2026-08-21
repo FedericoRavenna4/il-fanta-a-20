@@ -18,7 +18,7 @@
     "test:navigation": "node --test scripts/navigation.test.mjs",
     "test:demo-data": "node --experimental-strip-types --test src/lib/demo-data/*.test.ts src/app/coppe/coppa-fanta-fixture.test.ts src/app/campionati-preview/mock-data.test.ts",
     "test:profile-verification": "node --experimental-strip-types --test scripts/profile-verification.test.mjs",
-    "test:user-emblems": "node --test scripts/user-emblems.test.mjs",
+    "test:user-emblems": "node --test scripts/user-emblems.test.mjs scripts/arcade-user-emblems.test.mjs",
     "test:runtime-encoding": "node --test scripts/runtime-encoding.test.mjs",
     "test:admin-profile": "node --test scripts/admin-profile-multi-officials.test.mjs",
     "test:account-persistence": "node --experimental-strip-types --test src/lib/account/persistence.test.ts",
