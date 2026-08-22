@@ -1,5 +1,5 @@
 export type ImportType = "calendario_campionato" | "calendario_coppa" | "rose";
-export type ChangeKind = "insert" | "update" | "unchanged" | "warning" | "error";
+export type ChangeKind = "insert" | "update" | "remove" | "unchanged" | "warning" | "error";
 
 export type AdminAccess = { allowed: boolean; canPublish: boolean; mode: "denied" | "development" | "authenticated"; email: string | null; username: string; userId: string | null; reason: string };
 
@@ -40,6 +40,8 @@ export type ImportPreview = {
     calciatori?: number;
     trasferimenti?: number;
     rimossi?: number;
+    removed?: number;
+    calendarRevision?: number;
   };
   changes: ImportChange[];
   warnings: ImportIssue[];

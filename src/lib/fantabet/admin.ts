@@ -9,7 +9,7 @@ export function isAdminRoundEditable(round: { status: string; opensAt: string },
 }
 
 export type AdminBetInput = { partitaId: number; type: FantaBetType; points: number; order: number };
-export type AdminRoundInput = { roundId?: number | null; stagioneId: number; giornata: number; opensAt: string; deadlineAt: string; bets: AdminBetInput[] };
+export type AdminRoundInput = { roundId?: number | null; expectedUpdatedAt?: string | null; stagioneId: number; giornata: number; opensAt: string; deadlineAt: string; bets: AdminBetInput[] };
 
 export function validateAdminRound(input: AdminRoundInput) {
   const errors: string[] = [];
@@ -33,4 +33,12 @@ export function roundCompletion(participants: number, confirmed: number) {
 
 export function confirmedSubmissionsLabel(confirmed: number) {
   return String(Math.max(0, Math.trunc(Number.isFinite(confirmed) ? confirmed : 0)));
+}
+
+export function mapAdminFantaBetSaveError(code: string) {
+  if (code.includes("FANTABET_ROUND_MODIFICATA")) return "La round è stata modificata da un’altra sessione. Ricarica prima di salvare.";
+  if (code.includes("FANTABET_CINQUE_PARTITE_RICHIESTE") || code.includes("FANTABET_GIOCATE_INVALIDE")) return "Le cinque partite non rispettano la configurazione FantaBet.";
+  if (code.includes("FANTABET_PARTITE_FUORI_SCOPE")) return "Una o più partite non appartengono alla stagione e giornata selezionate.";
+  if (code.includes("FANTABET_CONFIGURAZIONE") || code.includes("FANTABET_ROUND_GIA_ESISTENTE")) return "Configurazione non valida o giornata già utilizzata.";
+  return "Salvataggio non riuscito. La bozza precedente è rimasta invariata.";
 }

@@ -5,7 +5,7 @@ import { normalizeSocietaName, parseCalendarBuffer, validateCampionatoCalendarSt
 import { sha256 } from "./hash.server";
 import { validateImportFile } from "./file-validation";
 import type { ImportChange, ImportIssue, ImportPreview, ImportType } from "./types";
-import { assertPublishable, compareByLogicalKey, parsePositiveInteger, validateEditionSelection } from "./logic";
+import { compareByLogicalKey, parsePositiveInteger, validateEditionSelection } from "./logic";
 import { getSupabaseAdminClient } from "@/lib/supabase/server";
 import { planCalendarSynchronization } from "./calendar-sync";
 import { getCompetitionImportConfig } from "./competition-config";
@@ -59,11 +59,13 @@ async function prepare(buffer: Uint8Array, importType: CalendarImportType, editi
   const foundIssues = issues(parsed, importType, competitionCode);
   const matchRows = parsed.matches.filter((match) => match.casa.societaId !== null && match.trasferta.societaId !== null).map((match) => ({ edizione_competizione_id: editionId, giornata_lega: match.giornataLega, giornata_serie_a: match.giornataSerieA, societa_casa_id: match.casa.societaId!, societa_trasferta_id: match.trasferta.societaId!, fantapunti_casa: match.fantapuntiCasa, fantapunti_trasferta: match.fantapuntiTrasferta, gol_casa: match.golCasa, gol_trasferta: match.golTrasferta, stato: match.stato, fonte_importazione: "leghe_fantacalcio" }));
   const restRows = parsed.rests.filter((rest) => rest.societa.societaId !== null).map((rest) => ({ edizione_competizione_id: editionId, giornata_lega: rest.giornataLega, giornata_serie_a: rest.giornataSerieA, societa_id: rest.societa.societaId, fase: rest.fase, girone: rest.girone, raggruppamento: rest.raggruppamento }));
-  const [{ data: existingMatches, error: matchError }, { data: existingRests, error: restError }] = await Promise.all([
-    admin().from("partite").select("*").eq("edizione_competizione_id", editionId),
-    admin().from("riposi_competizione").select("*").eq("edizione_competizione_id", editionId),
-  ]);
-  if (matchError || restError) throw new Error("Impossibile confrontare i dati esistenti.");
+  const { data: snapshot, error: snapshotError } = await admin().rpc("admin_calendar_preview_state", { p_edizione_competizione_id: editionId });
+  if (snapshotError || !snapshot || typeof snapshot !== "object" || Array.isArray(snapshot)) throw new Error("Impossibile confrontare i dati esistenti.");
+  const previewState = snapshot as Record<string, unknown>;
+  const existingMatches = Array.isArray(previewState.matches) ? previewState.matches : [];
+  const existingRests = Array.isArray(previewState.rests) ? previewState.rests : [];
+  const calendarRevision = Number(previewState.calendarRevision);
+  if (!Number.isSafeInteger(calendarRevision) || calendarRevision < 0) throw new Error("Revisione calendario non valida.");
   const synchronization = planCalendarSynchronization(matchRows, existingMatches ?? []);
   const safeMatchRows = synchronization.safeRows;
   const { obsoleteCalculated, obsoleteFuture } = synchronization;
@@ -88,7 +90,8 @@ async function prepare(buffer: Uint8Array, importType: CalendarImportType, editi
   }
   const matchPlan = compareByLogicalKey(safeMatchRows, existingMatches ?? [], ["edizione_competizione_id", "giornata_lega", "societa_casa_id", "societa_trasferta_id"], ["giornata_serie_a", "fantapunti_casa", "fantapunti_trasferta", "gol_casa", "gol_trasferta", "stato"]);
   const restPlan = compareByLogicalKey(restRows, existingRests ?? [], ["edizione_competizione_id", "giornata_lega", "societa_id"], ["giornata_serie_a", "fase", "girone", "raggruppamento"]);
-  return { parsed, ...foundIssues, matchRows: safeMatchRows, restRows, matchPlan, restPlan, obsoleteFuture };
+  const obsoleteRests = existingRests.filter((current) => !restRows.some((incoming) => incoming.edizione_competizione_id === Number((current as Record<string, unknown>).edizione_competizione_id) && incoming.giornata_lega === Number((current as Record<string, unknown>).giornata_lega) && incoming.societa_id === Number((current as Record<string, unknown>).societa_id)));
+  return { parsed, ...foundIssues, matchRows: safeMatchRows, restRows, matchPlan, restPlan, obsoleteFuture, obsoleteRests, calendarRevision };
 }
 
 export async function createAuthenticatedPreview(formData: FormData, userId: string): Promise<ImportPreview> {
@@ -139,13 +142,18 @@ export async function createAuthenticatedPreview(formData: FormData, userId: str
   const { count: duplicateCount } = await admin().from("importazioni").select("id", { count: "exact", head: true }).eq("file_hash", hash).neq("id", importRow.id);
   if (duplicateCount) warnings.push({ codice: "FILE_GIA_ANALIZZATO", messaggio: "Un file con lo stesso hash è già stato analizzato." });
   const recognized = new Set([...parsed.matches.flatMap((match) => [match.casa, match.trasferta]), ...parsed.rests.map((rest) => rest.societa)].filter((team) => team.societaId !== null).map((team) => team.societaId));
+  const matchKind = new Map([...matchPlan.insert.map((row) => [row, "insert"] as const), ...matchPlan.update.map((row) => [row, "update"] as const), ...matchPlan.unchanged.map((row) => [row, "unchanged"] as const)]);
+  const restKind = new Map([...restPlan.insert.map((row) => [row, "insert"] as const), ...restPlan.update.map((row) => [row, "update"] as const), ...restPlan.unchanged.map((row) => [row, "unchanged"] as const)]);
   const changes: ImportChange[] = [
-    ...parsed.matches.map((match) => ({ kind: "insert" as const, entity: "partita" as const, giornata: match.giornataLega, title: `${match.casa.name} - ${match.trasferta.name}`, detail: [match.stato, `gol: ${match.golCasa ?? "null"}-${match.golTrasferta ?? "null"}`, `fantapunti: ${match.fantapuntiCasa ?? "null"}-${match.fantapuntiTrasferta ?? "null"}`] })),
-    ...parsed.rests.map((rest) => ({ kind: "insert" as const, entity: "riposo" as const, giornata: rest.giornataLega, title: `Riposa ${rest.societa.name}`, detail: [rest.fase ?? "Fase non indicata", rest.girone ? `Girone ${rest.girone}` : "Nessun girone"] })),
+    ...prepared.matchRows.map((row) => ({ kind: matchKind.get(row) ?? "unchanged", entity: "partita" as const, giornata: row.giornata_lega, title: `SocietÃ  ${row.societa_casa_id} - ${row.societa_trasferta_id}`, detail: [row.stato, `gol: ${row.gol_casa ?? "null"}-${row.gol_trasferta ?? "null"}`, `fantapunti: ${row.fantapunti_casa ?? "null"}-${row.fantapunti_trasferta ?? "null"}`] })),
+    ...prepared.restRows.map((row) => ({ kind: restKind.get(row) ?? "unchanged", entity: "riposo" as const, giornata: row.giornata_lega, title: `Riposa societÃ  ${row.societa_id}`, detail: [row.fase ?? "Fase non indicata", row.girone ? `Girone ${row.girone}` : "Nessun girone"] })),
+    ...prepared.obsoleteFuture.map((row) => ({ kind: "remove" as const, entity: "partita" as const, giornata: row.giornata_lega, title: `Rimuovi societÃ  ${row.societa_casa_id} - ${row.societa_trasferta_id}`, detail: ["Partita futura assente dallo snapshot"] })),
+    ...prepared.obsoleteRests.map((row) => ({ kind: "remove" as const, entity: "riposo" as const, giornata: Number((row as Record<string, unknown>).giornata_lega), title: `Rimuovi riposo societÃ  ${String((row as Record<string, unknown>).societa_id)}`, detail: ["Riposo assente dallo snapshot"] })),
   ];
   const insert = matchPlan.insert.length + restPlan.insert.length;
   const update = matchPlan.update.length + restPlan.update.length;
-  const summary = { giornate: parsed.days.length, partite: parsed.matches.length, riposi: parsed.rests.length, societaRiconosciute: recognized.size, societaNonRiconosciute: parsed.diagnostics.unknownNames, insert, update, unchanged, existing: prepared.matchRows.length - matchPlan.insert.length, replace: prepared.obsoleteFuture.length, warning: warnings.length, error: errors.length };
+  const removed = prepared.obsoleteFuture.length + prepared.obsoleteRests.length;
+  const summary = { giornate: parsed.days.length, partite: parsed.matches.length, riposi: parsed.rests.length, societaRiconosciute: recognized.size, societaNonRiconosciute: parsed.diagnostics.unknownNames, insert, update, removed, unchanged, existing: prepared.matchRows.length - matchPlan.insert.length, replace: prepared.obsoleteFuture.length, warning: warnings.length, error: errors.length, calendarRevision: prepared.calendarRevision };
   await admin().from("importazioni").update({ righe_totali: parsed.matches.length + parsed.rests.length, righe_valide: prepared.matchRows.length + prepared.restRows.length, righe_inserite: insert, righe_aggiornate: update, righe_invariate: unchanged, righe_scartate: errors.length, warning_count: warnings.length, error_count: errors.length, riepilogo: summary, warning: warnings, errori: errors }).eq("id", importRow.id);
   return {
     importId: String(importRow.id),
@@ -164,35 +172,26 @@ export async function createAuthenticatedPreview(formData: FormData, userId: str
   };
 }
 
-export async function publishAuthenticatedImport(formData: FormData) {
+export async function publishAuthenticatedImport(formData: FormData, adminUserId: string) {
   const importId = String(formData.get("importId") ?? "");
   const file = validateImportFile(formData.get("file") instanceof File ? formData.get("file") as File : null);
   const bytes = new Uint8Array(await file.arrayBuffer());
   const { data: record, error } = await admin().from("importazioni").select("*").eq("id", importId).single();
   if (error || !record) throw new Error("Importazione non trovata.");
-  assertPublishable(String(record.stato), Number(record.error_count));
+  if (!["anteprima", "pubblicata", "pubblicata_con_warning"].includes(String(record.stato)) || Number(record.error_count) > 0) throw new Error("CALENDAR_IMPORT_NOT_PUBLISHABLE");
   if (sha256(bytes) !== record.file_hash) throw new Error("Il file non corrisponde all’anteprima validata.");
-  const { data: lock } = await admin().from("importazioni").update({ stato: "validata" }).eq("id", importId).eq("stato", "anteprima").select("id").maybeSingle();
-  if (!lock) throw new Error("Importazione già in elaborazione o pubblicata.");
-  try {
+  {
     const edition = await admin().from("edizioni_competizioni").select("competizioni!inner(codice)").eq("id", record.edizione_competizione_id).single();
     if (edition.error || !edition.data) throw new Error("Impossibile identificare la competizione dell’importazione.");
     const competition = Array.isArray(edition.data.competizioni) ? edition.data.competizioni[0] : edition.data.competizioni;
     const prepared = await prepare(bytes, record.tipo as CalendarImportType, Number(record.edizione_competizione_id), String(competition?.codice ?? ""));
     if (prepared.errors.length) throw new Error("La nuova validazione contiene errori bloccanti.");
-    const matchWrites = [...prepared.matchPlan.insert, ...prepared.matchPlan.update].map((row) => ({ ...row, import_batch_id: importId }));
-    const restWrites = [...prepared.restPlan.insert, ...prepared.restPlan.update].map((row) => ({ ...row, import_batch_id: importId }));
-    if (matchWrites.length) { const { error: writeError } = await admin().from("partite").upsert(matchWrites, { onConflict: "edizione_competizione_id,giornata_lega,societa_casa_id,societa_trasferta_id" }); if (writeError) throw writeError; }
-    if (prepared.obsoleteFuture.length) { const { error: deleteError } = await admin().from("partite").delete().in("id", prepared.obsoleteFuture.map((row) => row.id)); if (deleteError) throw deleteError; }
-    if (restWrites.length) { const { error: writeError } = await admin().from("riposi_competizione").upsert(restWrites, { onConflict: "edizione_competizione_id,giornata_lega,societa_id" }); if (writeError) throw writeError; }
-    const inserted = prepared.matchPlan.insert.length + prepared.restPlan.insert.length;
-    const updated = prepared.matchPlan.update.length + prepared.restPlan.update.length;
-    const unchanged = prepared.matchPlan.unchanged.length + prepared.restPlan.unchanged.length;
-    const finalState = prepared.warnings.length ? "pubblicata_con_warning" : "pubblicata";
-    await admin().from("importazioni").update({ stato: finalState, completata_il: new Date().toISOString(), righe_inserite: inserted, righe_aggiornate: updated, righe_invariate: unchanged, warning_count: prepared.warnings.length, error_count: 0 }).eq("id", importId);
-    return { state: finalState, inserted, updated, unchanged };
-  } catch (publishError) {
-    await admin().from("importazioni").update({ stato: "errore", completata_il: new Date().toISOString(), error_count: 1, errori: [{ codice: "PUBBLICAZIONE_FALLITA", messaggio: "Pubblicazione non completata." }] }).eq("id", importId);
-    throw publishError;
+    const summary = record.riepilogo as Record<string, unknown>;
+    const expectedRevision = Number(summary.calendarRevision);
+    if (!Number.isSafeInteger(expectedRevision)) throw new Error("CALENDAR_SNAPSHOT_STALE");
+    const { data, error: publishError } = await admin().rpc("admin_publish_calendar_snapshot", { p_import_id: importId, p_admin_id: adminUserId, p_expected_revision: expectedRevision, p_matches: prepared.matchRows, p_rests: prepared.restRows });
+    if (publishError) throw publishError;
+    const result = Array.isArray(data) ? data[0] : data;
+    return { state: String(result?.import_state ?? "pubblicata"), inserted: Number(result?.inserted ?? 0), updated: Number(result?.updated ?? 0), removed: Number(result?.removed ?? 0), unchanged: Number(result?.unchanged ?? 0), alreadyPublished: Boolean(result?.already_published) };
   }
 }

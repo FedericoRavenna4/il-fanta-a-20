@@ -13,7 +13,17 @@ type SupabaseLikeError = { message?: unknown; code?: unknown; details?: unknown;
 function actionError(error: unknown, fallback: string) {
   if (error instanceof Error) return error.message;
   const value = error && typeof error === "object" ? error as SupabaseLikeError : null;
-  const message = typeof value?.message === "string" ? value.message : fallback;
+  const raw = typeof value?.message === "string" ? value.message : error instanceof Error ? error.message : fallback;
+  const messages: Array<[string,string]> = [
+    ["CALENDAR_SNAPSHOT_STALE", "L'anteprima non Ã¨ piÃ¹ valida. Rigenera l'anteprima."],
+    ["CALENDAR_SNAPSHOT_INCOMPLETE", "Lo snapshot calendario Ã¨ incompleto."],
+    ["CALENDAR_CALCULATED_MATCH_MISSING", "Una partita giÃ  calcolata manca dallo snapshot: pubblicazione bloccata."],
+    ["CALENDAR_OBSOLETE_MATCH_HAS_DEPENDENCIES", "Una partita Ã¨ collegata a dati esistenti e non puÃ² essere eliminata."],
+    ["CALENDAR_IMPORT_NOT_PUBLISHABLE", "L'importazione non Ã¨ pubblicabile."],
+    ["CALENDAR_SCOPE_MISMATCH", "Lo scope del calendario non Ã¨ valido."],
+    ["CALENDAR_SNAPSHOT_DUPLICATE", "Lo snapshot contiene partite o riposi duplicati."],
+  ];
+  const message = messages.find(([code]) => raw.includes(code))?.[1] ?? fallback;
   if (process.env.NODE_ENV === "development") console.error("[admin/importazioni] Operazione fallita", { message, code: value?.code ?? null, details: value?.details ?? null, hint: value?.hint ?? null });
   return message;
 }
@@ -29,13 +39,13 @@ export async function createImportPreviewAction(formData: FormData): Promise<Act
 
 export async function publishImportAction(formData: FormData): Promise<{ ok: boolean; message: string }> {
   try {
-    await requireImportAdmin();
+    const access = await requireImportAdmin();
     const db = getSupabaseAdminClient() as unknown as SupabaseClient;
     const { data: record } = await db.from("importazioni").select("tipo").eq("id", String(formData.get("importId") ?? "")).maybeSingle();
-    if (record?.tipo === "rose") await publishRoseImport(formData); else await publishAuthenticatedImport(formData);
+    const publish = record?.tipo === "rose" ? (await publishRoseImport(formData), null) : await publishAuthenticatedImport(formData, access.userId!);
     revalidatePath("/societa");
     revalidatePath("/societa/[slug]", "page");
-    return { ok: true, message: "Importazione pubblicata correttamente." };
+    return { ok: true, message: publish?.alreadyPublished ? "Calendario giÃ  pubblicato." : "Importazione pubblicata correttamente." };
   } catch (error) {
     return { ok: false, message: actionError(error, "Pubblicazione non riuscita.") };
   }

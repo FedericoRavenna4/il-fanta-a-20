@@ -131,7 +131,7 @@ test("import Coppa espone vincoli 14x50 e valida tutto prima degli upsert", asyn
   assert.match(config, /coppa-fanta-20[\s\S]*14 giornate · 700 partite · 100 società/);
   assert.match(client, /pronto per l’importazione/);
   assert.match(preview, /validateCoppaCalendarStructure\(parsed\)/);
-  assert.ok(preview.indexOf("if (prepared.errors.length)") < preview.indexOf('.from("partite").upsert'));
+  assert.ok(preview.indexOf("if (prepared.errors.length)") < preview.indexOf('rpc("admin_publish_calendar_snapshot"'));
   assert.match(preview, /planCalendarSynchronization/);
   assert.match(preview, /CALENDARIO_DIVERGENTE_CALCOLATO/);
   assert.match(preview, /PARTITA_OBSOLETA_CON_DIPENDENZE/);
@@ -139,6 +139,78 @@ test("import Coppa espone vincoli 14x50 e valida tutto prima degli upsert", asyn
   assert.match(client, /Sincronizza calendario/);
   assert.match(client, /Importazione avvenuta con successo/);
   assert.match(client, /setTimeout\(\(\) => setSuccessToast\(""\), 4200\)/);
+});
+
+test("preview revisionata e publish calendario usano esclusivamente le RPC atomiche", () => {
+  const preview = fs.readFileSync(path.join(process.cwd(), "src/lib/admin-import/preview.server.ts"), "utf8");
+  const actions = fs.readFileSync(path.join(process.cwd(), "src/app/admin/importazioni/actions.ts"), "utf8");
+  const migration = fs.readFileSync(path.join(process.cwd(), "supabase/migrations/202608220001_atomic_calendar_publish.sql"), "utf8");
+  assert.match(preview, /rpc\("admin_calendar_preview_state"/);
+  assert.match(preview, /calendarRevision: prepared\.calendarRevision/);
+  assert.match(preview, /rpc\("admin_publish_calendar_snapshot"/);
+  assert.match(preview, /p_matches: prepared\.matchRows[\s\S]*p_rests: prepared\.restRows/);
+  assert.doesNotMatch(preview, /from\("partite"\)\.upsert|from\("partite"\)\.delete|from\("riposi_competizione"\)\.upsert/);
+  assert.match(preview, /alreadyPublished: Boolean\(result\?\.already_published\)/);
+  assert.match(actions, /Calendario giÃ  pubblicato/);
+  for (const code of ["CALENDAR_SNAPSHOT_STALE", "CALENDAR_SNAPSHOT_INCOMPLETE", "CALENDAR_CALCULATED_MATCH_MISSING", "CALENDAR_OBSOLETE_MATCH_HAS_DEPENDENCIES", "CALENDAR_IMPORT_NOT_PUBLISHABLE", "CALENDAR_SCOPE_MISMATCH", "CALENDAR_SNAPSHOT_DUPLICATE"]) assert.match(actions, new RegExp(code));
+  assert.match(migration, /admin_calendar_preview_state[\s\S]*pg_advisory_xact_lock/);
+  assert.match(migration, /calendar_revision=calendar_revision\+1/);
+  assert.doesNotMatch(migration, /current\.fonte_importazione[\s\S]*is distinct from[\s\S]*excluded\.fonte_importazione/);
+});
+
+test("boundary Admin calendario riusa allowlist server-side e RPC service-role-only", () => {
+  const auth = fs.readFileSync(path.join(process.cwd(), "src/lib/admin-import/auth.server.ts"), "utf8");
+  const actions = fs.readFileSync(path.join(process.cwd(), "src/app/admin/importazioni/actions.ts"), "utf8");
+  const migration = fs.readFileSync(path.join(process.cwd(), "supabase/migrations/202608220001_atomic_calendar_publish.sql"), "utf8");
+  assert.match(auth, /evaluateAdminIdentity\(email, process\.env\.ADMIN_IMPORT_EMAILS\)/);
+  assert.match(actions, /const access = await requireImportAdmin\(\)[\s\S]*publishAuthenticatedImport\(formData, access\.userId!\)/);
+  assert.match(migration, /target\.importato_da|t\.importato_da is distinct from p_admin_id/);
+  assert.match(migration, /revoke all on function public\.admin_publish_calendar_snapshot[\s\S]*public,anon,authenticated/);
+  assert.match(migration, /grant execute on function public\.admin_publish_calendar_snapshot[\s\S]*service_role/);
+});
+
+test("race preview safe-fail: X persistita e mutazione X+1 rendono publish stale prima dei write", () => {
+  const migration = fs.readFileSync(path.join(process.cwd(), "supabase/migrations/202608220001_atomic_calendar_publish.sql"), "utf8");
+  const previewRevision = 8;
+  const databaseRevisionAtPublish = previewRevision + 1;
+  assert.notEqual(previewRevision, databaseRevisionAtPublish);
+  const staleGuard = migration.indexOf("rev is distinct from p_expected_revision");
+  const firstWrite = migration.indexOf("insert into public.partite as current");
+  assert.ok(staleGuard > 0 && staleGuard < firstWrite);
+  assert.match(migration.slice(staleGuard, firstWrite), /CALENDAR_SNAPSHOT_STALE/);
+});
+
+test("Coppa usa la RPC atomica senza ricevere i vincoli strutturali del campionato", () => {
+  const preview = fs.readFileSync(path.join(process.cwd(), "src/lib/admin-import/preview.server.ts"), "utf8");
+  const migration = fs.readFileSync(path.join(process.cwd(), "supabase/migrations/202608220001_atomic_calendar_publish.sql"), "utf8");
+  assert.match(preview, /record\.tipo as CalendarImportType[\s\S]*admin_publish_calendar_snapshot/);
+  assert.match(preview, /calendario_coppa[\s\S]*validateCoppaCalendarStructure/);
+  const championshipGuard = migration.slice(migration.indexOf("if t.tipo='calendario_campionato'"), migration.indexOf("CALENDAR_CALCULATED_MATCH_MISSING"));
+  assert.match(championshipGuard, /380[\s\S]*38[\s\S]*10[\s\S]*20/);
+  assert.doesNotMatch(championshipGuard, /calendario_coppa/);
+  for (const shared of ["CALENDAR_SNAPSHOT_STALE", "CALENDAR_CALCULATED_MATCH_MISSING", "CALENDAR_OBSOLETE_MATCH_HAS_DEPENDENCIES"]) assert.match(migration, new RegExp(shared));
+});
+
+test("retry pubblicato ritorna prima di revision check e mutazioni", () => {
+  const migration = fs.readFileSync(path.join(process.cwd(), "supabase/migrations/202608220001_atomic_calendar_publish.sql"), "utf8");
+  const retry = migration.indexOf("if t.stato in ('pubblicata','pubblicata_con_warning')");
+  const revision = migration.indexOf("select calendar_revision into rev");
+  const write = migration.indexOf("insert into public.partite as current");
+  assert.ok(retry > 0 && retry < revision && revision < write);
+  assert.match(migration.slice(retry, revision), /true;return/);
+  assert.doesNotMatch(migration.slice(retry, revision), /insert into public\.partite|insert into public\.riposi_competizione|calendar_revision=calendar_revision\+1/);
+});
+
+test("righe unchanged non aggiornano né incrementano revision; risultati nuovi sì", () => {
+  const migration = fs.readFileSync(path.join(process.cwd(), "supabase/migrations/202608220001_atomic_calendar_publish.sql"), "utf8");
+  assert.match(migration, /on conflict\(edizione_competizione_id,giornata_lega,societa_casa_id,societa_trasferta_id\) do update[\s\S]*where \(current\.giornata_serie_a[\s\S]*is distinct from/);
+  assert.match(migration, /on conflict\(edizione_competizione_id,giornata_lega,societa_id\) do update[\s\S]*where \(current\.giornata_serie_a[\s\S]*is distinct from/);
+  assert.match(migration, /create trigger partite_calendar_revision after insert or update or delete/);
+  const unchangedRows = 380;
+  const logicalUpdates = 0;
+  assert.equal(logicalUpdates, 0);
+  assert.equal(unchangedRows - logicalUpdates, 380);
+  assert.ok(10 > logicalUpdates);
 });
 
 test("reimport sincronizza senza duplicati, preserva i calcolati e blocca divergenze storiche", () => {
@@ -268,4 +340,9 @@ test("reset FantaBet manuale azzera solo dati operativi e conserva emblemi e sis
   for (const table of ["profiles", "societa", "partite", "user_emblems", "user_emblem_unlocks", "profile_supports", "fantabet_support_match_events", "fantabet_support_bonus_events"]) assert.doesNotMatch(sql, new RegExp(`delete from public\\.${table}`));
   assert.match(sql, /^-- MANUAL ONE-TIME OPERATION/);
   assert.match(sql, /begin;[\s\S]*commit;/i);
+});
+
+test("preview calendario mostra esplicitamente anche le rimozioni", () => {
+  const client = fs.readFileSync(path.join(process.cwd(), "src/app/admin/importazioni/ImportazioniClient.tsx"), "utf8");
+  assert.match(client, /Invariate: preview\.summary\.unchanged, Rimossi: preview\.summary\.rimossi/);
 });

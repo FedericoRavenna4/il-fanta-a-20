@@ -44,7 +44,7 @@ export type Database = {
         Relationships: [];
       };
       edizioni_competizioni: {
-        Row: { id: number; competizione_id: number; stagione_id: number; nome_edizione: string; formato: string | null; numero_squadre: number | null; stato: string; data_inizio: string | null; data_fine: string | null; attiva: boolean; societa_vincitrice_id: number | null; winner_recorded_at: string | null; created_at: string; updated_at: string };
+        Row: { id: number; competizione_id: number; stagione_id: number; nome_edizione: string; formato: string | null; numero_squadre: number | null; stato: string; data_inizio: string | null; data_fine: string | null; attiva: boolean; societa_vincitrice_id: number | null; winner_recorded_at: string | null; calendar_revision: number; created_at: string; updated_at: string };
         Insert: Partial<Database["public"]["Tables"]["edizioni_competizioni"]["Row"]>;
         Update: Partial<Database["public"]["Tables"]["edizioni_competizioni"]["Row"]>;
         Relationships: [{ foreignKeyName: "edizioni_competizioni_competizione_id_fkey"; columns: ["competizione_id"]; isOneToOne: false; referencedRelation: "competizioni"; referencedColumns: ["id"] }];
@@ -271,6 +271,8 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: {
+      admin_calendar_preview_state: { Args: { p_edizione_competizione_id: number }; Returns: { calendarRevision: number; matches: unknown[]; rests: unknown[] } };
+      admin_publish_calendar_snapshot: { Args: { p_import_id: string; p_admin_id: string; p_expected_revision: number; p_matches: unknown[]; p_rests: unknown[] }; Returns: Array<{ inserted: number; updated: number; removed: number; unchanged: number; import_state: string; already_published: boolean }> };
       create_my_legacy_profile: {
   Args: { p_username: string };
   Returns: Database["public"]["Tables"]["profiles"]["Row"];
@@ -302,6 +304,10 @@ request_my_profile_verification: {
       fantabet_round_is_evaluable: {
         Args: { p_round_id: number };
         Returns: boolean;
+      };
+      admin_save_fantabet_draft: {
+        Args: { p_round_id: number | null; p_expected_updated_at: string | null; p_stagione_id: number; p_numero_giornata: number; p_opens_at: string; p_deadline_at: string; p_bets: Array<{ partita_id: number; bet_type: string; points_value: number; display_order: number }> };
+        Returns: Array<{ round_id: number; updated_at: string; unchanged: boolean }>;
       };
       fantabet_global_leaderboard: {
         Args: Record<PropertyKey, never>;
