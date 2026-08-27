@@ -113,6 +113,13 @@ export default async function RootLayout({
   const account = await getCurrentAccount();
   return (
     <html lang="it" className={`${manrope.variable} ${outfit.variable}`}>
+      <head>
+        <script
+          async
+          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${GOOGLE_ADSENSE_CLIENT}`}
+          crossOrigin="anonymous"
+        />
+      </head>
       <body className="min-h-screen flex flex-col font-[var(--font-outfit)]">
         <script
           type="application/ld+json"
@@ -128,13 +135,6 @@ export default async function RootLayout({
         <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top))] lg:pt-0">{children}</main>
 
         <Footer />
-        <Script
-          id="google-adsense"
-          async
-          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${GOOGLE_ADSENSE_CLIENT}`}
-          crossOrigin="anonymous"
-          strategy="afterInteractive"
-        />
         {process.env.NODE_ENV === "production" && (
           <>
             <Script
