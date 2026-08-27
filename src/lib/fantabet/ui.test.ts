@@ -456,13 +456,27 @@ test("confronto formazioni resta a due colonne compatte su mobile e desktop", as
   for (const viewport of [360, 375, 390, 414, 430]) assert.ok(viewport >= 360 && /grid-cols-2/.test(lineups));
 });
 
-test("formazioni usano ruoli Rose senza numerazione e mantengono C e VC", async () => {
+test("formazioni usano ruoli Rose senza numerazione e mostrano C e V", async () => {
   const client = await readFile(new URL("../../app/fantabet/FantaBetClient.tsx", import.meta.url), "utf8");
   const rose = await readFile(new URL("../../app/societa/[slug]/RosaSocieta.tsx", import.meta.url), "utf8");
   const lineups = client.slice(client.indexOf("function LineupTeam"), client.indexOf("function CompactBetCard"));
   assert.doesNotMatch(lineups, /\{player\.order\}\./);
   for (const color of ["bg-orange-500", "bg-green-600", "bg-blue-600", "bg-red-600"]) { assert.match(lineups, new RegExp(color)); assert.match(rose, new RegExp(color)); }
-  assert.match(lineups, /player\.captain \? " \(C\)"/); assert.match(lineups, /player\.viceCaptain \? " \(VC\)"/);
+  assert.match(lineups, /player\.captain \? " \(C\)"/); assert.match(lineups, /player\.viceCaptain \? " \(V\)"/); assert.doesNotMatch(lineups, /\(VC\)/);
+});
+
+test("header formazione contiene solo squadra e modulo senza statistiche duplicate", async () => {
+  const client = await readFile(new URL("../../app/fantabet/FantaBetClient.tsx", import.meta.url), "utf8");
+  const lineupTeam = client.slice(client.indexOf("function LineupTeam"), client.indexOf("function RoleBadge"));
+  assert.match(lineupTeam, /team\.name/); assert.match(lineupTeam, /lineup\.formation/);
+  assert.doesNotMatch(lineupTeam, /stats|position|points|fantasyPointsTotal|<Form/);
+});
+
+test("ordinamento visuale formazione è stabile P D C A", async () => {
+  const client = await readFile(new URL("../../app/fantabet/FantaBetClient.tsx", import.meta.url), "utf8");
+  const sorter = await readFile(new URL("../fantabet-lineups/presentation.ts", import.meta.url), "utf8");
+  assert.match(sorter, /\{ P: 0, D: 1, C: 2, A: 3 \}/); assert.match(sorter, /left\.index - right\.index/);
+  assert.match(client, /sortLineupPlayers\(lineup\.players\)\.map/);
 });
 
 test("assenza formazioni occupa la stessa area senza interferire con il pronostico", async () => {
