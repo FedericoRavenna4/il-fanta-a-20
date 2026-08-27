@@ -33,6 +33,7 @@ const outfit = Outfit({
 });
 
 const GOOGLE_ANALYTICS_ID = "G-FE9PHKQRBT";
+const GOOGLE_ADSENSE_CLIENT = "ca-pub-6062997912590989";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -127,6 +128,13 @@ export default async function RootLayout({
         <main className="flex-1 pt-[calc(4rem+env(safe-area-inset-top))] lg:pt-0">{children}</main>
 
         <Footer />
+        <Script
+          id="google-adsense"
+          async
+          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${GOOGLE_ADSENSE_CLIENT}`}
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
+        />
         {process.env.NODE_ENV === "production" && (
           <>
             <Script

@@ -41,6 +41,8 @@
     "audit:societa-db-csv": "node scripts/audit-societa-db-vs-csv.mjs",
     "test:fantabet": "node --experimental-strip-types --test src/lib/fantabet/*.test.ts",
     "test:fantabet-lineups": "node --experimental-strip-types --test src/lib/fantabet-lineups/*.test.ts scripts/fantabet-lineups-migration.test.mjs scripts/fantabet-lineup-captains-migration.test.mjs",
+    "test:adsense": "node --experimental-strip-types --test src/lib/adsense.test.ts",
+    "test:privacy": "node --experimental-strip-types --test src/lib/privacy-policy.test.ts",
     "test:campionati-live": "node --experimental-strip-types --test src/app/campionati-live-preview/logic.test.ts",
     "test:arcade": "node --experimental-strip-types --test src/lib/arcade/*.test.ts",
     "test:home": "node --experimental-strip-types --test src/lib/home/*.test.ts",

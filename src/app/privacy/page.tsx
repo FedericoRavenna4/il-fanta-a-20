@@ -1,79 +1,29 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import PageHeader from "../components/PageHeader";
+import PrivacyPreferencesButton from "../components/PrivacyPreferencesButton";
 import { PRIVACY_CONTACTS } from "@/lib/privacy";
 import { createPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = createPageMetadata({
-  title: "Informativa Privacy",
-  description: "Informativa sul trattamento dei dati raccolti attraverso la Lista di attesa del Fanta a 20.",
-  path: "/privacy",
-});
+export const metadata: Metadata = createPageMetadata({ title: "Informativa Privacy", description: "Informativa sul trattamento dei dati personali nel portale Il Fanta a 20.", path: "/privacy" });
 
 const sections = [
-  {
-    title: "1. Titolare del trattamento",
-    content: <><p>Il titolare del trattamento è <strong>{PRIVACY_CONTACTS.titolare}</strong>, con sede operativa a {PRIVACY_CONTACTS.sede}.</p><p>Per richieste relative alla privacy puoi scrivere a <PrivacyEmail />.</p></>,
-  },
-  {
-    title: "2. Dati raccolti",
-    content: <><p>Attraverso il modulo della Lista di attesa vengono raccolti:</p><PrivacyList items={["nome", "cognome", "nickname Instagram", "presentazione o motivazione facoltativa", "dichiarazione di maggiore età", "data e ora di invio della candidatura"]} /><p>Non viene raccolta la data di nascita completa.</p></>,
-  },
-  {
-    title: "3. Finalità del trattamento",
-    content: <><p>I dati vengono utilizzati esclusivamente per:</p><PrivacyList items={["ricevere e valutare le candidature", "contattare i candidati selezionati", "organizzare eventuali ingressi futuri nel Fanta a 20", "prevenire invii duplicati o abusivi"]} /><p>I dati non vengono utilizzati per pubblicità, profilazione o cessione a terzi.</p></>,
-  },
-  {
-    title: "4. Base giuridica",
-    content: <p>Il trattamento si basa sul consenso espresso dall’interessato mediante l’accettazione dell’informativa prima dell’invio della candidatura.</p>,
-  },
-  {
-    title: "5. Conferimento dei dati",
-    content: <><p>Nome, cognome, nickname Instagram, conferma della maggiore età e accettazione dell’informativa sono necessari per inviare la candidatura.</p><p>La presentazione personale è facoltativa, ma può aiutare gli organizzatori nella valutazione.</p></>,
-  },
-  {
-    title: "6. Destinatari",
-    content: <><p>I dati possono essere consultati esclusivamente dagli organizzatori del Fanta a 20 incaricati della selezione.</p><p>Per il funzionamento tecnico del sito possono essere trattati dai fornitori di hosting e database utilizzati dal progetto, nei limiti necessari all’erogazione del servizio.</p></>,
-  },
-  {
-    title: "7. Conservazione",
-    content: <><p>I dati vengono conservati per un massimo di {PRIVACY_CONTACTS.conservazioneMesi} mesi dalla candidatura.</p><p>Alla scadenza devono essere cancellati o anonimizzati, salvo richiesta anticipata dell’interessato o necessità documentate compatibili con la finalità originaria.</p></>,
-  },
-  {
-    title: "8. Diritti dell’interessato",
-    content: <><p>L’interessato può richiedere:</p><PrivacyList items={["accesso ai propri dati", "rettifica", "cancellazione", "limitazione del trattamento", "revoca del consenso", "opposizione, quando applicabile", "portabilità, quando applicabile"]} /><p>Le richieste possono essere inviate a <PrivacyEmail />. È inoltre possibile proporre reclamo al Garante per la protezione dei dati personali.</p></>,
-  },
-  {
-    title: "9. Sicurezza",
-    content: <p>I dati sono conservati tramite servizi tecnici protetti e accessibili soltanto agli organizzatori autorizzati e ai fornitori necessari al funzionamento del sito.</p>,
-  },
-  {
-    title: "10. Aggiornamenti",
-    content: <p>L’informativa può essere aggiornata per riflettere cambiamenti normativi, organizzativi o tecnici.</p>,
-  },
+  { title: "1. Titolare e contatti", content: <><p>Il titolare del trattamento è <strong>{PRIVACY_CONTACTS.titolare}</strong>, con sede operativa a {PRIVACY_CONTACTS.sede}.</p><p>Per richieste o per esercitare i propri diritti: <PrivacyEmail />.</p></> },
+  { title: "2. Dati trattati", content: <><p>Il sito tratta, secondo le funzioni utilizzate:</p><PrivacyList items={["dati account: email, username, credenziali gestite dal servizio di autenticazione e identificativo account", "profilo pubblico: username, eventuale avatar, società associata, emblemi e risultati competitivi", "richieste di verifica: nome, cognome, società richiesta, stato e date della pratica", "attività FantaBet: pronostici, conferme, punteggi, squadra sostenuta e cronologia collegata al profilo", "attività Arcade: nickname, identificativo di gioco, record, progressi e risultati", "dati della Lista di attesa indicati nella sezione dedicata", "dati tecnici come indirizzo IP, informazioni su browser/dispositivo, richieste, data e ora, log di errore e sicurezza", "scelte relative a cookie, pubblicità e consenso, quando la CMP sarà attiva"]} /></> },
+  { title: "3. Account, profili e funzionalità", content: <><p>Supabase gestisce autenticazione, sessione, database e archiviazione degli avatar. Le sessioni usano cookie tecnici. Username, avatar, associazione a una società e parte dei risultati possono essere visibili pubblicamente.</p><p>FantaBet conserva pronostici e conferme necessari al gioco e alle classifiche. Arcade conserva record e progressi; alcune preferenze e un identificativo casuale restano anche nel <code>localStorage</code> del dispositivo. Gli emblemi registrano gli sblocchi collegati al profilo.</p></> },
+  { title: "4. Lista di attesa", content: <><p>Il modulo raccoglie nome, cognome, nickname Instagram, motivazione facoltativa, dichiarazione di maggiore età, accettazione dell’informativa e data di invio. Non richiede la data di nascita completa.</p><p>I dati servono a ricevere e valutare candidature, contattare i candidati selezionati, organizzare eventuali ingressi e prevenire abusi o duplicati.</p></> },
+  { title: "5. Finalità e basi giuridiche", content: <PrivacyList items={["fornire account, giochi, classifiche, profili e funzionalità richieste: esecuzione del servizio richiesto", "gestire la Lista di attesa e le comunicazioni collegate: consenso", "proteggere sito, account e infrastruttura, prevenire abusi e diagnosticare errori: legittimo interesse alla sicurezza e affidabilità", "adempiere obblighi di legge o richieste delle autorità: obbligo legale", "misurare l’uso tramite Google Analytics e utilizzare tecnologie pubblicitarie tramite Google AdSense: consenso, quando richiesto", "gestire preferenze e prova delle scelte privacy: adempimento degli obblighi applicabili e gestione del consenso"]} /> },
+  { title: "6. Google Analytics", content: <><p>Il sito integra Google Analytics per misurare traffico e utilizzo, ad esempio sessioni, pagine consultate, informazioni tecniche e area geografica approssimativa. Il tag può usare cookie o identificatori come descritto da Google.</p><p>Per gli utenti per cui è richiesto, la raccolta deve rispettare le scelte espresse tramite CMP e Consent Mode. Questa configurazione deve essere attivata e verificata prima della piena operatività.</p></> },
+  { title: "7. Google AdSense e pubblicità", content: <><p>Il sito è predisposto per Google AdSense, che può pubblicare e misurare annunci, prevenire frodi e, se autorizzato, personalizzare la pubblicità. Google e i partner pubblicitari possono trattare dati tecnici, indirizzo IP, URL visitato, cookie o altri identificatori secondo le scelte dell’utente e le impostazioni applicabili.</p><p>Per SEE, Regno Unito e Svizzera, consenso e opzioni pubblicitarie saranno raccolti tramite una CMP Google certificata. La presenza del codice di verifica AdSense non significa che siano già presenti spazi pubblicitari manuali.</p></> },
+  { title: "8. Cookie, tecnologie analoghe e preferenze", content: <><p>Cookie tecnici mantengono la sessione e la sicurezza dell’account. Analytics e AdSense possono usare tecnologie ulteriori secondo consenso; Arcade ed emblemi usano anche <code>localStorage</code> per identificativo di gioco, nickname, progressi, record e notifiche già viste.</p><p>Dettagli e categorie sono descritti nella <Link href="/cookie-policy" className="font-black text-blue-800 underline">Cookie Policy</Link>.</p><PrivacyPreferencesButton className="mt-2 min-h-11 rounded-xl border border-blue-950 px-4 text-sm font-black text-blue-950" /></> },
+  { title: "9. Fornitori e destinatari", content: <><p>I dati sono accessibili nei limiti necessari al titolare e ai fornitori che supportano il servizio: <strong>Vercel</strong> per hosting e log tecnici, <strong>Supabase</strong> per autenticazione, database e storage, e <strong>Google</strong> per Analytics, AdSense e CMP.</p><p>La funzione amministrativa di riconoscimento delle formazioni usa OpenAI: invia lo screenshot scelto dall’amministratore per l’analisi, senza archiviarlo nel sito e con memorizzazione API disattivata nel codice. Instagram e TikTok sono semplici collegamenti esterni e ricevono dati solo quando il link viene aperto.</p></> },
+  { title: "10. Trasferimenti internazionali", content: <p>Alcuni fornitori possono trattare dati anche fuori dallo Spazio Economico Europeo. In tali casi il trattamento dipende dalla configurazione del servizio e dalle garanzie previste dal fornitore e dalla normativa applicabile, come decisioni di adeguatezza o clausole contrattuali.</p> },
+  { title: "11. Conservazione", content: <><p>I dati della Lista di attesa sono conservati per un massimo di {PRIVACY_CONTACTS.conservazioneMesi} mesi dalla candidatura, salvo cancellazione anticipata o necessità documentate compatibili.</p><p>Dati account e funzionalità sono conservati per il tempo necessario a erogare il servizio e gestire il profilo; risultati e classifiche possono essere mantenuti come storico del gioco. Dati di sicurezza e rate limit sono conservati per finestre limitate o secondo le configurazioni tecniche. Cookie e dati dei fornitori seguono le durate indicate nella Cookie Policy e nelle rispettive informative.</p></> },
+  { title: "12. Diritti e revoca", content: <><p>L’interessato può chiedere accesso, rettifica, cancellazione, limitazione, opposizione e portabilità quando applicabili, oppure revocare il consenso senza pregiudicare i trattamenti precedenti. Può inoltre proporre reclamo al Garante per la protezione dei dati personali.</p><p>Le richieste possono essere inviate a <PrivacyEmail />. Le preferenze relative a cookie e pubblicità possono essere riaperte con “Gestisci preferenze privacy”, quando la CMP Google è disponibile.</p></> },
+  { title: "13. Sicurezza e log", content: <p>Sono applicati controlli di accesso, autorizzazioni server, limitazioni degli invii e logging tecnico. Per il rate limit l’indirizzo IP viene trasformato in un hash HMAC prima della registrazione. Nessuna misura può eliminare ogni rischio, ma accessi e dati vengono limitati a quanto necessario.</p> },
+  { title: "14. Aggiornamenti", content: <p>L’informativa può essere aggiornata quando cambiano servizi, configurazioni o requisiti applicabili. Una revisione professionale resta consigliata prima dell’attivazione definitiva della pubblicità.</p> },
 ];
 
-export default function PrivacyPage() {
-  return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-7 sm:px-5 sm:py-12 lg:px-6 lg:py-16">
-      <PageHeader eyebrow="Tutela dei dati" title="Informativa Privacy" description="Come raccogliamo, utilizziamo e proteggiamo i dati inviati attraverso la Lista di attesa." />
-      <div className="grid gap-3 sm:gap-4">
-        {sections.map((section) => (
-          <section key={section.title} className="rounded-[1.5rem] border border-slate-200 bg-white/85 p-5 shadow-[0_14px_38px_rgba(15,23,42,.06)] sm:rounded-[1.75rem] sm:p-7">
-            <h2 className="text-lg font-black uppercase leading-tight tracking-tight text-blue-950 sm:text-2xl">{section.title}</h2>
-            <div className="mt-3 space-y-3 text-sm font-semibold leading-6 text-slate-600 sm:text-base sm:leading-7">{section.content}</div>
-          </section>
-        ))}
-      </div>
-      <p className="mt-6 text-xs font-black uppercase tracking-[.12em] text-slate-500">Ultimo aggiornamento: {PRIVACY_CONTACTS.ultimoAggiornamento}</p>
-    </main>
-  );
-}
-
-function PrivacyEmail() {
-  return <Link href={`mailto:${PRIVACY_CONTACTS.email}`} className="font-black text-blue-800 underline decoration-blue-300 underline-offset-2">{PRIVACY_CONTACTS.email}</Link>;
-}
-
-function PrivacyList({ items }: { items: string[] }) {
-  return <ul className="ml-5 list-disc space-y-1.5 marker:text-amber-500">{items.map((item) => <li key={item}>{item}</li>)}</ul>;
-}
+export default function PrivacyPage() { return <main className="mx-auto w-full max-w-6xl px-4 py-7 sm:px-5 sm:py-12 lg:px-6 lg:py-16"><PageHeader eyebrow="Tutela dei dati" title="Informativa Privacy – Il Fanta a 20" description="Come vengono trattati dati, account, attività di gioco e informazioni tecniche del portale." /><div className="grid gap-3 sm:gap-4">{sections.map((section) => <section key={section.title} className="rounded-[1.5rem] border border-slate-200 bg-white/85 p-5 shadow-[0_14px_38px_rgba(15,23,42,.06)] sm:rounded-[1.75rem] sm:p-7"><h2 className="text-lg font-black uppercase leading-tight tracking-tight text-blue-950 sm:text-2xl">{section.title}</h2><div className="mt-3 space-y-3 text-sm font-semibold leading-6 text-slate-600 sm:text-base sm:leading-7">{section.content}</div></section>)}</div><p className="mt-6 text-xs font-black uppercase tracking-[.12em] text-slate-500">Ultimo aggiornamento: {PRIVACY_CONTACTS.ultimoAggiornamento}</p></main>; }
+function PrivacyEmail() { return <Link href={`mailto:${PRIVACY_CONTACTS.email}`} className="font-black text-blue-800 underline decoration-blue-300 underline-offset-2">{PRIVACY_CONTACTS.email}</Link>; }
+function PrivacyList({ items }: { items: string[] }) { return <ul className="ml-5 list-disc space-y-1.5 marker:text-amber-500">{items.map((item) => <li key={item}>{item}</li>)}</ul>; }

@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { F20_CONTACTS } from "@/lib/contact";
+import PrivacyPreferencesButton from "./PrivacyPreferencesButton";
 
 const socialIconClass =
   "flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 transition duration-300 hover:-translate-y-0.5 hover:border-blue-950 hover:text-blue-950 sm:h-8 sm:w-8";
@@ -14,7 +15,9 @@ export default function Footer() {
           <div className="mt-1.5 flex flex-col items-start text-[9px] font-semibold sm:mt-2 sm:text-xs">
             <Link href="/lista-attesa" className="inline-flex py-1 font-black text-blue-950 underline decoration-amber-400 decoration-2 underline-offset-4 transition hover:text-blue-700">Lista di attesa</Link>
             <Link href="/storia" className="inline-flex py-0.5 transition hover:text-blue-950">La storia</Link>
-            <Link href="/privacy" className="inline-flex py-0.5 transition hover:text-blue-950">Privacy</Link>
+            <Link href="/privacy" className="inline-flex py-0.5 transition hover:text-blue-950">Privacy Policy</Link>
+            <Link href="/cookie-policy" className="inline-flex py-0.5 transition hover:text-blue-950">Cookie Policy</Link>
+            <PrivacyPreferencesButton className="max-w-full py-0.5 text-left transition hover:text-blue-950" />
           </div>
         </div>
 

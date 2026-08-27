@@ -4,5 +4,5 @@ export const PRIVACY_CONTACTS = {
   email: "ilfantaa20@gmail.com",
   conservazioneMesi: 12,
   etaMinima: 18,
-  ultimoAggiornamento: "1 agosto 2026",
+  ultimoAggiornamento: "27 agosto 2026",
 } as const;
