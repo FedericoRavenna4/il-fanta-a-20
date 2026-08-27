@@ -1,4 +1,4 @@
-import type { ConfirmLineupInput, LineupPreview, LineupPreviewTeam, MatchStatus, RecognitionOutput, RosterPlayer, TeamOption } from "./types";
+import type { ConfirmLineupInput, LineupPreview, LineupPreviewTeam, MatchStatus, PlayerMatch, RecognitionOutput, RosterPlayer, TeamOption } from "./types";
 
 export function normalizeRecognitionName(value: string) {
   return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("it-IT").replace(/[’'`.]/g, " ").replace(/[^a-z0-9]+/g, " ").trim().replace(/\s+/g, " ");
@@ -32,7 +32,7 @@ export function buildLineupPreview(output: RecognitionOutput, matchId: number, s
   const makeTeam = (raw: RecognitionOutput["teamA"]): LineupPreviewTeam => {
     const society = bestMatches(raw.detectedName, options, (team) => team.name, (team) => team.aliases);
     const selected = society.status === "recognized" ? society.matches[0] : null;
-    return { detectedName: raw.detectedName.trim(), societyId: selected?.id ?? null, societyStatus: society.status, societyCandidates: society.matches.map((team) => team.id), formation: sanitizeFormation(raw.formation), players: raw.players.map((name) => matchPlayer(name, selected?.roster ?? [])) };
+    return { detectedName: raw.detectedName.trim(), societyId: selected?.id ?? null, societyStatus: society.status, societyCandidates: society.matches.map((team) => team.id), formation: sanitizeFormation(raw.formation), players: raw.players.map((name) => matchPlayer(name, selected?.roster ?? [])), captainId: null, viceCaptainId: null };
   };
   const detected = [makeTeam(output.teamA), makeTeam(output.teamB)] as [LineupPreviewTeam, LineupPreviewTeam];
   const forceTeam = (team: LineupPreviewTeam, raw: RecognitionOutput["teamA"], option: TeamOption): LineupPreviewTeam => ({ ...team, societyId: option.id, societyStatus: "recognized", societyCandidates: [option.id], players: raw.players.map((name) => matchPlayer(name, option.roster)) });
@@ -56,9 +56,19 @@ export function validateConfirmation(input: ConfirmLineupInput, options: TeamOpt
     if (team.playerIds.length !== 11) return "Ogni formazione deve avere esattamente 11 titolari.";
     if (new Set(team.playerIds).size !== 11) return "Lo stesso giocatore non può comparire due volte.";
     const rosterIds = new Set(option.roster.map((player) => player.id)); if (team.playerIds.some((id) => !rosterIds.has(id))) return "Un giocatore non appartiene alla rosa selezionata.";
+    if (!team.captainId) return "Seleziona il capitano per entrambe le formazioni.";
+    if (!team.viceCaptainId) return "Seleziona il vicecapitano per entrambe le formazioni.";
+    if (team.captainId === team.viceCaptainId) return "Capitano e vicecapitano devono essere giocatori diversi.";
+    if (!team.playerIds.includes(team.captainId)) return "Il capitano deve appartenere agli 11 titolari.";
+    if (!team.playerIds.includes(team.viceCaptainId)) return "Il vicecapitano deve appartenere agli 11 titolari.";
     if (team.formation !== null && !sanitizeFormation(team.formation)) return "Modulo non valido.";
   }
   return null;
+}
+
+export function invalidateMissingLeaders(team: LineupPreviewTeam, players: PlayerMatch[]) {
+  const ids = new Set(players.flatMap((player) => player.playerId ? [player.playerId] : []));
+  return { players, captainId: team.captainId && ids.has(team.captainId) ? team.captainId : null, viceCaptainId: team.viceCaptainId && ids.has(team.viceCaptainId) ? team.viceCaptainId : null };
 }
 
 export function parseRecognitionOutput(value: unknown): RecognitionOutput {

@@ -6,6 +6,7 @@ import { getSupabaseAdminClient } from "@/lib/supabase/server";
 import { getLineupMatchContext } from "@/lib/fantabet-lineups/data.server";
 import { buildLineupPreview, validateConfirmation } from "@/lib/fantabet-lineups/logic";
 import { RecognitionError, recognizeLineups } from "@/lib/fantabet-lineups/recognition.server";
+import { resolveLineupSaveFailure } from "@/lib/fantabet-lineups/save-errors";
 import type { ConfirmLineupInput, LineupPreview } from "@/lib/fantabet-lineups/types";
 
 const ALLOWED = new Set(["image/png", "image/jpeg", "image/webp"]); const MAX_BYTES = 10 * 1024 * 1024;
@@ -40,7 +41,8 @@ export async function confirmLineupsAction(raw: string): Promise<LineupActionRes
   let context; try { context = await getLineupMatchContext(input.matchId); } catch (error) { console.error("[fantabet-lineups:confirm-context]", { category: error instanceof Error ? error.message : "UNKNOWN" }); return { ok: false, message: "La partita FantaBet selezionata non è più disponibile." }; }
   if (input.seasonId !== context.seasonId || input.matchday !== context.matchday || new Set(input.teams.map((team) => team.societyId)).size !== 2 || input.teams.some((team) => !context.teams.some((option) => option.id === team.societyId))) return { ok: false, message: "Il contesto della partita FantaBet non è valido." };
   const validation = validateConfirmation(input, context.teams); if (validation) { console.error("[fantabet-lineups:validation]", { category: "CONFIRMATION_REJECTED", matchId: input.matchId }); return { ok: false, message: validation }; }
-  const { data, error } = await admin().rpc("admin_upsert_fantabet_lineups", { p_stagione_id: context.seasonId, p_numero_giornata: context.matchday, p_lineups: input.teams.map((team) => ({ societa_id: team.societyId, modulo: team.formation, player_ids: team.playerIds })) });
-  if (error || data !== true) return { ok: false, message: "Salvataggio rifiutato. Le formazioni precedenti sono rimaste invariate." };
+  const { data, error } = await admin().rpc("admin_upsert_fantabet_lineups", { p_stagione_id: context.seasonId, p_numero_giornata: context.matchday, p_lineups: input.teams.map((team) => ({ societa_id: team.societyId, modulo: team.formation, player_ids: team.playerIds, captain: team.captainId, vice_captain: team.viceCaptainId })) });
+  const saveFailure = resolveLineupSaveFailure(data, error, { seasonId: context.seasonId, matchday: context.matchday, matchId: input.matchId, societyIds: input.teams.map((team) => team.societyId) });
+  if (saveFailure) return { ok: false, message: saveFailure };
   revalidatePath("/admin/formazioni"); revalidatePath("/fantabet"); return { ok: true, message: "Le due formazioni sono state salvate atomicamente." };
 }

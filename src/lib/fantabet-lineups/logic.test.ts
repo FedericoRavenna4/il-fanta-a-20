@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { buildLineupPreview, matchPlayer, normalizeRecognitionName, parseRecognitionOutput, validateConfirmation } from "./logic.ts";
-import type { TeamOption } from "./types.ts";
+import { buildLineupPreview, invalidateMissingLeaders, matchPlayer, normalizeRecognitionName, parseRecognitionOutput, validateConfirmation } from "./logic.ts";
+import type { LineupPreviewTeam, TeamOption } from "./types.ts";
 
 const roster = Array.from({ length: 12 }, (_, index) => ({ id: index + 1, name: index === 0 ? "Vitinha Oliveira" : index === 1 ? "Nico Paz" : index === 2 ? "Juan Rodriguez" : `Giocatore ${index + 1}`, role: index === 0 ? "P" : "D" }));
 const options: TeamOption[] = [{ id: 7, name: "Interstellar", aliases: ["inter stellar"], roster }, { id: 1, name: "Kung Fu Parma", aliases: [], roster: roster.map((player) => ({ ...player, id: player.id + 100 })) }];
@@ -13,9 +13,14 @@ test("segnala giocatore ambiguo", () => { const result = matchPlayer("Mario", [{
 test("valida output recognition strutturato", () => assert.equal(parseRecognitionOutput({ teamA: { detectedName: "A", formation: "4-3-3", players: ["Uno"] }, teamB: { detectedName: "B", formation: null, players: ["Due"] } }).teamA.formation, "4-3-3"));
 test("riconosce le due società autorevoli e limita matching alle rispettive rose", () => { const output = { teamA: { detectedName: "Inter Stellar", formation: "4-3-3", players: ["Vitinha O."] }, teamB: { detectedName: "Kung Fu Parma", formation: "3-5-2", players: ["Vitinha O."] } }; const preview = buildLineupPreview(output, 99, 1, 2, options as [TeamOption, TeamOption]); assert.equal(preview.matchId, 99); assert.deepEqual(preview.teams.map((team) => team.societyId), [7, 1]); assert.deepEqual(preview.teams.map((team) => team.players[0].playerId), [1, 101]); });
 test("nome società illeggibile non permette una società estranea", () => { const preview = buildLineupPreview({ teamA: { detectedName: "Ignoto", formation: null, players: ["Vitinha O."] }, teamB: { detectedName: "Altro", formation: null, players: ["Vitinha O."] } }, 99, 1, 2, options as [TeamOption, TeamOption]); assert.deepEqual(preview.teams.map((team) => team.societyId), [7, 1]); });
-const valid = { matchId: 99, seasonId: 1, matchday: 2, teams: [{ societyId: 7, formation: "4-3-3", playerIds: roster.slice(0, 11).map((p) => p.id) }, { societyId: 1, formation: null, playerIds: roster.slice(0, 11).map((p) => p.id + 100) }] };
+const valid = { matchId: 99, seasonId: 1, matchday: 2, teams: [{ societyId: 7, formation: "4-3-3", playerIds: roster.slice(0, 11).map((p) => p.id), captainId: 1, viceCaptainId: 2 }, { societyId: 1, formation: null, playerIds: roster.slice(0, 11).map((p) => p.id + 100), captainId: 101, viceCaptainId: 102 }] };
 test("accetta due formazioni valide", () => assert.equal(validateConfirmation(valid, options), null));
 test("blocca 10 giocatori", () => assert.match(validateConfirmation({ ...valid, teams: [{ ...valid.teams[0], playerIds: valid.teams[0].playerIds.slice(0, 10) }, valid.teams[1]] }, options)!, /11/));
 test("blocca 12 giocatori", () => assert.match(validateConfirmation({ ...valid, teams: [{ ...valid.teams[0], playerIds: roster.map((p) => p.id) }, valid.teams[1]] }, options)!, /11/));
 test("blocca duplicato", () => assert.match(validateConfirmation({ ...valid, teams: [{ ...valid.teams[0], playerIds: [...valid.teams[0].playerIds.slice(0, 10), 1] }, valid.teams[1]] }, options)!, /stesso/));
 test("blocca giocatore di altra rosa", () => assert.match(validateConfirmation({ ...valid, teams: [{ ...valid.teams[0], playerIds: [...valid.teams[0].playerIds.slice(0, 10), 101] }, valid.teams[1]] }, options)!, /rosa/));
+test("capitano e vicecapitano validi passano", () => assert.equal(validateConfirmation(valid, options), null));
+test("capitano uguale al vicecapitano viene bloccato", () => assert.match(validateConfirmation({ ...valid, teams: [{ ...valid.teams[0], viceCaptainId: 1 }, valid.teams[1]] }, options)!, /diversi/));
+test("capitano fuori dagli undici viene bloccato", () => assert.match(validateConfirmation({ ...valid, teams: [{ ...valid.teams[0], captainId: 12 }, valid.teams[1]] }, options)!, /capitano.*11/i));
+test("vicecapitano fuori dagli undici viene bloccato", () => assert.match(validateConfirmation({ ...valid, teams: [{ ...valid.teams[0], viceCaptainId: 12 }, valid.teams[1]] }, options)!, /vicecapitano.*11/i));
+test("cambio titolare invalida capitano o vice non più presente", () => { const team = { captainId: 1, viceCaptainId: 2 } as LineupPreviewTeam; const players = [{ detectedName: "Nuovo", playerId: 3, status: "recognized" as const, candidates: [3] }]; assert.deepEqual(invalidateMissingLeaders(team, players), { players, captainId: null, viceCaptainId: null }); });

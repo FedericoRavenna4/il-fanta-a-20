@@ -40,6 +40,6 @@ export async function getLineupMatchContext(matchId: number) {
 export async function getPublicLineups(seasonId: number, matchday: number, societyIds: number[]) {
   if (!societyIds.length) return new Map<number, PublicLineup>();
   const { data } = await db().rpc("public_fantabet_lineups", { p_stagione_id: seasonId, p_numero_giornata: matchday, p_societa_ids: societyIds });
-  const rows = (data ?? []) as Array<{ societa_id: number; societa_nome: string; modulo: string | null; players: Array<{ order: number; name: string; role: string }> }>;
+  const rows = (data ?? []) as Array<{ societa_id: number; societa_nome: string; modulo: string | null; players: PublicLineup["players"] }>;
   return new Map(rows.map((row) => [Number(row.societa_id), { societyId: Number(row.societa_id), societyName: row.societa_nome, formation: row.modulo, players: row.players ?? [] }]));
 }

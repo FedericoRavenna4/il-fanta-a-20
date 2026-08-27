@@ -310,12 +310,12 @@ request_my_profile_verification: {
         Returns: Array<{ round_id: number; updated_at: string; unchanged: boolean }>;
       };
       admin_upsert_fantabet_lineups: {
-        Args: { p_stagione_id: number; p_numero_giornata: number; p_lineups: Array<{ societa_id: number; modulo: string | null; player_ids: number[] }> };
+        Args: { p_stagione_id: number; p_numero_giornata: number; p_lineups: Array<{ societa_id: number; modulo: string | null; player_ids: number[]; captain: number; vice_captain: number }> };
         Returns: boolean;
       };
       public_fantabet_lineups: {
         Args: { p_stagione_id: number; p_numero_giornata: number; p_societa_ids: number[] };
-        Returns: Array<{ societa_id: number; societa_nome: string; modulo: string | null; players: Array<{ order: number; name: string; role: string }> }>;
+        Returns: Array<{ societa_id: number; societa_nome: string; modulo: string | null; players: Array<{ order: number; name: string; role: string; captain: boolean; viceCaptain: boolean }> }>;
       };
       fantabet_global_leaderboard: {
         Args: Record<PropertyKey, never>;
