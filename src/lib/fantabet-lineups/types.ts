@@ -1,0 +1,10 @@
+export type RecognitionTeam = { detectedName: string; formation: string | null; players: string[] };
+export type RecognitionOutput = { teamA: RecognitionTeam; teamB: RecognitionTeam };
+export type MatchStatus = "recognized" | "ambiguous" | "unrecognized";
+export type RosterPlayer = { id: number; name: string; role: string };
+export type TeamOption = { id: number; name: string; aliases: string[]; roster: RosterPlayer[] };
+export type PlayerMatch = { detectedName: string; playerId: number | null; status: MatchStatus; candidates: number[] };
+export type LineupPreviewTeam = { detectedName: string; societyId: number | null; societyStatus: MatchStatus; societyCandidates: number[]; formation: string | null; players: PlayerMatch[] };
+export type LineupPreview = { seasonId: number; matchday: number; teams: [LineupPreviewTeam, LineupPreviewTeam]; options: TeamOption[] };
+export type ConfirmLineupInput = { seasonId: number; matchday: number; teams: Array<{ societyId: number; formation: string | null; playerIds: number[] }> };
+export type PublicLineup = { societyId: number; societyName: string; formation: string | null; players: Array<{ order: number; name: string; role: string }> };

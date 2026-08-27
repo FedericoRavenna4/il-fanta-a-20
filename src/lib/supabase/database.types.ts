@@ -309,6 +309,14 @@ request_my_profile_verification: {
         Args: { p_round_id: number | null; p_expected_updated_at: string | null; p_stagione_id: number; p_numero_giornata: number; p_opens_at: string; p_deadline_at: string; p_bets: Array<{ partita_id: number; bet_type: string; points_value: number; display_order: number }> };
         Returns: Array<{ round_id: number; updated_at: string; unchanged: boolean }>;
       };
+      admin_upsert_fantabet_lineups: {
+        Args: { p_stagione_id: number; p_numero_giornata: number; p_lineups: Array<{ societa_id: number; modulo: string | null; player_ids: number[] }> };
+        Returns: boolean;
+      };
+      public_fantabet_lineups: {
+        Args: { p_stagione_id: number; p_numero_giornata: number; p_societa_ids: number[] };
+        Returns: Array<{ societa_id: number; societa_nome: string; modulo: string | null; players: Array<{ order: number; name: string; role: string }> }>;
+      };
       fantabet_global_leaderboard: {
         Args: Record<PropertyKey, never>;
         Returns: Array<{ profile_id: string; username: string; punti_pronostici: number; punti_bonus_costanza: number; punti_tifo: number; punti_bonus_tifo: number; punti_totali: number; giornate_giocate: number; pronostici_corretti: number; schedine_perfette: number; streak_attuale: number; posizione: number }>;

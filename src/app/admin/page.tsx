@@ -9,6 +9,7 @@ export const dynamic = "force-dynamic";
 const cards = [
   { href: "/admin/importazioni", title: "Importazioni", subtitle: "Gestisci calendari e dati.", icon: "upload" },
   { href: "/admin/fantabet", title: "Gestione FantaBet", subtitle: "Gestisci turni e pronostici.", icon: "target" },
+  { href: "/admin/formazioni", title: "Formazioni", subtitle: "Importa gli screenshot FantaBet.", icon: "target" },
 ] as const;
 
 function AdminIcon({ type }: { type: "shield" | "upload" | "target" }) {

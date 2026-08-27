@@ -40,6 +40,7 @@
     "test:societa-season": "node --experimental-strip-types --test src/lib/societa/season-snapshot.test.ts",
     "audit:societa-db-csv": "node scripts/audit-societa-db-vs-csv.mjs",
     "test:fantabet": "node --experimental-strip-types --test src/lib/fantabet/*.test.ts",
+    "test:fantabet-lineups": "node --experimental-strip-types --test src/lib/fantabet-lineups/*.test.ts scripts/fantabet-lineups-migration.test.mjs",
     "test:campionati-live": "node --experimental-strip-types --test src/app/campionati-live-preview/logic.test.ts",
     "test:arcade": "node --experimental-strip-types --test src/lib/arcade/*.test.ts",
     "test:home": "node --experimental-strip-types --test src/lib/home/*.test.ts",

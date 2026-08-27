@@ -1,0 +1,21 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { buildLineupPreview, matchPlayer, normalizeRecognitionName, parseRecognitionOutput, validateConfirmation } from "./logic.ts";
+import type { TeamOption } from "./types.ts";
+
+const roster = Array.from({ length: 12 }, (_, index) => ({ id: index + 1, name: index === 0 ? "Vitinha Oliveira" : index === 1 ? "Nico Paz" : index === 2 ? "Juan Rodriguez" : `Giocatore ${index + 1}`, role: index === 0 ? "P" : "D" }));
+const options: TeamOption[] = [{ id: 7, name: "Interstellar", aliases: ["inter stellar"], roster }, { id: 1, name: "Kung Fu Parma", aliases: [], roster: roster.map((player) => ({ ...player, id: player.id + 100 })) }];
+test("normalizza accenti, apostrofi, punti e spazi", () => assert.equal(normalizeRecognitionName("  D’Àngelo N. "), "d angelo n"));
+test("riconosce abbreviazione con iniziale", () => assert.equal(matchPlayer("Vitinha O.", roster).playerId, 1));
+test("riconosce nome e cognome troncato", () => assert.equal(matchPlayer("Rodriguez Ju.", roster).playerId, 3));
+test("segnala giocatore sconosciuto", () => assert.equal(matchPlayer("Nessuno X", roster).status, "unrecognized"));
+test("segnala giocatore ambiguo", () => { const result = matchPlayer("Mario", [{ id: 1, name: "Mario Rossi", role: "D" }, { id: 2, name: "Mario Bianchi", role: "C" }]); assert.equal(result.status, "ambiguous"); });
+test("valida output recognition strutturato", () => assert.equal(parseRecognitionOutput({ teamA: { detectedName: "A", formation: "4-3-3", players: ["Uno"] }, teamB: { detectedName: "B", formation: null, players: ["Due"] } }).teamA.formation, "4-3-3"));
+test("riconosce due società e limita matching alla rispettiva rosa", () => { const output = { teamA: { detectedName: "Inter Stellar", formation: "4-3-3", players: ["Vitinha O."] }, teamB: { detectedName: "Kung Fu Parma", formation: "3-5-2", players: ["Vitinha O."] } }; const preview = buildLineupPreview(output, 1, 2, options); assert.deepEqual(preview.teams.map((team) => team.societyId), [7, 1]); assert.deepEqual(preview.teams.map((team) => team.players[0].playerId), [1, 101]); });
+test("segnala società sconosciuta", () => { const preview = buildLineupPreview({ teamA: { detectedName: "Ignoto", formation: null, players: ["X"] }, teamB: { detectedName: "Kung Fu Parma", formation: null, players: ["X"] } }, 1, 2, options); assert.equal(preview.teams[0].societyStatus, "unrecognized"); });
+const valid = { seasonId: 1, matchday: 2, teams: [{ societyId: 7, formation: "4-3-3", playerIds: roster.slice(0, 11).map((p) => p.id) }, { societyId: 1, formation: null, playerIds: roster.slice(0, 11).map((p) => p.id + 100) }] };
+test("accetta due formazioni valide", () => assert.equal(validateConfirmation(valid, options), null));
+test("blocca 10 giocatori", () => assert.match(validateConfirmation({ ...valid, teams: [{ ...valid.teams[0], playerIds: valid.teams[0].playerIds.slice(0, 10) }, valid.teams[1]] }, options)!, /11/));
+test("blocca 12 giocatori", () => assert.match(validateConfirmation({ ...valid, teams: [{ ...valid.teams[0], playerIds: roster.map((p) => p.id) }, valid.teams[1]] }, options)!, /11/));
+test("blocca duplicato", () => assert.match(validateConfirmation({ ...valid, teams: [{ ...valid.teams[0], playerIds: [...valid.teams[0].playerIds.slice(0, 10), 1] }, valid.teams[1]] }, options)!, /stesso/));
+test("blocca giocatore di altra rosa", () => assert.match(validateConfirmation({ ...valid, teams: [{ ...valid.teams[0], playerIds: [...valid.teams[0].playerIds.slice(0, 10), 101] }, valid.teams[1]] }, options)!, /rosa/));

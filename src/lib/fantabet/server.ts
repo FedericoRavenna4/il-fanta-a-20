@@ -5,6 +5,7 @@ import { getActiveSocietaCatalog } from "@/lib/societa/catalog.server";
 import { currentTeamStanding, recentTeamStats, selectRelevantRound } from "./ui";
 import { scorePlay } from "./logic";
 import type { FantaBetChoice, FantaBetMatchResult, FantaBetType } from "./types";
+import type { PublicLineup } from "@/lib/fantabet-lineups/types";
 
 export type FantaBetPredictionRow = { id: number; bet_id: number; scelta: string; exact_home: number | null; exact_away: number | null };
 export type FantaBetTeam = { id: number; name: string; logo: string; slug: string; category?: string | null; group?: string | null };
@@ -15,6 +16,7 @@ export type FantaBetBetView = {
   homeStats: FantaBetStats; awayStats: FantaBetStats;
   homeRoster: Array<{ role: string; player: string }>;
   awayRoster: Array<{ role: string; player: string }>;
+  homeLineup: PublicLineup | null; awayLineup: PublicLineup | null;
   result: FantaBetMatchResult;
 };
 export type FantaBetLeaderboardRow = { profile_id: string; username: string; societa_id: number | null; team_id: number | null; team_name: string | null; team_logo: string | null; punti_pronostici: number; punti_bonus_costanza: number; punti_tifo: number; punti_bonus_tifo: number; punti_totali: number; giornate_giocate: number; pronostici_corretti: number; schedine_perfette: number; streak_attuale: number; posizione: number };
@@ -92,12 +94,15 @@ export async function loadFantaBetPageData(requestedRoundId?: number): Promise<F
   const seasonResult = await supabase.from("stagioni").select("codice").eq("id", selected.stagione_id).maybeSingle();
   const seasonCode = (seasonResult.data as { codice?: string } | null)?.codice;
   const rosters = seasonCode ? getRose().filter((player) => player.stagione === seasonCode) : [];
+  const societyIds = [...new Set(selectedMatches.flatMap((match) => [match.societa_casa_id, match.societa_trasferta_id]))];
+  const lineupsResult = societyIds.length ? await supabase.rpc("public_fantabet_lineups", { p_stagione_id: selected.stagione_id, p_numero_giornata: selected.numero_giornata, p_societa_ids: societyIds }) : { data: [], error: null };
+  const lineupMap = new Map(((lineupsResult.data ?? []) as Array<{ societa_id: number; societa_nome: string; modulo: string | null; players: PublicLineup["players"] }>).map((row) => [Number(row.societa_id), { societyId: Number(row.societa_id), societyName: row.societa_nome, formation: row.modulo, players: row.players ?? [] }]));
   const matchById = new Map(selectedMatches.map((match) => [match.id, match]));
   const bets = rawBets.flatMap((bet): FantaBetBetView[] => {
     const match = matchById.get(bet.partita_id); if (!match) return [];
     const home = resolveTeam(match.societa_casa_id); const away = resolveTeam(match.societa_trasferta_id);
     const editionMatches = history.filter((item) => item.edizione_competizione_id === match.edizione_competizione_id && item.giornata_lega < match.giornata_lega).map((item) => ({ matchday: item.giornata_lega, homeId: item.societa_casa_id, awayId: item.societa_trasferta_id, homeGoals: item.gol_casa!, awayGoals: item.gol_trasferta!, homeFantasy: item.fantapunti_casa, awayFantasy: item.fantapunti_trasferta }));
-    return [{ id: bet.id, type: bet.bet_type, points: bet.points_value, order: bet.display_order, home, away, homeStats: { ...recentTeamStats(editionMatches, home.id), ...currentTeamStanding(editionMatches, home.id) }, awayStats: { ...recentTeamStats(editionMatches, away.id), ...currentTeamStanding(editionMatches, away.id) }, homeRoster: rosters.filter((player) => player.squadraId === home.id).map((player) => ({ role: player.ruolo, player: player.giocatore })), awayRoster: rosters.filter((player) => player.squadraId === away.id).map((player) => ({ role: player.ruolo, player: player.giocatore })), result: { status: match.stato, homeGoals: match.gol_casa, awayGoals: match.gol_trasferta, homeFantasyPoints: match.fantapunti_casa, awayFantasyPoints: match.fantapunti_trasferta } }];
+    return [{ id: bet.id, type: bet.bet_type, points: bet.points_value, order: bet.display_order, home, away, homeStats: { ...recentTeamStats(editionMatches, home.id), ...currentTeamStanding(editionMatches, home.id) }, awayStats: { ...recentTeamStats(editionMatches, away.id), ...currentTeamStanding(editionMatches, away.id) }, homeRoster: rosters.filter((player) => player.squadraId === home.id).map((player) => ({ role: player.ruolo, player: player.giocatore })), awayRoster: rosters.filter((player) => player.squadraId === away.id).map((player) => ({ role: player.ruolo, player: player.giocatore })), homeLineup: lineupMap.get(home.id) ?? null, awayLineup: lineupMap.get(away.id) ?? null, result: { status: match.stato, homeGoals: match.gol_casa, awayGoals: match.gol_trasferta, homeFantasyPoints: match.fantapunti_casa, awayFantasyPoints: match.fantapunti_trasferta } }];
   });
   const predictionsResult = viewerId ? await supabase.from("fantabet_predictions").select("id,bet_id,scelta,exact_home,exact_away").in("bet_id", rawBets.map((bet) => bet.id)) : { data: [], error: null };
   const predictions = (predictionsResult.data ?? []) as FantaBetPredictionRow[];
