@@ -439,6 +439,39 @@ test("card compatte condividono corpo bianco e zona esito laterale", async () =>
   assert.match(compact, /bg-emerald-50/); assert.match(compact, /bg-rose-50/); assert.match(compact, /<CompactBetOutcome/);
 });
 
+test("formazioni sono immediate nella partita espansa e statistiche restano collassabili", async () => {
+  const client = await readFile(new URL("../../app/fantabet/FantaBetClient.tsx", import.meta.url), "utf8");
+  const expanded = client.slice(client.indexOf("return <article"), client.indexOf("function CompactBetCard"));
+  assert.match(expanded, /<LineupsComparison bet=\{bet\} \/>[\s\S]*<CombinedStatsPanel bet=\{bet\} \/>/);
+  assert.doesNotMatch(expanded, /Vedi formazioni|LineupsDisclosure/);
+  const stats = client.slice(client.indexOf("function CombinedStatsPanel"), client.indexOf("function DetailedTeamStats"));
+  assert.match(stats, /<details/); assert.match(stats, /<summary[^>]*>STATISTICHE<\/summary>/);
+});
+
+test("confronto formazioni resta a due colonne compatte su mobile e desktop", async () => {
+  const client = await readFile(new URL("../../app/fantabet/FantaBetClient.tsx", import.meta.url), "utf8");
+  const lineups = client.slice(client.indexOf("function LineupsComparison"), client.indexOf("function CompactBetCard"));
+  assert.match(lineups, /grid min-w-0 grid-cols-2/); assert.doesNotMatch(lineups, /sm:grid-cols-2|grid-cols-1/);
+  assert.match(lineups, /min-w-0 overflow-hidden/); assert.match(lineups, /truncate/);
+  for (const viewport of [360, 375, 390, 414, 430]) assert.ok(viewport >= 360 && /grid-cols-2/.test(lineups));
+});
+
+test("formazioni usano ruoli Rose senza numerazione e mantengono C e VC", async () => {
+  const client = await readFile(new URL("../../app/fantabet/FantaBetClient.tsx", import.meta.url), "utf8");
+  const rose = await readFile(new URL("../../app/societa/[slug]/RosaSocieta.tsx", import.meta.url), "utf8");
+  const lineups = client.slice(client.indexOf("function LineupTeam"), client.indexOf("function CompactBetCard"));
+  assert.doesNotMatch(lineups, /\{player\.order\}\./);
+  for (const color of ["bg-orange-500", "bg-green-600", "bg-blue-600", "bg-red-600"]) { assert.match(lineups, new RegExp(color)); assert.match(rose, new RegExp(color)); }
+  assert.match(lineups, /player\.captain \? " \(C\)"/); assert.match(lineups, /player\.viceCaptain \? " \(VC\)"/);
+});
+
+test("assenza formazioni occupa la stessa area senza interferire con il pronostico", async () => {
+  const client = await readFile(new URL("../../app/fantabet/FantaBetClient.tsx", import.meta.url), "utf8");
+  const lineups = client.slice(client.indexOf("function LineupsComparison"), client.indexOf("function CompactBetCard"));
+  assert.match(lineups, /Formazioni non ancora disponibili/); assert.match(lineups, /Formazione non ancora disponibile/);
+  assert.match(client, /<LineupsComparison bet=\{bet\} \/>[\s\S]*CONFERMA GIOCATA/);
+});
+
 test("corrente e storico condividono altezza, colonne e gerarchia responsive", async () => {
   const client = await readFile(new URL("../../app/fantabet/FantaBetClient.tsx", import.meta.url), "utf8");
   const compact = client.slice(client.indexOf("function CompactBetCard"), client.indexOf("function FantasyValues"));
