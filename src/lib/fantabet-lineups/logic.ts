@@ -28,18 +28,26 @@ export function matchPlayer(read: string, roster: RosterPlayer[]) {
   return { detectedName: read.trim(), playerId: match.status === "recognized" ? match.matches[0].id : null, status: match.status, candidates: match.matches.map((player) => player.id) };
 }
 
-export function buildLineupPreview(output: RecognitionOutput, seasonId: number, matchday: number, options: TeamOption[]): LineupPreview {
+export function buildLineupPreview(output: RecognitionOutput, matchId: number, seasonId: number, matchday: number, options: [TeamOption, TeamOption]): LineupPreview {
   const makeTeam = (raw: RecognitionOutput["teamA"]): LineupPreviewTeam => {
     const society = bestMatches(raw.detectedName, options, (team) => team.name, (team) => team.aliases);
     const selected = society.status === "recognized" ? society.matches[0] : null;
     return { detectedName: raw.detectedName.trim(), societyId: selected?.id ?? null, societyStatus: society.status, societyCandidates: society.matches.map((team) => team.id), formation: sanitizeFormation(raw.formation), players: raw.players.map((name) => matchPlayer(name, selected?.roster ?? [])) };
   };
-  return { seasonId, matchday, teams: [makeTeam(output.teamA), makeTeam(output.teamB)], options };
+  const detected = [makeTeam(output.teamA), makeTeam(output.teamB)] as [LineupPreviewTeam, LineupPreviewTeam];
+  const forceTeam = (team: LineupPreviewTeam, raw: RecognitionOutput["teamA"], option: TeamOption): LineupPreviewTeam => ({ ...team, societyId: option.id, societyStatus: "recognized", societyCandidates: [option.id], players: raw.players.map((name) => matchPlayer(name, option.roster)) });
+  let ordered: [LineupPreviewTeam, LineupPreviewTeam];
+  if (detected[0].societyId && detected[1].societyId && detected[0].societyId !== detected[1].societyId) ordered = detected;
+  else if (detected[0].societyId) { const other = options.find((option) => option.id !== detected[0].societyId)!; ordered = [detected[0], forceTeam(detected[1], output.teamB, other)]; }
+  else if (detected[1].societyId) { const other = options.find((option) => option.id !== detected[1].societyId)!; ordered = [forceTeam(detected[0], output.teamA, other), detected[1]]; }
+  else ordered = [forceTeam(detected[0], output.teamA, options[0]), forceTeam(detected[1], output.teamB, options[1])];
+  return { matchId, seasonId, matchday, teams: ordered, options };
 }
 
 export function sanitizeFormation(value: string | null) { const clean = value?.trim() ?? ""; return /^\d(?:-\d){2,4}$/.test(clean) ? clean : null; }
 
 export function validateConfirmation(input: ConfirmLineupInput, options: TeamOption[]) {
+  if (!Number.isSafeInteger(input.matchId) || input.matchId <= 0) return "Partita FantaBet non valida.";
   if (!Number.isSafeInteger(input.seasonId) || input.seasonId <= 0 || !Number.isInteger(input.matchday) || input.matchday < 1 || input.matchday > 38) return "Stagione o giornata non valide.";
   if (!Array.isArray(input.teams) || input.teams.length !== 2) return "Servono esattamente due formazioni.";
   if (input.teams[0].societyId === input.teams[1].societyId) return "Seleziona due società diverse.";
