@@ -22,7 +22,7 @@ export function calculateStandings(teams: Team[], matches: Match[], throughMatch
     else { home.drawn++; away.drawn++; home.points++; away.points++; }
   }
   return [...rows.values()].map((row) => ({ ...row, position: 0, movement: 0, goalDifference: row.goalsFor - row.goalsAgainst, fantasyPoints: Number(row.fantasyPoints.toFixed(2)) }))
-    .sort((a, b) => b.points - a.points || b.goalDifference - a.goalDifference || b.goalsFor - a.goalsFor || b.fantasyPoints - a.fantasyPoints || a.name.localeCompare(b.name, "it"))
+    .sort((a, b) => b.points - a.points || b.fantasyPoints - a.fantasyPoints || a.name.localeCompare(b.name, "it"))
     .map((row, index) => ({ ...row, position: index + 1 }));
 }
 

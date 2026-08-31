@@ -57,9 +57,17 @@ test("più giornate e limite giornata", () => {
   assert.equal(calculateStandings([a, b], games, 2)[0].id, a.id);
 });
 
-test("ordinamento: punti, DR, gol fatti, fantapunti e nome", () => {
-  const games = [match(1, 1, a, b, 2, 1, 60, 90), match(2, 1, c, team(4, "Delta"), 3, 2, 59, 50)];
-  assert.deepEqual(calculateStandings([a, b, c, team(4, "Delta")], games).slice(0, 2).map((r) => r.id), [c.id, a.id]);
+test("ordinamento ufficiale: punti DESC, poi PT.tot DESC, anche a zero punti", () => {
+  const delta = team(4, "Delta");
+  const epsilon = team(5, "Epsilon");
+  const games = [
+    match(1, 1, a, b, 2, 1, 60, 90),
+    match(2, 1, c, delta, 1, 0, 89, 50),
+    match(3, 1, epsilon, team(6, "Zeta"), 0, 1, 78, 65),
+  ];
+  const rows = calculateStandings([a, b, c, delta, epsilon, team(6, "Zeta")], games);
+  assert.deepEqual(rows.filter((row) => row.points === 3).map((row) => row.id), [c.id, 6, a.id]);
+  assert.deepEqual(rows.filter((row) => row.points === 0).map((row) => row.id), [b.id, epsilon.id, delta.id]);
   assert.deepEqual(calculateStandings([a, b], []).map((r) => r.name), ["Alfa", "Beta"]);
 });
 

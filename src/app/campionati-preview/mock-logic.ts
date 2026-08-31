@@ -23,7 +23,7 @@ function tableAt(league: LeagueMock, matchday: number): Omit<StandingRow, "posit
     ...row,
     goalDifference: row.goalsFor - row.goalsAgainst,
     fantasyPoints: Number(row.fantasyPoints.toFixed(1)),
-  })).sort((a, b) => b.points - a.points || b.goalDifference - a.goalDifference || b.fantasyPoints - a.fantasyPoints || a.name.localeCompare(b.name));
+  })).sort((a, b) => b.points - a.points || b.fantasyPoints - a.fantasyPoints || a.name.localeCompare(b.name));
 }
 
 export function standingsFor(league: LeagueMock): StandingRow[] {
