@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
-import { canConfirmSlip, canConfirmSubmittedSlip, clampExactScore, compactLeaderboard, confirmRoundBetId, consistencyBlockProgress, countdownParts, currentStreakPresentation, currentTeamPosition, filterLeaderboard, isCompletePrediction, isDemoMode, isSubmitButtonDisabled, predictionOptions, recentTeamStats, searchLeaderboard, selectRelevantRound } from "./ui.ts";
+import { canConfirmSlip, canConfirmSubmittedSlip, clampExactScore, compactLeaderboard, confirmRoundBetId, consistencyBlockProgress, countdownParts, currentStreakPresentation, currentTeamPosition, filterLeaderboard, isCompletePrediction, isCurrentAutosaveRevision, isDemoMode, isSubmitButtonDisabled, predictionOptions, recentTeamStats, searchLeaderboard, selectRelevantRound, serverRelativeNow } from "./ui.ts";
 import { createFantaBetDemoData } from "./demo.ts";
 
 test("seleziona round aperta, altrimenti ultima conclusa, senza hardcodare id", () => {
@@ -45,11 +45,11 @@ test("anon vede FantaBet ma la CTA richiede account", async () => {
   assert.match(client, /Nuova schedina in arrivo/);
 });
 
-test("salvataggio usa auth uid, persiste su predictions e non usa service role", async () => {
+test("salvataggio usa auth uid, RPC serializzata e non usa service role", async () => {
   const action = await readFile(new URL("../../app/fantabet/actions.ts", import.meta.url), "utf8");
   const server = await readFile(new URL("./server.ts", import.meta.url), "utf8");
-  assert.match(action, /profile_id: user\.id/);
-  assert.match(action, /upsert\(payload, \{ onConflict: "profile_id,bet_id" \}\)/);
+  assert.match(action, /save_my_fantabet_prediction/);
+  assert.match(action, /getUser\(\)/);
   assert.match(server, /from\("fantabet_predictions"\)\.select\("id,bet_id,scelta,exact_home,exact_away"\)/);
   assert.doesNotMatch(action + server, /SERVICE_ROLE|SUPABASE_SERVICE_ROLE_KEY|sb_secret_/);
 });
@@ -115,6 +115,19 @@ test("countdown usa uno snapshot esplicito ed è identico fra server e hydration
   assert.deepEqual(countdownParts(deadline, snapshot), [["GIORNI", 2], ["ORE", 1], ["MINUTI", 29], ["SECONDI", 45]]);
 });
 
+test("clock server-relative ignora il clock assoluto del dispositivo", () => {
+  const serverNow = new Date("2026-08-29T12:00:00.000Z").getTime();
+  assert.equal(serverRelativeNow(serverNow, 1000, 4000), serverNow + 3000);
+  assert.equal(serverRelativeNow(serverNow, 1000, 500), serverNow);
+  assert.notEqual(serverRelativeNow(serverNow, 1000, 4000), serverNow + 7_203_000);
+  assert.notEqual(serverRelativeNow(serverNow, 1000, 4000), serverNow - 7_197_000);
+});
+
+test("una risposta autosave obsoleta non può sostituire quella corrente", () => {
+  assert.equal(isCurrentAutosaveRevision(2, 1), false);
+  assert.equal(isCurrentAutosaveRevision(2, 2), true);
+});
+
 test("nessun branch iniziale FantaBet legge window o Date.now durante il render", async () => {
   const client = await readFile(new URL("../../app/fantabet/FantaBetClient.tsx", import.meta.url), "utf8");
   const beforeEffect = client.slice(0, client.indexOf("useEffect(() =>"));
@@ -128,15 +141,17 @@ test("deadline e stato submission mantengono blocco coerente", () => {
   assert.equal(isSubmitButtonDisabled({ ...ready, writable: false }), true);
   assert.equal(isSubmitButtonDisabled({ ...ready, writable: true }), false);
   assert.equal(isSubmitButtonDisabled({ ...ready, writable: true, pending: true }), true);
+  assert.equal(isSubmitButtonDisabled({ ...ready, writable: true, saving: true }), true);
+  assert.equal(isSubmitButtonDisabled({ ...ready, writable: true, hasSaveError: true }), true);
 });
 
 test("UI distingue pronta, confermata, da riconfermare e scaduta senza submission", async () => {
   const client = await readFile(new URL("../../app/fantabet/FantaBetClient.tsx", import.meta.url), "utf8");
-  assert.match(client, /Schedina pronta da confermare/);
-  assert.match(client, /SCHEDINA COMPILATA/);
-  assert.match(client, /Da confermare/);
+  assert.match(client, /Selezioni salvate · schedina da confermare/);
+  assert.match(client, /SCHEDINA CONFERMATA/);
+  assert.match(client, /Schedina da confermare/);
   assert.match(client, /Schedina non confermata/);
-  assert.match(client, /deadlinePassed \? "Schedina non confermata"/);
+  assert.match(client, /Deadline scaduta · schedina non confermata/);
 });
 
 test("UI visuale include card 1X2, forma V/S/P, collapse e FantaPT distinto", async () => {
@@ -149,7 +164,7 @@ test("UI visuale include card 1X2, forma V/S/P, collapse e FantaPT distinto", as
 
 test("selezione salva senza collapse, Conferma giocata chiude e una modifica richiede riconferma", async () => {
   const client = await readFile(new URL("../../app/fantabet/FantaBetClient.tsx", import.meta.url), "utf8");
-  const savedBlock = client.slice(client.indexOf("function saved"), client.indexOf("function confirm()"));
+  const savedBlock = client.slice(client.indexOf("async function savePrediction"), client.indexOf("function confirm()"));
   assert.match(savedBlock, /setPredictions/);
   assert.match(savedBlock, /setConfirmedBets/);
   assert.doesNotMatch(savedBlock, /next\.delete\(prediction\.bet_id\).*setExpanded/s);
@@ -172,18 +187,78 @@ test("demo forza statistiche coerenti su tutte le cinque giocate", () => {
   assert.equal(demo.bets.every((bet) => bet.homeStats.points !== null && bet.awayStats.points !== null), true);
 });
 
-test("submission è server-side, unica, riapribile prima deadline e invalidata dalle modifiche", async () => {
+test("submission atomica è serializzata, verificata e resta invalidabile", async () => {
   const action = await readFile(new URL("../../app/fantabet/actions.ts", import.meta.url), "utf8");
-  const migration = await readFile(new URL("../../../supabase/migrations/202608080001_fantabet_round_submissions.sql", import.meta.url), "utf8");
-  assert.match(action, /confirm_my_fantabet_round/); assert.match(action, /reopen_my_fantabet_round/);
-  assert.match(migration, /primary key \(profile_id, round_id\)/i);
-  assert.match(migration, /actual_count <> expected_count/);
-  assert.match(migration, /submitted >= deadline/);
-  assert.match(migration, /delete from public\.fantabet_round_submissions/);
-  assert.match(migration, /after insert or update on public\.fantabet_predictions/);
+  const baseMigration = await readFile(new URL("../../../supabase/migrations/202608080001_fantabet_round_submissions.sql", import.meta.url), "utf8");
+  const migration = await readFile(new URL("../../../supabase/migrations/202609010001_fantabet_atomic_confirmation.sql", import.meta.url), "utf8");
+  assert.match(action, /save_and_confirm_my_fantabet_round/); assert.match(action, /reopen_my_fantabet_round/);
+  assert.match(migration, /save_my_fantabet_prediction/);
+  assert.match(migration, /pg_advisory_xact_lock/);
+  const lockKey = /hashtextextended\('fantabet-player-' \|\| v_profile_id::text \|\| '-' \|\| (?:v_round_id|p_round_id)::text, 0\)/g;
+  assert.equal(migration.match(lockKey)?.length, 4, "autosave, conferme e reopen devono condividere la stessa chiave lock");
+  assert.match(migration, /insert into public\.fantabet_predictions[\s\S]*insert into public\.fantabet_round_submissions/);
+  assert.match(migration, /where prediction\.scelta is distinct from excluded\.scelta/);
+  assert.match(migration, /on conflict \(profile_id, round_id\) do nothing/);
+  assert.match(migration, /revoke insert, update on public\.fantabet_predictions from authenticated/);
+  assert.match(baseMigration, /delete from public\.fantabet_round_submissions/);
+  assert.match(baseMigration, /after insert or update on public\.fantabet_predictions/);
+  assert.match(action, /fantabet_round_submissions/);
   assert.match(action, /PGRST202/);
-  assert.match(action, /202608080001|FantaBet submissions|fantabet\/submission/);
-  assert.match(action, /Conferma non disponibile: manca la migrazione FantaBet submissions/);
+  assert.match(action, /Conferma non disponibile: applica la migration FantaBet atomica/);
+});
+
+test("deadline autoritativa viene rivalutata con clock reale dopo ogni lock", async () => {
+  const migration = await readFile(new URL("../../../supabase/migrations/202609010001_fantabet_atomic_confirmation.sql", import.meta.url), "utf8");
+  assert.doesNotMatch(migration, /statement_timestamp\(\)/, "le nuove RPC non devono congelare il tempo prima dell'attesa sul lock");
+  const functions = ["save_my_fantabet_prediction", "save_and_confirm_my_fantabet_round", "confirm_my_fantabet_round", "reopen_my_fantabet_round"];
+  for (let index = 0; index < functions.length; index += 1) {
+    const start = migration.indexOf(`create or replace function public.${functions[index]}`);
+    const end = index + 1 < functions.length ? migration.indexOf(`create or replace function public.${functions[index + 1]}`) : migration.indexOf("-- All authenticated writes");
+    const body = migration.slice(start, end);
+    assert.ok(body.indexOf("pg_advisory_xact_lock") < body.indexOf("clock_timestamp()"), `${functions[index]} deve leggere il tempo reale dopo il lock`);
+    assert.match(body, /v_now >= v_deadline/);
+  }
+});
+
+test("autosave valida integralmente bet type e risultato esatto 0..20", async () => {
+  const migration = await readFile(new URL("../../../supabase/migrations/202609010001_fantabet_atomic_confirmation.sql", import.meta.url), "utf8");
+  const autosave = migration.slice(migration.indexOf("create or replace function public.save_my_fantabet_prediction"), migration.indexOf("create or replace function public.save_and_confirm_my_fantabet_round"));
+  assert.match(autosave, /v_bet_type in \('1X2', 'FANTAPUNTEGGIO_1X2'\)/);
+  assert.match(autosave, /p_scelta not in \('1', 'X', '2'\)/);
+  assert.match(autosave, /v_bet_type = 'UNDER_OVER_2_5'/);
+  assert.match(autosave, /p_scelta not in \('UNDER', 'OVER'\)/);
+  assert.match(autosave, /v_bet_type = 'RISULTATO_ESATTO'/);
+  assert.match(autosave, /p_exact_home not between 0 and 20 or p_exact_away not between 0 and 20/);
+  assert.match(autosave, /p_exact_home is null or p_exact_away is null/);
+  assert.match(autosave, /p_exact_home is not null or p_exact_away is not null/);
+  assert.match(autosave, /FANTABET_PRONOSTICO_NON_VALIDO/);
+  assert.match(autosave, /v_bet_type not in \('1X2', 'FANTAPUNTEGGIO_1X2', 'UNDER_OVER_2_5', 'RISULTATO_ESATTO'\)/);
+  const exactScoreAllowed = (home: number, away: number) => home >= 0 && home <= 20 && away >= 0 && away <= 20;
+  assert.equal(exactScoreAllowed(0, 0), true);
+  assert.equal(exactScoreAllowed(20, 20), true);
+  assert.equal(exactScoreAllowed(21, 0), false);
+  assert.equal(exactScoreAllowed(0, 21), false);
+  assert.equal(exactScoreAllowed(-1, 0), false);
+});
+
+test("retry identico conserva submitted_at mentre una modifica reale richiede una nuova submission", async () => {
+  const migration = await readFile(new URL("../../../supabase/migrations/202609010001_fantabet_atomic_confirmation.sql", import.meta.url), "utf8");
+  const baseMigration = await readFile(new URL("../../../supabase/migrations/202608080001_fantabet_round_submissions.sql", import.meta.url), "utf8");
+  assert.equal(migration.match(/on conflict \(profile_id, round_id\) do nothing/g)?.length, 2);
+  assert.match(migration, /where prediction\.scelta is distinct from excluded\.scelta/);
+  assert.match(baseMigration, /old\.scelta is not distinct from new\.scelta[\s\S]*return new/);
+  assert.match(baseMigration, /delete from public\.fantabet_round_submissions/);
+  assert.match(migration, /insert into public\.fantabet_predictions[\s\S]*insert into public\.fantabet_round_submissions/);
+});
+
+test("race G1/G2: pending, errori e doppio click bloccano la conferma", async () => {
+  const client = await readFile(new URL("../../app/fantabet/FantaBetClient.tsx", import.meta.url), "utf8");
+  assert.match(client, /autosavePending/);
+  assert.match(client, /autosaveFailed/);
+  assert.match(client, /confirmingRef\.current/);
+  assert.match(client, /confirmingRef\.current \|\| autosavePending \|\| autosaveFailed/);
+  assert.match(client, /saveRevisions/);
+  assert.match(client, /isCurrentAutosaveRevision/);
 });
 
 test("demo include 20 utenti, premi derivabili e tutte le 38 giornate", () => {
@@ -217,7 +292,7 @@ test("risultato esatto usa una sola conferma e le righe mostrano la scelta", asy
 
 test("stato finale usa due barre e countdown mobile occupa la larghezza", async () => {
   const client = await readFile(new URL("../../app/fantabet/FantaBetClient.tsx", import.meta.url), "utf8");
-  assert.match(client, /SCHEDINA COMPILATA/); assert.match(client, /MODIFICA SCHEDINA/); assert.match(client, /space-y-2/);
+  assert.match(client, /SCHEDINA CONFERMATA/); assert.match(client, /MODIFICA SCHEDINA/); assert.match(client, /space-y-2/);
   assert.match(client, /w-full text-center sm:w-auto/); assert.match(client, /grid w-full grid-cols-4/); assert.match(client, /overflow-x-hidden/);
 });
 
@@ -290,10 +365,12 @@ test("selettore compatto distingue corrente, storico e deadline", async () => {
 test("round pre-open è visibile, read-only e non tenta salvataggi", async () => {
   const client = await readFile(new URL("../../app/fantabet/FantaBetClient.tsx", import.meta.url), "utf8");
   const actions = await readFile(new URL("../../app/fantabet/actions.ts", import.meta.url), "utf8");
+  const migration = await readFile(new URL("../../../supabase/migrations/202609010001_fantabet_atomic_confirmation.sql", import.meta.url), "utf8");
   assert.match(client, /const preOpen = round\.status === "pubblicata".*now < new Date\(round\.opensAt\)/);
   assert.match(client, /Schedina non ancora aperta/); assert.match(client, /Le giocate apriranno il/);
   assert.match(client, /writable=\{writable\}/); assert.match(client, /if \(!viewerId \|\| !writable \|\| submitted\) return/);
-  assert.match(actions, /now < new Date\(roundResult\.data\.opens_at\).*La schedina non è ancora aperta/s);
+  assert.match(actions, /save_my_fantabet_prediction/);
+  assert.match(migration, /v_now < v_opens_at/);
 });
 
 test("navigazione pubblica usa tutte le round reali e il parametro id", async () => {

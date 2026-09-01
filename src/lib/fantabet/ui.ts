@@ -57,9 +57,17 @@ export function canConfirmSubmittedSlip(completed: number, confirmed: number, re
   return canConfirmSlip(completed, required, writable) && confirmed === required;
 }
 
-export function isSubmitButtonDisabled(input: { hydrated: boolean; completed: number; confirmed: number; required: number; writable: boolean; pending: boolean }) {
+export function isSubmitButtonDisabled(input: { hydrated: boolean; completed: number; confirmed: number; required: number; writable: boolean; pending: boolean; saving?: boolean; hasSaveError?: boolean }) {
   if (!input.hydrated) return true;
-  return Boolean(!canConfirmSubmittedSlip(input.completed, input.confirmed, input.required, input.writable) || input.pending);
+  return Boolean(!canConfirmSubmittedSlip(input.completed, input.confirmed, input.required, input.writable) || input.pending || input.saving || input.hasSaveError);
+}
+
+export function serverRelativeNow(initialServerNow: number, initialMonotonic: number, currentMonotonic: number) {
+  return initialServerNow + Math.max(0, currentMonotonic - initialMonotonic);
+}
+
+export function isCurrentAutosaveRevision(latestRevision: number, responseRevision: number) {
+  return latestRevision === responseRevision;
 }
 
 export function countdownParts(deadline: string, snapshotNow: number) {

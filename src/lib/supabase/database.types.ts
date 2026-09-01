@@ -369,6 +369,14 @@ request_my_profile_verification: {
         Args: { p_round_id: number };
         Returns: string;
       };
+      save_my_fantabet_prediction: {
+        Args: { p_bet_id: number; p_scelta: string; p_exact_home?: number | null; p_exact_away?: number | null };
+        Returns: Array<{ id: number; bet_id: number; scelta: string; exact_home: number | null; exact_away: number | null; server_now: string }>;
+      };
+      save_and_confirm_my_fantabet_round: {
+        Args: { p_round_id: number; p_predictions: unknown };
+        Returns: Array<{ round_id: number; profile_id: string; submitted_at: string; confirmed: boolean; prediction_count: number; server_now: string }>;
+      };
       reopen_my_fantabet_round: {
         Args: { p_round_id: number };
         Returns: undefined;
