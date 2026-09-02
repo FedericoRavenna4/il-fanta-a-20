@@ -207,17 +207,27 @@ function parseCalendarData(data, readOptions, options = {}) {
       const rawAway = text(row[header.offset + layout.away]);
       const rawHomeFantasy = decimal(row[header.offset + layout.homeFantasy]);
       const rawAwayFantasy = decimal(row[header.offset + layout.awayFantasy]);
-      const goalResult = parseGoalResult(row[header.offset + layout.result]);
+      const rawResult = text(row[header.offset + layout.result]);
+      const goalResult = parseGoalResult(rawResult);
       if (!rawHome || !rawAway) {
         incompleteRows.push({ sheet: sheetName, row: sourceRowIndex + 1, giornataLega: header.giornataLega, casa: rawHome, trasferta: rawAway });
         continue;
       }
       const casa = resolveAndTrack(rawHome);
       const trasferta = resolveAndTrack(rawAway);
-      const placeholders = !goalResult && rawHomeFantasy === 0 && rawAwayFantasy === 0;
-      const hasAnyResultData = goalResult || (rawHomeFantasy !== null && rawHomeFantasy !== 0) || (rawAwayFantasy !== null && rawAwayFantasy !== 0);
+      const placeholders = !rawResult && rawHomeFantasy === 0 && rawAwayFantasy === 0;
+      const emptyResult = !rawResult && ((rawHomeFantasy === null && rawAwayFantasy === null) || placeholders);
       const calculated = Boolean(goalResult && rawHomeFantasy !== null && rawAwayFantasy !== null && rawHomeFantasy > 0 && rawAwayFantasy > 0);
-      if (hasAnyResultData && !calculated) anomalies.push({ type: "risultato_parziale_o_ambiguo", sheet: sheetName, row: sourceRowIndex + 1, giornataLega: header.giornataLega });
+      if (!emptyResult && !calculated) {
+        const missing = [];
+        if (!rawResult) missing.push("risultato mancante");
+        else if (!goalResult) missing.push("risultato non riconosciuto");
+        if (rawHomeFantasy === null) missing.push("fantapunteggio casa mancante");
+        else if (rawHomeFantasy <= 0) missing.push("fantapunteggio casa non valido");
+        if (rawAwayFantasy === null) missing.push("fantapunteggio trasferta mancante");
+        else if (rawAwayFantasy <= 0) missing.push("fantapunteggio trasferta non valido");
+        anomalies.push({ type: "risultato_parziale_o_ambiguo", sheet: sheetName, row: sourceRowIndex + 1, giornataLega: header.giornataLega, casa: rawHome, trasferta: rawAway, motivo: missing.join(", ") });
+      }
       const normalized = {
         source: { sheet: sheetName, row: sourceRowIndex + 1 },
         edizioneCompetizioneId: options.edizioneCompetizioneId ?? null,
@@ -316,7 +326,7 @@ export function validateCoppaCalendarStructure(parsed) {
 
 export function buildUpsertPayload(parsed, options) {
   if (!Number.isInteger(options.edizioneCompetizioneId) || options.edizioneCompetizioneId <= 0) throw new Error("edizioneCompetizioneId deve essere un intero positivo.");
-  if (parsed.diagnostics.ambiguousNames.length || parsed.diagnostics.duplicates.length || parsed.diagnostics.restDuplicates.length || parsed.diagnostics.incompleteRows.length) throw new Error("Import bloccato: il parsing contiene dati ambigui, duplicati o righe incomplete.");
+  if (parsed.diagnostics.ambiguousNames.length || parsed.diagnostics.duplicates.length || parsed.diagnostics.restDuplicates.length || parsed.diagnostics.incompleteRows.length || parsed.diagnostics.anomalies?.some((item) => item.type === "risultato_parziale_o_ambiguo")) throw new Error("Import bloccato: il parsing contiene dati ambigui, duplicati o righe incomplete.");
   return parsed.matches.map((match) => {
     if (match.casa.societaId === null || match.trasferta.societaId === null) throw new Error(`Import bloccato: società non risolta alla giornata ${match.giornataLega}.`);
     return {
@@ -338,7 +348,7 @@ export function buildUpsertPayload(parsed, options) {
 
 export function buildRestsUpsertPayload(parsed, options) {
   if (!Number.isInteger(options.edizioneCompetizioneId) || options.edizioneCompetizioneId <= 0) throw new Error("edizioneCompetizioneId deve essere un intero positivo.");
-  if (parsed.diagnostics.ambiguousNames.length || parsed.diagnostics.duplicates.length || parsed.diagnostics.restDuplicates.length || parsed.diagnostics.incompleteRows.length) throw new Error("Import bloccato: il parsing contiene dati ambigui, duplicati o righe incomplete.");
+  if (parsed.diagnostics.ambiguousNames.length || parsed.diagnostics.duplicates.length || parsed.diagnostics.restDuplicates.length || parsed.diagnostics.incompleteRows.length || parsed.diagnostics.anomalies?.some((item) => item.type === "risultato_parziale_o_ambiguo")) throw new Error("Import bloccato: il parsing contiene dati ambigui, duplicati o righe incomplete.");
   return parsed.rests.map((rest) => {
     if (rest.societa.societaId === null) throw new Error(`Import bloccato: società in riposo non risolta alla giornata ${rest.giornataLega}.`);
     return {

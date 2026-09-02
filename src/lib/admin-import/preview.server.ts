@@ -11,15 +11,26 @@ import { planCalendarSynchronization } from "./calendar-sync";
 import { getCompetitionImportConfig } from "./competition-config";
 
 type CalendarImportType = Exclude<ImportType, "rose">;
+type ResultAnomaly = { type: "risultato_parziale_o_ambiguo"; row?: number; giornataLega?: number; casa?: string | null; trasferta?: string | null; motivo?: string };
+
+function isResultAnomaly(item: unknown): item is ResultAnomaly {
+  return Boolean(item && typeof item === "object" && "type" in item && item.type === "risultato_parziale_o_ambiguo");
+}
 
 function issues(parsed: ReturnType<typeof parseCalendarBuffer>, importType: CalendarImportType, competitionCode: string) {
   const competitionConfig = getCompetitionImportConfig(competitionCode);
+  const resultAnomalies = parsed.diagnostics.anomalies.filter(isResultAnomaly);
   const errors: ImportIssue[] = [
     ...parsed.diagnostics.unknownNames.map((value) => ({ codice: "SOCIETA_NON_RICONOSCIUTA", messaggio: `Società non riconosciuta: ${value}`, valore: value })),
     ...parsed.diagnostics.ambiguousNames.map((value) => ({ codice: "SOCIETA_AMBIGUA", messaggio: `Società ambigua: ${value}`, valore: value })),
     ...parsed.diagnostics.duplicates.map(() => ({ codice: "PARTITA_DUPLICATA", messaggio: "Partita duplicata nel file." })),
     ...parsed.diagnostics.restDuplicates.map(() => ({ codice: "RIPOSO_DUPLICATO", messaggio: "Riposo duplicato nel file." })),
     ...parsed.diagnostics.incompleteRows.map((row) => ({ codice: "RIGA_INCOMPLETA", messaggio: "Partita con una squadra mancante e senza indicazione di riposo.", riga: row.row })),
+    ...resultAnomalies.map((item) => ({
+      codice: "RISULTATO_PARZIALE_O_AMBIGUO",
+      messaggio: `Giornata ${item.giornataLega}, ${item.casa ?? "squadra casa"} - ${item.trasferta ?? "squadra trasferta"}: ${item.motivo ?? "risultato o fantapunteggi incompleti"}.`,
+      riga: item.row,
+    })),
     ...(importType === "calendario_campionato" ? validateCampionatoCalendarStructure(parsed) : []),
     ...(importType === "calendario_coppa" && competitionConfig?.code === "coppa-fanta-20" ? validateCoppaCalendarStructure(parsed) : []),
   ];

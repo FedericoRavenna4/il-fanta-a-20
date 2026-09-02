@@ -346,3 +346,22 @@ test("preview calendario mostra esplicitamente anche le rimozioni", () => {
   const client = fs.readFileSync(path.join(process.cwd(), "src/app/admin/importazioni/ImportazioniClient.tsx"), "utf8");
   assert.match(client, /Invariate: preview\.summary\.unchanged, Rimossi: preview\.summary\.rimossi/);
 });
+
+test("risultati parziali sono bloccanti anche nella validazione server", () => {
+  const preview = fs.readFileSync(path.join(process.cwd(), "src/lib/admin-import/preview.server.ts"), "utf8");
+  assert.match(preview, /diagnostics\.anomalies\.filter\(isResultAnomaly\)/);
+  assert.match(preview, /isResultAnomaly[\s\S]*risultato_parziale_o_ambiguo/);
+  assert.match(preview, /RISULTATO_PARZIALE_O_AMBIGUO/);
+  assert.match(preview, /Giornata \$\{item\.giornataLega\}[\s\S]*item\.casa[\s\S]*item\.trasferta[\s\S]*item\.motivo/);
+  assert.match(preview, /prepared\.errors\.length[\s\S]*nuova validazione contiene errori bloccanti/);
+});
+
+test("una partita calcolata avvia atomicamente solo un'edizione programmata", () => {
+  const migration = fs.readFileSync(path.join(process.cwd(), "supabase/migrations/202609020001_start_competition_after_calculated_match.sql"), "utf8");
+  assert.match(migration, /^begin;/);
+  assert.match(migration, /if new\.stato = 'calcolata'/);
+  assert.match(migration, /set stato = 'in_corso'[\s\S]*where id = new\.edizione_competizione_id[\s\S]*and stato = 'programmata'/);
+  assert.match(migration, /after insert or update of stato on public\.partite/);
+  assert.match(migration, /commit;\s*$/);
+  assert.doesNotMatch(migration, /set stato = 'conclusa'/);
+});

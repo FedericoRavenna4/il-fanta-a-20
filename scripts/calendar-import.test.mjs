@@ -70,6 +70,43 @@ test("distingue il placeholder 0/0 con trattino da un vero 0-0 esplicito", () =>
   assert.deepEqual({ stato: parsed.matches[1].stato, fp: parsed.matches[1].fantapuntiCasa, gol: parsed.matches[1].golCasa }, { stato: "calcolata", fp: 66.5, gol: 0 });
 });
 
+test("blocca tutte le combinazioni di risultato parziale o ambiguo e accetta una correzione completa", () => {
+  const cases = [
+    { row: ["Casa", null, null, "Ospite", "3-1"], reason: /fantapunteggio casa mancante/ },
+    { row: ["Casa", 66.5, 65, "Ospite", "-"], reason: /risultato mancante/ },
+    { row: ["Casa", 66.5, null, "Ospite", "-"], reason: /risultato mancante.*fantapunteggio trasferta mancante/ },
+    { row: ["Casa", 66.5, 65, "Ospite", "vittoria"], reason: /risultato non riconosciuto/ },
+  ];
+  for (const item of cases) {
+    const parsed = parseCalendarWorkbook(fixture([["1ª Giornata lega", null, "3ª Giornata serie a"], item.row]), { resolver, expectedDays: 1 });
+    const anomaly = parsed.diagnostics.anomalies.find((entry) => entry.type === "risultato_parziale_o_ambiguo");
+    assert.ok(anomaly);
+    assert.match(anomaly.motivo, item.reason);
+    assert.equal(anomaly.giornataLega, 1);
+    assert.equal(anomaly.casa, "Casa");
+    assert.equal(anomaly.trasferta, "Ospite");
+    assert.throws(() => buildUpsertPayload(parsed, { edizioneCompetizioneId: 10 }), /Import bloccato/);
+  }
+  const corrected = parseCalendarWorkbook(fixture([["1ª Giornata lega", null, "3ª Giornata serie a"], ["Casa", 66.5, 65, "Ospite", "2-2"]]), { resolver, expectedDays: 1 });
+  assert.equal(corrected.diagnostics.anomalies.some((entry) => entry.type === "risultato_parziale_o_ambiguo"), false);
+  assert.deepEqual(buildUpsertPayload(corrected, { edizioneCompetizioneId: 10 })[0], { edizione_competizione_id: 10, giornata_lega: 1, giornata_serie_a: 3, societa_casa_id: 1, societa_trasferta_id: 2, fantapunti_casa: 66.5, fantapunti_trasferta: 65, gol_casa: 2, gol_trasferta: 2, stato: "calcolata", fonte_importazione: null, import_batch_id: null });
+});
+
+test("Coppa completa accetta G1 calcolata e giornate 2-14 completamente vuote", () => {
+  const rows = [["Girone di qualificazione"]];
+  for (let pair = 0; pair < 7; pair += 1) {
+    const odd = pair * 2 + 1; const even = odd + 1;
+    rows.push([`${odd}ª Giornata lega`, null, `${odd + 2}ª Giornata serie a`, null, null, null, `${even}ª Giornata lega`, null, `${even + 2}ª Giornata serie a`]);
+    for (let index = 0; index < 50; index += 1) rows.push([`Team ${index + 1}`, odd === 1 ? 66.5 : 0, odd === 1 ? 65 : 0, `Team ${index + 51}`, odd === 1 ? "3-1" : "-", null, `Team ${index + 1}`, 0, 0, `Team ${index + 51}`, "-"]);
+  }
+  const teamResolver = { resolve(name) { const societaId = Number(String(name).replace("Team ", "")); return { input: name, normalized: normalizeSocietaName(name), matches: [{ societaId }], societaId }; } };
+  const parsed = parseCalendarWorkbook(fixture(rows), { resolver: teamResolver, calendarType: "calendario_coppa" });
+  assert.deepEqual(validateCoppaCalendarStructure(parsed), []);
+  assert.equal(parsed.matches.filter((match) => match.stato === "calcolata").length, 50);
+  assert.equal(parsed.matches.filter((match) => match.stato === "programmata").length, 650);
+  assert.equal(parsed.diagnostics.anomalies.some((entry) => entry.type === "risultato_parziale_o_ambiguo"), false);
+});
+
 test("segnala righe incomplete e non crea falsi 0-0", () => {
   const file = fixture([["1ª Giornata lega", null, "1ª Giornata serie a"], [null, 0, 0, "Ospite", "-"]]);
   const parsed = parseCalendarWorkbook(file, { resolver, expectedDays: 1, expectedMatchesPerDay: 1 });

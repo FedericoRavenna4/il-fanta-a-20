@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
-import { buildCoppaPrototype, coppaStandingsForRange, qualificationFor, qualificationSeparators, sortCoppaStandings, type CoppaMatch, type CoppaTeam } from "./coppa-fanta-fixture.ts";
+import { buildCoppaPrototype, coppaStandingsForRange, isCoppaQualificationComplete, qualificationFor, qualificationSeparators, qualificationSeparatorsFor, sortCoppaStandings, type CoppaMatch, type CoppaTeam } from "./coppa-fanta-fixture.ts";
 
 const teams: CoppaTeam[] = Array.from({ length: 100 }, (_, index) => ({ id: index + 1, name: `Società ${index + 1}`, slug: `societa-${index + 1}`, logo: `/logo-${index + 1}.png` }));
 
@@ -58,6 +58,20 @@ test("separatori sono collocati dopo 8, 16, 24, 32 e 64", () => {
   assert.deepEqual([...qualificationSeparators.keys()], [8, 16, 24, 32, 64]);
 });
 
+test("girone incompleto usa soltanto etichette provvisorie", () => {
+  const matches = buildCoppaPrototype(teams).matches.map((match, index) => index === 0 ? match : { ...match, status: "programmata", homeGoals: null, awayGoals: null, homeScore: null, awayScore: null });
+  const labels = [...qualificationSeparatorsFor(matches).values()].flatMap((label) => [label.desktop, label.mobile]);
+  assert.equal(isCoppaQualificationComplete(matches), false);
+  assert.ok(labels.every((label) => label.startsWith("ZONA ")));
+  assert.doesNotMatch(labels.join(" "), /QUALIFICAT[AE]|ELIMINAT[AE]|NON QUALIFICATA|\bOUT\b/i);
+});
+
+test("girone completo abilita i verdetti definitivi", () => {
+  const matches = buildCoppaPrototype(teams).matches;
+  assert.equal(isCoppaQualificationComplete(matches), true);
+  assert.match([...qualificationSeparatorsFor(matches).values()].map((label) => label.desktop).join(" "), /QUALIFICATE AGLI OTTAVI/);
+});
+
 test("fasce qualificazione coprono esattamente 1-100", () => {
   assert.equal(qualificationFor(1).short, "OTTAVI"); assert.equal(qualificationFor(9).short, "SEDIC.");
   assert.equal(qualificationFor(17).short, "32ESIMI"); assert.equal(qualificationFor(25).short, "3°T PO");
@@ -109,10 +123,10 @@ test("Coppa replica tab, slider, gerarchia risultati e colori solo agli estremi"
   assert.match(source, /setTab\("results"\)[\s\S]*setTab\("table"\)/); assert.match(source, /hidden lg:block/);
   assert.match(source, /Array\.from\(\{ length: 14 \}/); assert.match(source, /aria-haspopup="listbox"[\s\S]*Giornata \{day\}/);
   assert.match(source, /aria-label="Da giornata Coppa"/); assert.match(source, /aria-label="A giornata Coppa"/); assert.match(source, /Giornate \{from\}–\{to\}/);
-  assert.match(source, /qualificationSeparators\.has\(row\.position\)/); assert.match(source, /showQualification && row\.position >= 65 \? "border-l-2 border-l-rose-300 bg-rose-100\/60"/);
+  assert.match(source, /qualificationSeparators\.get\(row\.position\)/); assert.match(source, /showQualification && row\.position >= 65 \? "border-l-2 border-l-rose-300 bg-rose-100\/60"/);
   assert.match(source, /sort === "official" \|\| sort === "points"/);
   assert.match(source, /showQualification && row\.position >= 65/);
-  assert.match(source, /showQualification && qualificationSeparators\.has\(row\.position\)/);
+  assert.match(source, /showQualification && qualificationLabel/);
   assert.match(source, /mt-1 block sm:ml-\[\.22em\] sm:mt-0 sm:inline/);
   assert.match(source, /sortCoppaStandings/); assert.match(source, /POS conserva la posizione ufficiale/);
   assert.doesNotMatch(source, /qualificationFor\(row\.position\)/); assert.match(source, /styles\.marqueeActive/);

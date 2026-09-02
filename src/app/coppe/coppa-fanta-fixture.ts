@@ -56,13 +56,31 @@ export function sortCoppaStandings(rows: CoppaStanding[], key: CoppaSortKey, dir
   return [...rows].sort((a, b) => ((a[key] - b[key]) * sign) || a.position - b.position);
 }
 
-export const qualificationSeparators = new Map([
+const definitiveQualificationSeparators = new Map([
   [8, { desktop: "QUALIFICATE AGLI OTTAVI", mobile: "OTTAVI" }],
   [16, { desktop: "QUALIFICATE AI SEDICESIMI", mobile: "SEDICESIMI" }],
   [24, { desktop: "QUALIFICATE AI TRENTADUESIMI", mobile: "32ESIMI" }],
   [32, { desktop: "ACCESSO AL 3° TURNO PLAYOFF", mobile: "3°T PLAYOFF" }],
   [64, { desktop: "ACCESSO AL 1° TURNO PLAYOFF", mobile: "1°T PLAYOFF" }],
 ]);
+
+const provisionalQualificationSeparators = new Map([
+  [8, { desktop: "ZONA OTTAVI", mobile: "ZONA OTTAVI" }],
+  [16, { desktop: "ZONA SEDICESIMI", mobile: "ZONA SEDIC." }],
+  [24, { desktop: "ZONA TRENTADUESIMI", mobile: "ZONA 32ESIMI" }],
+  [32, { desktop: "ZONA TERZO TURNO PLAYOFF", mobile: "ZONA 3°T PO" }],
+  [64, { desktop: "ZONA PRIMO TURNO PLAYOFF", mobile: "ZONA 1°T PO" }],
+]);
+
+export const qualificationSeparators = definitiveQualificationSeparators;
+
+export function isCoppaQualificationComplete(matches: CoppaMatch[]) {
+  return matches.length > 0 && matches.every(isCalculatedCoppaMatch);
+}
+
+export function qualificationSeparatorsFor(matches: CoppaMatch[]) {
+  return isCoppaQualificationComplete(matches) ? definitiveQualificationSeparators : provisionalQualificationSeparators;
+}
 
 export function qualificationFor(position: number) {
   if (position <= 8) return { short: "OTTAVI", full: "Accesso diretto agli Ottavi", tone: "border-amber-300 bg-amber-100 text-amber-900" };
