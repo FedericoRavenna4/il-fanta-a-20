@@ -23,3 +23,41 @@ test("manuale invalido blocca",()=>{for(const slot of [{source:"manual",player:"
 test("unresolved blocca",()=>{const input=structuredClone(valid);input.teams[0].players[10]=null;assert.match(validateConfirmation(input,options)!,/risolti/);});
 test("duplicati roster manual e misti bloccano",()=>{const cases=[{source:"roster",rosterPlayerId:1},{source:"manual",player:"Manuale",role:"A",overrideConfirmed:true},{source:"manual",player:"Vitinha Oliveira",role:"A",overrideConfirmed:true}] as const;for(const slot of cases){const input=structuredClone(valid);if(slot.source==="manual"&&slot.player==="Manuale")input.teams[0].players[9]={...slot};input.teams[0].players[10]={...slot};assert.match(validateConfirmation(input,options)!,/stesso/);}});
 test("capitano e vice devono essere posizioni valide e distinte",()=>{for(const patch of [{captainOrder:0},{captainOrder:12},{viceCaptainOrder:12},{captainOrder:2,viceCaptainOrder:2}]){const input=structuredClone(valid);Object.assign(input.teams[0],patch);assert.ok(validateConfirmation(input,options));}});
+
+test("fallback OCR riconosce sostituzione omissione errore interno e trasposizione",()=>{
+  for(const [actual,read] of [["Carnesecchi","Carnececchi"],["Diouf","Diuf"],["Diouf","Dioouf"],["Mendy P.","Mendi P"],["Ghedjemis","Ghediemis"],["Helland","Heland"],["Chukwueze","Chukweeze"],["Baturina","Bautrina"]]){
+    const result=matchPlayer(read,[{id:1,name:actual,role:"C"}]);
+    assert.equal(result.status,"recognized",`${read} -> ${actual}`);
+    assert.equal(result.playerId,1);
+  }
+});
+
+test("matcher esistente conserva priorità su exact prefix token e containment",()=>{
+  assert.equal(matchPlayer("Solet",[{id:1,name:"Solet",role:"D"},{id:2,name:"Solex",role:"D"}]).playerId,1);
+  assert.equal(matchPlayer("Vitinha Oli",[{id:1,name:"Vitinha Oliveira",role:"C"},{id:2,name:"Vitinha Pereira",role:"C"}]).playerId,1);
+  assert.equal(matchPlayer("VitinhaO",[{id:1,name:"Vitinha Oliveira",role:"C"},{id:2,name:"Vitinhap",role:"C"}]).playerId,1);
+});
+
+test("fallback OCR resta conservativa per distanza lunghezza e unicità",()=>{
+  assert.equal(matchPlayer("Carnxxecchi",[{id:1,name:"Carnesecchi",role:"P"}]).status,"unrecognized");
+  assert.equal(matchPlayer("Dio",[{id:1,name:"Diao",role:"C"}]).status,"unrecognized");
+  const ambiguous=matchPlayer("Playerx",[{id:1,name:"Playera",role:"C"},{id:2,name:"Playerb",role:"C"}]);
+  assert.equal(ambiguous.status,"ambiguous");
+  assert.deepEqual(ambiguous.candidates,[1,2]);
+  assert.equal(matchPlayer("Nessuno",[{id:1,name:"Carnesecchi",role:"P"}]).status,"unrecognized");
+});
+
+test("fallback automatica non consulta rosa avversaria o catalogo lega",()=>{
+  const own=[{id:1,name:"Carnesecchi",role:"P",societyId:7,societyName:"Interstellar"}];
+  const opponent=[{id:2,name:"Chukwueze",role:"C",societyId:1,societyName:"Kung Fu Parma"}];
+  const isolatedOptions:TeamOption[]=[{id:7,name:"Interstellar",aliases:[],roster:own,leaguePlayers:[...own,...opponent]},{id:1,name:"Kung Fu Parma",aliases:[],roster:opponent,leaguePlayers:[...own,...opponent]}];
+  const preview=buildLineupPreview({teamA:{detectedName:"Interstellar",formation:null,players:["Chukweeze"]},teamB:{detectedName:"Kung Fu Parma",formation:null,players:["Carnesecchx"]}},99,1,2,isolatedOptions as [TeamOption,TeamOption]);
+  assert.equal(preview.teams[0].players[0].status,"unrecognized");
+  assert.equal(preview.teams[1].players[0].status,"unrecognized");
+});
+
+test("campione audit passa da 16 riconosciuti e 6 sconosciuti a 22 riconosciuti",()=>{
+  const sample=[["Carnesecchi","Carnececchi"],["Solet","Solet"],["Stones","Stones"],["Valeri","Valeri"],["Valle","Valle"],["Colpani","Colpani"],["Diouf","Diuf"],["Volpato","Volpato"],["Yeboah J.","Yeboah J"],["Mendy P.","Mendi P"],["Ghilardi","Ghilardi"],["Ghedjemis","Ghediemis"],["Malen","Malen"],["Diao","Diao"],["Baturina","Baturina"],["Calò","Calo"],["Vojvoda","Vojvoda"],["Helland","Heland"],["Troilo","Troilo"],["Obert","Obert"],["Muric","Muric"],["Chukwueze","Chukweeze"]];
+  const results=sample.map(([actual,read],index)=>matchPlayer(read,[{id:index+1,name:actual,role:"C"}]));
+  assert.deepEqual({recognized:results.filter((result)=>result.status==="recognized").length,ambiguous:results.filter((result)=>result.status==="ambiguous").length,unrecognized:results.filter((result)=>result.status==="unrecognized").length},{recognized:22,ambiguous:0,unrecognized:0});
+});
