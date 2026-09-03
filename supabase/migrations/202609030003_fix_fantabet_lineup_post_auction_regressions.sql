@@ -1,27 +1,5 @@
 begin;
 
-create extension if not exists unaccent with schema extensions;
-
-create or replace function public.normalize_fantabet_player_name(input text)
-returns text
-language sql
-immutable
-strict
-set search_path = ''
-as $$
-  select pg_catalog.btrim(
-    pg_catalog.regexp_replace(
-      pg_catalog.lower(extensions.unaccent(input)),
-      '[^a-z0-9]+',
-      ' ',
-      'g'
-    )
-  );
-$$;
-
-revoke all on function public.normalize_fantabet_player_name(text) from public, anon, authenticated;
-grant execute on function public.normalize_fantabet_player_name(text) to service_role;
-
 create or replace function public.admin_upsert_fantabet_lineups(
   p_stagione_id bigint,
   p_numero_giornata integer,
