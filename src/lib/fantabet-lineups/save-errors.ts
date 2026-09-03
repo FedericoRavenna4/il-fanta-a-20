@@ -5,6 +5,8 @@ const DB_ERRORS = {
   FANTABET_LINEUPS_SCOPE_INVALIDO: { category: "SCOPE_INVALID", message: "Stagione o giornata FantaBet non valide." },
   FANTABET_LINEUPS_INVALIDE: { category: "LINEUPS_INVALID", message: "Le due formazioni non rispettano il formato richiesto." },
   FANTABET_TITOLARI_INVALIDI: { category: "PLAYERS_INVALID", message: "Controlla che ogni formazione abbia 11 titolari validi della rosa corretta." },
+  FANTABET_LINEUPS_FORMATO_AMBIGUO: { category: "PAYLOAD_FORMAT", message: "Il formato delle formazioni non è valido." },
+  FANTABET_LINEUPS_LEGA_INVALIDA: { category: "LEAGUE_INVALID", message: "Non è possibile determinare in modo sicuro la lega della formazione." },
   FANTABET_LINEUPS_PARTITA_FUORI_SCOPE: { category: "MATCH_OUT_OF_SCOPE", message: "La partita non appartiene alla stagione e giornata FantaBet selezionate." },
   FANTABET_LINEUPS_PARTITA_NON_SELEZIONATA: { category: "MATCH_NOT_SELECTED", message: "La partita non appartiene alle cinque giocate della round FantaBet." },
 } as const;

@@ -207,6 +207,16 @@ test("submission atomica è serializzata, verificata e resta invalidabile", asyn
   assert.match(action, /Conferma non disponibile: applica la migration FantaBet atomica/);
 });
 
+test("migration correttiva elimina i conflict target ambigui nelle RPC RETURNS TABLE", async () => {
+  const migration = await readFile(new URL("../../../supabase/migrations/202609030001_fix_fantabet_rpc_ambiguous_columns.sql", import.meta.url), "utf8");
+  assert.match(migration, /create or replace function public\.save_my_fantabet_prediction/);
+  assert.match(migration, /create or replace function public\.save_and_confirm_my_fantabet_round/);
+  assert.doesNotMatch(migration, /create or replace function public\.(?:confirm_my_fantabet_round|reopen_my_fantabet_round)/);
+  assert.equal(migration.match(/on conflict on constraint fantabet_predictions_profile_bet_unique/g)?.length, 2);
+  assert.equal(migration.match(/on conflict on constraint fantabet_round_submissions_pkey/g)?.length, 1);
+  assert.doesNotMatch(migration, /on conflict \(profile_id, (?:bet_id|round_id)\)/);
+});
+
 test("deadline autoritativa viene rivalutata con clock reale dopo ogni lock", async () => {
   const migration = await readFile(new URL("../../../supabase/migrations/202609010001_fantabet_atomic_confirmation.sql", import.meta.url), "utf8");
   assert.doesNotMatch(migration, /statement_timestamp\(\)/, "le nuove RPC non devono congelare il tempo prima dell'attesa sul lock");

@@ -310,7 +310,7 @@ request_my_profile_verification: {
         Returns: Array<{ round_id: number; updated_at: string; unchanged: boolean }>;
       };
       admin_upsert_fantabet_lineups: {
-        Args: { p_stagione_id: number; p_numero_giornata: number; p_lineups: Array<{ societa_id: number; modulo: string | null; player_ids: number[]; captain: number; vice_captain: number }> };
+        Args: { p_stagione_id: number; p_numero_giornata: number; p_lineups: unknown };
         Returns: boolean;
       };
       public_fantabet_lineups: {

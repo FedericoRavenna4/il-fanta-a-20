@@ -1,12 +1,13 @@
 export type RecognitionTeam = { detectedName: string; formation: string | null; players: string[] };
 export type RecognitionOutput = { teamA: RecognitionTeam; teamB: RecognitionTeam };
 export type MatchStatus = "recognized" | "ambiguous" | "unrecognized";
-export type RosterPlayer = { id: number; name: string; role: string };
-export type TeamOption = { id: number; name: string; aliases: string[]; roster: RosterPlayer[] };
+export type RosterPlayer = { id: number; name: string; role: string; societyId?: number; societyName?: string; realTeam?: string | null };
+export type TeamOption = { id: number; name: string; aliases: string[]; leagueCode?: string; roster: RosterPlayer[]; leaguePlayers?: RosterPlayer[] };
 export type LineupAdminMatch = { id: number; home: { id: number; name: string }; away: { id: number; name: string } };
 export type LineupAdminRound = { id: number; seasonId: number; matchday: number; status: string; matches: LineupAdminMatch[] };
-export type PlayerMatch = { detectedName: string; playerId: number | null; status: MatchStatus; candidates: number[] };
+export type LineupSlot = { source: "roster"; rosterPlayerId: number; overrideConfirmed?: boolean } | { source: "manual"; player: string; role: "P" | "D" | "C" | "A"; overrideConfirmed?: boolean };
+export type PlayerMatch = { detectedName: string; playerId: number | null; status: MatchStatus; candidates: number[]; slot: LineupSlot | null };
 export type LineupPreviewTeam = { detectedName: string; societyId: number | null; societyStatus: MatchStatus; societyCandidates: number[]; formation: string | null; players: PlayerMatch[]; captainId: number | null; viceCaptainId: number | null };
 export type LineupPreview = { matchId: number; seasonId: number; matchday: number; teams: [LineupPreviewTeam, LineupPreviewTeam]; options: TeamOption[] };
-export type ConfirmLineupInput = { matchId: number; seasonId: number; matchday: number; teams: Array<{ societyId: number; formation: string | null; playerIds: number[]; captainId: number | null; viceCaptainId: number | null }> };
+export type ConfirmLineupInput = { matchId: number; seasonId: number; matchday: number; teams: Array<{ societyId: number; formation: string | null; players: Array<LineupSlot | null>; captainOrder: number | null; viceCaptainOrder: number | null }> };
 export type PublicLineup = { societyId: number; societyName: string; formation: string | null; players: Array<{ order: number; name: string; role: string; captain: boolean; viceCaptain: boolean }> };
