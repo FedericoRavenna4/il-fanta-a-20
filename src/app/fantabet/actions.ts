@@ -21,6 +21,13 @@ export async function saveFantaBetPrediction(input: SavePredictionInput): Promis
     p_exact_away: exact ? input.exactAway! : null,
   });
   if (error) {
+    console.error("[FANTABET_RPC_ERROR]", {
+      rpc: "save_my_fantabet_prediction",
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
     const closed = error.message.includes("FANTABET_PRONOSTICI_CHIUSI") || error.code === "42501";
     return { ok: false, deadlinePassed: closed, message: closed ? "La schedina è chiusa: la deadline è scaduta." : "Non è stato possibile salvare. Riprova." };
   }
