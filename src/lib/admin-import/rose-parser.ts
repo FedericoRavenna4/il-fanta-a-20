@@ -46,12 +46,66 @@ function readRoseWorkbook(buffer: Uint8Array) {
   return XLSX.read(csv, { type: "string", raw: true });
 }
 
+function encapsulatedCell(row: unknown[]) {
+  return typeof row[0] === "string" && text(row[0]) !== "" && row.slice(1).every((value) => text(value) === "")
+    ? row[0] : null;
+}
+
+function readEncapsulatedRecord(value: string): unknown[] | null {
+  // SheetJS is permissive with malformed quotes. Validate one comma-separated
+  // record before asking it to decode the fields; never recursively unwrap.
+  let state: "start" | "plain" | "quoted" | "closed" = "start";
+  let columns = 1;
+  for (let offset = 0; offset < value.length; offset++) {
+    const char = value[offset];
+    if (state === "quoted") {
+      if (char === '"') {
+        if (value[offset + 1] === '"') offset++;
+        else state = "closed";
+      }
+    } else if (char === ",") {
+      columns++; state = "start";
+    } else if (char === "\r" || char === "\n") {
+      return null;
+    } else if (char === '"') {
+      if (state !== "start") return null;
+      state = "quoted";
+    } else {
+      if (state === "closed") return null;
+      state = "plain";
+    }
+  }
+  if (state === "quoted" || columns < 2) return null;
+  const workbook = XLSX.read(value, { type: "string", raw: true, FS: "," });
+  const sheet = workbook.Sheets[workbook.SheetNames[0] ?? ""];
+  if (!sheet) return null;
+  const records = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: "", raw: true });
+  if (records.length !== 1 || records[0].length > columns) return null;
+  // SheetJS omits a final empty field from the sheet range.
+  return Array.from({ length: columns }, (_, index) => records[0][index] ?? "");
+}
+
+function coherentRoseHeader(headers: string[]) {
+  return headers.every((header) => header !== "") && new Set(headers).size === headers.length
+    && ROSE_REQUIRED_COLUMNS.every((column) => headers.includes(column));
+}
+
 export function parseRoseBuffer(buffer: Uint8Array, resolver: RoseResolver, expectedSeason?: string): ParsedRose {
   const workbook = readRoseWorkbook(buffer);
   const sheet = workbook.Sheets[workbook.SheetNames[0] ?? ""];
   if (!sheet) return { rows: [], errors: [{ code: "FILE_VUOTO", message: "Il file Rose è vuoto." }], warnings: [], totalRows: 0, headers: [], recognizedTeams: 0, unknownTeams: [], targetLeagueCode: null };
   const matrix = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: "", raw: true });
-  const headers = (matrix[0] ?? []).map((value) => text(value));
+  const csv = !isExcelBinary(buffer);
+  let headers = (matrix[0] ?? []).map((value) => text(value));
+  let recoveredHeader = false;
+  if (csv && !ROSE_REQUIRED_COLUMNS.every((column) => headers.includes(column))) {
+    const cell = encapsulatedCell(matrix[0] ?? []);
+    const recovered = cell === null ? null : readEncapsulatedRecord(cell)?.map((value) => text(value));
+    if (recovered && coherentRoseHeader(recovered)) { headers = recovered; recoveredHeader = true; }
+  }
+  // Ignore only sheet_to_json padding when determining the fallback width.
+  const structuralHeaders = headers.slice(0, headers.reduce((end, header, index) => header ? index + 1 : end, 0));
+  const unwrapRows = csv && coherentRoseHeader(structuralHeaders);
   const index = new Map(headers.map((header, position) => [header, position]));
   const errors: RoseIssue[] = [];
   const legacy = ROSE_LEGACY_COLUMNS.every((column) => index.has(column));
@@ -61,8 +115,21 @@ export function parseRoseBuffer(buffer: Uint8Array, resolver: RoseResolver, expe
 
   const rows: ParsedRoseRow[] = []; const unknown = new Set<string>(); const seen = new Map<string, ParsedRoseRow>();
   for (let offset = 1; offset < matrix.length; offset++) {
-    const source = matrix[offset] ?? []; const rowNumber = offset + 1;
+    let source = matrix[offset] ?? []; const rowNumber = offset + 1;
     if (source.every((value) => text(value) === "")) continue;
+    if (recoveredHeader && source.slice(headers.length).some((value) => text(value) !== "")) {
+      errors.push({ code: "RECORD_CSV_INCOERENTE", message: "La riga contiene dati oltre le colonne dell'header CSV incapsulato.", row: rowNumber });
+      continue;
+    }
+    const cell = unwrapRows ? encapsulatedCell(source) : null;
+    if (cell !== null && cell.includes(",")) {
+      const recovered = readEncapsulatedRecord(cell);
+      if (!recovered || recovered.length !== structuralHeaders.length) {
+        errors.push({ code: "RECORD_CSV_INCOERENTE", message: `Record CSV incapsulato non valido: attese ${structuralHeaders.length} colonne in un solo record.`, row: rowNumber });
+        continue;
+      }
+      source = recovered;
+    }
     const teamName = legacy ? text(source[index.get("Squadra_ID")!]) : text(source[index.get("Squadra")!]);
     const playerName = legacy ? text(source[index.get("Giocatore")!]) : text(source[index.get("Nome")!]);
     const role = text(source[index.get("Ruolo")!]).toUpperCase();

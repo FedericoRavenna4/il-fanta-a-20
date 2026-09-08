@@ -8,6 +8,135 @@ import { diffRoseSnapshot, parseRoseBuffer, type ExistingRoseRow } from "./rose-
 const teams = new Map([["societa a", 1], ["societa b", 2]]);
 const resolver = { resolve(name: string) { const key = name.toLowerCase().trim().replace(/\s+/g, " "); return key === "ambigua" ? { societaId: null, legaCodice: null, ambiguous: true } : { societaId: teams.get(key) ?? null, legaCodice: teams.has(key) ? "serie-a" : null }; } };
 const columns = ["Squadra", "Nome", "Squadra_Appartenenza", "Ruolo", "Ruoli_Mantra", "Prezzo", "Quotazione", "Quotazione_Mantra", "Fantacalcio_Id"];
+
+const historicalHeader = "Squadra,Nome,Squadra_Appartenenza,Ruolo,Ruoli_Mantra,Prezzo,Quotazione,Quotazione_Mantra,Fantacalcio_Id";
+const historicalRecords = [
+  '"Interstellar,""Corvi"",""PAR"",""P"",""Por"",42,1,1,6662"',
+  '"Interstellar,""Daffara"",""PAR"",""P"",""Por"",1,7,7,7411"',
+];
+const standardRecords = ["Interstellar,Corvi,PAR,P,Por,42,1,1,6662", "Interstellar,Daffara,PAR,P,Por,1,7,7,7411"];
+const historicalResolver = { resolve: (name: string) => ({ societaId: name === "Interstellar" ? 1 : null, legaCodice: "serie-a" }) };
+const csvBytes = (value: string) => new TextEncoder().encode(value);
+const wrapRecord = (value: string) => `"${value.replace(/"/g, '""')}"`;
+
+test("fixture storico Corvi/Daffara e quattro combinazioni di header e record producono lo stesso dataset", () => {
+  const standard = parseRoseBuffer(csvBytes([historicalHeader, ...standardRecords].join("\n")), historicalResolver);
+  assert.deepEqual(standard.errors, []);
+  assert.equal(standard.recognizedTeams, 1);
+  assert.deepEqual(standard.rows, [
+    { row: 2, legaCodice: "serie-a", societaId: 1, societa: "Interstellar", giocatore: "Corvi", giocatoreNormalizzato: "corvi", squadraReale: "PAR", ruolo: "P", prezzo: 42 },
+    { row: 3, legaCodice: "serie-a", societaId: 1, societa: "Interstellar", giocatore: "Daffara", giocatoreNormalizzato: "daffara", squadraReale: "PAR", ruolo: "P", prezzo: 1 },
+  ]);
+  for (const header of [historicalHeader, wrapRecord(historicalHeader)]) {
+    for (const records of [standardRecords, historicalRecords, [standardRecords[0], historicalRecords[1]]]) {
+      for (const newline of ["\n", "\r\n"]) for (const bom of ["", "\uFEFF"]) for (const end of ["", newline]) {
+        const parsed = parseRoseBuffer(csvBytes(bom + [header, ...records].join(newline) + end), historicalResolver);
+        assert.deepEqual(parsed, standard, JSON.stringify({ header, records, newline, bom, end }));
+      }
+    }
+  }
+});
+
+test("campi con virgole, virgolette escaped, newline e prezzo decimale restano identici nei due formati", () => {
+  const header = "Squadra,Nome,Squadra_Appartenenza,Ruolo,Prezzo";
+  const record = 'Interstellar,"Corvi, detto ""Portiere""","PAR\nPrimavera",P,"12,5"';
+  const standard = parseRoseBuffer(csvBytes(`${header}\n${record}`), historicalResolver);
+  assert.deepEqual(standard.errors, []);
+  assert.equal(standard.rows[0].giocatore, 'Corvi, detto "Portiere"');
+  assert.equal(standard.rows[0].squadraReale, "PAR\nPrimavera");
+  assert.equal(standard.rows[0].prezzo, 12.5);
+  for (const csvHeader of [header, wrapRecord(header)]) {
+    assert.deepEqual(parseRoseBuffer(csvBytes(`${csvHeader}\n${wrapRecord(record)}`), historicalResolver), standard);
+  }
+});
+
+test("fallback conserva campi finali vuoti e ordine colonne definito dall'header", () => {
+  const header = "Prezzo,Ruolo,Nome,Squadra,Squadra_Appartenenza";
+  const record = "42,P,Corvi,Interstellar,";
+  const standard = parseRoseBuffer(csvBytes(`${header}\n${record}`), historicalResolver);
+  const wrapped = parseRoseBuffer(csvBytes(`${wrapRecord(header)}\n${wrapRecord(record)}`), historicalResolver);
+  assert.deepEqual(wrapped, standard);
+  assert.deepEqual(wrapped.errors, []);
+  assert.equal(wrapped.rows[0].squadraReale, null);
+});
+
+test("CSV standard conserva delimitatori supportati e celle ordinarie contenenti virgole", () => {
+  for (const delimiter of [",", ";", "\t", "|"]) {
+    const header = ["Squadra", "Nome", "Ruolo", "Prezzo"].join(delimiter);
+    const record = ['"Societa, A"', '"Corvi, detto ""Uno"""', "P", '"12,5"'].join(delimiter);
+    const parsed = parseRoseBuffer(csvBytes(`${header}\r\n${record}`), {
+      resolve(name) { assert.equal(name, "Societa, A"); return { societaId: 1, legaCodice: "serie-a" }; },
+    });
+    assert.deepEqual(parsed.errors, []);
+    assert.equal(parsed.rows[0].giocatore, 'Corvi, detto "Uno"');
+    assert.equal(parsed.rows[0].prezzo, 12.5);
+  }
+  const ordinary = parseRoseBuffer(csvBytes('Squadra,Nome,Ruolo,Prezzo\nInterstellar,"Uno,Due,P,42",P,1'), historicalResolver);
+  assert.deepEqual(ordinary.errors, []);
+  assert.equal(ordinary.rows[0].giocatore, "Uno,Due,P,42");
+  assert.equal(ordinary.rows[0].prezzo, 1);
+});
+
+test("record incapsulati incoerenti, quoting malformato e record multipli sono bloccati senza correzioni", () => {
+  for (const record of [
+    "Interstellar,Corvi,P", // Too few fields.
+    "Interstellar,Corvi,P,42,extra", // Too many fields.
+    'Interstellar,"Corvi,P,42',
+    'Interstellar,Cor"vi,P,42',
+    'Interstellar,"Corvi"extra,P,42',
+    "Interstellar,Corvi,P,42\nInterstellar,Daffara,P,1",
+    wrapRecord("Interstellar,Corvi,P,42"), // No recursive unwrapping.
+  ]) {
+    const parsed = parseRoseBuffer(csvBytes(`Squadra,Nome,Ruolo,Prezzo\n${wrapRecord(record)}`), historicalResolver);
+    assert.equal(parsed.rows.length, 0, record);
+    assert.equal(parsed.totalRows, 1, record);
+    assert.deepEqual(parsed.errors.map(({ code, row }) => ({ code, row })), [{ code: "RECORD_CSV_INCOERENTE", row: 2 }], record);
+  }
+});
+
+test("header incapsulati incompleti o ambigui non eludono le colonne obbligatorie", () => {
+  for (const header of [
+    "Nome,Ruolo,Prezzo", "Squadra,Ruolo,Prezzo", "Squadra,Nome,Prezzo", "Squadra,Nome,Ruolo",
+    "Squadra,Nome,Ruolo,Prezzo,Nome", "Squadra,Nome,Ruolo,Prezzo,", "Squadra,,Nome,Ruolo,Prezzo",
+    'Squadra,"Nome"extra,Ruolo,Prezzo', "Squadra,Nome,Ruolo,Prezzo\nAltro,Header,P,1",
+  ]) {
+    const parsed = parseRoseBuffer(csvBytes(`${wrapRecord(header)}\n${wrapRecord("Interstellar,Corvi,P,42")}`), historicalResolver);
+    assert.equal(parsed.rows.length, 0, header);
+    assert.ok(parsed.errors.some(({ code }) => code === "COLONNA_MANCANTE"), header);
+  }
+  for (const missing of ["Squadra", "Nome", "Ruolo", "Prezzo"]) {
+    const header = ["Squadra", "Nome", "Ruolo", "Prezzo"].filter((column) => column !== missing).join(",");
+    const parsed = parseRoseBuffer(csvBytes(header), historicalResolver);
+    assert.ok(parsed.errors.some(({ code, value }) => code === "COLONNA_MANCANTE" && value === missing));
+  }
+});
+
+test("validazioni dei valori restano attive dopo il secondo parsing", () => {
+  const parsed = parseRoseBuffer(csvBytes(`Squadra,Nome,Ruolo,Prezzo\n${wrapRecord("Interstellar,,X,-1")}`), historicalResolver);
+  assert.equal(parsed.rows.length, 0);
+  assert.deepEqual(parsed.errors.map(({ code }) => code), ["NOME_MANCANTE", "RUOLO_NON_VALIDO", "PREZZO_NON_VALIDO"]);
+});
+
+test("header incapsulato non accetta righe standard con dati oltre lo schema recuperato", () => {
+  const parsed = parseRoseBuffer(csvBytes(`${wrapRecord("Squadra,Nome,Ruolo,Prezzo")}\nInterstellar,Corvi,P,42,extra`), historicalResolver);
+  assert.equal(parsed.rows.length, 0);
+  assert.deepEqual(parsed.errors.map(({ code, row }) => ({ code, row })), [{ code: "RECORD_CSV_INCOERENTE", row: 2 }]);
+});
+
+test("fallback non si applica a celle XLS/XLSX con record o header CSV", () => {
+  for (const bookType of ["xls", "xlsx"] as const) for (const wrappedHeader of [false, true]) {
+    const sheet = XLSX.utils.aoa_to_sheet([
+      wrappedHeader ? [historicalHeader] : columns,
+      ['Interstellar,"Corvi","PAR","P","Por",42,1,1,6662'],
+    ]);
+    const book = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(book, sheet, "Rose");
+    const parsed = parseRoseBuffer(new Uint8Array(XLSX.write(book, { type: "array", bookType })), historicalResolver);
+    assert.equal(parsed.rows.length, 0);
+    assert.ok(parsed.errors.some(({ code }) => code === (wrappedHeader ? "COLONNA_MANCANTE" : "NOME_MANCANTE")));
+    assert.ok(parsed.errors.every(({ code }) => code !== "RECORD_CSV_INCOERENTE"));
+  }
+});
+
 const rows = [["Societa A", "Lautaro", "Inter", "A", "Pc", 50, "", "", ""], ["Societa A", "Barella", "Inter", "C", "M/C", "12,5", "", "", ""]];
 function file(kind: "csv" | "xlsx", values = rows) { const sheet = XLSX.utils.aoa_to_sheet([columns, ...values]); const book = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(book, sheet, "Rose"); return new Uint8Array(XLSX.write(book, { type: "array", bookType: kind === "csv" ? "csv" : "xlsx" })); }
 
