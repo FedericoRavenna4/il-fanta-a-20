@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireImportAdmin } from "@/lib/admin-import/auth.server";
 import { getSupabaseAdminClient } from "@/lib/supabase/server";
 import { FANTABET_ADMIN_SEASON, roundCompletion } from "./admin";
+import { loadAllAdminMatches } from "./admin-matches";
 
 export type AdminSeason = { id: number; label: string };
 export type AdminMatch = { id: number; stagioneId: number; league: string; giornata: number; stato: string; home: { name: string; logo: string }; away: { name: string; logo: string } };
@@ -28,8 +29,7 @@ export async function getFantaBetAdminData(): Promise<FantaBetAdminData> {
   const competitionIds = [...new Set(editions.map((item) => Number(item.competizione_id)))];
   const competitionResult = competitionIds.length ? await db.from("competizioni").select("id,divisione_riferimento,tipo").in("id", competitionIds) : { data: [], error: null };
   if (competitionResult.error) throw new Error("Impossibile caricare le leghe.");
-  const matchResult = editionIds.length ? await db.from("partite").select("id,edizione_competizione_id,giornata_lega,societa_casa_id,societa_trasferta_id,stato").in("edizione_competizione_id", editionIds).order("giornata_lega") : { data: [], error: null };
-  if (matchResult.error) throw new Error("Impossibile caricare le partite.");
+  const matchRows = editionIds.length ? await loadAllAdminMatches((afterId) => db.from("partite").select("id,edizione_competizione_id,giornata_lega,societa_casa_id,societa_trasferta_id,stato").in("edizione_competizione_id", editionIds).gt("id", afterId).order("id").limit(500)) : [];
   const rounds = roundResult.data ?? [];
   const roundIds = rounds.map((item) => Number(item.id));
   const betsResult = roundIds.length ? await db.from("fantabet_bets").select("id,round_id,partita_id,bet_type,points_value,display_order").in("round_id", roundIds).order("display_order") : { data: [], error: null };
@@ -45,7 +45,7 @@ export async function getFantaBetAdminData(): Promise<FantaBetAdminData> {
   const competitionMap = new Map((competitionResult.data ?? []).map((item) => [Number(item.id), String(item.divisione_riferimento ?? "")]));
   const editionLeague = new Map(editions.map((item) => [Number(item.id), competitionMap.get(Number(item.competizione_id)) ?? ""]));
   const companyMap = new Map((companyResult.data ?? []).map((item) => [Number(item.id), { name: String(item.nome_ufficiale), logo: String(item.logo_path || "/logos/logo.png") }]));
-  const matches = (matchResult.data ?? []).map((item) => ({ id: Number(item.id), stagioneId: editionSeason.get(Number(item.edizione_competizione_id)) ?? 0, league: editionLeague.get(Number(item.edizione_competizione_id)) ?? "", giornata: Number(item.giornata_lega), stato: String(item.stato), home: companyMap.get(Number(item.societa_casa_id)) ?? { name: "Società", logo: "/logos/logo.png" }, away: companyMap.get(Number(item.societa_trasferta_id)) ?? { name: "Società", logo: "/logos/logo.png" } }));
+  const matches = matchRows.map((item) => ({ id: Number(item.id), stagioneId: editionSeason.get(Number(item.edizione_competizione_id)) ?? 0, league: editionLeague.get(Number(item.edizione_competizione_id)) ?? "", giornata: Number(item.giornata_lega), stato: String(item.stato), home: companyMap.get(Number(item.societa_casa_id)) ?? { name: "Società", logo: "/logos/logo.png" }, away: companyMap.get(Number(item.societa_trasferta_id)) ?? { name: "Società", logo: "/logos/logo.png" } }));
   const matchMap = new Map(matches.map((match) => [match.id, match]));
   const adminRounds = rounds.map((round): AdminRound => {
     const id = Number(round.id); const roundBets = (betsResult.data ?? []).filter((bet) => Number(bet.round_id) === id);
